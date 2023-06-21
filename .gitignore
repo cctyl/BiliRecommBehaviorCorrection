@@ -37,8 +37,6 @@ local.properties
 .loadpath
 .factorypath
 /src/main/resources/rebel.xml
-/src/main/resources/config/application-dev.yml
-/src/main/resources/config/application.yml
 /src/test/java/*
 # External tool builders
 .externalToolBuilders/**
@@ -152,4 +150,3 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
-/src/main/resources/logback-spring.xml
