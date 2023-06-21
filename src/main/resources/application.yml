@@ -1,0 +1,15 @@
+spring:
+  redis:
+    host: 10.0.8.15
+    port: 6379
+    password: wsdvdkyjyq311l
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
+
+ws:
+  url: ws://10.0.8.12:9001/log
