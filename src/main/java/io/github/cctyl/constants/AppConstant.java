@@ -19,9 +19,14 @@ public class AppConstant {
     public static final String BLACK_USER_ID_KEY = "black_user_ids";
 
     /**
-     * 黑名单关键词
+     * 黑名单关键词-视频标题、简介 DFA算法过滤
      */
     public static final String BLACK_KEY_WORD_KEY = "black_keywords";
+
+    /**
+     * 黑名单标签
+     */
+    public static final String BLACK_TAG_KEY = "black_tags";
 
     /**
      * 黑名单分区id集合

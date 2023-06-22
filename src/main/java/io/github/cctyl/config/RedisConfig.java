@@ -26,10 +26,7 @@ public class RedisConfig {
         //hash 类型的 key 和 value的序列化方式
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-
         redisTemplate.afterPropertiesSet();;
-
         return redisTemplate;
     }
 }

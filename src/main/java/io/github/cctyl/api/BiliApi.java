@@ -5,6 +5,7 @@ import io.github.cctyl.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,10 +30,12 @@ public class BiliApi {
      */
     private Map<String,String> cookies = new HashMap<>(10);
 
+
     /**
      * 初始化
      */
-    public BiliApi() {
+    @PostConstruct
+    public void init() {
         //0.加载cookie
         Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
         if (CollUtil.isNotEmpty(cookiesFromRedis)){

@@ -2,12 +2,14 @@ package io.github.cctyl.task;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.utils.RedisUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +21,7 @@ import static io.github.cctyl.constants.AppConstant.*;
  * bilibili相关的任务
  */
 @Component
+@Slf4j
 public class BiliRecommTask {
 
     @Autowired
@@ -44,9 +47,15 @@ public class BiliRecommTask {
     private Set<String> blackTidSet;
 
     /**
+     * 黑名单标签列表
+     */
+    private Set<String> blackTagSet;
+
+    /**
      * 初始化
      */
-    public BiliRecommTask() {
+    @PostConstruct
+    public void init() {
 
         //1. 加载关键字数据
         keywordSet = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
@@ -60,6 +69,9 @@ public class BiliRecommTask {
         //4. 加载黑名单分区id列表
         blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
+        //5.黑名单标签列表
+        blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
     }
 
     @Autowired
@@ -68,8 +80,7 @@ public class BiliRecommTask {
 
     @Scheduled(cron = "*/4 * * * * *")
     public void test() {
-        System.out.println("当前时间为：" + LocalDateTime.now());
-        redisUtil.set(LocalDateTime.now().toString(),LocalDateTime.now());
+      log.info("当前时间为：" + LocalDateTime.now());
 
     }
 }
