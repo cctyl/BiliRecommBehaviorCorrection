@@ -365,7 +365,7 @@ public class RedisUtil {
         return this.redisTemplate.opsForSet().differenceAndStore(key, otherKeys, destKey);
     }
 
-    public Set<Object> setMembers(String key) {
+    public Set<Object> sMembers(String key) {
         return this.redisTemplate.opsForSet().members(key);
     }
 
