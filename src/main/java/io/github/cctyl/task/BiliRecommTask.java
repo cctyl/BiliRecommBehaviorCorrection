@@ -81,6 +81,5 @@ public class BiliRecommTask {
     @Scheduled(cron = "*/4 * * * * *")
     public void test() {
       log.info("当前时间为：" + LocalDateTime.now());
-
     }
 }
