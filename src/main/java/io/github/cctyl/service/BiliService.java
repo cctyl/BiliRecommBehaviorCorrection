@@ -1,10 +1,14 @@
 package io.github.cctyl.service;
 
+import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.net.HttpCookie;
+import java.util.List;
 
 /**
  * 相关任务处理
@@ -27,6 +31,14 @@ public class BiliService {
         JSONObject history = biliApi.getHistory();
         log.info("检查cookie状态：{}",history.toString());
         return history.getIntValue("code")==0;
+    }
+
+
+    /**
+     * 更新一下必要的cookie
+     */
+    public void updateCookie(){
+        biliApi.updateCookie();
     }
 
 }

@@ -22,7 +22,7 @@ import static io.github.cctyl.constants.AppConstant.*;
  */
 @Component
 @Slf4j
-public class BiliRecommTask {
+public class BiliTask {
 
     @Autowired
     private RedisUtil redisUtil;
@@ -78,8 +78,9 @@ public class BiliRecommTask {
     @Qualifier("vchat")
     private WebSocketClient vchatCliet;
 
-    @Scheduled(cron = "*/4 * * * * *")
-    public void test() {
-      log.info("当前时间为：" + LocalDateTime.now());
+//    @Scheduled(cron = "*/4 * * * * *")
+    public void recommonTask() {
+
+
     }
 }

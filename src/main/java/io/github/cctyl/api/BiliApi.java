@@ -2,6 +2,7 @@ package io.github.cctyl.api;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.entity.Owner;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.HttpCookie;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,7 @@ public class BiliApi {
     /**
      * cookie
      */
-    private Map<String, String> cookies = new HashMap<>(10);
+    private Map<String, String> cookieMap = new HashMap<>(10);
 
 
     /**
@@ -54,7 +56,7 @@ public class BiliApi {
         Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
         if (CollUtil.isNotEmpty(cookiesFromRedis)) {
             cookiesFromRedis.keySet().forEach(o -> {
-                cookies.put((String) o, (String) cookiesFromRedis.get(o));
+                cookieMap.put((String) o, (String) cookiesFromRedis.get(o));
             });
         }
     }
@@ -125,7 +127,33 @@ public class BiliApi {
      * @return
      */
     public String getCookieStr() {
-        return cookies.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
+        return cookieMap.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
+    }
+
+    /**
+     * 获取首页数据
+     */
+    public HttpResponse getHome() {
+        String url = "https://www.bilibili.com/";
+        return HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr())
+                .execute();
+    }
+
+    /**
+     * 更新cookie
+     */
+    public void updateCookie() {
+        HttpResponse response = getHome();
+        List<HttpCookie> cookies = response.getCookies();
+        for (HttpCookie cookie : cookies) {
+            String name = cookie.getName();
+            cookieMap.put(name,cookie.getValue());
+        }
+
+        //缓存
+        redisUtil.hPutAll(COOKIES_KEY,cookieMap);
     }
 }
