@@ -38,7 +38,7 @@ public class BiliService {
      * 更新一下必要的cookie
      */
     public void updateCookie(){
-        biliApi.updateCookie();
+        biliApi.getHome();
     }
 
 }

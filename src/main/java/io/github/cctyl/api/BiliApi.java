@@ -61,6 +61,22 @@ public class BiliApi {
         }
     }
 
+    /**
+     * 封装通用的get
+     *      携带cookie、ua
+     *      记忆cookie
+     * @param url
+     * @return
+     */
+    private HttpResponse commonGet(String url){
+        HttpRequest request = HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr());
+        HttpResponse response = request
+                .execute();
+        updateCookie(response);
+        return response;
+    }
 
     /**
      * 获取热门排行榜数据（非首页推荐）
@@ -70,11 +86,8 @@ public class BiliApi {
      */
     public List<VideoInfo> getHotRankVideo(int pageNum, int pageSize) {
         String url = "https://api.bilibili.com/x/web-interface/popular?pn=" + pageNum + "&ps=" + pageSize;
-        String body = HttpRequest.get(url)
-                .header("User-Agent", BROWSER_UA_STR)
-                .cookie(getCookieStr())
-                .execute()
-                .body();
+
+        String body = commonGet(url).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
         if (jsonObject.getIntValue("code") != 0) {
@@ -113,11 +126,7 @@ public class BiliApi {
      */
     public JSONObject getHistory(){
         String url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
-        String body = HttpRequest.get(url)
-                .header("User-Agent", BROWSER_UA_STR)
-                .cookie(getCookieStr())
-                .execute()
-                .body();
+        String body = commonGet(url).body();
         return JSONObject.parseObject(body);
     }
 
@@ -136,17 +145,13 @@ public class BiliApi {
      */
     public HttpResponse getHome() {
         String url = "https://www.bilibili.com/";
-        return HttpRequest.get(url)
-                .header("User-Agent", BROWSER_UA_STR)
-                .cookie(getCookieStr())
-                .execute();
+        return commonGet(url);
     }
 
     /**
      * 更新cookie
      */
-    public void updateCookie() {
-        HttpResponse response = getHome();
+    public void updateCookie(HttpResponse response) {
         List<HttpCookie> cookies = response.getCookies();
         for (HttpCookie cookie : cookies) {
             String name = cookie.getName();
