@@ -104,6 +104,21 @@ public class BiliApi {
         return videoInfoList;
     }
 
+
+    /**
+     * 获取历史观看记录
+     * @return
+     */
+    public JSONObject getHistory(){
+        String url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
+        String body = HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr())
+                .execute()
+                .body();
+        return JSONObject.parseObject(body);
+    }
+
     /**
      * 获得cookie字符串
      *
