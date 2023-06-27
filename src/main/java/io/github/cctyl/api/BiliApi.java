@@ -7,6 +7,7 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,10 @@ public class BiliApi {
      */
     private Map<String, String> cookieMap = new HashMap<>(10);
 
+    /**
+     * 播放者用户id
+     */
+    private String mid;
 
     /**
      * 初始化
@@ -58,6 +63,16 @@ public class BiliApi {
             cookiesFromRedis.keySet().forEach(o -> {
                 cookieMap.put((String) o, (String) cookiesFromRedis.get(o));
             });
+        }else {
+            throw new RuntimeException("cookie为空");
+        }
+        mid = (String) redisUtil.get("mid");
+        if (mid==null){
+            throw new RuntimeException("mid 为空");
+        }
+
+        if (cookieMap.get("bili_jct")==null){
+            throw new RuntimeException("csrf 为空");
         }
     }
 
@@ -293,60 +308,69 @@ public class BiliApi {
 
     /**
      * 上报播放心跳
-     * curl 'api.bilibili.com/x/click-interface/web/heartbeat' \
-     *      --data-urlencode 'aid=2' \
-     *      --data-urlencode 'bvid=BV1xx411c7mD' \
-     *      --data-urlencode 'cid=62131' \
-     *      --data-urlencode 'played_time=60' \
-     *      --data-urlencode 'realtime=60' \
-     *      --data-urlencode 'start_ts=1592720840' \
-     *      --data-urlencode 'type=3' \
-     *      --data-urlencode 'dt=2' \
-     *      --data-urlencode 'play_type=0' \
-     *      --data-urlencode 'csrf=xxx' \
-     * -b 'SESSDATA=xxx'
-     *
-     *
-     * 响应成功，但是未记录到历史记录中
-     *
-     * @param bvid
-     * @param playedSecond  播放进度，默认为0
-     * @param playTotalSecond 总播放时长
+     * @param start_ts
+     * @param aid
+     * @param cid
+     * @param type 视频类型，通常都是3
+     * @param sub_type
+     * @param dt
+     * @param realtime
+     * @param play_type
+     *          0：播放中
+     *          1：开始播放
+     *          2：暂停
+     *          3：继续播放
+     * @param played_time
+     * @param real_played_time
+     * @param video_duration
+     * @param last_play_progress_time
+     * @param max_play_progress_time
+     * @return
      */
-    public JSONObject reportHeartBeat(String bvid,int playedSecond,int playTotalSecond){
+    public JSONObject reportHeartBeat(
+            long start_ts,
+            int aid,
+            int cid,
+            int type,
+            int sub_type,
+            int dt,
+            int realtime,
+            int play_type,
+            int played_time,
+            int real_played_time,
+            int video_duration,
+            int last_play_progress_time,
+            int max_play_progress_time
+    ) {
         String url = "https://api.bilibili.com/x/click-interface/web/heartbeat";
-        String body = commonPost(url,
-                Map.of(
-                        "bvid", bvid,
-                        "played_time", playedSecond,
-                        "realtime", playTotalSecond
-                )
-        ).body();
+        Map<String, Object> paramMap = new HashMap<>(16);
+
+        paramMap.put("start_ts", start_ts);
+        //播放视频的用户id
+        paramMap.put("mid", mid);
+        paramMap.put("aid", aid);
+        paramMap.put("cid", cid);
+        paramMap.put("type", type);
+        paramMap.put("sub_type", sub_type);
+        paramMap.put("dt", dt);
+        paramMap.put("play_type", play_type);
+        paramMap.put("realtime", realtime);
+        paramMap.put("played_time", played_time);
+        paramMap.put("real_played_time", real_played_time);
+        paramMap.put("quality", "80");
+        paramMap.put("video_duration", video_duration);
+        paramMap.put("last_play_progress_time", last_play_progress_time);
+        paramMap.put("max_play_progress_time", max_play_progress_time);
+        paramMap.put("extra", "{\"player_version\":\"4.1.18\"}");
+        paramMap.put("csrf", cookieMap.get("bili_jct"));
+
+
+        String body = commonPost(url,paramMap).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject,body);
         return jsonObject;
     }
 
-    /**
-     * 不可用，原因未知
-     * @param avid
-     * @param cid
-     * @param progress
-     * @return
-     */
-    public JSONObject reportHeartBeat(int avid,int cid,int progress){
-        String url = "https://api.bilibili.com/x/v2/history/report";
-        String body = commonPost(url,
-                Map.of(
-                        "aid", avid,
-                        "progress",progress,
-                        "cid", cid,
-                        "platform","android"
-                )
-        ).body();
-        JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
-        return jsonObject;
-    }
+
 
 }

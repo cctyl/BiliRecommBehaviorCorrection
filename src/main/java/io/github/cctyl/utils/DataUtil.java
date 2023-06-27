@@ -27,4 +27,15 @@ public class DataUtil {
 
         return numSet;
     }
+
+    /**
+     * 获取一个指定范围的随机数
+     * @param start
+     * @param end
+     * @return
+     */
+    public static int getRandom(int start,int end){
+        Random random = new Random();
+        return random.nextInt(end-start+1) + start;
+    }
 }
