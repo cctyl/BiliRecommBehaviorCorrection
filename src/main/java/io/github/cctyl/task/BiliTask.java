@@ -126,7 +126,6 @@ public class BiliTask {
             一个关键词，从两页抽20条
          */
         for (String keyword : keywordSet) {
-
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
                 List<SearchResult> searchRaw = biliApi.search(keyword, i);

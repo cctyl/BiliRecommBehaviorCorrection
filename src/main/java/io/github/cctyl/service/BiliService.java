@@ -4,6 +4,7 @@ import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.SearchResult;
+import io.github.cctyl.entity.VideoDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,11 +57,10 @@ public class BiliService {
     public void handleVideo(List<String> thumbUpVideoList, List<String> dislikeVideoList, SearchResult searchResult) {
 
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
+        VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
-        biliApi.getVideoDetail(searchResult.getBvid());
-
-
-
+        //1.模拟播放
+        String url = biliApi.getVideoUrl(videoDetail.getBvid(),videoDetail.getCid());
 
     }
 }

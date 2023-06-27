@@ -229,15 +229,48 @@ public class BiliApi {
     }
 
     /**
-     * 获取视频详情
+     * 根据bvid获取视频详情
      * @param bvid
      */
-    public void getVideoDetail(String bvid) {
+    public VideoDetail getVideoDetail(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view";
         String body = commonGet(url, Map.of("bvid", bvid)).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject,body);
+        return jsonObject.getJSONObject("data").to(VideoDetail.class);
+    }
 
-        VideoDetail to = jsonObject.getJSONObject("data").to(VideoDetail.class);
+    /**
+     * 获取视频的播放地址
+     * curl -G 'https://api.bilibili.com/x/player/playurl' \
+     *     --data-urlencode 'bvid=BV1rp4y1e745' \
+     *     --data-urlencode 'cid=244954665' \
+     *     --data-urlencode 'qn=0' \
+     *     --data-urlencode 'fnval=80' \
+     *     --data-urlencode 'fnver=0' \
+     *     --data-urlencode 'fourk=1' \
+     *     -b 'SESSDATA=xxx'
+     * @return
+     */
+    public String getVideoUrl(String bvid,int cid) {
+
+        String url  = "https://api.bilibili.com/x/player/playurl";
+        String body = commonGet(url, Map.of(
+                "bvid", bvid,
+                "cid", cid,
+                "qn", 64
+        )).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+
+        VideoUrl videoUrl = jsonObject.getJSONObject("data").to(VideoUrl.class);
+        if (CollUtil.isNotEmpty(videoUrl.getDurl()) ){
+            return videoUrl.getDurl().get(0).getUrl();
+        }else {
+            log.error("body={}",body);
+            throw new RuntimeException("url 获取失败");
+        }
+
     }
 }
