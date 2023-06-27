@@ -377,15 +377,32 @@ public class BiliApi {
      * @param cookieStr
      */
     public void replaceCookie(String cookieStr) {
+        redisUtil.delete(COOKIES_KEY);
         Map<String, String> map = new HashMap<>(10);
         String[] cookieArr = cookieStr.split(";");
         for (String cookie : cookieArr) {
             String[] split = cookie.split("=");
-            map.put(split[0], split[1]);
+            map.put(split[0].trim(), split[1].trim());
         }
         this.cookieMap = map;
         //缓存
         redisUtil.hPutAll(COOKIES_KEY, map);
     }
 
+    /**
+     * 获取视频tag
+     * @param aid
+     */
+    public List<Tag> getVideoTag(int aid) {
+
+        String url = "https://api.bilibili.com/x/tag/archive/tags";
+        String body = commonGet(url, Map.of("aid", aid)).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+
+        List<Tag> data = jsonObject.getJSONArray("data").stream().map(o -> ((JSONObject) o).to(Tag.class))
+                .collect(Collectors.toList());
+
+        return data;
+    }
 }

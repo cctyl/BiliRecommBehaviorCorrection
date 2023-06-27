@@ -1,19 +1,28 @@
 package io.github.cctyl.service;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.dfa.WordTree;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.SearchResult;
+import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.net.HttpCookie;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static io.github.cctyl.constants.AppConstant.*;
 
 /**
  * 相关任务处理
@@ -27,6 +36,63 @@ public class BiliService {
     private BiliApi biliApi;
 
 
+    @Autowired
+    private RedisUtil redisUtil;
+
+    /**
+     * 黑名单id列表
+     */
+    private Set<String> blackUserIdSet;
+
+    /**
+     * 黑名单关键词列表
+     */
+    private Set<String> blackKeywordSet;
+
+    /**
+     * 黑名单关键词树
+     */
+    private WordTree blackKeywordTree = new WordTree();
+
+    /**
+     * 黑名单分区id列表
+     */
+    private Set<String> blackTidSet;
+
+    /**
+     * 黑名单标签列表
+     */
+    private Set<String> blackTagSet;
+
+    /**
+     * 黑名单标签树
+     */
+    private WordTree blackTagTree = new WordTree();
+
+    /**
+     * 初始化
+     */
+    @PostConstruct
+    public void init() {
+
+
+        //2. 加载黑名单用户id列表
+        blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        //3. 加载黑名单关键词列表
+        blackKeywordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        //3.1 初始化关键词树
+        blackKeywordTree.addWords(blackKeywordSet);
+
+
+        //4. 加载黑名单分区id列表
+        blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        //5.黑名单标签列表
+        blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        blackTagTree.addWords(blackTagSet);
+
+    }
     /**
      * 检查cookie状态
      * 调用历史记录接口来实现
@@ -57,14 +123,57 @@ public class BiliService {
      * @param thumbUpVideoList
      * @param dislikeVideoList
      * @param searchResult
+     * @param isRank 如果是搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
      */
-    public void handleVideo(List<String> thumbUpVideoList, List<String> dislikeVideoList, SearchResult searchResult) {
+    public void handleVideo(List<String> thumbUpVideoList,
+                            List<String> dislikeVideoList,
+                            SearchResult searchResult,
+                            boolean isRank
+                            ) {
 
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
         VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
-        //1.模拟播放
-        String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
+        //1.判断并分类
+
+        //1.1 标题是否触发黑名单关键词
+        boolean titleMatch = blackKeywordTree.isMatch(videoDetail.getTitle());
+
+        //1.2 简介是否触发黑名单关键词
+        boolean descMatch = blackKeywordTree.isMatch(videoDetail.getDesc());
+        if (CollUtil.isNotEmpty(videoDetail.getDescV2())){
+            descMatch = descMatch || videoDetail.getDescV2().stream().anyMatch(blackKeywordTree::isMatch);
+        }
+
+        //1.3 标签是否触发关键词,需要先获取标签
+        boolean tagMatch = biliApi.getVideoTag(videoDetail.getAid()).stream().map(Tag::getTagName).anyMatch(s -> blackTagTree.isMatch(s));
+
+        //1.4 up主id是否在黑名单内
+        boolean midMatch = blackUserIdSet.contains(videoDetail.getOwner().getMid());
+
+        //1.5 分区是否触发
+        boolean tidMatch = blackTidSet.contains(String.valueOf(videoDetail.getTid()));
+
+        //1.6 todo 封面是否触发
+        boolean coverMatch = false;
+
+
+        //2. 如果是黑名单内的，直接执行点踩操作
+        if (titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch) {
+
+            //todo 点踩 加日志
+        }else if (isRank){
+            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 接下来再次判断
+
+
+            String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
+            simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
+
+        }else {
+
+            //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
+
+        }
 
     }
 
