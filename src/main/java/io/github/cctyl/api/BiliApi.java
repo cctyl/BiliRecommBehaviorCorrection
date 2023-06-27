@@ -80,6 +80,24 @@ public class BiliApi {
     }
 
     /**
+     * 封装通用Post
+     * @param url
+     * @param paramMap
+     * @return
+     */
+    private HttpResponse commonPost(String url, Map<String, Object> paramMap) {
+        HttpRequest request =
+                HttpRequest.post(url)
+                        .header("Content-Type","application/x-www-form-urlencoded")
+                        .header("User-Agent", BROWSER_UA_STR)
+                        .form(paramMap)
+                        .cookie(getCookieStr());
+        HttpResponse response = request
+                .execute();
+        updateCookie(response);
+        return response;
+    }
+    /**
      * 封装通用的get
      * 携带cookie、ua、参数的url编码
      * 记忆cookie
@@ -250,20 +268,20 @@ public class BiliApi {
      *     --data-urlencode 'fnver=0' \
      *     --data-urlencode 'fourk=1' \
      *     -b 'SESSDATA=xxx'
+     *
+     * @param bvid
+     * @param cid
      * @return
      */
     public String getVideoUrl(String bvid,int cid) {
-
         String url  = "https://api.bilibili.com/x/player/playurl";
         String body = commonGet(url, Map.of(
                 "bvid", bvid,
                 "cid", cid,
                 "qn", 64
         )).body();
-
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject,body);
-
         VideoUrl videoUrl = jsonObject.getJSONObject("data").to(VideoUrl.class);
         if (CollUtil.isNotEmpty(videoUrl.getDurl()) ){
             return videoUrl.getDurl().get(0).getUrl();
@@ -271,6 +289,64 @@ public class BiliApi {
             log.error("body={}",body);
             throw new RuntimeException("url 获取失败");
         }
-
     }
+
+    /**
+     * 上报播放心跳
+     * curl 'api.bilibili.com/x/click-interface/web/heartbeat' \
+     *      --data-urlencode 'aid=2' \
+     *      --data-urlencode 'bvid=BV1xx411c7mD' \
+     *      --data-urlencode 'cid=62131' \
+     *      --data-urlencode 'played_time=60' \
+     *      --data-urlencode 'realtime=60' \
+     *      --data-urlencode 'start_ts=1592720840' \
+     *      --data-urlencode 'type=3' \
+     *      --data-urlencode 'dt=2' \
+     *      --data-urlencode 'play_type=0' \
+     *      --data-urlencode 'csrf=xxx' \
+     * -b 'SESSDATA=xxx'
+     *
+     *
+     * 响应成功，但是未记录到历史记录中
+     *
+     * @param bvid
+     * @param playedSecond  播放进度，默认为0
+     * @param playTotalSecond 总播放时长
+     */
+    public JSONObject reportHeartBeat(String bvid,int playedSecond,int playTotalSecond){
+        String url = "https://api.bilibili.com/x/click-interface/web/heartbeat";
+        String body = commonPost(url,
+                Map.of(
+                        "bvid", bvid,
+                        "played_time", playedSecond,
+                        "realtime", playTotalSecond
+                )
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+        return jsonObject;
+    }
+
+    /**
+     * 不可用，原因未知
+     * @param avid
+     * @param cid
+     * @param progress
+     * @return
+     */
+    public JSONObject reportHeartBeat(int avid,int cid,int progress){
+        String url = "https://api.bilibili.com/x/v2/history/report";
+        String body = commonPost(url,
+                Map.of(
+                        "aid", avid,
+                        "progress",progress,
+                        "cid", cid,
+                        "platform","android"
+                )
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+        return jsonObject;
+    }
+
 }
