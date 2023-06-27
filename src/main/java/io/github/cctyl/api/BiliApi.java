@@ -5,10 +5,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
-import io.github.cctyl.entity.Owner;
-import io.github.cctyl.entity.SearchResult;
-import io.github.cctyl.entity.Stat;
-import io.github.cctyl.entity.VideoInfo;
+import io.github.cctyl.entity.*;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,38 +104,18 @@ public class BiliApi {
      * @param pageNum  页码，1开始
      * @param pageSize 每页记录数，页数
      */
-    public List<VideoInfo> getHotRankVideo(int pageNum, int pageSize) {
+    public List<VideoDetail> getHotRankVideo(int pageNum, int pageSize) {
         String url = "https://api.bilibili.com/x/web-interface/popular?pn=" + pageNum + "&ps=" + pageSize;
-
         String body = commonGet(url).body();
-
         JSONObject jsonObject = JSONObject.parseObject(body);
-        if (checkResp(jsonObject)) {
-            log.error("响应异常，message={}", jsonObject.getString("message"));
-            log.error("body={}", body);
-            throw new RuntimeException("json 解析异常");
-        }
-        List<VideoInfo> videoInfoList =
+        checkRespAndThrow(jsonObject, body);
+        List<VideoDetail> videoInfoList =
                 jsonObject
                         .getJSONObject("data")
                         .getJSONArray("list")
                         .stream()
-                        .map(o ->
-                                {
-                                    //fixme 不能反序列化嵌套的对象
-                                    var jo = (JSONObject) o;
-                                    VideoInfo videoInfo = JSONObject.parseObject(o.toString(), VideoInfo.class)
-                                            .setOwner(
-                                                    JSONObject.parseObject(jo.get("owner").toString(), Owner.class)
-                                            )
-                                            .setStat(
-                                                    JSONObject.parseObject(jo.get("stat").toString(), Stat.class)
-                                            );
-                                    return videoInfo;
-                                }
-                        )
+                        .map(o -> ((JSONObject) o).to(VideoDetail.class) )
                         .collect(Collectors.toList());
-
         return videoInfoList;
     }
 
@@ -202,6 +179,19 @@ public class BiliApi {
     }
 
     /**
+     * 检查响应，如果响应不正确，则抛出异常
+     * @param jsonObject
+     * @param body
+     */
+    public void checkRespAndThrow(JSONObject jsonObject,String body){
+        if (!checkResp(jsonObject)) {
+            log.error("响应异常，message={}", jsonObject.getString("message"));
+            log.error("body={}", body);
+            throw new RuntimeException("响应异常");
+        }
+    }
+
+    /**
      * 根据关键词进行综合搜索
      *
      * @param keyword
@@ -217,11 +207,7 @@ public class BiliApi {
         );
         String body = commonGet(url, paramMap).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        if (!checkResp(jsonObject)) {
-            log.error("响应异常，message={}", jsonObject.getString("message"));
-            log.error("body={}", body);
-            throw new RuntimeException("响应异常");
-        }
+        checkRespAndThrow(jsonObject,body);
 
         Object videoObj = jsonObject
                 .getJSONObject("data")
@@ -240,5 +226,18 @@ public class BiliApi {
                 .collect(Collectors.toList());
 
         return data;
+    }
+
+    /**
+     * 获取视频详情
+     * @param bvid
+     */
+    public void getVideoDetail(String bvid) {
+        String url = "https://api.bilibili.com/x/web-interface/view";
+        String body = commonGet(url, Map.of("bvid", bvid)).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+
+        VideoDetail to = jsonObject.getJSONObject("data").to(VideoDetail.class);
     }
 }

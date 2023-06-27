@@ -1,9 +1,13 @@
 package io.github.cctyl.task;
 
 import cn.hutool.core.collection.CollUtil;
-import io.github.cctyl.entity.VideoInfo;
+import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.entity.SearchResult;
+
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +37,10 @@ public class BiliTask {
 
     @Autowired
     private BiliService biliService;
+
+
+    @Autowired
+    private BiliApi biliApi;
 
     /**
      * 关键词列表
@@ -92,10 +101,10 @@ public class BiliTask {
     public void recommonTask() {
         //0.初始化部分
         //本次点赞视频列表
-        var thumUpVideoList = new ArrayList<VideoInfo>();
+        var thumbUpVideoList = new ArrayList<String>();
 
         //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoInfo>();
+        var dislikeVideoList = new ArrayList<String>();
 
 
         //1.检查cookie
@@ -118,8 +127,20 @@ public class BiliTask {
          */
         for (String keyword : keywordSet) {
 
+            //不能一次获取完再执行操作，要最大限度模拟用户的行为
+            for (int i = 0; i < 2; i++) {
+                List<SearchResult> searchRaw = biliApi.search(keyword, i);
+                ThreadUtil.sleep(3);
 
-
+                //随机挑选的结果
+                DataUtil
+                .getRandom(10, 0, 20)
+                .stream().map(searchRaw::get)
+                .forEach(searchResult -> {
+                    //处理挑选结果
+                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult);
+                });
+            }
         }
 
 
