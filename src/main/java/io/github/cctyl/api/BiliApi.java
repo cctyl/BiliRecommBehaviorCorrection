@@ -372,5 +372,20 @@ public class BiliApi {
     }
 
 
+    /**
+     * 完全替换cookie
+     * @param cookieStr
+     */
+    public void replaceCookie(String cookieStr) {
+        Map<String, String> map = new HashMap<>(10);
+        String[] cookieArr = cookieStr.split(";");
+        for (String cookie : cookieArr) {
+            String[] split = cookie.split("=");
+            map.put(split[0], split[1]);
+        }
+        this.cookieMap = map;
+        //缓存
+        redisUtil.hPutAll(COOKIES_KEY, map);
+    }
 
 }
