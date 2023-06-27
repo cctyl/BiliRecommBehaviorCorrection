@@ -66,7 +66,7 @@ public class BiliApi {
         }else {
             throw new RuntimeException("cookie为空");
         }
-        mid = (String) redisUtil.get("mid");
+        mid = (String) redisUtil.get(MID_KEY);
         if (mid==null){
             throw new RuntimeException("mid 为空");
         }
