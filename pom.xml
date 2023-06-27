@@ -34,6 +34,8 @@
     </dependencyManagement>
 
     <dependencies>
+
+
         <!--基本的springboot环境-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

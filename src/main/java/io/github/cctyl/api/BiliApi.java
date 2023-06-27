@@ -6,6 +6,7 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.entity.Owner;
+import io.github.cctyl.entity.SearchResult;
 import io.github.cctyl.entity.Stat;
 import io.github.cctyl.entity.VideoInfo;
 import io.github.cctyl.utils.RedisUtil;
@@ -14,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.Serializable;
 import java.net.HttpCookie;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +66,34 @@ public class BiliApi {
 
     /**
      * 封装通用的get
-     *      携带cookie、ua
-     *      记忆cookie
+     * 携带cookie、ua
+     * 记忆cookie
+     *
      * @param url
      * @return
      */
-    private HttpResponse commonGet(String url){
+    private HttpResponse commonGet(String url) {
         HttpRequest request = HttpRequest.get(url)
                 .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr());
+        HttpResponse response = request
+                .execute();
+        updateCookie(response);
+        return response;
+    }
+
+    /**
+     * 封装通用的get
+     * 携带cookie、ua、参数的url编码
+     * 记忆cookie
+     *
+     * @param url
+     * @return
+     */
+    private HttpResponse commonGet(String url, Map<String, Object> paramMap) {
+        HttpRequest request = HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .form(paramMap)
                 .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
@@ -90,7 +113,7 @@ public class BiliApi {
         String body = commonGet(url).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
-        if (jsonObject.getIntValue("code") != 0) {
+        if (checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
             log.error("body={}", body);
             throw new RuntimeException("json 解析异常");
@@ -122,9 +145,10 @@ public class BiliApi {
 
     /**
      * 获取历史观看记录
+     *
      * @return
      */
-    public JSONObject getHistory(){
+    public JSONObject getHistory() {
         String url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
         String body = commonGet(url).body();
         return JSONObject.parseObject(body);
@@ -155,10 +179,66 @@ public class BiliApi {
         List<HttpCookie> cookies = response.getCookies();
         for (HttpCookie cookie : cookies) {
             String name = cookie.getName();
-            cookieMap.put(name,cookie.getValue());
+            cookieMap.put(name, cookie.getValue());
         }
 
         //缓存
-        redisUtil.hPutAll(COOKIES_KEY,cookieMap);
+        redisUtil.hPutAll(COOKIES_KEY, cookieMap);
+    }
+
+    /**
+     * 判断响应是否正常
+     * {
+     * "code": 0,
+     * "message": "0",
+     * "ttl": 1
+     * }
+     *
+     * @param jsonObject
+     * @return
+     */
+    public boolean checkResp(JSONObject jsonObject) {
+        return jsonObject.getIntValue("code") == 0;
+    }
+
+    /**
+     * 根据关键词进行综合搜索
+     *
+     * @param keyword
+     */
+    public List<SearchResult> search(String keyword, int page) {
+
+        String url = "https://api.bilibili.com/x/web-interface/search/all/v2";
+        Map<String, Object> paramMap = Map.of(
+                "search_type", "video",
+                "keyword", keyword,
+                "order", "totalrank",
+                "page", page
+        );
+        String body = commonGet(url, paramMap).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        if (!checkResp(jsonObject)) {
+            log.error("响应异常，message={}", jsonObject.getString("message"));
+            log.error("body={}", body);
+            throw new RuntimeException("响应异常");
+        }
+
+        Object videoObj = jsonObject
+                .getJSONObject("data")
+                .getJSONArray("result")
+                .stream()
+                .filter(o -> "video".equals(((JSONObject) o).getString("result_type")))
+                .findFirst()
+                .orElse(null);
+        if (videoObj == null) {
+            return null;
+        }
+
+        List<SearchResult> data = ((JSONObject) videoObj).getJSONArray("data")
+                .stream()
+                .map(o -> JSONObject.parseObject(o.toString(), SearchResult.class))
+                .collect(Collectors.toList());
+
+        return data;
     }
 }
