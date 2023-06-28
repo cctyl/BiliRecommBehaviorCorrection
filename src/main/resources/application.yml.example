@@ -10,5 +10,16 @@ spring:
         min-idle: 0
 
 
+api:
+  #当前启用的服务，多个服务逗号分隔。如果配置来了服务，就要增加该服务所需要的配置
+  service: baidu,
+
+
+#百度相关配置
+baidu:
+  clientId: xxxxx
+  client_secret: xxxxx
+
+
 ws:
   url: ws://10.0.8.12:9001/log
