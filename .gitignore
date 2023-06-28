@@ -136,6 +136,8 @@ Desktop.ini
 *~
 .merge_file*
 
+application.yml
+
 ######################
 # Gradle Wrapper
 ######################
