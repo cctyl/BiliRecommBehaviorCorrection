@@ -104,7 +104,7 @@ public class BiliTask {
                 .stream().map(searchRaw::get)
                 .forEach(searchResult -> {
                     //处理挑选结果
-                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult);
+                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult,false);
                 });
             }
         }

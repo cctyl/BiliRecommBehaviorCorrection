@@ -1,8 +1,10 @@
 spring:
   redis:
-    host: 10.0.8.14
-    port: 6330
-    password: wsdvdkyjyq311l
+#    host: 10.0.8.14
+#    port: 6330
+#    password: wsdvdkyjyq311l
+    host: 127.0.0.1
+    port: 6379
     lettuce:
       pool:
         max-active: 8

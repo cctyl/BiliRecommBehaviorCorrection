@@ -135,7 +135,6 @@ public class BiliService {
         VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
         //1.判断并分类
-
         //1.1 标题是否触发黑名单关键词
         boolean titleMatch = blackKeywordTree.isMatch(videoDetail.getTitle());
 
@@ -160,14 +159,10 @@ public class BiliService {
 
         //2. 如果是黑名单内的，直接执行点踩操作
         if (titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch) {
-
             //todo 点踩 加日志
+
         }else if (isRank){
-            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 接下来再次判断
-
-
-            String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
-            simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
+            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 不一定，接下来再次判断
 
         }else {
 
@@ -175,6 +170,17 @@ public class BiliService {
 
         }
 
+    }
+
+
+    /**
+     * 播放并点赞 todo 点赞未完成
+     * @param videoDetail
+     */
+    public void playAndThumbUp(VideoDetail videoDetail ){
+
+        String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
+        simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
     }
 
 
