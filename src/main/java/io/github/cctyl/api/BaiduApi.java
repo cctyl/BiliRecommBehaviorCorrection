@@ -6,7 +6,6 @@ import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.entity.BaiduImageClassify;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
@@ -37,27 +36,20 @@ public class BaiduApi {
     @Value("${baidu.clientSecret}")
     private String secretKey;
 
-   private static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().build();
-
     /**
      * 人体检测和属性识别
-     * @param bytes
+     * @param imgBase64Str
      * @return
      */
-    public BaiduImageClassify getGender(byte[] bytes) throws IOException {
-        String imgBase64Str = getFileContentAsBase64(bytes);
-        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        RequestBody body = RequestBody.create(mediaType, "image="+ imgBase64Str);
-        Request request = new Request.Builder()
-                .url("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken())
-                .method("POST", body)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .addHeader("Accept", "application/json")
-                .build();
-        Response response = HTTP_CLIENT.newCall(request).execute();
-        String bodyStr = response.body().string();
+    public BaiduImageClassify getGender(String imgBase64Str) {
+        String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken())
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .body("image="+imgBase64Str)
+                .execute()
+                .body();
         log.debug("body={}",body);
-        return JSONObject.parseObject(bodyStr, BaiduImageClassify.class);
+        return JSONObject.parseObject(body, BaiduImageClassify.class);
     }
 
 
