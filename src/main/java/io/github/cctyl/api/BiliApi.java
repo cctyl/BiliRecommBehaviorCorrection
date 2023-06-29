@@ -1,6 +1,7 @@
 package io.github.cctyl.api;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.HttpCookie;
 import java.nio.charset.Charset;
@@ -32,6 +35,7 @@ import static io.github.cctyl.constants.AppConstant.*;
 @Component
 @Slf4j
 public class BiliApi {
+
 
 
     @Autowired
@@ -112,6 +116,10 @@ public class BiliApi {
         updateCookie(response);
         return response;
     }
+
+
+
+
     /**
      * 封装通用的get
      * 携带cookie、ua、参数的url编码
@@ -129,6 +137,36 @@ public class BiliApi {
                 .execute();
         updateCookie(response);
         return response;
+    }
+
+
+    /**
+     * 获取bilibili图片的byte数组
+     * @param picUrl
+     * @return
+     */
+    public byte[] getPicByte(String picUrl) throws IOException {
+        HttpResponse response = HttpRequest.get(picUrl)
+                .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr())
+                .executeAsync();
+        InputStream inputStream = response.bodyStream();
+        FastByteArrayOutputStream fastByteArrayOutputStream = new FastByteArrayOutputStream();
+        try(inputStream;fastByteArrayOutputStream) {
+            byte[] buff = new byte[1024];
+            int totalLength = 0;
+            int len = 0;
+            while (  (len = inputStream.read(buff))!=-1){
+                fastByteArrayOutputStream.write(buff,0,len);
+                totalLength +=len;
+                if (totalLength>PIC_MAX_SIZE){
+                    throw new RuntimeException("图片过大，不采用");
+                }
+            }
+            return fastByteArrayOutputStream.toByteArray();
+        } catch (IOException e) {
+           throw e;
+        }
     }
 
     /**

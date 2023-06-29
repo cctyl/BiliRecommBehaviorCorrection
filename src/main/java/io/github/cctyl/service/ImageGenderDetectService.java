@@ -7,10 +7,13 @@ package io.github.cctyl.service;
 public interface ImageGenderDetectService {
 
     /**
-     * 判断性别 1 男性 2 女性 其他表示未识别成功
-     * @param url
+     * 判断性别 1 男性 2 女性 3其他表示未识别成功 4表示出现异常
+     *
+     * @param bytes
      * @return
      */
-    int getGender(String url);
+    default int getGender(byte[] bytes) {
+        throw new RuntimeException("not implement");
+    }
 
 }

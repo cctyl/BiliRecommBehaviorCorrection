@@ -39,4 +39,12 @@ public class AppConstant {
      */
     public static final String MID_KEY = PREFIX+"mid";
 
+
+    /**
+     * 最大图片大小 3M
+     */
+    public static final int PIC_MAX_SIZE = 2097152;
+
+
+
 }
