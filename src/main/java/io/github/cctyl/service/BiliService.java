@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +33,7 @@ import static io.github.cctyl.constants.AppConstant.*;
 public class BiliService {
 
 
-    @Autowired
-    private BiliApi biliApi;
 
-
-    @Autowired
-    private RedisUtil redisUtil;
 
     /**
      * 黑名单id列表
@@ -69,6 +65,15 @@ public class BiliService {
      */
     private WordTree blackTagTree = new WordTree();
 
+    @Autowired
+    private ImageGenderDetectService imageGenderDetectService;
+
+    @Autowired
+    private BiliApi biliApi;
+
+    @Autowired
+    private RedisUtil redisUtil;
+
     /**
      * 初始化
      */
@@ -81,9 +86,7 @@ public class BiliService {
 
         //3. 加载黑名单关键词列表
         blackKeywordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        //3.1 初始化关键词树
         blackKeywordTree.addWords(blackKeywordSet);
-
 
         //4. 加载黑名单分区id列表
         blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
@@ -93,6 +96,7 @@ public class BiliService {
         blackTagTree.addWords(blackTagSet);
 
     }
+
     /**
      * 检查cookie状态
      * 调用历史记录接口来实现
@@ -125,8 +129,8 @@ public class BiliService {
      * @param searchResult
      * @param isRank 如果是搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
      */
-    public void handleVideo(List<String> thumbUpVideoList,
-                            List<String> dislikeVideoList,
+    public void handleVideo(List<VideoDetail> thumbUpVideoList,
+                            List<VideoDetail> dislikeVideoList,
                             SearchResult searchResult,
                             boolean isRank
                             ) {
@@ -134,42 +138,155 @@ public class BiliService {
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
         VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
-        //1.判断并分类
-        //1.1 标题是否触发黑名单关键词
-        boolean titleMatch = blackKeywordTree.isMatch(videoDetail.getTitle());
-
-        //1.2 简介是否触发黑名单关键词
-        boolean descMatch = blackKeywordTree.isMatch(videoDetail.getDesc());
-        if (CollUtil.isNotEmpty(videoDetail.getDescV2())){
-            descMatch = descMatch || videoDetail.getDescV2().stream().anyMatch(blackKeywordTree::isMatch);
-        }
-
-        //1.3 标签是否触发关键词,需要先获取标签
-        boolean tagMatch = biliApi.getVideoTag(videoDetail.getAid()).stream().map(Tag::getTagName).anyMatch(s -> blackTagTree.isMatch(s));
-
-        //1.4 up主id是否在黑名单内
-        boolean midMatch = blackUserIdSet.contains(videoDetail.getOwner().getMid());
-
-        //1.5 分区是否触发
-        boolean tidMatch = blackTidSet.contains(String.valueOf(videoDetail.getTid()));
-
-        //1.6 todo 封面是否触发
-        boolean coverMatch = false;
 
 
-        //2. 如果是黑名单内的，直接执行点踩操作
-        if (titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch) {
-            //todo 点踩 加日志
+        //1. 如果是黑名单内的，直接执行点踩操作
+        if (
+                //1.1 标题是否触发黑名单关键词
+                isTitleMatch(blackKeywordTree, videoDetail)
+                ||
+                //1.2 简介是否触发黑名单关键词
+                isDescMatch(blackKeywordTree, videoDetail)
+                ||
+                //1.3 标签是否触发关键词,需要先获取标签
+                isTagMatch(videoDetail)
+                ||
+                //1.4 up主id是否在黑名单内
+                isMidMatch(blackUserIdSet, videoDetail)
+                ||
+                //1.5 分区是否触发
+                isTidMatch(blackTidSet, videoDetail)
+                || //1.6 封面是否触发
+                isCoverMatch(videoDetail)
+        ) {
+            //todo 点踩
+
+            //加日志
+            dislikeVideoList.add(videoDetail);
 
         }else if (isRank){
-            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 不一定，接下来再次判断
+            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
 
         }else {
 
             //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
 
+            //播放并点赞
+            playAndThumbUp(videoDetail);
+
+            //加日志
+            thumbUpVideoList.add(videoDetail);
         }
 
+    }
+
+    /**
+     * 封面是否匹配
+     * @param videoDetail
+     * @return
+     */
+    private boolean isCoverMatch(VideoDetail videoDetail) {
+        try {
+            byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
+            int gender = imageGenderDetectService.getGender(picByte);
+            log.debug("视频:{}-{}的封面：{}，匹配结果：{}",videoDetail.getBvid(),videoDetail.getTitle(),videoDetail.getPic(),gender);
+            return gender==2;
+        } catch (IOException e) {
+            log.error("获取图片字节码出错：{}", e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 标题匹配
+     * @param blackKeywordTree
+     * @param videoDetail
+     * @return
+     */
+    private boolean isTitleMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
+        boolean match = blackKeywordTree.isMatch(videoDetail.getTitle());
+        log.debug("视频:{}-{}的标题：{}，匹配结果：{}",videoDetail.getBvid(),videoDetail.getTitle(),videoDetail.getTitle(),match);
+        return match;
+    }
+
+    /**
+     * 简介匹配
+     * @param blackKeywordTree
+     * @param videoDetail
+     * @return
+     */
+    private boolean isDescMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
+        boolean result = blackKeywordTree.isMatch(videoDetail.getDesc());
+        String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
+        if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
+            result = result || videoDetail.getDescV2().stream().anyMatch(blackKeywordTree::isMatch);
+            desc = desc + "," videoDetail.getDescV2().stream().collect(Collectors.joining(","));
+        }
+        log.debug("视频:{}-{}的 简介：{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                desc,
+                result);
+        return result;
+    }
+
+    /**
+     * 分区id匹配
+     * @param blackTidSet
+     * @param videoDetail
+     * @return
+     */
+    private boolean isTidMatch(Set<String> blackTidSet, VideoDetail videoDetail) {
+        boolean match = blackTidSet.contains(String.valueOf(videoDetail.getTid()));
+
+        log.debug("视频:{}-{}的 分区：{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getTname(),
+                match);
+        return match;
+    }
+
+    /**
+     * up主id匹配
+     * @param blackUserIdSet
+     * @param videoDetail
+     * @return
+     */
+    private boolean isMidMatch(Set<String> blackUserIdSet, VideoDetail videoDetail) {
+        boolean match = blackUserIdSet
+                .contains(videoDetail.getOwner().getMid());
+
+        log.debug("视频:{}-{}的 up主：{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getOwner().getName(),
+                match);
+        return match;
+    }
+
+    /**
+     * 标签匹配
+     * @param videoDetail
+     * @return
+     */
+    private boolean isTagMatch(VideoDetail videoDetail) {
+        if (CollUtil.isEmpty(videoDetail.getTagList())) {
+            videoDetail.setTagList(biliApi.getVideoTag(videoDetail.getAid()));
+        }
+
+        boolean match = videoDetail.getTagList()
+                .stream().map(Tag::getTagName)
+                .anyMatch(s -> blackTagTree.isMatch(s));
+
+        log.debug("视频:{}-{}的 tag：{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getTagList(),
+                match);
+
+        return match;
     }
 
 

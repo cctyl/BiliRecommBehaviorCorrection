@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.SearchResult;
 
+import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
@@ -68,10 +69,10 @@ public class BiliTask {
     public void recommonTask() {
         //0.初始化部分
         //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<String>();
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
 
         //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<String>();
+        var dislikeVideoList = new ArrayList<VideoDetail>();
 
 
         //1.检查cookie

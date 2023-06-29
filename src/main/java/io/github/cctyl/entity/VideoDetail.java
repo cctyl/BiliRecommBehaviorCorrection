@@ -114,6 +114,10 @@ public class VideoDetail {
     @JSONField(name = "stat")
     private Stat stat;
 
+    /**
+     * 标签列表
+     */
+    List<Tag> tagList;
 
     @JSONField(name = "rights")
     private Rights rights;
