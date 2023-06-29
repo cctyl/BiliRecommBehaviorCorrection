@@ -221,7 +221,7 @@ public class BiliService {
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
             result = result || videoDetail.getDescV2().stream().anyMatch(blackKeywordTree::isMatch);
-            desc = desc + "," videoDetail.getDescV2().stream().collect(Collectors.joining(","));
+            desc = desc + "," + videoDetail.getDescV2().stream().collect(Collectors.joining(","));
         }
         log.debug("视频:{}-{}的 简介：{}，匹配结果：{}",
                 videoDetail.getBvid(),
