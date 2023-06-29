@@ -9,6 +9,12 @@ public class AppConstant {
      * redis 存储cookie的key
      */
     public static final String COOKIES_KEY = PREFIX+"cookies";
+
+    /**
+     * accessKey
+     */
+    public static final String ACCESS_KEY = PREFIX+"access_key";
+
     /**
      * 关键词列表
      */
@@ -44,6 +50,18 @@ public class AppConstant {
      * 最大图片大小 3M
      */
     public static final int PIC_MAX_SIZE = 2097152;
+
+    /**
+     * android 粉 appkey
+     */
+    public static final String ANDROID_PINK_APPKEY = "1d8b6e7d45233436";
+    /**
+     * android 粉 appsec
+     */
+    public static final String ANDROID_PINK_APPSEC = "560c52ccd288fed045859ed18bffd973";
+
+
+
 
 
 

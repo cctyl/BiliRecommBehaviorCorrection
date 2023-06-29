@@ -2,11 +2,15 @@ package io.github.cctyl.api;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.entity.*;
+import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +22,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.HttpCookie;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -373,6 +376,70 @@ public class BiliApi {
     }
 
     /**
+     * 点踩
+     * curl -L -X POST 'https://app.biliapi.net/x/v2/view/dislike' \
+     *      -H 'Content-Type: application/x-www-form-urlencoded' \
+     *      --data-urlencode 'access_key=xxx' \
+     *      --data-urlencode 'aid=xxx' \
+     *      --data-urlencode 'dislike=0'
+     * @param aid
+     * @return
+     */
+    public JSONObject dislike(int aid){
+        String url ="https://app.biliapi.net/x/v2/view/dislike";
+        String body = commonPost(url, Map.of(
+                "aid", aid,
+                "access_key", getAccessKeyBySessData(),
+                "dislike", 0
+        )).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+        return jsonObject;
+    }
+
+    /**
+     * 通过sessData 获得 accessKey
+     * 目前来看不可用
+     * @return
+     */
+    @Deprecated
+    public String getAccessKeyBySessData(){
+        //如果缓存中存在，则直接返回
+        if (!StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))){
+            return (String) redisUtil.get(ACCESS_KEY);
+        }
+
+        String sign = DigestUtil.md5Hex("api=http://link.acg.tv/forum.php"+ANDROID_PINK_APPSEC);;
+        String url =
+                "https://passport.bilibili.com/login/app/third?appkey="
+                        +ANDROID_PINK_APPKEY+"&api=http://link.acg.tv/forum.php&sign="+sign;
+        String body = HttpRequest.get(url)
+                .header("SESSDATA", getSessData())
+                .header("DedeUserID", mid)
+                .execute()
+                .body();
+        JSONObject first = JSONObject.parseObject(body);
+        String confirmUri = first.getJSONObject("data").getString("confirm_uri");
+
+        HttpResponse redirect = HttpRequest.head(confirmUri)
+                .header("SESSDATA", getSessData())
+                .header("DedeUserID", mid)
+                .execute();
+
+        String location = redirect.header(Header.LOCATION);
+
+        String accessKey = DataUtil.getUrlQueryParam(location,"access_key");
+        log.info("获得的accessKey为：{}",accessKey);
+
+
+        redisUtil.set(ACCESS_KEY,accessKey);
+
+        return accessKey;
+    }
+
+
+    /**
      * 上报播放心跳
      * @param start_ts
      * @param aid
@@ -443,6 +510,15 @@ public class BiliApi {
      */
     public String getCsrf(){
        return cookieMap.getOrDefault("bili_jct","");
+    }
+
+
+    /**
+     * 获取SESSDATA
+     * @return
+     */
+    public String getSessData(){
+        return cookieMap.getOrDefault("SESSDATA","");
     }
 
     /**

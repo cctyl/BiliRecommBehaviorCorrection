@@ -54,6 +54,12 @@
             <artifactId>hutool-dfa</artifactId>
         </dependency>
 
+        <!-- crypto -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-crypto</artifactId>
+        </dependency>
+
         <!--缓存-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
