@@ -344,6 +344,34 @@ public class BiliApi {
         }
     }
 
+
+    /**
+     * 对视频进行点赞
+     * curl 'https://api.bilibili.com/x/web-interface/archive/like' \
+     *  --data-urlencode 'aid=79677524' \
+     *  --data-urlencode 'like=1' \
+     *  --data-urlencode 'csrf=xxx' \
+     *  -b 'SESSDATA=xxx'
+     * @param aid
+     * @return
+     */
+    public JSONObject thumpUp(int aid){
+        String url ="https://api.bilibili.com/x/web-interface/archive/like";
+        String body = commonPost(url, Map.of(
+                "aid", aid,
+                "like", 1,
+                "csrf", getCsrf()
+        )).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        if (jsonObject.getIntValue("code")==65006){
+            //已赞过
+            return jsonObject;
+        }
+        checkRespAndThrow(jsonObject,body);
+        return jsonObject;
+    }
+
     /**
      * 上报播放心跳
      * @param start_ts
@@ -400,7 +428,7 @@ public class BiliApi {
         paramMap.put("last_play_progress_time", last_play_progress_time);
         paramMap.put("max_play_progress_time", max_play_progress_time);
         paramMap.put("extra", "{\"player_version\":\"4.1.18\"}");
-        paramMap.put("csrf", cookieMap.get("bili_jct"));
+        paramMap.put("csrf", getCsrf());
 
 
         String body = commonPost(url,paramMap).body();
@@ -409,6 +437,13 @@ public class BiliApi {
         return jsonObject;
     }
 
+    /**
+     * 获取csrf
+     * @return
+     */
+    public String getCsrf(){
+       return cookieMap.getOrDefault("bili_jct","");
+    }
 
     /**
      * 完全替换cookie

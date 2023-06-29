@@ -138,8 +138,6 @@ public class BiliService {
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
         VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
-
-
         //1. 如果是黑名单内的，直接执行点踩操作
         if (
                 //1.1 标题是否触发黑名单关键词
@@ -296,8 +294,12 @@ public class BiliService {
      */
     public void playAndThumbUp(VideoDetail videoDetail ){
 
+        //模拟播放
         String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
         simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
+
+
+        //点赞
     }
 
 
