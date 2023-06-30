@@ -24,7 +24,11 @@ import java.io.Serializable;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -284,15 +288,16 @@ public class BiliApi {
      * 检查响应，如果响应是未登陆，则刷新accessKey并重试
      * 如果还是无法获取正确响应，则抛出异常
      *
-     * @param jsonObject
-     * @param supplier   重试的方法，需要返回一个响应
+     * @param supplier 重试的方法，需要返回一个响应
      */
-    public JSONObject checkRespAndRetry(JSONObject jsonObject, Supplier<JSONObject> supplier) {
+    public JSONObject checkRespAndRetry(Supplier<JSONObject> supplier) {
 
+        JSONObject jsonObject = supplier.get();
         if (checkIsNoLogin(jsonObject)) {
             //账号未登陆，强制刷新token，重新发起这次请求
             getAccessKeyByCookie(true);
             ThreadUtil.sleep(1);
+            //重试一次
             jsonObject = supplier.get();
             if (checkIsNoLogin(jsonObject)) {
                 throw new RuntimeException("刷新token后访问仍然失败，请检查日志");
@@ -432,21 +437,13 @@ public class BiliApi {
      */
     public JSONObject dislike(int aid) {
         String url = "https://app.biliapi.net/x/v2/view/dislike";
-        String body = commonPost(url, Map.of(
-                "aid", aid,
-                "access_key", getAccessKeyByCookie(false),
-                "dislike", 0
-        )).body();
 
-        JSONObject jsonObject = JSONObject.parseObject(body);
-        jsonObject = checkRespAndRetry(jsonObject, () ->
+        return checkRespAndRetry(() ->
                 JSONObject.parseObject(commonPost(url, Map.of(
                         "aid", aid,
                         "access_key", getAccessKeyByCookie(false),
                         "dislike", 0
                 )).body()));
-
-        return jsonObject;
     }
 
     /**
@@ -454,33 +451,19 @@ public class BiliApi {
      */
     public List<RecommendCard> getRecommendVideo() {
         String url = "https://app.bilibili.com/x/v2/feed/index";
-        String body = commonGet(url,
+        JSONObject jsonObject = checkRespAndRetry(() -> JSONObject.parseObject(commonGet(url,
                 Map.of(
                         "build", "1",
                         "mobi_app", "android",
                         "idx", getIdx(),
                         "appkey", THIRD_PART_APPKEY,
                         "access_key", getAccessKeyByCookie(false)
-                )).body();
-
-        JSONObject jsonObject = JSONObject.parseObject(body);
-        jsonObject = checkRespAndRetry(jsonObject, () -> JSONObject.parseObject(commonGet(url,
-                Map.of(
-                        "build", "1",
-                        "mobi_app", "android",
-                        "idx", getIdx(),
-                        "appkey",THIRD_PART_APPKEY,
-                        "access_key", getAccessKeyByCookie(false)
                 )).body()));
-
-        List<RecommendCard> recommendCardList = jsonObject
+        return jsonObject
                 .getJSONObject("data")
                 .getJSONArray("items")
                 .stream().map(o -> ((JSONObject) o).to(RecommendCard.class))
                 .collect(Collectors.toList());
-
-        return recommendCardList;
-
     }
 
 
@@ -495,7 +478,7 @@ public class BiliApi {
         if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))) {
             return (String) redisUtil.get(ACCESS_KEY);
         }
-        String url = "https://passport.bilibili.com/login/app/third?appkey="+THIRD_PART_APPKEY+"&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
+        String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
         String body = commonGet(url).body();
         JSONObject first = JSONObject.parseObject(body);
         if (first.getJSONObject("data").getIntValue("has_login") != 1) {
@@ -644,4 +627,56 @@ public class BiliApi {
 
         return data;
     }
+
+    /**
+     * 时间戳 秒
+     *
+     * @return
+     */
+    public static long getTs() {
+        return System.currentTimeMillis() / 1000;
+    }
+
+    /**
+     * 获取当前用户信息
+     */
+    public JSONObject getUserInfo() {
+        String url = "https://app.bilibili.com/x/v2/account/myinfo";
+        String body = commonGet(url,
+                getAppSign(
+                        Map.of(
+                                "access_key", getAccessKeyByCookie(false),
+                                "appkey", THIRD_PART_APPKEY,
+                                "ts", String.valueOf(getTs())
+                        )
+                )
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        return jsonObject;
+    }
+
+
+    public static Map<String, Object> getAppSign(Map<String, String> params) {
+        HashMap<String, Object> map = new HashMap<>(params);
+        // 为请求参数进行 APP 签名
+        map.put("appkey", THIRD_PART_APPKEY);
+        // 按照 key 重排参数
+        Map<String, String> sortedParams = new TreeMap<>(params);
+        // 序列化参数
+        StringBuilder queryBuilder = new StringBuilder();
+        for (Map.Entry<String, String> entry : sortedParams.entrySet()) {
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append('&');
+            }
+            queryBuilder
+                    .append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+                    .append('=')
+                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+        }
+        String sign = DataUtil.generateMD5(queryBuilder.toString() + THIRD_PART_APPSEC);
+        map.put("sign", sign);
+        return map;
+    }
+
+
 }

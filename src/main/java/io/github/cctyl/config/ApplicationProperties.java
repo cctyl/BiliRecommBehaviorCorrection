@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
+
 @ConfigurationProperties(prefix = "common")
 @Component
 @Data
@@ -18,11 +21,13 @@ public class ApplicationProperties {
      */
     private Boolean init;
 
-
-
     private Baidu baidu;
 
     private Ws ws;
+
+    private DefaultData defaultData;
+
+
 
     @Data
     @AllArgsConstructor
@@ -41,4 +46,18 @@ public class ApplicationProperties {
         private Boolean enable;
         private String url;
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DefaultData{
+        private String cookie;
+        private String mid;
+        private List<String> keyWord;
+        private List<String> blackUserId;
+        private List<String> blackKeyWord;
+        private List<String> blackTag;
+        private List<String> blackTid;
+    }
+
 }

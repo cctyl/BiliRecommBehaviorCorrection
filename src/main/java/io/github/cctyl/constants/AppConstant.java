@@ -62,8 +62,12 @@ public class AppConstant {
 
 
     /**
-     * 第三方登陆用到的key 27eb53fc9058f8c3
+     * 第三方登陆用到的key
      */
-    public static final String THIRD_PART_APPKEY = "1d8b6e7d45233436";
+    public static final String THIRD_PART_APPKEY = "27eb53fc9058f8c3";
+    /**
+     * 第三方登陆用到的secret
+     */
+    public static final String THIRD_PART_APPSEC = "c2ed53a74eeefe3cf99fbd01d8c9c375";
 
 }

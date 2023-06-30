@@ -1,6 +1,7 @@
 package io.github.cctyl.task;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.SearchResult;
 
@@ -74,8 +75,7 @@ public class BiliTask {
         //本次点踩视频列表
         var dislikeVideoList = new ArrayList<VideoDetail>();
 
-
-        //1.检查cookie
+        //0.1 检查cookie
         boolean cookieStatus = biliService.checkCookie();
         if (!cookieStatus){
             log.error("cookie过期，请更新cookie");
@@ -83,10 +83,19 @@ public class BiliTask {
             return;
         }
 
-        //2.更新一下必要的cookie
+        //0.2 检查accessKey
+        try {
+            JSONObject jsonObject = biliApi.checkRespAndRetry(() -> biliApi.getUserInfo());
+            log.info("accessKey验证通过,body={}",jsonObject.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("accessKey验证不通过，请检查");
+        }
+
+        //0.3 更新一下必要的cookie
         biliService.updateCookie();
 
-        //3.主动搜索，针对搜索视频进行处理
+        //1.主动搜索，针对搜索视频进行处理
         /*
             一个关键字获取几条？肯定是每个关键字都需要搜索遍历的
             根据关键词搜索后，不能按顺序点击，这是为了模拟用户真实操作
@@ -111,7 +120,7 @@ public class BiliTask {
         }
 
 
-        //4.对排行榜数据进行处理，处理100条，即5页数据
+        //2.对排行榜数据进行处理，处理100条，即5页数据 todo
 
     }
 }

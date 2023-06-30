@@ -2,6 +2,8 @@ package io.github.cctyl.utils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
@@ -62,5 +64,25 @@ public class DataUtil {
             throw new RuntimeException(e);
         }
 
+    }
+
+    /**
+     * 返回一个16进制字符串表示的md5值
+     * @param input
+     * @return
+     */
+    public static String generateMD5(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(input.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
