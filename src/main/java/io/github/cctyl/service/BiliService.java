@@ -80,7 +80,6 @@ public class BiliService {
     @PostConstruct
     public void init() {
 
-
         //2. 加载黑名单用户id列表
         blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
@@ -157,13 +156,14 @@ public class BiliService {
                 || //1.6 封面是否触发
                 isCoverMatch(videoDetail)
         ) {
-            //todo 点踩
+            //点踩
+            dislike(videoDetail.getAid());
 
             //加日志
             dislikeVideoList.add(videoDetail);
 
         }else if (isRank){
-            // 3. 不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
+            // 3. todo 不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
 
         }else {
 
@@ -176,6 +176,14 @@ public class BiliService {
             thumbUpVideoList.add(videoDetail);
         }
 
+    }
+
+    /**
+     * 给视频点踩
+     * @param aid
+     */
+    public void dislike(int aid) {
+        biliApi.dislike(aid);
     }
 
     /**
@@ -289,7 +297,7 @@ public class BiliService {
 
 
     /**
-     * 播放并点赞 todo 点赞未完成
+     * 播放并点赞
      * @param videoDetail
      */
     public void playAndThumbUp(VideoDetail videoDetail ){
@@ -298,8 +306,8 @@ public class BiliService {
         String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
         simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
 
-
         //点赞
+        biliApi.thumpUp(videoDetail.getAid());
     }
 
 

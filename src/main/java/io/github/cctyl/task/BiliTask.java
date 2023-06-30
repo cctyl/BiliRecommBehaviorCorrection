@@ -107,7 +107,6 @@ public class BiliTask {
             for (int i = 0; i < 2; i++) {
                 List<SearchResult> searchRaw = biliApi.search(keyword, i);
                 ThreadUtil.sleep(3);
-
                 //随机挑选的结果
                 DataUtil
                 .getRandom(10, 0, 20)
@@ -120,7 +119,7 @@ public class BiliTask {
         }
 
 
-        //2.对排行榜数据进行处理，处理100条，即5页数据 todo
+        //2. todo 对排行榜数据进行处理，处理100条，即5页数据
 
     }
 }
