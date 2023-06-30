@@ -444,6 +444,41 @@ public class BiliApi {
     }
 
     /**
+     * 获取推荐数据
+     */
+    public  List<RecommendCard>  getRecommendVideo(){
+        String url = "https://app.bilibili.com/x/v2/feed/index";
+        String body = commonGet(url,
+                Map.of(
+                        "build", "1",
+                        "mobi_app", "android",
+                        "idx", getIdx(),
+                        "appkey", "27eb53fc9058f8c3",
+                        "access_key", getAccessKeyByCookie(false)
+                )).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        jsonObject = checkRespAndRetry(jsonObject,() -> JSONObject.parseObject(commonGet(url,
+                Map.of(
+                        "build", "1",
+                        "mobi_app", "android",
+                        "idx", getIdx(),
+                        "appkey", "27eb53fc9058f8c3",
+                        "access_key", getAccessKeyByCookie(false)
+                )).body()));
+
+        List<RecommendCard> recommendCardList = jsonObject
+                .getJSONObject("data")
+                .getJSONArray("items")
+                .stream().map(o -> ((JSONObject) o).to(RecommendCard.class))
+                .collect(Collectors.toList());
+
+        return recommendCardList;
+
+    }
+
+
+    /**
      * 通过sessData 获得 accessKey
      * 目前来看不可用
      * @return
@@ -536,6 +571,15 @@ public class BiliApi {
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject,body);
         return jsonObject;
+    }
+
+
+    /**
+     * 参考 <a href="https://github.com/magicdawn/bilibili-app-recommend"> bilibili-app-recommend </a> 该项目的实现
+     * @return
+     */
+    public static String getIdx(){
+        return System.currentTimeMillis() / 1000 + "0" + String.format("%03d", new Random().nextInt(1000));
     }
 
     /**
