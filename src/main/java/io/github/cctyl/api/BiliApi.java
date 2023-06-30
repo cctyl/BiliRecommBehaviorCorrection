@@ -26,6 +26,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -266,6 +269,42 @@ public class BiliApi {
     }
 
     /**
+     * 判断是否是未登陆
+     * true 表示未登陆，false表示其他
+     * @param jsonObject
+     * @return
+     */
+    public boolean checkIsNoLogin(JSONObject jsonObject){
+        return jsonObject.getIntValue("code")==-101;
+    }
+    /**
+     * accessKey 接口专用
+     * 检查响应，如果响应是未登陆，则刷新accessKey并重试
+     * 如果还是无法获取正确响应，则抛出异常
+     * @param jsonObject
+     * @param supplier 重试的方法，需要返回一个响应
+     */
+    public JSONObject checkRespAndRetry(JSONObject jsonObject, Supplier<JSONObject> supplier){
+
+        if (checkIsNoLogin(jsonObject)){
+            //账号未登陆，强制刷新token，重新发起这次请求
+            getAccessKeyByCookie(true);
+            ThreadUtil.sleep(1);
+            jsonObject = supplier.get();
+            if (checkIsNoLogin(jsonObject)){
+                throw new RuntimeException("刷新token后访问仍然失败，请检查日志");
+            }
+        }
+
+        if (!checkResp(jsonObject)) {
+            log.error("响应异常，message={}", jsonObject.getString("message"));
+            log.error("body={}", jsonObject.toJSONString());
+            throw new RuntimeException("响应异常");
+        }
+        return jsonObject;
+    }
+
+    /**
      * 根据关键词进行综合搜索
      *
      * @param keyword
@@ -389,12 +428,18 @@ public class BiliApi {
         String url ="https://app.biliapi.net/x/v2/view/dislike";
         String body = commonPost(url, Map.of(
                 "aid", aid,
-                "access_key", getAccessKeyBySessData(),
+                "access_key", getAccessKeyByCookie(false),
                 "dislike", 0
         )).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        jsonObject = checkRespAndRetry(jsonObject, () ->
+                JSONObject.parseObject(commonPost(url, Map.of(
+                "aid", aid,
+                "access_key", getAccessKeyByCookie(false),
+                "dislike", 0
+        )).body()));
+
         return jsonObject;
     }
 
@@ -403,38 +448,27 @@ public class BiliApi {
      * 目前来看不可用
      * @return
      */
-    @Deprecated
-    public String getAccessKeyBySessData(){
+    public String getAccessKeyByCookie(boolean refresh){
         //如果缓存中存在，则直接返回
-        if (!StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))){
+        if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))){
             return (String) redisUtil.get(ACCESS_KEY);
         }
-
-        String sign = DigestUtil.md5Hex("api=http://link.acg.tv/forum.php"+ANDROID_PINK_APPSEC);;
-        String url =
-                "https://passport.bilibili.com/login/app/third?appkey="
-                        +ANDROID_PINK_APPKEY+"&api=http://link.acg.tv/forum.php&sign="+sign;
-        String body = HttpRequest.get(url)
-                .header("SESSDATA", getSessData())
-                .header("DedeUserID", mid)
-                .execute()
-                .body();
+        String url = "https://passport.bilibili.com/login/app/third?appkey=27eb53fc9058f8c3&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a"  ;
+        String body = commonGet(url).body();
         JSONObject first = JSONObject.parseObject(body);
+        if (first.getJSONObject("data").getIntValue("has_login")!=1){
+            log.error("未登陆bilibili，无法获取accessKey. body={}",body);
+            throw new RuntimeException("未登陆，无法获取accessKey");
+        }
         String confirmUri = first.getJSONObject("data").getString("confirm_uri");
-
         HttpResponse redirect = HttpRequest.head(confirmUri)
-                .header("SESSDATA", getSessData())
-                .header("DedeUserID", mid)
-                .execute();
-
+                                .header("User-Agent", BROWSER_UA_STR)
+                                .cookie(getCookieStr())
+                                .execute();
         String location = redirect.header(Header.LOCATION);
-
         String accessKey = DataUtil.getUrlQueryParam(location,"access_key");
         log.info("获得的accessKey为：{}",accessKey);
-
-
-        redisUtil.set(ACCESS_KEY,accessKey);
-
+        redisUtil.setEx(ACCESS_KEY,accessKey,29, TimeUnit.DAYS);
         return accessKey;
     }
 
