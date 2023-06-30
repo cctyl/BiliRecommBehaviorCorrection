@@ -114,8 +114,10 @@ public class BiliTask {
                 .forEach(searchResult -> {
                     //处理挑选结果
                     biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult,false);
+                    ThreadUtil.sleep(2);
                 });
             }
+            ThreadUtil.sleep(3);
         }
 
 

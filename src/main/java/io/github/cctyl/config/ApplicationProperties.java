@@ -58,6 +58,8 @@ public class ApplicationProperties {
         private List<String> blackKeyWord;
         private List<String> blackTag;
         private List<String> blackTid;
+        private List<String> whiteTid;
+        private List<String> whiteUserId;
     }
 
 }

@@ -64,9 +64,11 @@ public class Init implements ApplicationRunner {
         if (redisUtil.get(MID_KEY)==null){
             redisUtil.set(MID_KEY,defaultData.getMid());
         }
-
-
-
-
+        if (redisUtil.sMembers(WHITE_TID_KEY).size()==0){
+            redisUtil.sAdd(WHITE_TID_KEY,defaultData.getWhiteTid().toArray(new String[0]));
+        }
+        if (redisUtil.sMembers(WHITE_USER_ID_KEY).size()==0){
+            redisUtil.sAdd(WHITE_USER_ID_KEY,defaultData.getWhiteTid().toArray(new String[0]));
+        }
     }
 }

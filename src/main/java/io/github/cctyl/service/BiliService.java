@@ -36,9 +36,14 @@ public class BiliService {
 
 
     /**
-     * 黑名单id列表
+     * 黑名单up主 id列表
      */
     private Set<String> blackUserIdSet;
+
+    /**
+     * 白名单up主id列表
+     */
+    private Set<String> whiteUserIdSet;
 
     /**
      * 黑名单关键词列表
@@ -54,6 +59,22 @@ public class BiliService {
      * 黑名单分区id列表
      */
     private Set<String> blackTidSet;
+
+    /**
+     * 白名单关键词列表
+     */
+    private Set<String> whiteKeyword;
+
+    /**
+     * 黑名单关键词树
+     */
+    private WordTree whiteKeywordTree = new WordTree();
+
+
+    /**
+     * 白名单分区id列表
+     */
+    private Set<String> whiteTidSet;
 
     /**
      * 黑名单标签列表
@@ -93,6 +114,17 @@ public class BiliService {
         //5.黑名单标签列表
         blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
         blackTagTree.addWords(blackTagSet);
+
+
+        //6.白名单用户id
+        whiteUserIdSet = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        //7.白名单分区id
+        whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        //8. 白名单关键字数据
+        whiteKeyword = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        whiteKeywordTree.addWords(whiteKeyword);
 
     }
 
@@ -138,9 +170,61 @@ public class BiliService {
         VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
 
         //1. 如果是黑名单内的，直接执行点踩操作
-        if (
+        if ( blackMatch(videoDetail)) {
+            //点踩
+            dislike(videoDetail.getAid());
+
+            //加日志
+            dislikeVideoList.add(videoDetail);
+
+        }else if (isRank){
+            // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
+           if ( whiteMatch(videoDetail)){
+               //播放并点赞
+               playAndThumbUp(videoDetail);
+               //加日志
+               thumbUpVideoList.add(videoDetail);
+           }else {
+               log.info("视频：{}-{} 不属于黑名单也并非白名单",videoDetail.getBvid(),videoDetail.getTitle());
+           }
+
+        }else {
+            //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
+            //播放并点赞
+            playAndThumbUp(videoDetail);
+            //加日志
+            thumbUpVideoList.add(videoDetail);
+        }
+    }
+
+
+    /**
+     * 白名单判断
+     * @param videoDetail
+     * @return
+     */
+    public boolean whiteMatch(VideoDetail videoDetail){
+
+
+        return
+                //标题触发白名单
+                whiteKeywordTree.isMatch(videoDetail.getTitle())
+                ||
+                //up主id处于白名单
+                whiteUserIdSet.contains(videoDetail.getOwner().getMid())
+                ||
+                //分区id处于白名单
+                whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+    }
+
+    /**
+     * 黑名单判断
+     * @param videoDetail
+     * @return
+     */
+    public boolean blackMatch(VideoDetail videoDetail) {
                 //1.1 标题是否触发黑名单关键词
-                isTitleMatch(blackKeywordTree, videoDetail)
+        return isTitleMatch(blackKeywordTree, videoDetail)
                 ||
                 //1.2 简介是否触发黑名单关键词
                 isDescMatch(blackKeywordTree, videoDetail)
@@ -154,28 +238,7 @@ public class BiliService {
                 //1.5 分区是否触发
                 isTidMatch(blackTidSet, videoDetail)
                 || //1.6 封面是否触发
-                isCoverMatch(videoDetail)
-        ) {
-            //点踩
-            dislike(videoDetail.getAid());
-
-            //加日志
-            dislikeVideoList.add(videoDetail);
-
-        }else if (isRank){
-            // 3. todo 不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
-
-        }else {
-
-            //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
-
-            //播放并点赞
-            playAndThumbUp(videoDetail);
-
-            //加日志
-            thumbUpVideoList.add(videoDetail);
-        }
-
+                isCoverMatch(videoDetail);
     }
 
     /**
@@ -304,6 +367,7 @@ public class BiliService {
 
         //模拟播放
         String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
+        log.debug("模拟播放，获得的urk={}",url);
         simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
 
         //点赞

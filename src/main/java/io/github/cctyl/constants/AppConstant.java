@@ -26,6 +26,11 @@ public class AppConstant {
     public static final String BLACK_USER_ID_KEY = PREFIX+"black_user_ids";
 
     /**
+     *  白名单用户id集合
+     */
+    public static final String WHITE_USER_ID_KEY = PREFIX+"white_user_ids";
+
+    /**
      * 黑名单关键词-视频标题、简介 DFA算法过滤
      */
     public static final String BLACK_KEY_WORD_KEY = PREFIX+"black_keywords";
@@ -39,6 +44,11 @@ public class AppConstant {
      * 黑名单分区id集合
      */
     public static final String BLACK_TID_KEY = PREFIX+"black_tids";
+
+    /**
+     * 白名单分区id集合
+     */
+    public static final String WHITE_TID_KEY = PREFIX+"white_tids";
 
     /**
      * 黑名单分区id集合

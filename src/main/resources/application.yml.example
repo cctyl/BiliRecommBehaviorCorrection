@@ -50,3 +50,8 @@ common:
       - 252
       - 158
       - 159
+    # 白名单
+    whiteTid:
+      - xx
+    whiteUserId:
+      - xxx
