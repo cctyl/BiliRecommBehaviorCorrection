@@ -61,8 +61,9 @@ public class AppConstant {
     public static final String ANDROID_PINK_APPSEC = "560c52ccd288fed045859ed18bffd973";
 
 
-
-
-
+    /**
+     * 第三方登陆用到的key 27eb53fc9058f8c3
+     */
+    public static final String THIRD_PART_APPKEY = "1d8b6e7d45233436";
 
 }

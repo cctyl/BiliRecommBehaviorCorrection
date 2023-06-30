@@ -43,7 +43,6 @@ import static io.github.cctyl.constants.AppConstant.*;
 public class BiliApi {
 
 
-
     @Autowired
     private RedisUtil redisUtil;
 
@@ -73,15 +72,15 @@ public class BiliApi {
             cookiesFromRedis.keySet().forEach(o -> {
                 cookieMap.put((String) o, (String) cookiesFromRedis.get(o));
             });
-        }else {
+        } else {
             throw new RuntimeException("cookie为空");
         }
         mid = (String) redisUtil.get(MID_KEY);
-        if (mid==null){
+        if (mid == null) {
             throw new RuntimeException("mid 为空");
         }
 
-        if (cookieMap.get("bili_jct")==null){
+        if (cookieMap.get("bili_jct") == null) {
             throw new RuntimeException("csrf 为空");
         }
     }
@@ -106,6 +105,7 @@ public class BiliApi {
 
     /**
      * 封装通用Post
+     *
      * @param url
      * @param paramMap
      * @return
@@ -113,7 +113,7 @@ public class BiliApi {
     private HttpResponse commonPost(String url, Map<String, Object> paramMap) {
         HttpRequest request =
                 HttpRequest.post(url)
-                        .header("Content-Type","application/x-www-form-urlencoded")
+                        .header("Content-Type", "application/x-www-form-urlencoded")
                         .header("User-Agent", BROWSER_UA_STR)
                         .form(paramMap)
                         .cookie(getCookieStr());
@@ -122,8 +122,6 @@ public class BiliApi {
         updateCookie(response);
         return response;
     }
-
-
 
 
     /**
@@ -148,6 +146,7 @@ public class BiliApi {
 
     /**
      * 获取bilibili图片的byte数组
+     *
      * @param picUrl
      * @return
      */
@@ -158,20 +157,20 @@ public class BiliApi {
                 .executeAsync();
         InputStream inputStream = response.bodyStream();
         FastByteArrayOutputStream fastByteArrayOutputStream = new FastByteArrayOutputStream();
-        try(inputStream;fastByteArrayOutputStream) {
+        try (inputStream; fastByteArrayOutputStream) {
             byte[] buff = new byte[1024];
             int totalLength = 0;
             int len = 0;
-            while (  (len = inputStream.read(buff))!=-1){
-                fastByteArrayOutputStream.write(buff,0,len);
-                totalLength +=len;
-                if (totalLength>PIC_MAX_SIZE){
+            while ((len = inputStream.read(buff)) != -1) {
+                fastByteArrayOutputStream.write(buff, 0, len);
+                totalLength += len;
+                if (totalLength > PIC_MAX_SIZE) {
                     throw new RuntimeException("图片过大，不采用");
                 }
             }
             return fastByteArrayOutputStream.toByteArray();
         } catch (IOException e) {
-           throw e;
+            throw e;
         }
     }
 
@@ -191,7 +190,7 @@ public class BiliApi {
                         .getJSONObject("data")
                         .getJSONArray("list")
                         .stream()
-                        .map(o -> ((JSONObject) o).to(VideoDetail.class) )
+                        .map(o -> ((JSONObject) o).to(VideoDetail.class))
                         .collect(Collectors.toList());
         return videoInfoList;
     }
@@ -257,10 +256,11 @@ public class BiliApi {
 
     /**
      * 检查响应，如果响应不正确，则抛出异常
+     *
      * @param jsonObject
      * @param body
      */
-    public void checkRespAndThrow(JSONObject jsonObject,String body){
+    public void checkRespAndThrow(JSONObject jsonObject, String body) {
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
             log.error("body={}", body);
@@ -271,27 +271,30 @@ public class BiliApi {
     /**
      * 判断是否是未登陆
      * true 表示未登陆，false表示其他
+     *
      * @param jsonObject
      * @return
      */
-    public boolean checkIsNoLogin(JSONObject jsonObject){
-        return jsonObject.getIntValue("code")==-101;
+    public boolean checkIsNoLogin(JSONObject jsonObject) {
+        return jsonObject.getIntValue("code") == -101;
     }
+
     /**
      * accessKey 接口专用
      * 检查响应，如果响应是未登陆，则刷新accessKey并重试
      * 如果还是无法获取正确响应，则抛出异常
+     *
      * @param jsonObject
-     * @param supplier 重试的方法，需要返回一个响应
+     * @param supplier   重试的方法，需要返回一个响应
      */
-    public JSONObject checkRespAndRetry(JSONObject jsonObject, Supplier<JSONObject> supplier){
+    public JSONObject checkRespAndRetry(JSONObject jsonObject, Supplier<JSONObject> supplier) {
 
-        if (checkIsNoLogin(jsonObject)){
+        if (checkIsNoLogin(jsonObject)) {
             //账号未登陆，强制刷新token，重新发起这次请求
             getAccessKeyByCookie(true);
             ThreadUtil.sleep(1);
             jsonObject = supplier.get();
-            if (checkIsNoLogin(jsonObject)){
+            if (checkIsNoLogin(jsonObject)) {
                 throw new RuntimeException("刷新token后访问仍然失败，请检查日志");
             }
         }
@@ -320,7 +323,7 @@ public class BiliApi {
         );
         String body = commonGet(url, paramMap).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
 
         Object videoObj = jsonObject
                 .getJSONObject("data")
@@ -343,45 +346,46 @@ public class BiliApi {
 
     /**
      * 根据bvid获取视频详情
+     *
      * @param bvid
      */
     public VideoDetail getVideoDetail(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view";
         String body = commonGet(url, Map.of("bvid", bvid)).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
         return jsonObject.getJSONObject("data").to(VideoDetail.class);
     }
 
     /**
      * 获取视频的播放地址
      * curl -G 'https://api.bilibili.com/x/player/playurl' \
-     *     --data-urlencode 'bvid=BV1rp4y1e745' \
-     *     --data-urlencode 'cid=244954665' \
-     *     --data-urlencode 'qn=0' \
-     *     --data-urlencode 'fnval=80' \
-     *     --data-urlencode 'fnver=0' \
-     *     --data-urlencode 'fourk=1' \
-     *     -b 'SESSDATA=xxx'
+     * --data-urlencode 'bvid=BV1rp4y1e745' \
+     * --data-urlencode 'cid=244954665' \
+     * --data-urlencode 'qn=0' \
+     * --data-urlencode 'fnval=80' \
+     * --data-urlencode 'fnver=0' \
+     * --data-urlencode 'fourk=1' \
+     * -b 'SESSDATA=xxx'
      *
      * @param bvid
      * @param cid
      * @return
      */
-    public String getVideoUrl(String bvid,int cid) {
-        String url  = "https://api.bilibili.com/x/player/playurl";
+    public String getVideoUrl(String bvid, int cid) {
+        String url = "https://api.bilibili.com/x/player/playurl";
         String body = commonGet(url, Map.of(
                 "bvid", bvid,
                 "cid", cid,
                 "qn", 64
         )).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
         VideoUrl videoUrl = jsonObject.getJSONObject("data").to(VideoUrl.class);
-        if (CollUtil.isNotEmpty(videoUrl.getDurl()) ){
+        if (CollUtil.isNotEmpty(videoUrl.getDurl())) {
             return videoUrl.getDurl().get(0).getUrl();
-        }else {
-            log.error("body={}",body);
+        } else {
+            log.error("body={}", body);
             throw new RuntimeException("url 获取失败");
         }
     }
@@ -390,15 +394,16 @@ public class BiliApi {
     /**
      * 对视频进行点赞
      * curl 'https://api.bilibili.com/x/web-interface/archive/like' \
-     *  --data-urlencode 'aid=79677524' \
-     *  --data-urlencode 'like=1' \
-     *  --data-urlencode 'csrf=xxx' \
-     *  -b 'SESSDATA=xxx'
+     * --data-urlencode 'aid=79677524' \
+     * --data-urlencode 'like=1' \
+     * --data-urlencode 'csrf=xxx' \
+     * -b 'SESSDATA=xxx'
+     *
      * @param aid
      * @return
      */
-    public JSONObject thumpUp(int aid){
-        String url ="https://api.bilibili.com/x/web-interface/archive/like";
+    public JSONObject thumpUp(int aid) {
+        String url = "https://api.bilibili.com/x/web-interface/archive/like";
         String body = commonPost(url, Map.of(
                 "aid", aid,
                 "like", 1,
@@ -406,26 +411,27 @@ public class BiliApi {
         )).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
-        if (jsonObject.getIntValue("code")==65006){
+        if (jsonObject.getIntValue("code") == 65006) {
             //已赞过
             return jsonObject;
         }
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
         return jsonObject;
     }
 
     /**
      * 点踩
      * curl -L -X POST 'https://app.biliapi.net/x/v2/view/dislike' \
-     *      -H 'Content-Type: application/x-www-form-urlencoded' \
-     *      --data-urlencode 'access_key=xxx' \
-     *      --data-urlencode 'aid=xxx' \
-     *      --data-urlencode 'dislike=0'
+     * -H 'Content-Type: application/x-www-form-urlencoded' \
+     * --data-urlencode 'access_key=xxx' \
+     * --data-urlencode 'aid=xxx' \
+     * --data-urlencode 'dislike=0'
+     *
      * @param aid
      * @return
      */
-    public JSONObject dislike(int aid){
-        String url ="https://app.biliapi.net/x/v2/view/dislike";
+    public JSONObject dislike(int aid) {
+        String url = "https://app.biliapi.net/x/v2/view/dislike";
         String body = commonPost(url, Map.of(
                 "aid", aid,
                 "access_key", getAccessKeyByCookie(false),
@@ -435,10 +441,10 @@ public class BiliApi {
         JSONObject jsonObject = JSONObject.parseObject(body);
         jsonObject = checkRespAndRetry(jsonObject, () ->
                 JSONObject.parseObject(commonPost(url, Map.of(
-                "aid", aid,
-                "access_key", getAccessKeyByCookie(false),
-                "dislike", 0
-        )).body()));
+                        "aid", aid,
+                        "access_key", getAccessKeyByCookie(false),
+                        "dislike", 0
+                )).body()));
 
         return jsonObject;
     }
@@ -446,24 +452,24 @@ public class BiliApi {
     /**
      * 获取推荐数据
      */
-    public  List<RecommendCard>  getRecommendVideo(){
+    public List<RecommendCard> getRecommendVideo() {
         String url = "https://app.bilibili.com/x/v2/feed/index";
         String body = commonGet(url,
                 Map.of(
                         "build", "1",
                         "mobi_app", "android",
                         "idx", getIdx(),
-                        "appkey", "27eb53fc9058f8c3",
+                        "appkey", THIRD_PART_APPKEY,
                         "access_key", getAccessKeyByCookie(false)
                 )).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
-        jsonObject = checkRespAndRetry(jsonObject,() -> JSONObject.parseObject(commonGet(url,
+        jsonObject = checkRespAndRetry(jsonObject, () -> JSONObject.parseObject(commonGet(url,
                 Map.of(
                         "build", "1",
                         "mobi_app", "android",
                         "idx", getIdx(),
-                        "appkey", "27eb53fc9058f8c3",
+                        "appkey",THIRD_PART_APPKEY,
                         "access_key", getAccessKeyByCookie(false)
                 )).body()));
 
@@ -481,47 +487,48 @@ public class BiliApi {
     /**
      * 通过sessData 获得 accessKey
      * 目前来看不可用
+     *
      * @return
      */
-    public String getAccessKeyByCookie(boolean refresh){
+    public String getAccessKeyByCookie(boolean refresh) {
         //如果缓存中存在，则直接返回
-        if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))){
+        if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))) {
             return (String) redisUtil.get(ACCESS_KEY);
         }
-        String url = "https://passport.bilibili.com/login/app/third?appkey=27eb53fc9058f8c3&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a"  ;
+        String url = "https://passport.bilibili.com/login/app/third?appkey="+THIRD_PART_APPKEY+"&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
         String body = commonGet(url).body();
         JSONObject first = JSONObject.parseObject(body);
-        if (first.getJSONObject("data").getIntValue("has_login")!=1){
-            log.error("未登陆bilibili，无法获取accessKey. body={}",body);
+        if (first.getJSONObject("data").getIntValue("has_login") != 1) {
+            log.error("未登陆bilibili，无法获取accessKey. body={}", body);
             throw new RuntimeException("未登陆，无法获取accessKey");
         }
         String confirmUri = first.getJSONObject("data").getString("confirm_uri");
         HttpResponse redirect = HttpRequest.head(confirmUri)
-                                .header("User-Agent", BROWSER_UA_STR)
-                                .cookie(getCookieStr())
-                                .execute();
+                .header("User-Agent", BROWSER_UA_STR)
+                .cookie(getCookieStr())
+                .execute();
         String location = redirect.header(Header.LOCATION);
-        String accessKey = DataUtil.getUrlQueryParam(location,"access_key");
-        log.info("获得的accessKey为：{}",accessKey);
-        redisUtil.setEx(ACCESS_KEY,accessKey,29, TimeUnit.DAYS);
+        String accessKey = DataUtil.getUrlQueryParam(location, "access_key");
+        log.info("获得的accessKey为：{}", accessKey);
+        redisUtil.setEx(ACCESS_KEY, accessKey, 29, TimeUnit.DAYS);
         return accessKey;
     }
 
 
     /**
      * 上报播放心跳
+     *
      * @param start_ts
      * @param aid
      * @param cid
-     * @param type 视频类型，通常都是3
+     * @param type                    视频类型，通常都是3
      * @param sub_type
      * @param dt
      * @param realtime
-     * @param play_type
-     *          0：播放中
-     *          1：开始播放
-     *          2：暂停
-     *          3：继续播放
+     * @param play_type               0：播放中
+     *                                1：开始播放
+     *                                2：暂停
+     *                                3：继续播放
      * @param played_time
      * @param real_played_time
      * @param video_duration
@@ -567,40 +574,44 @@ public class BiliApi {
         paramMap.put("csrf", getCsrf());
 
 
-        String body = commonPost(url,paramMap).body();
+        String body = commonPost(url, paramMap).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
         return jsonObject;
     }
 
 
     /**
      * 参考 <a href="https://github.com/magicdawn/bilibili-app-recommend"> bilibili-app-recommend </a> 该项目的实现
+     *
      * @return
      */
-    public static String getIdx(){
+    public static String getIdx() {
         return System.currentTimeMillis() / 1000 + "0" + String.format("%03d", new Random().nextInt(1000));
     }
 
     /**
      * 获取csrf
+     *
      * @return
      */
-    public String getCsrf(){
-       return cookieMap.getOrDefault("bili_jct","");
+    public String getCsrf() {
+        return cookieMap.getOrDefault("bili_jct", "");
     }
 
 
     /**
      * 获取SESSDATA
+     *
      * @return
      */
-    public String getSessData(){
-        return cookieMap.getOrDefault("SESSDATA","");
+    public String getSessData() {
+        return cookieMap.getOrDefault("SESSDATA", "");
     }
 
     /**
      * 完全替换cookie
+     *
      * @param cookieStr
      */
     public void replaceCookie(String cookieStr) {
@@ -618,6 +629,7 @@ public class BiliApi {
 
     /**
      * 获取视频tag
+     *
      * @param aid
      */
     public List<Tag> getVideoTag(int aid) {
@@ -625,7 +637,7 @@ public class BiliApi {
         String url = "https://api.bilibili.com/x/tag/archive/tags";
         String body = commonGet(url, Map.of("aid", aid)).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
 
         List<Tag> data = jsonObject.getJSONArray("data").stream().map(o -> ((JSONObject) o).to(Tag.class))
                 .collect(Collectors.toList());
