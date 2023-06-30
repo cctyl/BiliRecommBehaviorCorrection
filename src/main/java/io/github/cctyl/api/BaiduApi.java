@@ -4,10 +4,13 @@ package io.github.cctyl.api;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
+import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.entity.BaiduImageClassify;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -23,18 +26,16 @@ import java.util.Map;
 /**
  * 百度相关api
  */
-@ConditionalOnExpression("'${api.service}'.contains('baidu')")
+@ConditionalOnExpression("${common.baidu.enable}==true")
 @Component
 @Slf4j
 public class BaiduApi {
 
 
-    @Value("${baidu.clientId}")
-    private String apiKey;
 
 
-    @Value("${baidu.clientSecret}")
-    private String secretKey;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     /**
      * 人体检测和属性识别
@@ -78,8 +79,8 @@ public class BaiduApi {
                 .header("Accept", "application/json")
                 .form(Map.of(
                         "grant_type","client_credentials",
-                        "client_id",apiKey,
-                        "client_secret",secretKey
+                        "client_id",applicationProperties.getBaidu().getClientId(),
+                        "client_secret",applicationProperties.getBaidu().getClientSecret()
 
                 ))
                 .execute()

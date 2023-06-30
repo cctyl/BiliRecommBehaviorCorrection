@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 百度人体分析api
  */
-@ConditionalOnExpression("'${api.service}'.contains('baidu')")
+@ConditionalOnExpression("${common.baidu.enable}==true")
 @Service
 @Slf4j
 public class BaiduHumanRecognitionService implements ImageGenderDetectService {
