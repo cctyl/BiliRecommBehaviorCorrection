@@ -49,7 +49,6 @@ public class InitFromRedis implements ApplicationRunner {
         //1. 加载关键字数据
         GlobalVariables.keywordSet = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
-
         //2. 加载黑名单用户id列表
         GlobalVariables.blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
@@ -64,7 +63,6 @@ public class InitFromRedis implements ApplicationRunner {
         GlobalVariables.blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
         GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
 
-
         //6.白名单用户id
         GlobalVariables.whiteUserIdSet = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
@@ -74,7 +72,6 @@ public class InitFromRedis implements ApplicationRunner {
         //8. 白名单关键字数据
         GlobalVariables.whiteKeyword = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
         GlobalVariables.whiteKeywordTree.addWords(GlobalVariables.whiteKeyword);
-
 
     }
 }

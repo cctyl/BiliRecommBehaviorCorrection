@@ -320,11 +320,11 @@ public class BiliApi {
     /**
      * 根据bvid获取视频详情
      *
-     * @param bvid
+     * @param avid
      */
-    public VideoDetail getVideoDetail(String bvid) {
+    public VideoDetail getVideoDetail(long avid) {
         String url = "https://api.bilibili.com/x/web-interface/view";
-        String body = commonGet(url, Map.of("bvid", bvid)).body();
+        String body = commonGet(url, Map.of("aid", avid)).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
         return jsonObject.getJSONObject("data").to(VideoDetail.class);

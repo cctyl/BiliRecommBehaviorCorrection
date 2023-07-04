@@ -78,12 +78,12 @@ public class BiliService {
      */
     public void handleVideo(List<VideoDetail> thumbUpVideoList,
                             List<VideoDetail> dislikeVideoList,
-                            String bvid,
+                            int avid,
                             boolean isRank
     ) {
 
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
-        VideoDetail videoDetail = biliApi.getVideoDetail(bvid);
+        VideoDetail videoDetail = biliApi.getVideoDetail(avid);
 
         //1. 如果是黑名单内的，直接执行点踩操作
         if (blackMatch(videoDetail)) {

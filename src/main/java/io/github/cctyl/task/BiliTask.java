@@ -103,7 +103,7 @@ public class BiliTask {
                 //随机挑选10个
                 DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
-                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getBvid(), false);
+                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid(), false);
                     ThreadUtil.sleep(2);
                 });
 
@@ -121,7 +121,7 @@ public class BiliTask {
                 biliService.handleVideo(
                         thumbUpVideoList,
                         dislikeVideoList,
-                        videoDetail.getBvid(),
+                        videoDetail.getAid(),
                         false);
                 ThreadUtil.sleep(2);
             });
@@ -131,20 +131,23 @@ public class BiliTask {
 
 
         //3. 对推荐视频进行处理
-//        for (int i = 0; i < 5; i++) {
-//            List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
-//            DataUtil.randomAccessList(recommendVideo,10,recommendCard -> {
-//                //处理挑选结果
-//                biliService.handleVideo(
-//                        thumbUpVideoList,
-//                        dislikeVideoList,
-//                        recommendCard.getb,
-//                        false);
-//                ThreadUtil.sleep(2);
-//            });
-//
-//            ThreadUtil.sleep(3);
-//        }
+        for (int i = 0; i < 5; i++) {
+            List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
+            DataUtil.randomAccessList(recommendVideo,10,recommendCard -> {
+                if ("av".equals( recommendCard.getCardGoto())){
+                    //处理挑选结果
+                    biliService.handleVideo(
+                            thumbUpVideoList,
+                            dislikeVideoList,
+                            recommendCard.getArgs().getAid(),
+                            false);
+                    ThreadUtil.sleep(2);
+                }
+
+            });
+
+            ThreadUtil.sleep(3);
+        }
 
 
     }
