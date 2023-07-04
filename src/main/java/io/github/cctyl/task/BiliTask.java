@@ -52,11 +52,8 @@ public class BiliTask {
     @Qualifier("vchat")
     private WebSocketClient vchatCliet;
 
-    /**
-     * bilibili 推荐纠正任务
-     */
-//    @Scheduled(cron = "*/4 * * * * *")
-    public void recommonTask() {
+    @Scheduled(cron = "0 9 * * *")
+    public void recommonTaskBack() {
         //0.初始化部分
         //本次点赞视频列表
         var thumbUpVideoList = new ArrayList<VideoDetail>();
@@ -122,7 +119,7 @@ public class BiliTask {
                         thumbUpVideoList,
                         dislikeVideoList,
                         videoDetail.getAid(),
-                        false);
+                        true);
                 ThreadUtil.sleep(2);
             });
 
@@ -133,14 +130,14 @@ public class BiliTask {
         //3. 对推荐视频进行处理
         for (int i = 0; i < 5; i++) {
             List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
-            DataUtil.randomAccessList(recommendVideo,10,recommendCard -> {
-                if ("av".equals( recommendCard.getCardGoto())){
+            DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
+                if ("av".equals(recommendCard.getCardGoto())) {
                     //处理挑选结果
                     biliService.handleVideo(
                             thumbUpVideoList,
                             dislikeVideoList,
                             recommendCard.getArgs().getAid(),
-                            false);
+                            true);
                     ThreadUtil.sleep(2);
                 }
 

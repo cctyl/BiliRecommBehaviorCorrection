@@ -73,13 +73,13 @@ public class BiliService {
      *
      * @param thumbUpVideoList
      * @param dislikeVideoList
-     * @param bvid
-     * @param isRank           如果是搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
+     * @param avid
+     * @param notKeyWord  如果是关键词搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
      */
     public void handleVideo(List<VideoDetail> thumbUpVideoList,
                             List<VideoDetail> dislikeVideoList,
                             int avid,
-                            boolean isRank
+                            boolean notKeyWord
     ) {
 
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
@@ -93,7 +93,7 @@ public class BiliService {
             //加日志
             dislikeVideoList.add(videoDetail);
 
-        } else if (isRank) {
+        } else if (notKeyWord) {
             // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
             if (whiteMatch(videoDetail)) {
                 //播放并点赞
@@ -310,6 +310,10 @@ public class BiliService {
 
 
         long start_ts = System.currentTimeMillis() / 1000;
+
+        //todo 清除此处debug
+        videoDuration = 15;
+
         //0.初始播放
         biliApi.reportHeartBeat(
                 start_ts,
