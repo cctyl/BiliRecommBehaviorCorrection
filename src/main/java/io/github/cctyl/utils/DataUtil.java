@@ -4,10 +4,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class DataUtil {
 
@@ -31,6 +30,26 @@ public class DataUtil {
         }
 
         return numSet;
+    }
+
+    /**
+     * 随机访问List中的元素
+     * @param source 源数据
+     * @param size 需要抽取多少个元素
+     * @param consumer
+     * @param <T>
+     */
+    public static <T> void randomAccessList(final List<T> source,
+                                            int size,
+                                            Consumer<T> consumer
+    ) {
+        if (size>=source.size()){
+            size = source.size()-1;
+        }
+        DataUtil
+                .getRandom(size, 0, size)
+                .stream().map(source::get)
+                .forEach(consumer);
     }
 
     /**

@@ -1,4 +1,4 @@
-package io.github.cctyl;
+package io.github.cctyl.initialization;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSONObject;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -18,7 +19,8 @@ import static io.github.cctyl.constants.AppConstant.*;
 @Slf4j
 @Component
 @ConditionalOnExpression("${common.init}==true")
-public class Init implements ApplicationRunner {
+@Order(0)
+public class InitFromConfig implements ApplicationRunner {
 
     @Autowired
     private RedisUtil redisUtil;
@@ -39,7 +41,7 @@ public class Init implements ApplicationRunner {
         ApplicationProperties.DefaultData defaultData = applicationProperties.getDefaultData();
         //1.如果redis中没有cookie，从配置文件中读取Cookie
         if (StrUtil.isBlankIfStr(redisUtil.get(COOKIES_KEY)) ){
-            if (StrUtil.isNotEmpty(defaultData.getCookie())){
+            if (StrUtil.isEmpty(defaultData.getCookie())){
                 throw new RuntimeException("未配置初始化cookie！");
             }
             biliApi.replaceCookie(defaultData.getCookie());

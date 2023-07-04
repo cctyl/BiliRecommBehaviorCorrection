@@ -9,12 +9,14 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -44,50 +46,13 @@ import static io.github.cctyl.constants.AppConstant.*;
  */
 @Component
 @Slf4j
+@Order(1)
 public class BiliApi {
 
 
     @Autowired
     private RedisUtil redisUtil;
 
-    /**
-     * 浏览器端的userAgent
-     */
-    private static final String BROWSER_UA_STR = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0";
-
-    /**
-     * cookie
-     */
-    private Map<String, String> cookieMap = new HashMap<>(10);
-
-    /**
-     * 播放者用户id
-     */
-    private String mid;
-
-    /**
-     * 初始化
-     */
-    @PostConstruct
-    public void init() {
-        //0.加载cookie
-        Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
-        if (CollUtil.isNotEmpty(cookiesFromRedis)) {
-            cookiesFromRedis.keySet().forEach(o -> {
-                cookieMap.put((String) o, (String) cookiesFromRedis.get(o));
-            });
-        } else {
-            throw new RuntimeException("cookie为空");
-        }
-        mid = (String) redisUtil.get(MID_KEY);
-        if (mid == null) {
-            throw new RuntimeException("mid 为空");
-        }
-
-        if (cookieMap.get("bili_jct") == null) {
-            throw new RuntimeException("csrf 为空");
-        }
-    }
 
     /**
      * 封装通用的get
@@ -180,9 +145,12 @@ public class BiliApi {
 
     /**
      * 获取热门排行榜数据（非首页推荐）
+     * curl -G 'https://api.bilibili.com/x/web-interface/popular' \
+     * --data-urlencode 'ps=20' \
+     * --data-urlencode 'pn=1'
      *
      * @param pageNum  页码，1开始
-     * @param pageSize 每页记录数，页数
+     * @param pageSize 每页记录数，页数 默认20
      */
     public List<VideoDetail> getHotRankVideo(int pageNum, int pageSize) {
         String url = "https://api.bilibili.com/x/web-interface/popular?pn=" + pageNum + "&ps=" + pageSize;
@@ -217,7 +185,7 @@ public class BiliApi {
      * @return
      */
     public String getCookieStr() {
-        return cookieMap.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
+        return GlobalVariables.cookieMap.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
     }
 
@@ -236,11 +204,11 @@ public class BiliApi {
         List<HttpCookie> cookies = response.getCookies();
         for (HttpCookie cookie : cookies) {
             String name = cookie.getName();
-            cookieMap.put(name, cookie.getValue());
+            GlobalVariables.cookieMap.put(name, cookie.getValue());
         }
 
         //缓存
-        redisUtil.hPutAll(COOKIES_KEY, cookieMap);
+        redisUtil.hPutAll(COOKIES_KEY, GlobalVariables.cookieMap);
     }
 
     /**
@@ -539,7 +507,7 @@ public class BiliApi {
 
         paramMap.put("start_ts", start_ts);
         //播放视频的用户id
-        paramMap.put("mid", mid);
+        paramMap.put("mid", GlobalVariables.mid);
         paramMap.put("aid", aid);
         paramMap.put("cid", cid);
         paramMap.put("type", type);
@@ -579,7 +547,7 @@ public class BiliApi {
      * @return
      */
     public String getCsrf() {
-        return cookieMap.getOrDefault("bili_jct", "");
+        return GlobalVariables.cookieMap.getOrDefault("bili_jct", "");
     }
 
 
@@ -589,7 +557,7 @@ public class BiliApi {
      * @return
      */
     public String getSessData() {
-        return cookieMap.getOrDefault("SESSDATA", "");
+        return GlobalVariables.cookieMap.getOrDefault("SESSDATA", "");
     }
 
     /**
@@ -605,7 +573,7 @@ public class BiliApi {
             String[] split = cookie.split("=");
             map.put(split[0].trim(), split[1].trim());
         }
-        this.cookieMap = map;
+        GlobalVariables.cookieMap = map;
         //缓存
         redisUtil.hPutAll(COOKIES_KEY, map);
     }

@@ -80,4 +80,9 @@ public class AppConstant {
      */
     public static final String THIRD_PART_APPSEC = "c2ed53a74eeefe3cf99fbd01d8c9c375";
 
+    /**
+     * 浏览器端的userAgent
+     */
+    public static  final String BROWSER_UA_STR = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0";
+
 }

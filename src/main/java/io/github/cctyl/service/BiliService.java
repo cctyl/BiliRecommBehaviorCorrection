@@ -5,6 +5,7 @@ import cn.hutool.dfa.WordTree;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.SearchResult;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
@@ -33,59 +34,6 @@ import static io.github.cctyl.constants.AppConstant.*;
 public class BiliService {
 
 
-
-
-    /**
-     * 黑名单up主 id列表
-     */
-    private Set<String> blackUserIdSet;
-
-    /**
-     * 白名单up主id列表
-     */
-    private Set<String> whiteUserIdSet;
-
-    /**
-     * 黑名单关键词列表
-     */
-    private Set<String> blackKeywordSet;
-
-    /**
-     * 黑名单关键词树
-     */
-    private WordTree blackKeywordTree = new WordTree();
-
-    /**
-     * 黑名单分区id列表
-     */
-    private Set<String> blackTidSet;
-
-    /**
-     * 白名单关键词列表
-     */
-    private Set<String> whiteKeyword;
-
-    /**
-     * 黑名单关键词树
-     */
-    private WordTree whiteKeywordTree = new WordTree();
-
-
-    /**
-     * 白名单分区id列表
-     */
-    private Set<String> whiteTidSet;
-
-    /**
-     * 黑名单标签列表
-     */
-    private Set<String> blackTagSet;
-
-    /**
-     * 黑名单标签树
-     */
-    private WordTree blackTagTree = new WordTree();
-
     @Autowired
     private ImageGenderDetectService imageGenderDetectService;
 
@@ -95,38 +43,6 @@ public class BiliService {
     @Autowired
     private RedisUtil redisUtil;
 
-    /**
-     * 初始化
-     */
-    @PostConstruct
-    public void init() {
-
-        //2. 加载黑名单用户id列表
-        blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        //3. 加载黑名单关键词列表
-        blackKeywordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        blackKeywordTree.addWords(blackKeywordSet);
-
-        //4. 加载黑名单分区id列表
-        blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        //5.黑名单标签列表
-        blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        blackTagTree.addWords(blackTagSet);
-
-
-        //6.白名单用户id
-        whiteUserIdSet = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        //7.白名单分区id
-        whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        //8. 白名单关键字数据
-        whiteKeyword = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        whiteKeywordTree.addWords(whiteKeyword);
-
-    }
 
     /**
      * 检查cookie状态
@@ -157,38 +73,38 @@ public class BiliService {
      *
      * @param thumbUpVideoList
      * @param dislikeVideoList
-     * @param searchResult
-     * @param isRank 如果是搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
+     * @param bvid
+     * @param isRank           如果是搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
      */
     public void handleVideo(List<VideoDetail> thumbUpVideoList,
                             List<VideoDetail> dislikeVideoList,
-                            SearchResult searchResult,
+                            String bvid,
                             boolean isRank
-                            ) {
+    ) {
 
         //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
-        VideoDetail videoDetail = biliApi.getVideoDetail(searchResult.getBvid());
+        VideoDetail videoDetail = biliApi.getVideoDetail(bvid);
 
         //1. 如果是黑名单内的，直接执行点踩操作
-        if ( blackMatch(videoDetail)) {
+        if (blackMatch(videoDetail)) {
             //点踩
             dislike(videoDetail.getAid());
 
             //加日志
             dislikeVideoList.add(videoDetail);
 
-        }else if (isRank){
+        } else if (isRank) {
             // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
-           if ( whiteMatch(videoDetail)){
-               //播放并点赞
-               playAndThumbUp(videoDetail);
-               //加日志
-               thumbUpVideoList.add(videoDetail);
-           }else {
-               log.info("视频：{}-{} 不属于黑名单也并非白名单",videoDetail.getBvid(),videoDetail.getTitle());
-           }
+            if (whiteMatch(videoDetail)) {
+                //播放并点赞
+                playAndThumbUp(videoDetail);
+                //加日志
+                thumbUpVideoList.add(videoDetail);
+            } else {
+                log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
+            }
 
-        }else {
+        } else {
             //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
             //播放并点赞
             playAndThumbUp(videoDetail);
@@ -200,49 +116,52 @@ public class BiliService {
 
     /**
      * 白名单判断
+     *
      * @param videoDetail
      * @return
      */
-    public boolean whiteMatch(VideoDetail videoDetail){
+    public boolean whiteMatch(VideoDetail videoDetail) {
 
 
         return
                 //标题触发白名单
-                whiteKeywordTree.isMatch(videoDetail.getTitle())
-                ||
-                //up主id处于白名单
-                whiteUserIdSet.contains(videoDetail.getOwner().getMid())
-                ||
-                //分区id处于白名单
-                whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+                GlobalVariables.whiteKeywordTree.isMatch(videoDetail.getTitle())
+                        ||
+                        //up主id处于白名单
+                        GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
+                        ||
+                        //分区id处于白名单
+                        GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
     }
 
     /**
      * 黑名单判断
+     *
      * @param videoDetail
      * @return
      */
     public boolean blackMatch(VideoDetail videoDetail) {
-                //1.1 标题是否触发黑名单关键词
-        return isTitleMatch(blackKeywordTree, videoDetail)
+        //1.1 标题是否触发黑名单关键词
+        return isTitleMatch(GlobalVariables.blackKeywordTree, videoDetail)
                 ||
                 //1.2 简介是否触发黑名单关键词
-                isDescMatch(blackKeywordTree, videoDetail)
+                isDescMatch(GlobalVariables.blackKeywordTree, videoDetail)
                 ||
                 //1.3 标签是否触发关键词,需要先获取标签
                 isTagMatch(videoDetail)
                 ||
                 //1.4 up主id是否在黑名单内
-                isMidMatch(blackUserIdSet, videoDetail)
+                isMidMatch(GlobalVariables.blackUserIdSet, videoDetail)
                 ||
                 //1.5 分区是否触发
-                isTidMatch(blackTidSet, videoDetail)
+                isTidMatch(GlobalVariables.blackTidSet, videoDetail)
                 || //1.6 封面是否触发
                 isCoverMatch(videoDetail);
     }
 
     /**
      * 给视频点踩
+     *
      * @param aid
      */
     public void dislike(int aid) {
@@ -251,6 +170,7 @@ public class BiliService {
 
     /**
      * 封面是否匹配
+     *
      * @param videoDetail
      * @return
      */
@@ -258,8 +178,8 @@ public class BiliService {
         try {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
             int gender = imageGenderDetectService.getGender(picByte);
-            log.debug("视频:{}-{}的封面：{}，匹配结果：{}",videoDetail.getBvid(),videoDetail.getTitle(),videoDetail.getPic(),gender);
-            return gender==2;
+            log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), gender);
+            return gender == 2;
         } catch (IOException e) {
             log.error("获取图片字节码出错：{}", e.getMessage());
             e.printStackTrace();
@@ -269,18 +189,20 @@ public class BiliService {
 
     /**
      * 标题匹配
+     *
      * @param blackKeywordTree
      * @param videoDetail
      * @return
      */
     private boolean isTitleMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
         boolean match = blackKeywordTree.isMatch(videoDetail.getTitle());
-        log.debug("视频:{}-{}的标题：{}，匹配结果：{}",videoDetail.getBvid(),videoDetail.getTitle(),videoDetail.getTitle(),match);
+        log.debug("视频:{}-{}的标题：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getTitle(), match);
         return match;
     }
 
     /**
      * 简介匹配
+     *
      * @param blackKeywordTree
      * @param videoDetail
      * @return
@@ -302,6 +224,7 @@ public class BiliService {
 
     /**
      * 分区id匹配
+     *
      * @param blackTidSet
      * @param videoDetail
      * @return
@@ -319,6 +242,7 @@ public class BiliService {
 
     /**
      * up主id匹配
+     *
      * @param blackUserIdSet
      * @param videoDetail
      * @return
@@ -337,6 +261,7 @@ public class BiliService {
 
     /**
      * 标签匹配
+     *
      * @param videoDetail
      * @return
      */
@@ -347,7 +272,7 @@ public class BiliService {
 
         boolean match = videoDetail.getTagList()
                 .stream().map(Tag::getTagName)
-                .anyMatch(s -> blackTagTree.isMatch(s));
+                .anyMatch(s -> GlobalVariables.blackTagTree.isMatch(s));
 
         log.debug("视频:{}-{}的 tag：{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -361,14 +286,16 @@ public class BiliService {
 
     /**
      * 播放并点赞
+     *
      * @param videoDetail
      */
-    public void playAndThumbUp(VideoDetail videoDetail ){
+    public void playAndThumbUp(VideoDetail videoDetail) {
 
         //模拟播放
         String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
-        log.debug("模拟播放，获得的urk={}",url);
-        simulatePlay(videoDetail.getAid(),videoDetail.getCid(),videoDetail.getDuration());
+        log.debug("模拟播放，获得的urk={}", url);
+        ThreadUtil.sleep(1);
+        simulatePlay(videoDetail.getAid(), videoDetail.getCid(), videoDetail.getDuration());
 
         //点赞
         biliApi.thumpUp(videoDetail.getAid());
@@ -400,8 +327,8 @@ public class BiliService {
                 0
         );
 
-        if (videoDuration<=15 ){
-            if ( videoDuration>=7){
+        if (videoDuration <= 15) {
+            if (videoDuration >= 7) {
                 //时间太短的，则播完
                 biliApi.reportHeartBeat(
                         start_ts,
@@ -410,42 +337,42 @@ public class BiliService {
                         3,
                         0,
                         2,
-                        videoDuration-2,
+                        videoDuration - 2,
                         1,
                         videoDuration,
                         videoDuration,
                         videoDuration,
-                        videoDuration-1,
-                        videoDuration-1
+                        videoDuration - 1,
+                        videoDuration - 1
                 );
-            }else {
+            } else {
                 //7秒以下，不播
-                log.error("视频 avid={} 时间={}，时长过短，不播放",aid,videoDuration);
+                log.error("视频 avid={} 时间={}，时长过短，不播放", aid, videoDuration);
             }
 
         }
         //本次预计要播放多少秒
         int playTime = DataUtil.getRandom(0, videoDuration);
-        if (playTime<=15){
-            if (playTime+15 <videoDuration){
-                playTime = playTime+15;
-            }else {
+        if (playTime <= 15) {
+            if (playTime + 15 < videoDuration) {
+                playTime = playTime + 15;
+            } else {
                 playTime = videoDuration;
             }
         }
 
         //playTime 不能太长
-        if (playTime>=300){
+        if (playTime >= 300) {
             playTime = 300;
         }
 
-        log.info("视频avid={} 预计观看时间：{}秒",aid,playTime);
+        log.info("视频avid={} 预计观看时间：{}秒", aid, playTime);
 
         //当前已播放多少秒
         int nowPlayTime = 0;
-        while (nowPlayTime +15 <=playTime){
+        while (nowPlayTime + 15 <= playTime) {
             ThreadUtil.sleep(15);
-            nowPlayTime+=15;
+            nowPlayTime += 15;
             biliApi.reportHeartBeat(
                     start_ts,
                     aid,
@@ -453,19 +380,19 @@ public class BiliService {
                     3,
                     0,
                     2,
-                    nowPlayTime-2,
+                    nowPlayTime - 2,
                     1,
                     nowPlayTime,
                     nowPlayTime,
                     videoDuration,
-                    nowPlayTime-1,
-                    nowPlayTime-1
+                    nowPlayTime - 1,
+                    nowPlayTime - 1
             );
         }
         //收尾操作,如果还差5秒以上没播完，那再播放一次
-        int remainingTime = playTime-nowPlayTime;
+        int remainingTime = playTime - nowPlayTime;
         ThreadUtil.sleep(remainingTime);
-        nowPlayTime+=remainingTime;
+        nowPlayTime += remainingTime;
         biliApi.reportHeartBeat(
                 start_ts,
                 aid,
@@ -473,13 +400,13 @@ public class BiliService {
                 3,
                 0,
                 2,
-                nowPlayTime-2,
+                nowPlayTime - 2,
                 1,
                 nowPlayTime,
                 nowPlayTime,
                 videoDuration,
-                nowPlayTime-1,
-                nowPlayTime-1
+                nowPlayTime - 1,
+                nowPlayTime - 1
         );
 
     }

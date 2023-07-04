@@ -3,6 +3,8 @@ package io.github.cctyl.task;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.RecommendCard;
 import io.github.cctyl.entity.SearchResult;
 
 import io.github.cctyl.entity.VideoDetail;
@@ -10,6 +12,7 @@ import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,20 +47,6 @@ public class BiliTask {
     @Autowired
     private BiliApi biliApi;
 
-    /**
-     * 关键词列表
-     */
-    private Set<String> keywordSet;
-
-
-    /**
-     * 初始化
-     */
-    @PostConstruct
-    public void init() {
-        //1. 加载关键字数据
-        keywordSet = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-    }
 
     @Autowired
     @Qualifier("vchat")
@@ -77,7 +66,7 @@ public class BiliTask {
 
         //0.1 检查cookie
         boolean cookieStatus = biliService.checkCookie();
-        if (!cookieStatus){
+        if (!cookieStatus) {
             log.error("cookie过期，请更新cookie");
             //todo 发送提醒
             return;
@@ -86,7 +75,7 @@ public class BiliTask {
         //0.2 检查accessKey
         try {
             JSONObject jsonObject = biliApi.checkRespAndRetry(() -> biliApi.getUserInfo());
-            log.info("accessKey验证通过,body={}",jsonObject.toString());
+            log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();
             log.error("accessKey验证不通过，请检查");
@@ -102,26 +91,61 @@ public class BiliTask {
             不能全部分页获取后，再进行点击，这样容易风控
             一个关键词，从两页抽20条
          */
-        for (String keyword : keywordSet) {
+        for (String keyword : GlobalVariables.keywordSet) {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
+
+                //执行搜索
                 List<SearchResult> searchRaw = biliApi.search(keyword, i);
+
                 ThreadUtil.sleep(3);
-                //随机挑选的结果
-                DataUtil
-                .getRandom(10, 0, 20)
-                .stream().map(searchRaw::get)
-                .forEach(searchResult -> {
+
+                //随机挑选10个
+                DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
-                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult,false);
+                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getBvid(), false);
                     ThreadUtil.sleep(2);
                 });
+
             }
             ThreadUtil.sleep(3);
         }
 
 
-        //2. todo 对排行榜数据进行处理，处理100条，即5页数据
+        //2. 对排行榜数据进行处理，处理100条，即5页数据
+        for (int i = 1; i <= 5; i++) {
+            List<VideoDetail> hotRankVideo = biliApi.getHotRankVideo(i, 20);
+            //20条中随机抽10条
+            DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
+                //处理挑选结果
+                biliService.handleVideo(
+                        thumbUpVideoList,
+                        dislikeVideoList,
+                        videoDetail.getBvid(),
+                        false);
+                ThreadUtil.sleep(2);
+            });
+
+            ThreadUtil.sleep(3);
+        }
+
+
+        //3. 对推荐视频进行处理
+//        for (int i = 0; i < 5; i++) {
+//            List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
+//            DataUtil.randomAccessList(recommendVideo,10,recommendCard -> {
+//                //处理挑选结果
+//                biliService.handleVideo(
+//                        thumbUpVideoList,
+//                        dislikeVideoList,
+//                        recommendCard.getb,
+//                        false);
+//                ThreadUtil.sleep(2);
+//            });
+//
+//            ThreadUtil.sleep(3);
+//        }
+
 
     }
 }
