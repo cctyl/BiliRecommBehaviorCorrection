@@ -55,6 +55,10 @@ public class AppConstant {
      */
     public static final String MID_KEY = PREFIX+"mid";
 
+    /**
+     * 百度accessKey
+     */
+    public static final String BAIDU_ASK_KEY = PREFIX+"mid";
 
     /**
      * 最大图片大小 3M

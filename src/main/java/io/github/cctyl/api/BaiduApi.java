@@ -2,10 +2,12 @@ package io.github.cctyl.api;
 
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.entity.BaiduImageClassify;
+import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
 
 /**
  * 百度相关api
@@ -33,6 +38,9 @@ public class BaiduApi {
 
 
 
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -73,6 +81,12 @@ public class BaiduApi {
      * @return 鉴权签名（Access Token）
      */
     public String getAccessToken()  {
+
+        Object o = redisUtil.get(BAIDU_ASK_KEY);
+        if (!StrUtil.isBlankIfStr(o)){
+            return (String)o;
+        }
+
         String body = HttpRequest.post("https://aip.baidubce.com/oauth/2.0/token")
 
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -85,12 +99,9 @@ public class BaiduApi {
                 ))
                 .execute()
                 .body();
-
-
-
         log.debug("body={}",body);
         String accessToken = JSONObject.parseObject(body).getString("access_token");
-        log.info("当前获得的token={}",accessToken);
+        redisUtil.setEx(BAIDU_ASK_KEY,accessToken,30, TimeUnit.DAYS);
         return accessToken;
     }
 
