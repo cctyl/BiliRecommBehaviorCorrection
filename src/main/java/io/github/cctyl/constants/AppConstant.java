@@ -54,11 +54,17 @@ public class AppConstant {
      * 黑名单分区id集合
      */
     public static final String MID_KEY = PREFIX+"mid";
+    /**
+     * 处理过的视频记录
+     */
+    public static final String HANDLE_VIDEO_DETAIL_KEY = PREFIX+"handle_video_detail_list";
+    public static final String HANDLE_VIDEO_ID_KEY = PREFIX+"handle_video_id_list";
 
     /**
      * 百度accessKey
      */
-    public static final String BAIDU_ASK_KEY = PREFIX+"mid";
+    public static final String BAIDU_ASK_KEY = "baidu_accesskey";
+
 
     /**
      * 最大图片大小 3M

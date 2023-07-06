@@ -1,6 +1,7 @@
 package io.github.cctyl.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import io.github.cctyl.entity.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -153,6 +154,9 @@ public class VideoDetail {
     private String likeIcon;
     @JSONField(name = "need_jump_bv")
     private Boolean needJumpBv;
+
+
+    private HandleType handleType;
 
 
     @NoArgsConstructor

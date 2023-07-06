@@ -293,7 +293,7 @@ public class RedisUtil {
         return this.redisTemplate.opsForList().size(key);
     }
 
-    public Long sAdd(String key, String... values) {
+    public Long sAdd(String key, Object... values) {
         return this.redisTemplate.opsForSet().add(key, values);
     }
 

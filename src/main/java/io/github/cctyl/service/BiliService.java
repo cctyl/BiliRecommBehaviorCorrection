@@ -10,6 +10,7 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.SearchResult;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
@@ -41,6 +42,8 @@ public class BiliService {
     @Autowired
     private BiliApi biliApi;
 
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -67,6 +70,17 @@ public class BiliService {
     }
 
     /**
+     * 记录已处理过的视频
+     * @param videoDetail 被处理的视频
+     * @param handleType 处理类型
+     */
+    public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType){
+        videoDetail.setHandleType(handleType);
+        redisUtil.sAdd(HANDLE_VIDEO_ID_KEY,videoDetail.getAid());
+        redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY,videoDetail);
+    }
+
+    /**
      * 处理搜索结果
      * 根据视频信息判断，
      * 最后得出结果，到底是喜欢的视频，还是不喜欢的视频
@@ -84,6 +98,11 @@ public class BiliService {
                             boolean notKeyWord
     ) {
 
+        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY,avid)){
+            log.info("视频：{} 之前已处理过", avid);
+            return;
+        }
+
         VideoDetail videoDetail = null;
 
         try {
@@ -97,6 +116,7 @@ public class BiliService {
 
                 //加日志
                 dislikeVideoList.add(videoDetail);
+                recordHandleVideo(videoDetail,HandleType.DISLIKE);
 
             } else if (notKeyWord) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
@@ -105,8 +125,10 @@ public class BiliService {
                     playAndThumbUp(videoDetail);
                     //加日志
                     thumbUpVideoList.add(videoDetail);
+                    recordHandleVideo(videoDetail,HandleType.THUMB_UP);
                 } else {
                     log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
+                    recordHandleVideo(videoDetail,HandleType.OTHER);
                 }
 
             } else {
@@ -115,6 +137,7 @@ public class BiliService {
                 playAndThumbUp(videoDetail);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
+                recordHandleVideo(videoDetail,HandleType.THUMB_UP);
             }
         } catch (Exception e) {
             if (videoDetail!=null){
