@@ -3,6 +3,7 @@ package io.github.cctyl.api;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.ApplicationProperties;
@@ -25,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
 
@@ -35,8 +37,6 @@ import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
 @Component
 @Slf4j
 public class BaiduApi {
-
-
 
 
     @Autowired
@@ -59,6 +59,47 @@ public class BaiduApi {
                 .body();
         log.debug("body={}",body);
         return JSONObject.parseObject(body, BaiduImageClassify.class);
+    }
+
+
+
+
+    /**
+     * 检测图片中是否包含人体
+     * @param imgBase64Str
+     * @return
+     */
+    public boolean isHuman(String imgBase64Str) {
+        try {
+            String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general?access_token=" + getAccessToken())
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .header("Accept", "application/json")
+                    .body("image="+imgBase64Str)
+                    .execute()
+                    .body();
+            log.debug("body={}",body);
+
+            JSONObject jsonObject = JSONObject.parseObject(body);
+            if (jsonObject.getIntValue("result_num") < 1) {
+                return false;
+            } else {
+                String word = jsonObject.getJSONArray("result")
+                        .stream().map(o ->
+
+                                {
+
+                                    var j = (JSONObject) o;
+                                    return j.getString("keyword") + j.getString("root");
+                                }
+                        ).collect(Collectors.joining());
+                return word.contains("女");
+            }
+        } catch (HttpException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+
     }
 
 
@@ -95,7 +136,6 @@ public class BaiduApi {
                         "grant_type","client_credentials",
                         "client_id",applicationProperties.getBaidu().getClientId(),
                         "client_secret",applicationProperties.getBaidu().getClientSecret()
-
                 ))
                 .execute()
                 .body();

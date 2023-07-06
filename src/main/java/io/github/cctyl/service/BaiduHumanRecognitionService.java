@@ -27,7 +27,6 @@ public class BaiduHumanRecognitionService implements ImageGenderDetectService {
      * @param bytes
      * @return
      */
-    @Override
     public int getGender(byte[] bytes) {
         try {
             BaiduImageClassify baiduImageClassify = baiduApi.getGender(baiduApi.getFileContentAsBase64(bytes));
@@ -40,10 +39,16 @@ public class BaiduHumanRecognitionService implements ImageGenderDetectService {
                 log.error("识别错误");
                 return 3;
             }
+
         } catch (Exception e) {
             log.error("识别异常！msg={}", e.getMessage());
             e.printStackTrace();
             return 4;
         }
+    }
+
+    @Override
+    public boolean isHuman(byte[] bytes) {
+        return baiduApi.isHuman(baiduApi.getFileContentAsBase64(bytes));
     }
 }

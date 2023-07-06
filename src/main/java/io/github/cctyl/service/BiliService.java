@@ -189,9 +189,9 @@ public class BiliService {
     private boolean isCoverMatch(VideoDetail videoDetail) {
         try {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
-            int gender = imageGenderDetectService.getGender(picByte);
-            log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), gender);
-            return gender == 2;
+            boolean human = imageGenderDetectService.isHuman(picByte);
+            log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
+            return human;
         } catch (IOException e) {
             log.error("获取图片字节码出错：{}", e.getMessage());
             e.printStackTrace();
