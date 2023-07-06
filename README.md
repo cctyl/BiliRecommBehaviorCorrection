@@ -1,7 +1,4 @@
 
-# BiliRecommBehaviorCorrection
-
-
 
 <p align="center">
     <img src="./assets/img/logo.png" width="480" height="235">
@@ -20,6 +17,7 @@
 </p>
 
 # 前言
+[项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection) 
 
 **号养好了？ 不要推荐我不喜欢的东西了！**
 
@@ -29,12 +27,11 @@
 在这个范围外的消息你无法收到，你的消息来源是被控制的。
 除非你主动搜索，否则你永远也不知道圈子之外还有什么东西。
 
+所以出现了这个项目，我们直接利用bilibili本身的推荐算法，编写了一个SpringBoot 程序。
+启动后程序会定时 主动对关键词列表进行搜索、点赞、播放。对不喜欢的视频进行点踩
+每天重复一次，相当于提醒bilibili，告诉它我们喜欢什么不喜欢什么。
+如果哔哩哔哩的推荐算法没有问题的情况下，纠正一段时间效果就很明显。
 
-[项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection) 
-
-# 实现原理
-
-我们直接利用bilibili本身的推荐算法，主动对特定的，我们希望它推荐的视频进行搜索、点赞、播放。每天重复一次，相当于提醒bilibili，告诉它我们喜欢什么不喜欢什么。如果哔哩哔哩的推荐算法没有问题的情况下，纠正一段时间效果就很明显。
 
 # 功能及特色
 1. 关键字主动搜索告知bilibili
@@ -48,6 +45,19 @@
 - up主id识别
 - 视频封面识别
 5. 黑白名单支持
+
+# 食用
+## 环境要求
+- jdk11
+- redis
+
+## 步骤
+1. 下载release压缩包
+2. 解压，得到 .jar结尾文件 以及 application.yml
+3. 填写号application.yml 中的 诸如 defaultData ,百度的 clientId， redis地址
+4. java -jar xxxx.jar
+5. 挂机
+
 
 # 后续开发计划
 功能    |  功能描述 |  开发进度 
