@@ -15,9 +15,9 @@ common:
   init: false
   # 最大模拟播放秒数
   minPlaySecond: 50
+  #图像识别服务
+  imgService: baidu,
   baidu:
-    # 是否启用baidu的api
-    enable: true
     clientId: xxx
     clientSecret: xxxxx
 

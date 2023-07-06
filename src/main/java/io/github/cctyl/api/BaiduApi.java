@@ -33,7 +33,7 @@ import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
 /**
  * 百度相关api
  */
-@ConditionalOnExpression("${common.baidu.enable}==true")
+@ConditionalOnExpression("'${common.imgService}'.contains('baidu')")
 @Component
 @Slf4j
 public class BaiduApi {
@@ -47,6 +47,7 @@ public class BaiduApi {
 
     /**
      * 人体检测和属性识别
+     *
      * @param imgBase64Str
      * @return
      */
@@ -54,18 +55,17 @@ public class BaiduApi {
         String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken())
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
-                .body("image="+imgBase64Str)
+                .body("image=" + imgBase64Str)
                 .execute()
                 .body();
-        log.debug("body={}",body);
+        log.debug("body={}", body);
         return JSONObject.parseObject(body, BaiduImageClassify.class);
     }
 
 
-
-
     /**
      * 检测图片中是否包含人体
+     *
      * @param imgBase64Str
      * @return
      */
@@ -74,10 +74,10 @@ public class BaiduApi {
             String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general?access_token=" + getAccessToken())
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .header("Accept", "application/json")
-                    .body("image="+imgBase64Str)
+                    .body("image=" + imgBase64Str)
                     .execute()
                     .body();
-            log.debug("body={}",body);
+            log.debug("body={}", body);
 
             JSONObject jsonObject = JSONObject.parseObject(body);
             if (jsonObject.getIntValue("result_num") < 1) {
@@ -85,9 +85,7 @@ public class BaiduApi {
             } else {
                 String word = jsonObject.getJSONArray("result")
                         .stream().map(o ->
-
                                 {
-
                                     var j = (JSONObject) o;
                                     return j.getString("keyword") + j.getString("root");
                                 }
@@ -121,11 +119,11 @@ public class BaiduApi {
      *
      * @return 鉴权签名（Access Token）
      */
-    public String getAccessToken()  {
+    public String getAccessToken() {
 
         Object o = redisUtil.get(BAIDU_ASK_KEY);
-        if (!StrUtil.isBlankIfStr(o)){
-            return (String)o;
+        if (!StrUtil.isBlankIfStr(o)) {
+            return (String) o;
         }
 
         String body = HttpRequest.post("https://aip.baidubce.com/oauth/2.0/token")
@@ -133,15 +131,15 @@ public class BaiduApi {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .form(Map.of(
-                        "grant_type","client_credentials",
-                        "client_id",applicationProperties.getBaidu().getClientId(),
-                        "client_secret",applicationProperties.getBaidu().getClientSecret()
+                        "grant_type", "client_credentials",
+                        "client_id", applicationProperties.getBaidu().getClientId(),
+                        "client_secret", applicationProperties.getBaidu().getClientSecret()
                 ))
                 .execute()
                 .body();
-        log.debug("body={}",body);
+        log.debug("body={}", body);
         String accessToken = JSONObject.parseObject(body).getString("access_token");
-        redisUtil.setEx(BAIDU_ASK_KEY,accessToken,30, TimeUnit.DAYS);
+        redisUtil.setEx(BAIDU_ASK_KEY, accessToken, 30, TimeUnit.DAYS);
         return accessToken;
     }
 

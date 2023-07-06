@@ -1,8 +1,9 @@
-package io.github.cctyl.service;
+package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.api.BaiduApi;
 import io.github.cctyl.entity.BaiduImageClassify;
+import io.github.cctyl.service.ImageGenderDetectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -14,7 +15,7 @@ import java.util.List;
 /**
  * 百度人体分析api
  */
-@ConditionalOnExpression("${common.baidu.enable}==true")
+@ConditionalOnExpression("'${common.imgService}'.contains('baidu')")
 @Service
 @Slf4j
 public class BaiduHumanRecognitionService implements ImageGenderDetectService {
