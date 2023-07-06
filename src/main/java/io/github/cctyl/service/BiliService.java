@@ -321,8 +321,7 @@ public class BiliService {
 
         long start_ts = System.currentTimeMillis() / 1000;
 
-        //todo 清除此处debug
-        videoDuration = 15;
+
 
         //0.初始播放
         biliApi.reportHeartBeat(
