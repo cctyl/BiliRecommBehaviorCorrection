@@ -10,6 +10,7 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.constants.ErrorCode;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
@@ -236,7 +237,7 @@ public class BiliApi {
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
             log.error("body={}", body);
-            throw new RuntimeException("响应异常");
+            checkOtherCode(jsonObject);
         }
     }
 
@@ -275,9 +276,24 @@ public class BiliApi {
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
             log.error("body={}", jsonObject.toJSONString());
-            throw new RuntimeException("响应异常");
+            checkOtherCode(jsonObject);
         }
         return jsonObject;
+    }
+
+    /**
+     * 响应
+     * @param jsonObject
+     */
+    private void checkOtherCode(JSONObject jsonObject){
+        switch (jsonObject.getIntValue("code")){
+            case 65007:
+                log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
+                break;
+
+            default:
+                throw new RuntimeException("响应异常");
+        }
     }
 
     /**

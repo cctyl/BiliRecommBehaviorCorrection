@@ -52,7 +52,7 @@ public class BiliTask {
     @Qualifier("vchat")
     private WebSocketClient vchatCliet;
 
-    @Scheduled(cron = "0 9 * * *")
+//    @Scheduled(cron = "0 9 * * * *")
     public void recommonTaskBack() {
         //0.初始化部分
         //本次点赞视频列表
@@ -146,6 +146,9 @@ public class BiliTask {
             ThreadUtil.sleep(3);
         }
 
+
+        log.info("本次点赞的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).toString());
+        log.info("本次点踩的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).toString());
 
     }
 }
