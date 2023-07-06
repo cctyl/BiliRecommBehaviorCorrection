@@ -2,6 +2,7 @@ package io.github.cctyl.initialization;
 
 
 import cn.hutool.core.collection.CollUtil;
+import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,10 @@ public class InitFromRedis implements ApplicationRunner {
 
     @Autowired
     private RedisUtil redisUtil;
+
+
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -73,5 +78,10 @@ public class InitFromRedis implements ApplicationRunner {
         GlobalVariables.whiteKeyword = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
         GlobalVariables.whiteKeywordTree.addWords(GlobalVariables.whiteKeyword);
 
+
+        if (applicationProperties.getMinPlaySecond()==null){
+            applicationProperties.setMinPlaySecond(50);
+        }
     }
+
 }

@@ -5,6 +5,7 @@ import cn.hutool.dfa.WordTree;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.SearchResult;
 import io.github.cctyl.entity.Tag;
@@ -40,8 +41,9 @@ public class BiliService {
     @Autowired
     private BiliApi biliApi;
 
+
     @Autowired
-    private RedisUtil redisUtil;
+    private ApplicationProperties applicationProperties;
 
 
     /**
@@ -375,10 +377,9 @@ public class BiliService {
         }
 
         //playTime 不能太长
-        if (playTime >= 300) {
-            playTime = 300;
+        if ( playTime >= applicationProperties.getMinPlaySecond()) {
+            playTime = applicationProperties.getMinPlaySecond();
         }
-
         log.info("视频avid={} 预计观看时间：{}秒", aid, playTime);
 
         //当前已播放多少秒
