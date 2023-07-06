@@ -17,9 +17,6 @@
     <a href="https://github.com/cctyl/BiliRecommBehaviorCorrection/network" style="text-decoration:none" >
         <img src="https://img.shields.io/github/forks/cctyl/BiliRecommBehaviorCorrection.svg" alt="GitHub forks"/>
     </a>
-    <a href="https://github.com/cctyl/BiliRecommBehaviorCorrection/blob/master/LICENSE" style="text-decoration:none" >
-        <img src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg" alt="GitHub license"/>
-    </a>
 </p>
 
 # 前言
@@ -55,7 +52,7 @@
 # 后续开发计划
 功能    |  功能描述 |  开发进度 
 -------- | --------- | -----
- [vchat](https://github.com/cctyl/v_chat) | 基于vchat进行消息推送、日志记录、指令发送 | 等待vchat重构
+ 与[vchat](https://github.com/cctyl/v_chat)联动 | 基于vchat进行消息推送、日志记录、指令发送 | 等待vchat重构
 编写[Greasyfork](https://greasyfork.org/zh-CN/users/416601-cctyl  ) 配套脚本| 基于脚本，实现在web端指定视频：关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 尚未开始
 tensflow 进行图像识别  | 使用tensflow 模型代替百度api 进行本地图像识别调用 | 准备阶段
 与[FakeBili](https://github.com/cctyl/FakeBiliBili)联动 | 在FakeBilibili客户端增加 关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 等待FakeBili项目启动
