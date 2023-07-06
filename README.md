@@ -4,7 +4,7 @@
 
 
 <p align="center">
-    <img src="./assets/img/logo.png" width="250" height="200">
+    <img src="./assets/img/logo.png" width="480" height="235">
 </p>
 <h1 align="center">bilibili视频推荐纠正</h1>
 <p align="center">
