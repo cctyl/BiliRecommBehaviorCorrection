@@ -54,9 +54,10 @@
 ## 步骤
 1. 下载release压缩包
 2. 解压，得到 .jar结尾文件 以及 application.yml
-3. 填写号application.yml 中的 诸如 defaultData ,百度的 clientId， redis地址
-4. java -jar xxxx.jar
-5. 挂机
+3. 浏览器打开bilibili，按下F12，找到网络栏。随便点击一个视频，查看发起的请求。直接复制请求头中的cookie字符串，填写到下一步的application.yml中
+4. 填写好application.yml 中的 诸如 defaultData ,百度的 clientId， redis地址
+5. java -jar xxxx.jar
+6. 挂机
 
 
 # 后续开发计划

@@ -88,6 +88,7 @@ public class BiliTask {
             不能全部分页获取后，再进行点击，这样容易风控
             一个关键词，从两页抽20条
          */
+        log.info("==============开始处理关键词==================");
         for (String keyword : GlobalVariables.keywordSet) {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
@@ -111,6 +112,7 @@ public class BiliTask {
 
 
         //2. 对排行榜数据进行处理，处理100条，即5页数据
+        log.info("==============开始处理热门排行榜==================");
         for (int i = 1; i <= 5; i++) {
             List<VideoDetail> hotRankVideo = biliApi.getHotRankVideo(i, 20);
             //20条中随机抽10条
@@ -129,6 +131,7 @@ public class BiliTask {
 
 
         //3. 对推荐视频进行处理
+        log.info("==============开始处理首页推荐==================");
         for (int i = 0; i < 5; i++) {
             List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
             DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
@@ -148,8 +151,8 @@ public class BiliTask {
         }
 
 
-        log.info("本次点赞的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).toString());
-        log.info("本次点踩的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).toString());
+        log.info("本次点赞的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+        log.info("本次点踩的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
 
     }
 }
