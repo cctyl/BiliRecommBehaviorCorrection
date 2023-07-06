@@ -82,34 +82,44 @@ public class BiliService {
                             boolean notKeyWord
     ) {
 
-        //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
-        VideoDetail videoDetail = biliApi.getVideoDetail(avid);
+        VideoDetail videoDetail = null;
 
-        //1. 如果是黑名单内的，直接执行点踩操作
-        if (blackMatch(videoDetail)) {
-            //点踩
-            dislike(videoDetail.getAid());
+        try {
+            //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
+            videoDetail = biliApi.getVideoDetail(avid);
 
-            //加日志
-            dislikeVideoList.add(videoDetail);
+            //1. 如果是黑名单内的，直接执行点踩操作
+            if (blackMatch(videoDetail)) {
+                //点踩
+                dislike(videoDetail.getAid());
 
-        } else if (notKeyWord) {
-            // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
-            if (whiteMatch(videoDetail)) {
+                //加日志
+                dislikeVideoList.add(videoDetail);
+
+            } else if (notKeyWord) {
+                // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
+                if (whiteMatch(videoDetail)) {
+                    //播放并点赞
+                    playAndThumbUp(videoDetail);
+                    //加日志
+                    thumbUpVideoList.add(videoDetail);
+                } else {
+                    log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
+                }
+
+            } else {
+                //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
                 //播放并点赞
                 playAndThumbUp(videoDetail);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
-            } else {
-                log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
             }
-
-        } else {
-            //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
-            //播放并点赞
-            playAndThumbUp(videoDetail);
-            //加日志
-            thumbUpVideoList.add(videoDetail);
+        } catch (Exception e) {
+            if (videoDetail!=null){
+                //出现任何异常，都进行跳过
+                log.error("处理视频：{} 时出现异常，信息如下：", videoDetail.getTitle());
+            }
+            e.printStackTrace();
         }
     }
 

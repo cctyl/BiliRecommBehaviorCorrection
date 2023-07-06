@@ -102,6 +102,7 @@ public class BiliTask {
                     //处理挑选结果
                     biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid(), false);
                     ThreadUtil.sleep(2);
+
                 });
 
             }
