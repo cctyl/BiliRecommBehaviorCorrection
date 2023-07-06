@@ -1,5 +1,6 @@
 package io.github.cctyl.initialization;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
@@ -40,7 +41,7 @@ public class InitFromConfig implements ApplicationRunner {
 
         ApplicationProperties.DefaultData defaultData = applicationProperties.getDefaultData();
         //1.如果redis中没有cookie，从配置文件中读取Cookie
-        if (StrUtil.isBlankIfStr(redisUtil.get(COOKIES_KEY)) ){
+        if (CollUtil.isEmpty(redisUtil.hGetAll(COOKIES_KEY))){
             if (StrUtil.isEmpty(defaultData.getCookie())){
                 throw new RuntimeException("未配置初始化cookie！");
             }
