@@ -9,6 +9,7 @@ import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.entity.BaiduImageClassify;
 import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
@@ -52,14 +54,16 @@ public class BaiduApi {
      * @return
      */
     public BaiduImageClassify getGender(String imgBase64Str) {
-        String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken())
+
+
+        JSONObject jsonObject = checkRespAndRetry(() -> JSONObject.parseObject(HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken(false))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .body("image=" + imgBase64Str)
                 .execute()
-                .body();
-        log.debug("body={}", body);
-        return JSONObject.parseObject(body, BaiduImageClassify.class);
+                .body()));
+
+        return jsonObject.to(BaiduImageClassify.class);
     }
 
 
@@ -71,15 +75,14 @@ public class BaiduApi {
      */
     public boolean isHuman(String imgBase64Str) {
         try {
-            String body = HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general?access_token=" + getAccessToken())
+
+            JSONObject jsonObject = checkRespAndRetry(() -> JSONObject.parseObject(HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general?access_token=" + getAccessToken(false))
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .header("Accept", "application/json")
                     .body("image=" + imgBase64Str)
                     .execute()
-                    .body();
-            log.debug("body={}", body);
+                    .body()));
 
-            JSONObject jsonObject = JSONObject.parseObject(body);
             if (jsonObject.getIntValue("result_num") < 1) {
                 return false;
             } else {
@@ -119,10 +122,10 @@ public class BaiduApi {
      *
      * @return 鉴权签名（Access Token）
      */
-    public String getAccessToken() {
+    public String getAccessToken(boolean refresh) {
 
         Object o = redisUtil.get(BAIDU_ASK_KEY);
-        if (!StrUtil.isBlankIfStr(o)) {
+        if (!(StrUtil.isBlankIfStr(o) || refresh)) {
             return (String) o;
         }
 
@@ -141,6 +144,26 @@ public class BaiduApi {
         String accessToken = JSONObject.parseObject(body).getString("access_token");
         redisUtil.setEx(BAIDU_ASK_KEY, accessToken, 30, TimeUnit.DAYS);
         return accessToken;
+    }
+
+
+    /**
+     * accessKey 接口专用
+     * 检查响应，如果响应是未登陆，则刷新accessKey并重试
+     * 如果还是无法获取正确响应，则抛出异常
+     *
+     * @param supplier 重试的方法，需要返回一个响应
+     */
+    public JSONObject checkRespAndRetry(Supplier<JSONObject> supplier) {
+
+        JSONObject jsonObject = supplier.get();
+        if (jsonObject.get("error_code") != null && jsonObject.getIntValue("error_code") == 110) {
+            getAccessToken(true);
+            log.debug("刷新token并重试一次");
+            jsonObject = supplier.get();
+        }
+
+        return jsonObject;
     }
 
 }
