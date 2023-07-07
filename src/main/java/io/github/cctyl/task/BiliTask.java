@@ -52,15 +52,11 @@ public class BiliTask {
     @Qualifier("vchat")
     private WebSocketClient vchatCliet;
 
-//    @Scheduled(cron = "0 9 * * * *")
-    public void recommonTaskBack() {
-        //0.初始化部分
-        //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
 
-        //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
-
+    /**
+     * 执行任务前的准备
+     */
+    public void before(){
         //0.1 检查cookie
         boolean cookieStatus = biliService.checkCookie();
         if (!cookieStatus) {
@@ -80,6 +76,19 @@ public class BiliTask {
 
         //0.3 更新一下必要的cookie
         biliService.updateCookie();
+    }
+
+    /**
+     * 关键词搜索任务
+     */
+    @Scheduled(cron = "0 9 * * * *")
+    public void searchTask() {
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
 
         //1.主动搜索，针对搜索视频进行处理
         /*
@@ -105,6 +114,20 @@ public class BiliTask {
             }
             ThreadUtil.sleep(3);
         }
+        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+    }
+
+    /**
+     * 热门排行榜任务
+     */
+    @Scheduled(cron = "0 11 * * * *")
+    public void hotRankTask() {
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
 
         //2. 对排行榜数据进行处理，处理100条，即5页数据
         log.info("==============开始处理热门排行榜==================");
@@ -122,7 +145,21 @@ public class BiliTask {
             });
             ThreadUtil.sleep(7);
         }
+        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+    }
 
+
+    /**
+     * 首页推荐任务
+     */
+    @Scheduled(cron = "0 12 * * * *")
+    public void homeRecommendTask() {
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
 
         //3. 对推荐视频进行处理
         log.info("==============开始处理首页推荐==================");
@@ -138,14 +175,18 @@ public class BiliTask {
                             true);
                     ThreadUtil.sleep(5);
                 }
-
             });
             ThreadUtil.sleep(7);
         }
+        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+    }
 
 
-        log.info("本次点赞的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
-        log.info("本次点踩的视频：{}",dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
-
+    /**
+     * 执行完毕后输出日志
+     */
+    public void videoLogOutput(List<VideoDetail> thumbUpVideoList, List<VideoDetail> dislikeVideoList) {
+        log.info("本次点赞的视频：{}", thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+        log.info("本次点踩的视频：{}", dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
     }
 }
