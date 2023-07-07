@@ -267,9 +267,10 @@ public class BiliService {
     private boolean isTidMatch(Set<String> blackTidSet, VideoDetail videoDetail) {
         boolean match = blackTidSet.contains(String.valueOf(videoDetail.getTid()));
 
-        log.debug("视频:{}-{}的 分区：{}，匹配结果：{}",
+        log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
+                videoDetail.getTid(),
                 videoDetail.getTname(),
                 match);
         return match;
@@ -286,9 +287,10 @@ public class BiliService {
         boolean match = blackUserIdSet
                 .contains(videoDetail.getOwner().getMid());
 
-        log.debug("视频:{}-{}的 up主：{}，匹配结果：{}",
+        log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
+                videoDetail.getOwner().getMid(),
                 videoDetail.getOwner().getName(),
                 match);
         return match;
@@ -387,22 +389,23 @@ public class BiliService {
                 //7秒以下，不播
                 log.error("视频 avid={} 时间={}，时长过短，不播放", aid, videoDuration);
             }
-
         }
         //本次预计要播放多少秒
         int playTime = DataUtil.getRandom(0, videoDuration);
+
+        //playTime 不能太长,最大值50
+        if ( playTime >= applicationProperties.getMinPlaySecond()) {
+            playTime = applicationProperties.getMinPlaySecond() + DataUtil.getRandom(1,10);
+        }
+        //不能太短,最小值 15
         if (playTime <= 15) {
-            if (playTime + 15 < videoDuration) {
-                playTime = playTime + 15;
-            } else {
-                playTime = videoDuration;
-            }
+            playTime = playTime + DataUtil.getRandom(1,10);
+        }
+        //最终都不能超过videoDuration
+        if (playTime>=videoDuration){
+            playTime = videoDuration;
         }
 
-        //playTime 不能太长
-        if ( playTime >= applicationProperties.getMinPlaySecond()) {
-            playTime = applicationProperties.getMinPlaySecond();
-        }
         log.info("视频avid={} 预计观看时间：{}秒", aid, playTime);
 
         //当前已播放多少秒

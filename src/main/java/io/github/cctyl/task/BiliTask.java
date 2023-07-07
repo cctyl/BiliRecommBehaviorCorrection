@@ -92,28 +92,23 @@ public class BiliTask {
         for (String keyword : GlobalVariables.keywordSet) {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
-
                 //执行搜索
                 List<SearchResult> searchRaw = biliApi.search(keyword, i);
-
                 ThreadUtil.sleep(3);
-
                 //随机挑选10个
                 DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
                     biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid(), false);
-                    ThreadUtil.sleep(2);
+                    ThreadUtil.sleep(5);
 
                 });
-
             }
             ThreadUtil.sleep(3);
         }
 
-
         //2. 对排行榜数据进行处理，处理100条，即5页数据
         log.info("==============开始处理热门排行榜==================");
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 10; i++) {
             List<VideoDetail> hotRankVideo = biliApi.getHotRankVideo(i, 20);
             //20条中随机抽10条
             DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
@@ -123,16 +118,15 @@ public class BiliTask {
                         dislikeVideoList,
                         videoDetail.getAid(),
                         true);
-                ThreadUtil.sleep(2);
+                ThreadUtil.sleep(5);
             });
-
-            ThreadUtil.sleep(3);
+            ThreadUtil.sleep(7);
         }
 
 
         //3. 对推荐视频进行处理
         log.info("==============开始处理首页推荐==================");
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
             DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
                 if ("av".equals(recommendCard.getCardGoto())) {
@@ -142,17 +136,16 @@ public class BiliTask {
                             dislikeVideoList,
                             recommendCard.getArgs().getAid(),
                             true);
-                    ThreadUtil.sleep(2);
+                    ThreadUtil.sleep(5);
                 }
 
             });
-
-            ThreadUtil.sleep(3);
+            ThreadUtil.sleep(7);
         }
 
 
         log.info("本次点赞的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
-        log.info("本次点踩的视频：{}",thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+        log.info("本次点踩的视频：{}",dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
 
     }
 }
