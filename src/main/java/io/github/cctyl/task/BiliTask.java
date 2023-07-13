@@ -56,7 +56,7 @@ public class BiliTask {
     /**
      * 执行任务前的准备
      */
-    public void before(){
+    public void before() {
         //0.1 检查cookie
         boolean cookieStatus = biliService.checkCookie();
         if (!cookieStatus) {
@@ -83,6 +83,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 9 * * * *")
     public void searchTask() {
+        before();
         //0.初始化部分
         //本次点赞视频列表
         var thumbUpVideoList = new ArrayList<VideoDetail>();
@@ -107,14 +108,14 @@ public class BiliTask {
                 //随机挑选10个
                 DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
-                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid(), false);
+                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
                     ThreadUtil.sleep(5);
 
                 });
             }
             ThreadUtil.sleep(3);
         }
-        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
     }
 
     /**
@@ -122,6 +123,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 11 * * * *")
     public void hotRankTask() {
+        before();
         //0.初始化部分
         //本次点赞视频列表
         var thumbUpVideoList = new ArrayList<VideoDetail>();
@@ -139,13 +141,13 @@ public class BiliTask {
                 biliService.handleVideo(
                         thumbUpVideoList,
                         dislikeVideoList,
-                        videoDetail.getAid(),
-                        true);
+                        videoDetail.getAid()
+                        );
                 ThreadUtil.sleep(5);
             });
             ThreadUtil.sleep(7);
         }
-        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
     }
 
 
@@ -154,6 +156,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 12 * * * *")
     public void homeRecommendTask() {
+        before();
         //0.初始化部分
         //本次点赞视频列表
         var thumbUpVideoList = new ArrayList<VideoDetail>();
@@ -171,14 +174,14 @@ public class BiliTask {
                     biliService.handleVideo(
                             thumbUpVideoList,
                             dislikeVideoList,
-                            recommendCard.getArgs().getAid(),
-                            true);
+                            recommendCard.getArgs().getAid()
+                            );
                     ThreadUtil.sleep(5);
                 }
             });
             ThreadUtil.sleep(7);
         }
-        videoLogOutput(thumbUpVideoList,dislikeVideoList);
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
     }
 
 

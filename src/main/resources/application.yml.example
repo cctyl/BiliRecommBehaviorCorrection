@@ -57,3 +57,18 @@ common:
       - xx
     whiteUserId:
       - xxx
+    # 白名单关键词规则，4个条件中两个匹配才通过。每一个whiteKeyWord实体类的四个条件之间是存在关联关系的
+    whiteKeyWordList:
+        # 标签名列表
+      - tagNameList:
+          - 萌宠
+        # 标题包含的关键词列表
+        titleKeyWordList:
+          - 猫猫
+          - 橘猫
+        # 描述应当包含的关键词列表
+        descKeyWordList:
+          - 猫
+
+        # 封面经过物体识别后的结果，应当包含的关键词列表
+        coverKeyword: 猫

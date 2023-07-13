@@ -10,6 +10,7 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.SearchResult;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.WhiteKeyWord;
 import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
@@ -22,9 +23,11 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.github.cctyl.constants.AppConstant.*;
 
@@ -71,13 +74,14 @@ public class BiliService {
 
     /**
      * 记录已处理过的视频
+     *
      * @param videoDetail 被处理的视频
-     * @param handleType 处理类型
+     * @param handleType  处理类型
      */
-    public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType){
+    public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
         videoDetail.setHandleType(handleType);
-        redisUtil.sAdd(HANDLE_VIDEO_ID_KEY,videoDetail.getAid());
-        redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY,videoDetail);
+        redisUtil.sAdd(HANDLE_VIDEO_ID_KEY, videoDetail.getAid());
+        redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY, videoDetail);
     }
 
     /**
@@ -90,57 +94,46 @@ public class BiliService {
      * @param thumbUpVideoList
      * @param dislikeVideoList
      * @param avid
-     * @param notKeyWord  如果是关键词搜索模式，那么不再黑名单内的都进行点踩。如果是排行榜模式，那么不在黑名单内，还需要判断一次是否在白名单内
      */
     public void handleVideo(List<VideoDetail> thumbUpVideoList,
                             List<VideoDetail> dislikeVideoList,
-                            int avid,
-                            boolean notKeyWord
+                            int avid
     ) {
 
-        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY,avid)){
+        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, avid)) {
             log.info("视频：{} 之前已处理过", avid);
             return;
         }
-
         VideoDetail videoDetail = null;
-
         try {
             //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
             videoDetail = biliApi.getVideoDetail(avid);
-
+            //0.1 获取视频标签
+            if (CollUtil.isEmpty(videoDetail.getTagList())) {
+                videoDetail.setTagList(biliApi.getVideoTag(videoDetail.getAid()));
+            }
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackMatch(videoDetail)) {
                 //点踩
                 dislike(videoDetail.getAid());
-
                 //加日志
                 dislikeVideoList.add(videoDetail);
-                recordHandleVideo(videoDetail,HandleType.DISLIKE);
+                recordHandleVideo(videoDetail, HandleType.DISLIKE);
 
-            } else if (notKeyWord) {
+            } else if (whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
-                if (whiteMatch(videoDetail)) {
-                    //播放并点赞
-                    playAndThumbUp(videoDetail);
-                    //加日志
-                    thumbUpVideoList.add(videoDetail);
-                    recordHandleVideo(videoDetail,HandleType.THUMB_UP);
-                } else {
-                    log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
-                    recordHandleVideo(videoDetail,HandleType.OTHER);
-                }
-
-            } else {
-                //4. 搜索模式，那么不是黑名单内的就是喜欢的，执行点赞播放操作
                 //播放并点赞
                 playAndThumbUp(videoDetail);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
-                recordHandleVideo(videoDetail,HandleType.THUMB_UP);
+                recordHandleVideo(videoDetail, HandleType.THUMB_UP);
+            } else {
+                log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
+                recordHandleVideo(videoDetail, HandleType.OTHER);
             }
+
         } catch (Exception e) {
-            if (videoDetail!=null){
+            if (videoDetail != null) {
                 //出现任何异常，都进行跳过
                 log.error("处理视频：{} 时出现异常，信息如下：", videoDetail.getTitle());
             }
@@ -157,16 +150,56 @@ public class BiliService {
      */
     public boolean whiteMatch(VideoDetail videoDetail) {
 
+        /**
+         * 假设，白名单使用一个专门的条件构造器，一个对象。里面包含 关键词 分区 up主id 等多个条件
+         * 白名单匹配时，需要在单个对象上，找到两个匹配的条件，则表示该条件匹配
+         *
+         * 那么此时与黑名单产生了割裂，黑名单是任意一个匹配
+         *
+         * 而关键词列表，不再作为白名单的判断条件
+         *
+         *
+         * 或者说，白名单的关键词 要 配合分区 或 up主id ，达到两个条件以上
+         *
+         * 错误案例：
+         *      刘三金
+         *      本来是搜索猫猫的视频，但是出现了一些标题带有刘三金的视频
+         *      也进行了点赞，这样非常的不符合。
+         *      起码，这个up主在范围内（直接用up主id不就行了），分区在范围内，封面在范围内
+         *      所以关键词部分，至少满足： 标题 描述 关键词匹配，分区匹配，封面包含指定关键词 三个条件中两个条件满足
+         */
+        boolean keyWordFlag = GlobalVariables.whiteKeyWordList
+                .stream()
+                .anyMatch(item ->
+                        {
+                            boolean titleMatch = item.titleMatch(videoDetail.getTitle());
+                            boolean descMatch =
+                                    item.descMatch(videoDetail.getDesc())
+                                            ||
+                                            videoDetail.getDescV2().stream().anyMatch(
+                                                    desc -> item.descMatch(desc)
+                                            );
+                            boolean tagMatch = item.tagNameMatch(videoDetail.getTagList()
+                                    .stream()
+                                    .map(Tag::getTagName)
+                                    .collect(Collectors.toList()));
 
+                            //两个以上的判断都通过，才表示
+                            return Stream.of(titleMatch, descMatch, tagMatch).filter(Boolean.TRUE::equals).count() > 1;
+                        }
+
+                );
         return
-                //标题触发白名单
-                GlobalVariables.whiteKeywordTree.isMatch(videoDetail.getTitle())
-                        ||
-                        //up主id处于白名单
-                        GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
+
+
+                //up主id处于白名单
+                GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
                         ||
                         //分区id处于白名单
-                        GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+                        GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()))
+                        ||
+                        keyWordFlag
+                ;
     }
 
     /**
@@ -303,9 +336,7 @@ public class BiliService {
      * @return
      */
     private boolean isTagMatch(VideoDetail videoDetail) {
-        if (CollUtil.isEmpty(videoDetail.getTagList())) {
-            videoDetail.setTagList(biliApi.getVideoTag(videoDetail.getAid()));
-        }
+
 
         boolean match = videoDetail.getTagList()
                 .stream().map(Tag::getTagName)
@@ -347,7 +378,6 @@ public class BiliService {
 
 
         long start_ts = System.currentTimeMillis() / 1000;
-
 
 
         //0.初始播放
@@ -394,15 +424,15 @@ public class BiliService {
         int playTime = DataUtil.getRandom(0, videoDuration);
 
         //playTime 不能太长,最大值50
-        if ( playTime >= applicationProperties.getMinPlaySecond()) {
-            playTime = applicationProperties.getMinPlaySecond() + DataUtil.getRandom(1,10);
+        if (playTime >= applicationProperties.getMinPlaySecond()) {
+            playTime = applicationProperties.getMinPlaySecond() + DataUtil.getRandom(1, 10);
         }
         //不能太短,最小值 15
         if (playTime <= 15) {
-            playTime = playTime + DataUtil.getRandom(1,10);
+            playTime = playTime + DataUtil.getRandom(1, 10);
         }
         //最终都不能超过videoDuration
-        if (playTime>=videoDuration){
+        if (playTime >= videoDuration) {
             playTime = videoDuration;
         }
 

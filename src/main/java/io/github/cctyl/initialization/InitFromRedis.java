@@ -4,6 +4,7 @@ package io.github.cctyl.initialization;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.WhiteKeyWord;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,14 +75,14 @@ public class InitFromRedis implements ApplicationRunner {
         //7.白名单分区id
         GlobalVariables.whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
-        //8. 白名单关键字数据
-        GlobalVariables.whiteKeyword = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        GlobalVariables.whiteKeywordTree.addWords(GlobalVariables.whiteKeyword);
-
-
+        //8.最小播放时间
         if (applicationProperties.getMinPlaySecond()==null){
             applicationProperties.setMinPlaySecond(50);
         }
+
+        //9.白名单关键词列表
+        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_KEY_WORD_KEY).stream().map(o -> (WhiteKeyWord)o).collect(Collectors.toList());
+
     }
 
 }

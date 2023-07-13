@@ -1,9 +1,11 @@
 package io.github.cctyl.config;
 
 import cn.hutool.dfa.WordTree;
+import io.github.cctyl.entity.WhiteKeyWord;
 import lombok.Data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,15 +40,7 @@ public class GlobalVariables {
      */
     public static Set<String> blackTidSet;
 
-    /**
-     * 白名单关键词列表
-     */
-    public static Set<String> whiteKeyword;
 
-    /**
-     * 黑名单关键词树
-     */
-    public static WordTree whiteKeywordTree = new WordTree();
 
 
     /**
@@ -81,6 +75,12 @@ public class GlobalVariables {
      * 关键词列表
      */
     public static Set<String> keywordSet;
+
+
+    /**
+     * 白名单关键词列表
+     */
+    public static List<WhiteKeyWord> whiteKeyWordList;
 
 
 }

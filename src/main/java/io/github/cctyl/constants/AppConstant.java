@@ -61,9 +61,15 @@ public class AppConstant {
     public static final String HANDLE_VIDEO_ID_KEY = PREFIX+"handle_video_id_list";
 
     /**
+     * 白名单关键词列表
+     */
+    public static final String WHITE_KEY_WORD_KEY = PREFIX+"white_key_word";
+
+    /**
      * 百度accessKey
      */
     public static final String BAIDU_ASK_KEY = "baidu_accesskey";
+
 
 
     /**
