@@ -81,7 +81,11 @@ public class InitFromRedis implements ApplicationRunner {
         }
 
         //9.白名单关键词列表
-        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_KEY_WORD_KEY).stream().map(o -> (WhiteKeyWord)o).collect(Collectors.toList());
+        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_KEY_WORD_KEY).stream().map(
+                o -> {
+                    return (WhiteKeyWord)o;
+                }
+        ).collect(Collectors.toList());
 
     }
 

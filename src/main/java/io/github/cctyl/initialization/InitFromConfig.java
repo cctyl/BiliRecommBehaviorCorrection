@@ -74,7 +74,7 @@ public class InitFromConfig implements ApplicationRunner {
             redisUtil.sAdd(WHITE_USER_ID_KEY,defaultData.getWhiteTid().toArray(new String[0]));
         }
         if (redisUtil.sMembers(WHITE_KEY_WORD_KEY).size()==0){
-            redisUtil.sAdd(WHITE_KEY_WORD_KEY,defaultData.getWhiteKeyWordList());
+            redisUtil.sAdd(WHITE_KEY_WORD_KEY,defaultData.getWhiteKeyWordList().toArray());
         }
     }
 }
