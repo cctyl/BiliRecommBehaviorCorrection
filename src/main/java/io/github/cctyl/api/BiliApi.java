@@ -3,6 +3,8 @@ package io.github.cctyl.api;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
+import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
@@ -36,6 +38,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -54,6 +57,21 @@ public class BiliApi {
     @Autowired
     private RedisUtil redisUtil;
 
+    /**
+     * urlRegex
+     *
+     */
+    private static Pattern urlRegex = Pattern.compile(".*/([^/]+\\.png)$");
+
+    /**
+     * 用于获取wbi签名
+     */
+    private static final int[] mixinKeyEncTab = new int[]{
+            46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
+            33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
+            61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
+            36, 20, 34, 44, 52
+    };
 
     /**
      * 封装通用的get
@@ -640,6 +658,11 @@ public class BiliApi {
     }
 
 
+    /**
+     * 获取签名后的参数，返回一个包含签名的map
+     * @param params
+     * @return
+     */
     public static Map<String, Object> getAppSign(Map<String, String> params) {
         HashMap<String, Object> map = new HashMap<>(params);
         // 为请求参数进行 APP 签名
@@ -660,6 +683,71 @@ public class BiliApi {
         String sign = DataUtil.generateMD5(queryBuilder.toString() + THIRD_PART_APPSEC);
         map.put("sign", sign);
         return map;
+    }
+
+
+    /**
+     * 获取wbi签名的字符串，返回一个拼接好的urlQuery: wts=xxxx&w_rid=xxxx
+     * @param refresh
+     * @return
+     */
+    public Map<String,Object> getWbi(boolean refresh, final Map<String,Object> paramMap) {
+        //如果缓存中存在，则直接返回
+        HashMap<String, Object> resultMap = new HashMap<>(paramMap);
+        String imgKey;
+        String subKey;
+        if (refresh ||  redisUtil.get(WBI)==null ) {
+            String url = "https://api.bilibili.com/x/web-interface/nav";
+            String body = commonGet(url).body();
+            JSONObject jsonObject = JSONObject.parseObject(body);
+            checkRespAndThrow(jsonObject,body);
+            JSONObject wbiImg = jsonObject.getJSONObject("data").getJSONObject("wbi_img");
+
+            imgKey = urlRegex
+                    .matcher(wbiImg.getString("img_url"))
+                    .group(1)
+                    .replace(".png", "");
+
+            subKey = urlRegex
+                    .matcher(wbiImg.getString("sub_url"))
+                    .group(1)
+                    .replace(".png", "");
+
+            //20小时刷新一次
+            redisUtil.setEx(WBI, Map.of(
+                    "imgKey",imgKey,
+                    "subKey",subKey
+            ), 20, TimeUnit.HOURS);
+
+        }else {
+            Map<String,String> map =   (Map<String,String>)redisUtil.get(WBI);
+            imgKey = map.get("imgKey");
+            subKey = map.get("subKey");
+        }
+
+        String mixinKey = getMixinKey(imgKey, subKey);
+        resultMap.put("wts", System.currentTimeMillis() / 1000);
+        StringJoiner param = new StringJoiner("&");
+        //排序 + 拼接字符串
+        resultMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> param.add(entry.getKey() + "=" + URLUtil.encode(entry.getValue().toString())));
+        String wbiSign = SecureUtil.md5(param + mixinKey);
+        resultMap.put("w_rid",wbiSign);
+
+        return resultMap;
+    }
+
+
+
+
+    private static String getMixinKey(String imgKey, String subKey) {
+        String s = imgKey + subKey;
+        StringBuilder key = new StringBuilder();
+        for (int i = 0; i < 32; i++) {
+            key.append(s.charAt(mixinKeyEncTab[i]));
+        }
+        return key.toString();
     }
 
 
