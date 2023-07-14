@@ -61,16 +61,16 @@
 5. java -jar xxxx.jar
 6. 挂机
 
-
 # 后续开发计划
 功能    |  功能描述 |  开发进度 
 -------- | --------- | -----
+增加web调试接口 | 提供http的方式，用于本地调试时添加关键词黑白名单 | 准备开始
+整合protobuf | 添加基于grpc的api 调用 | 尚未开始
+关键词同义词分析 | 对标题进行分词，生成同义词，再与关键词匹配，从而减少匹配误差 | 尚未开始
  与[vchat](https://github.com/cctyl/v_chat)联动 | 基于vchat进行消息推送、日志记录、指令发送 | 等待vchat重构
 编写[Greasyfork](https://greasyfork.org/zh-CN/users/416601-cctyl  ) 配套脚本| 基于脚本，实现在web端指定视频：关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 尚未开始
 tensorflow 进行图像识别  | 使用tensorflow 模型代替百度api 进行本地图像识别调用 | 准备阶段
 与[FakeBili](https://github.com/cctyl/FakeBiliBili)联动 | 在FakeBilibili客户端增加 关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 等待FakeBili项目启动
-
-
 
 # API 集合
 部分API来自 [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect/)，感谢作者。
