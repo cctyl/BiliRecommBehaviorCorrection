@@ -92,6 +92,49 @@ public class BiliApi {
     }
 
     /**
+     * 封装通用的get
+     * 携带cookie、ua、参数的url编码
+     * 记忆cookie
+     *
+     * @param url
+     * @return
+     */
+    private HttpResponse commonGet(String url, Map<String, Object> paramMap) {
+        HttpRequest request = HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .form(paramMap)
+                .cookie(getCookieStr());
+        HttpResponse response = request
+                .execute();
+        updateCookie(response);
+        return response;
+    }
+
+    /**
+     * 封装通用的get
+     * 携带cookie、ua、参数的url编码
+     * 记忆cookie
+     * 添加额外的请求头
+     *
+     * @param url
+     * @return
+     */
+    private HttpResponse commonGet(String url, Map<String, Object> paramMap,
+                                   Map<String, String> otherHeader) {
+        HttpRequest request = HttpRequest.get(url)
+                .header("User-Agent", BROWSER_UA_STR)
+                .form(paramMap)
+                .cookie(getCookieStr());
+
+        otherHeader.forEach(request::header);
+        HttpResponse response = request
+                .execute();
+        updateCookie(response);
+        return response;
+    }
+
+
+    /**
      * 封装通用Post
      *
      * @param url
@@ -112,24 +155,7 @@ public class BiliApi {
     }
 
 
-    /**
-     * 封装通用的get
-     * 携带cookie、ua、参数的url编码
-     * 记忆cookie
-     *
-     * @param url
-     * @return
-     */
-    private HttpResponse commonGet(String url, Map<String, Object> paramMap) {
-        HttpRequest request = HttpRequest.get(url)
-                .header("User-Agent", BROWSER_UA_STR)
-                .form(paramMap)
-                .cookie(getCookieStr());
-        HttpResponse response = request
-                .execute();
-        updateCookie(response);
-        return response;
-    }
+
 
 
     /**
@@ -180,9 +206,7 @@ public class BiliApi {
                 jsonObject
                         .getJSONObject("data")
                         .getJSONArray("list")
-                        .stream()
-                        .map(o -> ((JSONObject) o).to(VideoDetail.class))
-                        .collect(Collectors.toList());
+                        .toList(VideoDetail.class);
         return videoInfoList;
     }
 
@@ -344,9 +368,7 @@ public class BiliApi {
         }
 
         List<SearchResult> data = ((JSONObject) videoObj).getJSONArray("data")
-                .stream()
-                .map(o -> JSONObject.parseObject(o.toString(), SearchResult.class))
-                .collect(Collectors.toList());
+                .toList(SearchResult.class);
 
         return data;
     }
@@ -464,8 +486,7 @@ public class BiliApi {
         return jsonObject
                 .getJSONObject("data")
                 .getJSONArray("items")
-                .stream().map(o -> ((JSONObject) o).to(RecommendCard.class))
-                .collect(Collectors.toList());
+                .toList(RecommendCard.class);
     }
 
 
@@ -624,8 +645,8 @@ public class BiliApi {
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
 
-        List<Tag> data = jsonObject.getJSONArray("data").stream().map(o -> ((JSONObject) o).to(Tag.class))
-                .collect(Collectors.toList());
+        List<Tag> data = jsonObject.getJSONArray("data")
+                .toList(Tag.class);
 
         return data;
     }
@@ -703,21 +724,19 @@ public class BiliApi {
             checkRespAndThrow(jsonObject,body);
             JSONObject wbiImg = jsonObject.getJSONObject("data").getJSONObject("wbi_img");
 
-            imgKey = urlRegex
-                    .matcher(wbiImg.getString("img_url"))
-                    .group(1)
-                    .replace(".png", "");
+            String imgUrl = wbiImg.getString("img_url");
+            String subUrl = wbiImg.getString("sub_url");
 
-            subKey = urlRegex
-                    .matcher(wbiImg.getString("sub_url"))
-                    .group(1)
-                    .replace(".png", "");
+            imgKey = imgUrl.substring(imgUrl.lastIndexOf("/")+1).replace(".png","");
+            subKey = subUrl.substring(subUrl.lastIndexOf("/")+1).replace(".png","");
 
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("imgKey",imgKey);
+            map.put("subKey",subKey);
             //20小时刷新一次
-            redisUtil.setEx(WBI, Map.of(
-                    "imgKey",imgKey,
-                    "subKey",subKey
-            ), 20, TimeUnit.HOURS);
+            redisUtil.setEx(WBI,
+                    map,
+                    20, TimeUnit.HOURS);
 
         }else {
             Map<String,String> map =   (Map<String,String>)redisUtil.get(WBI);
@@ -738,9 +757,6 @@ public class BiliApi {
         return resultMap;
     }
 
-
-
-
     private static String getMixinKey(String imgKey, String subKey) {
         String s = imgKey + subKey;
         StringBuilder key = new StringBuilder();
@@ -750,5 +766,47 @@ public class BiliApi {
         return key.toString();
     }
 
+
+    /**
+     * 查询用户投稿的视频
+     * @param mid  用户id
+     * @param pageNumber 页码
+     * @param keyword 搜索关键词
+     */
+    public List<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
+                                          int pageNumber,
+                                          String keyword
+                                          ){
+        String url = "https://api.bilibili.com/x/space/wbi/arc/search";
+        String body = commonGet(url,
+               getWbi(false,
+                       Map.of(
+                               "mid", mid, //用户id
+                               "ps", 30,//每页数据大小
+                               "tid", 0, //不知具体用途
+                               "pn", pageNumber, //页码
+                               "keyword", keyword, //不知具体用途
+                               "order", "pubdate", //排序方式
+                               "platform", "web",
+                               "web_location", 1550101,//不知具体用途
+                               "order_avoided", true //不知具体用途
+                       )
+                       ),
+                Map.of(
+                        "Referer", "https://space.bilibili.com/" + mid + "/video",
+                        "Origin", "https://space.bilibili.com"
+                )
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+
+      return
+                jsonObject
+                        .getJSONObject("data")
+                        .getJSONObject("list")
+                        .getJSONArray("vlist")
+                        .toList(UserSubmissionVideo.class);
+
+    }
 
 }

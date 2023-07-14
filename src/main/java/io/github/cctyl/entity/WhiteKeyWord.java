@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -20,9 +21,9 @@ import java.util.stream.Collectors;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class WhiteKeyWord {
 
+    private String id;
 
     /**
      * 标签名
@@ -45,6 +46,9 @@ public class WhiteKeyWord {
      */
     private String coverKeyword;
 
+    public WhiteKeyWord() {
+        id = UUID.randomUUID().toString();
+    }
 
     /**
      * 标题是否匹配了对应的关键词
