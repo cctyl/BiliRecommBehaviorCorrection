@@ -4,13 +4,12 @@ package io.github.cctyl.initialization;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.WhiteKeyWord;
+import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -81,9 +80,9 @@ public class InitFromRedis implements ApplicationRunner {
         }
 
         //9.白名单关键词列表
-        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_KEY_WORD_KEY).stream().map(
+        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(
                 o -> {
-                    return (WhiteKeyWord)o;
+                    return (WhitelistRule)o;
                 }
         ).collect(Collectors.toList());
 

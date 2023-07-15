@@ -2,15 +2,14 @@ package io.github.cctyl.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
- * 白名单关键词
+ * 白名单规则
  * 它不能仅有关键词，还需要包含关键词对应的：
  * 分区名、
  * 标签名
@@ -21,7 +20,8 @@ import java.util.stream.Collectors;
  */
 @Data
 @AllArgsConstructor
-public class WhiteKeyWord {
+@Accessors(chain = true)
+public class WhitelistRule {
 
     private String id;
 
@@ -46,7 +46,7 @@ public class WhiteKeyWord {
      */
     private String coverKeyword;
 
-    public WhiteKeyWord() {
+    public WhitelistRule() {
         id = UUID.randomUUID().toString();
     }
 

@@ -68,11 +68,6 @@ public class VideoDetail {
     private Integer duration;
     @JSONField(name = "mission_id")
     private Integer missionId;
-    /**
-     * 新版本视频简介
-     */
-    @JSONField(name = "desc_v2")
-    private List<String> descV2;
 
     /**
      * 视频同步发布的的动态的文字内容
@@ -118,7 +113,7 @@ public class VideoDetail {
     /**
      * 标签列表
      */
-    List<Tag> tagList;
+    List<Tag> tags;
 
     @JSONField(name = "rights")
     private Rights rights;
@@ -155,9 +150,33 @@ public class VideoDetail {
     @JSONField(name = "need_jump_bv")
     private Boolean needJumpBv;
 
-
     private HandleType handleType;
 
+    @JSONField(name = "desc_v2")
+    private List<DescV2> descV2;
+    @JSONField(name = "owner")
+    private Owner ownerX;
+    @JSONField(name = "stat")
+    private Stat statX;
+    @JSONField(name = "premiere")
+    private Object premiereX;
+    @JSONField(name = "enable_vt")
+    private Integer enableVt;
+    @JSONField(name = "subtitle")
+    private Subtitle subtitleX;
+
+    @JSONField(name = "disable_show_up_info")
+    private Boolean disableShowUpInfo;
+    @JSONField(name = "up_from_v2")
+    private Integer upFromV2;
+
+    @JSONField(name = "rcmd_reason")
+    private String rcmdReason;
+
+    /**
+     * 相关推荐视频列表
+     */
+    private List<VideoDetail> relatedVideoList;
 
     @NoArgsConstructor
     @Data
@@ -168,6 +187,7 @@ public class VideoDetail {
     @Data
     public static class HonorReply {
     }
+
 
 
 }

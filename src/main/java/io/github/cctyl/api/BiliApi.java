@@ -378,7 +378,7 @@ public class BiliApi {
      *
      * @param avid
      */
-    public VideoDetail getVideoDetail(long avid) {
+    public VideoDetail getVideoCommonInfo(long avid) {
         String url = "https://api.bilibili.com/x/web-interface/view";
         String body = commonGet(url, Map.of("aid", avid)).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
@@ -809,4 +809,30 @@ public class BiliApi {
 
     }
 
+
+    /**
+     * 获取视频非常详细的信息
+     *  view 视频基本信息
+     *  Card UP主信息
+     *  Tags 视频的标签信息
+     *  Reply 视频热评信息
+     *  Related 相关视频列表
+     * @param avid 视频id
+     */
+    public VideoDetail getVideoDetail(long avid){
+        String url = "https://api.bilibili.com/x/web-interface/view/detail";
+        String body = commonGet(url, Map.of("aid", avid)).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(
+                jsonObject,body
+        );
+
+        JSONObject data = jsonObject.getJSONObject("data");
+        VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
+        videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
+        videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
+
+        return videoDetail;
+    }
 }

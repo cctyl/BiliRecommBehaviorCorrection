@@ -1,7 +1,7 @@
 package io.github.cctyl.config;
 
 import cn.hutool.dfa.WordTree;
-import io.github.cctyl.entity.WhiteKeyWord;
+import io.github.cctyl.entity.WhitelistRule;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -80,7 +80,7 @@ public class GlobalVariables {
     /**
      * 白名单关键词列表
      */
-    public static List<WhiteKeyWord> whiteKeyWordList;
+    public static List<WhitelistRule> whiteKeyWordList;
 
 
 }

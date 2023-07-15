@@ -2,29 +2,22 @@ package io.github.cctyl.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.dfa.WordTree;
-import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.SearchResult;
+import io.github.cctyl.entity.DescV2;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.WhiteKeyWord;
 import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.HttpCookie;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -109,10 +102,7 @@ public class BiliService {
         try {
             //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
             videoDetail = biliApi.getVideoDetail(avid);
-            //0.1 获取视频标签
-            if (CollUtil.isEmpty(videoDetail.getTagList())) {
-                videoDetail.setTagList(biliApi.getVideoTag(videoDetail.getAid()));
-            }
+
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackMatch(videoDetail)) {
                 //点踩
@@ -179,17 +169,17 @@ public class BiliService {
                                     item.descMatch(videoDetail.getDesc())
                                             ||
                                             videoDetail.getDescV2().stream().anyMatch(
-                                                    desc -> item.descMatch(desc)
+                                                    desc -> item.descMatch(desc.getRawText())
                                             );
                             log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
-                            boolean tagMatch = CollUtil.isNotEmpty(videoDetail.getTagList()) &&
+                            boolean tagMatch = CollUtil.isNotEmpty(videoDetail.getTags()) &&
                                     item.tagNameMatch(
-                                            videoDetail.getTagList()
+                                            videoDetail.getTags()
                                                     .stream()
                                                     .map(Tag::getTagName)
                                                     .collect(Collectors.toList())
                                     );
-                            log.info("tag {}匹配结果{}", videoDetail.getTagList()
+                            log.info("tag {}匹配结果{}", videoDetail.getTags()
                                     .stream()
                                     .map(Tag::getTagName)
                                     .collect(Collectors.toList()), tagMatch);
@@ -286,8 +276,8 @@ public class BiliService {
         boolean result = blackKeywordTree.isMatch(videoDetail.getDesc());
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
-            result = result || videoDetail.getDescV2().stream().anyMatch(blackKeywordTree::isMatch);
-            desc = desc + "," + videoDetail.getDescV2().stream().collect(Collectors.joining(","));
+            result = result || videoDetail.getDescV2().stream().map(DescV2::getRawText).anyMatch(blackKeywordTree::isMatch);
+            desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
         }
         log.debug("视频:{}-{}的 简介：{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -345,14 +335,14 @@ public class BiliService {
     private boolean isTagMatch(VideoDetail videoDetail) {
 
 
-        boolean match = videoDetail.getTagList()
+        boolean match = videoDetail.getTags()
                 .stream().map(Tag::getTagName)
                 .anyMatch(s -> GlobalVariables.blackTagTree.isMatch(s));
 
         log.debug("视频:{}-{}的 tag：{}，匹配结果：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
-                videoDetail.getTagList(),
+                videoDetail.getTags(),
                 match);
 
         return match;

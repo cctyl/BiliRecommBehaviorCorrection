@@ -68,7 +68,7 @@ public class AppConstant {
     /**
      * 白名单关键词列表
      */
-    public static final String WHITE_KEY_WORD_KEY = PREFIX + "white_key_word";
+    public static final String WHITE_LIST_RULE_KEY = PREFIX + "white_list_rule";
 
     /**
      * 百度accessKey

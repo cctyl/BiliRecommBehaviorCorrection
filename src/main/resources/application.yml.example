@@ -58,7 +58,7 @@ common:
     whiteUserId:
       - xxx
     # 白名单关键词规则，4个条件中两个匹配才通过。每一个whiteKeyWord实体类的四个条件之间是存在关联关系的
-    whiteKeyWordList:
+    whitleRuleList:
         # 标签名列表
       - tagNameList:
           - 萌宠
