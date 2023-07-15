@@ -819,7 +819,7 @@ public class BiliApi {
      *  Related 相关视频列表
      * @param avid 视频id
      */
-    public VideoDetail getVideoDetail(long avid){
+    public VideoDetail getVideoDetail(Integer avid){
         String url = "https://api.bilibili.com/x/web-interface/view/detail";
         String body = commonGet(url, Map.of("aid", avid)).body();
 
