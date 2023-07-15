@@ -17,6 +17,7 @@ import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -173,25 +174,31 @@ public class BiliService {
                 .anyMatch(item ->
                         {
                             boolean titleMatch = item.titleMatch(videoDetail.getTitle());
+                            log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
                             boolean descMatch =
                                     item.descMatch(videoDetail.getDesc())
                                             ||
                                             videoDetail.getDescV2().stream().anyMatch(
                                                     desc -> item.descMatch(desc)
                                             );
-                            boolean tagMatch = item.tagNameMatch(videoDetail.getTagList()
+                            log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
+                            boolean tagMatch = CollUtil.isNotEmpty(videoDetail.getTagList()) &&
+                                    item.tagNameMatch(
+                                            videoDetail.getTagList()
+                                                    .stream()
+                                                    .map(Tag::getTagName)
+                                                    .collect(Collectors.toList())
+                                    );
+                            log.info("tag {}匹配结果{}", videoDetail.getTagList()
                                     .stream()
                                     .map(Tag::getTagName)
-                                    .collect(Collectors.toList()));
-
+                                    .collect(Collectors.toList()), tagMatch);
                             //两个以上的判断都通过，才表示
                             return Stream.of(titleMatch, descMatch, tagMatch).filter(Boolean.TRUE::equals).count() > 1;
                         }
 
                 );
         return
-
-
                 //up主id处于白名单
                 GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
                         ||
