@@ -14,4 +14,16 @@ public class ThreadUtil {
             e.printStackTrace();
         }
     }
+    public static void sleep2Second(){
+        sleep(2);
+    }
+    public static void sleep5Second(){
+        sleep(5);
+    }
+    public static void sleep1Second(){
+        sleep(1);
+    }
+    public static void sleep10Second(){
+        sleep(10);
+    }
 }

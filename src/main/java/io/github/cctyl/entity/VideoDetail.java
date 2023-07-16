@@ -154,16 +154,12 @@ public class VideoDetail {
 
     @JSONField(name = "desc_v2")
     private List<DescV2> descV2;
-    @JSONField(name = "owner")
-    private Owner ownerX;
-    @JSONField(name = "stat")
-    private Stat statX;
-    @JSONField(name = "premiere")
-    private Object premiereX;
+
+
+
     @JSONField(name = "enable_vt")
     private Integer enableVt;
-    @JSONField(name = "subtitle")
-    private Subtitle subtitleX;
+
 
     @JSONField(name = "disable_show_up_info")
     private Boolean disableShowUpInfo;

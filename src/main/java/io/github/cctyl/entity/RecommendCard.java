@@ -58,8 +58,6 @@ public class RecommendCard {
     private String cardType;
     @JSONField(name = "card_goto")
     private String cardGoto;
-    @JSONField(name = "goto")
-    private String gotoX;
     @JSONField(name = "param")
     private String param;
     @JSONField(name = "cover")
