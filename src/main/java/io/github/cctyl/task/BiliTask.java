@@ -79,9 +79,9 @@ public class BiliTask {
     }
 
     /**
-     * 关键词搜索任务
+     * 关键词搜索任务 中午12点
      */
-    @Scheduled(cron = "0 9 * * * *")
+    @Scheduled(cron = "* 0 12 * * *")
     public void searchTask() {
         before();
         //0.初始化部分
@@ -120,7 +120,7 @@ public class BiliTask {
     /**
      * 热门排行榜任务
      */
-    @Scheduled(cron = "0 11 * * * *")
+    @Scheduled(cron = "* 3 18 * * *")
     public void hotRankTask() {
         before();
         //0.初始化部分
@@ -153,7 +153,7 @@ public class BiliTask {
     /**
      * 首页推荐任务
      */
-    @Scheduled(cron = "0 12 * * * *")
+    @Scheduled(cron = "0 1 19 * * *")
     public void homeRecommendTask() {
         before();
         //0.初始化部分
