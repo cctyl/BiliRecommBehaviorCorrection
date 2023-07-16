@@ -483,6 +483,9 @@ public class BiliService {
     public WhitelistRule whiteKeyWordAutomaticCorrection(
             WhitelistRule whitelistRule,
             List<Integer> whiteAvidList) {
+        if (whitelistRule==null){
+            whitelistRule = new WhitelistRule().setId(UUID.randomUUID().toString());
+        }
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(),whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
