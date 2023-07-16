@@ -781,8 +781,8 @@ public class BiliApi {
      * @param pageNumber 页码
      * @param keyword    搜索关键词
      */
-    public List<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
-                                                               int pageNumber,
+    public PageBean<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
+                                                               long pageNumber,
                                                                String keyword
     ) {
         String url = "https://api.bilibili.com/x/space/wbi/arc/search";
@@ -808,13 +808,16 @@ public class BiliApi {
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
 
-        return
-                jsonObject
-                        .getJSONObject("data")
-                        .getJSONObject("list")
-                        .getJSONArray("vlist")
-                        .toList(UserSubmissionVideo.class);
+        JSONObject data = jsonObject .getJSONObject("data");
+        List<UserSubmissionVideo> userSubmissionVideoList = data
+                .getJSONObject("list")
+                .getJSONArray("vlist")
+                .toList(UserSubmissionVideo.class);
 
+        return new PageBean<UserSubmissionVideo>().setData(userSubmissionVideoList)
+                .setPageNum(pageNumber)
+                .setPageSize(30)
+                .setTotal(data.getJSONObject("page").getIntValue("count"));
     }
 
 
