@@ -160,26 +160,33 @@ public class BiliService {
                 .stream()
                 .anyMatch(item ->
                         {
-                            boolean titleMatch = item.titleMatch(videoDetail.getTitle());
-                            log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
+                            boolean titleMatch = false;
                             boolean descMatch =
-                                    item.descMatch(videoDetail.getDesc())
-                                            ||
-                                            videoDetail.getDescV2().stream().anyMatch(
-                                                    desc -> item.descMatch(desc.getRawText())
-                                            );
-                            log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
-                            boolean tagMatch = CollUtil.isNotEmpty(videoDetail.getTags()) &&
-                                    item.tagNameMatch(
-                                            videoDetail.getTags()
-                                                    .stream()
-                                                    .map(Tag::getTagName)
-                                                    .collect(Collectors.toList())
-                                    );
-                            log.info("tag {}匹配结果{}", videoDetail.getTags()
-                                    .stream()
-                                    .map(Tag::getTagName)
-                                    .collect(Collectors.toList()), tagMatch);
+                                    false;
+                            boolean tagMatch = false;
+                            try {
+                                titleMatch = item.titleMatch(videoDetail.getTitle());
+                                log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
+                                descMatch = item.descMatch(videoDetail.getDesc())
+                                        ||
+                                        videoDetail.getDescV2().stream().anyMatch(
+                                                desc -> item.descMatch(desc.getRawText())
+                                        );
+                                log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
+                                tagMatch = CollUtil.isNotEmpty(videoDetail.getTags()) &&
+                                        item.tagNameMatch(
+                                                videoDetail.getTags()
+                                                        .stream()
+                                                        .map(Tag::getTagName)
+                                                        .collect(Collectors.toList())
+                                        );
+                                log.info("tag {}匹配结果{}", videoDetail.getTags()
+                                        .stream()
+                                        .map(Tag::getTagName)
+                                        .collect(Collectors.toList()), tagMatch);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                             //两个以上的判断都通过，才表示
                             return Stream.of(titleMatch, descMatch, tagMatch).filter(Boolean.TRUE::equals).count() > 1;
                         }

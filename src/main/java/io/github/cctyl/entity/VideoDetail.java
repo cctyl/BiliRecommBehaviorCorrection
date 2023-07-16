@@ -5,6 +5,7 @@ import io.github.cctyl.entity.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -153,8 +154,7 @@ public class VideoDetail {
     private HandleType handleType;
 
     @JSONField(name = "desc_v2")
-    private List<DescV2> descV2;
-
+    private List<DescV2> descV2 = new ArrayList<>();
 
 
     @JSONField(name = "enable_vt")
@@ -172,7 +172,7 @@ public class VideoDetail {
     /**
      * 相关推荐视频列表
      */
-    private List<VideoDetail> relatedVideoList;
+    private List<VideoDetail> relatedVideoList = new ArrayList<>();
 
     @NoArgsConstructor
     @Data
@@ -183,7 +183,6 @@ public class VideoDetail {
     @Data
     public static class HonorReply {
     }
-
 
 
 }
