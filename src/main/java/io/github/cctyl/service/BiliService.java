@@ -6,20 +6,18 @@ import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.DescV2;
-import io.github.cctyl.entity.Tag;
-import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.*;
 import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.SegmenterUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -477,4 +475,73 @@ public class BiliService {
         );
 
     }
+
+
+    /**
+     * 白名单关键词自动修正补全
+     * 传入一个指定的白名单规则对象，
+     * 传入你认为应当符合该规则的视频id
+     *
+     * @param whitelistRule 需要训练的白名单规则
+     * @param whiteAvidList 应当符号白名单规则的视频id集合
+     */
+    public WhitelistRule whiteKeyWordAutomaticCorrection(
+            WhitelistRule whitelistRule,
+            List<Integer> whiteAvidList) {
+
+        log.info("开始对:{} 规则进行训练",whitelistRule.getId());
+
+        List<String> titleProcess = new ArrayList<>();
+        List<String> descProcess = new ArrayList<>();
+        List<String> tagNameProcess = new ArrayList<>();
+        for (Integer avid : whiteAvidList) {
+            try {
+                VideoDetail videoDetail = biliApi.getVideoDetail(avid);
+
+                //1. 标题处理
+                String title = videoDetail.getTitle();
+                titleProcess.addAll(SegmenterUtil.process(title));
+
+                //2.描述
+                String desc = videoDetail.getDesc();
+                List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+                descProcess.addAll(SegmenterUtil.process(desc));
+                descProcess.addAll(descV2Process);
+
+                //3.标签
+                List<String> tagNameList = videoDetail.getTags().stream().map(Tag::getTagName).collect(Collectors.toList());
+                tagNameProcess.addAll(tagNameList);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            ThreadUtil.sleep(10);
+        }
+
+        //统计频次
+        Map<String, Integer> descKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(descProcess);
+        Map<String, Integer> tagNameFrequencyMap = SegmenterUtil.generateFrequencyMap(tagNameProcess);
+        Map<String, Integer> titleKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(titleProcess);
+        List<String> topDescKeyWord = SegmenterUtil.getTop5FrequentWord(descKeywordFrequencyMap);
+        List<String> topTagName = SegmenterUtil.getTop5FrequentWord(tagNameFrequencyMap);
+        List<String> topTitleKeyWord = SegmenterUtil.getTop5FrequentWord(titleKeywordFrequencyMap);
+
+        log.info("本次训练结束 \r\n\t前5的标题关键词是:{} \r\n\t 前5的标签名是:{} \r\n\t 前5的描述关键词是:{}",
+                topTitleKeyWord,
+                topTagName,
+                topDescKeyWord
+        );
+        whitelistRule.getTagNameList().addAll(topTagName);
+        whitelistRule.getTitleKeyWordList().addAll(topTitleKeyWord);
+        whitelistRule.getDescKeyWordList().addAll(topDescKeyWord);
+
+        return whitelistRule;
+
+
+
+    }
+
+
 }

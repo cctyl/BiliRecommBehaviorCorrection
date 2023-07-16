@@ -17,7 +17,8 @@ public class BeanProvider implements ApplicationContextAware {
     }
 
 
-
-
+    public static ApplicationContext getApplicationContext(){
+        return applicationContext;
+    }
 
 }

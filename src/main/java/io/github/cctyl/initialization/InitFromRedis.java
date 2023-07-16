@@ -2,6 +2,7 @@ package io.github.cctyl.initialization;
 
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.resource.ClassPathResource;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.WhitelistRule;
@@ -13,6 +14,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -85,6 +93,12 @@ public class InitFromRedis implements ApplicationRunner {
                     return (WhitelistRule)o;
                 }
         ).collect(Collectors.toList());
+
+        //10.加载停顿词
+       if ( redisUtil.sMembers(STOP_WORDS_KEY).size()==0){
+           ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
+           redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
+       }
 
     }
 

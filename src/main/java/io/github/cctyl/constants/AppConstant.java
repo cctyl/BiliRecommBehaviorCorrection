@@ -75,6 +75,7 @@ public class AppConstant {
      */
     public static final String BAIDU_ASK_KEY = "baidu_accesskey";
 
+    public static final String STOP_WORDS_KEY = "stop_words";
 
     /**
      * 最大图片大小 3M
@@ -104,5 +105,7 @@ public class AppConstant {
      * 浏览器端的userAgent
      */
     public static final String BROWSER_UA_STR = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0";
+
+
 
 }
