@@ -1,12 +1,12 @@
 package io.github.cctyl.entity;
 
+import io.github.cctyl.utils.IdGenerator;
+import io.github.cctyl.utils.SnowFlake;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * 白名单规则
@@ -23,31 +23,31 @@ import java.util.UUID;
 @Accessors(chain = true)
 public class WhitelistRule {
 
-    private String id;
+    private Long id;
 
     /**
      * 标签名
      */
-    private List<String> tagNameList;
+    private Set<String> tagNameList = new HashSet<>();
 
     /**
      * 视频描述应当包含的关键词
      */
-    private List<String> descKeyWordList;
+    private Set<String> descKeyWordList = new HashSet<>();
 
 
     /**
      * 视频标题应当包含的关键词
      */
-    private List<String> titleKeyWordList;
+    private Set<String> titleKeyWordList= new HashSet<>();
 
     /**
      * 封面信息应当包含的关键词
      */
-    private String coverKeyword;
+    private String coverKeyword = "";
 
     public WhitelistRule() {
-        id = UUID.randomUUID().toString();
+        id = IdGenerator.nextId();
     }
 
     /**
@@ -91,5 +91,19 @@ public class WhitelistRule {
     public boolean coverMatch(String picUrl) {
         //todo 尚未实现
         return false;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WhitelistRule that = (WhitelistRule) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

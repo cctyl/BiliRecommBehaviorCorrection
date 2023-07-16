@@ -8,10 +8,7 @@ import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.entity.enumeration.HandleType;
-import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.RedisUtil;
-import io.github.cctyl.utils.SegmenterUtil;
-import io.github.cctyl.utils.ThreadUtil;
+import io.github.cctyl.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -188,15 +185,20 @@ public class BiliService {
                         }
 
                 );
-        return
-                //up主id处于白名单
-                GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
-                        ||
-                        //分区id处于白名单
-                        GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()))
-                        ||
-                        keyWordFlag
-                ;
+        try {
+            return
+                    //up主id处于白名单
+                    GlobalVariables.whiteUserIdSet.contains(videoDetail.getOwner().getMid())
+                            ||
+                            //分区id处于白名单
+                            GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()))
+                            ||
+                            keyWordFlag
+                    ;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -314,6 +316,10 @@ public class BiliService {
      * @return
      */
     private boolean isMidMatch(Set<String> blackUserIdSet, VideoDetail videoDetail) {
+        if (videoDetail.getOwner()==null || videoDetail.getOwner().getMid()==null){
+            log.error("视频:{}缺少up主信息",videoDetail.toString());
+            return false;
+        }
         boolean match = blackUserIdSet
                 .contains(videoDetail.getOwner().getMid());
 
@@ -480,11 +486,11 @@ public class BiliService {
      * @param whitelistRule 需要训练的白名单规则
      * @param whiteAvidList 应当符号白名单规则的视频id集合
      */
-    public WhitelistRule whiteKeyWordAutomaticCorrection(
+    public WhitelistRule train(
             WhitelistRule whitelistRule,
             List<Integer> whiteAvidList) {
         if (whitelistRule==null){
-            whitelistRule = new WhitelistRule().setId(UUID.randomUUID().toString());
+            whitelistRule = new WhitelistRule().setId(IdGenerator.nextId());
         }
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(),whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
@@ -493,7 +499,6 @@ public class BiliService {
         for (Integer avid : whiteAvidList) {
             try {
                 VideoDetail videoDetail = biliApi.getVideoDetail(avid);
-
                 //1. 标题处理
                 String title = videoDetail.getTitle();
                 titleProcess.addAll(SegmenterUtil.process(title));
@@ -509,6 +514,7 @@ public class BiliService {
                 //3.标签
                 List<String> tagNameList = videoDetail.getTags().stream().map(Tag::getTagName).collect(Collectors.toList());
                 tagNameProcess.addAll(tagNameList);
+                log.info("获得视频信息:{}",videoDetail);
             } catch (Exception e) {
                 e.printStackTrace();
             }
