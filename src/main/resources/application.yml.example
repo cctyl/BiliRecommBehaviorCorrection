@@ -69,6 +69,7 @@ common:
         # 描述应当包含的关键词列表
         descKeyWordList:
           - 猫
+          - 狸花猫
 
         # 封面经过物体识别后的结果，应当包含的关键词列表
         coverKeyword: 猫
