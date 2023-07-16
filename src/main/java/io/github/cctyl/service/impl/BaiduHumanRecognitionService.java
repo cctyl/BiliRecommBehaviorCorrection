@@ -30,6 +30,7 @@ public class BaiduHumanRecognitionService implements ImageGenderDetectService {
      */
     public int getGender(byte[] bytes) {
         try {
+            log.debug("开始性别识别");
             BaiduImageClassify baiduImageClassify = baiduApi.getGender(baiduApi.getFileContentAsBase64(bytes));
             List<BaiduImageClassify.PersonInfo> personInfoList = baiduImageClassify.getPersonInfo();
             if (baiduImageClassify.getPersonNum()>0 && CollUtil.isNotEmpty(personInfoList)) {

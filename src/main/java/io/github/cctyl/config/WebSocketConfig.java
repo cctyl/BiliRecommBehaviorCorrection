@@ -17,7 +17,7 @@ public class WebSocketConfig {
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    @Bean("vchat")
+    //@Bean("vchat")
     public WebSocketClient vchatWebSocketClient() throws URISyntaxException {
         WebSocketClient client = new VchatWebSocketClient(applicationProperties.getWs().getUrl());
         client.connect();

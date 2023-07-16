@@ -5,10 +5,9 @@ import lombok.Data;
 
 public enum ErrorCode {
 
-    ALREAD_THUMBUP(65007,"已踩过"),
+    ALREAD_THUMBUP(65007, "已踩过"),
 
     ;
-
     private int code;
     private String message;
 

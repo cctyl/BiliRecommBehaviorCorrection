@@ -59,7 +59,6 @@ public class BiliApi {
 
     /**
      * urlRegex
-     *
      */
     private static Pattern urlRegex = Pattern.compile(".*/([^/]+\\.png)$");
 
@@ -88,6 +87,7 @@ public class BiliApi {
         HttpResponse response = request
                 .execute();
         updateCookie(response);
+        log.debug("body={}", response.body());
         return response;
     }
 
@@ -106,6 +106,7 @@ public class BiliApi {
                 .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
+        log.debug("body={}", response.body());
         updateCookie(response);
         return response;
     }
@@ -129,6 +130,7 @@ public class BiliApi {
         otherHeader.forEach(request::header);
         HttpResponse response = request
                 .execute();
+        log.debug("body={}", response.body());
         updateCookie(response);
         return response;
     }
@@ -150,12 +152,10 @@ public class BiliApi {
                         .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
+        log.debug("body={}", response.body());
         updateCookie(response);
         return response;
     }
-
-
-
 
 
     /**
@@ -305,6 +305,7 @@ public class BiliApi {
 
         JSONObject jsonObject = supplier.get();
         if (checkIsNoLogin(jsonObject)) {
+            log.debug("尝试刷新accessToken，并重新发起请求");
             //账号未登陆，强制刷新token，重新发起这次请求
             getAccessKeyByCookie(true);
             ThreadUtil.sleep(1);
@@ -325,15 +326,17 @@ public class BiliApi {
 
     /**
      * 响应
+     *
      * @param jsonObject
      */
-    private void checkOtherCode(JSONObject jsonObject){
-        switch (jsonObject.getIntValue("code")){
+    private void checkOtherCode(JSONObject jsonObject) {
+        switch (jsonObject.getIntValue("code")) {
             case 65007:
                 log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
                 break;
 
             default:
+                log.error("body={}", jsonObject.toString());
                 throw new RuntimeException("响应异常");
         }
     }
@@ -364,6 +367,7 @@ public class BiliApi {
                 .findFirst()
                 .orElse(null);
         if (videoObj == null) {
+            log.error("查询结果为空, body={}", body);
             return null;
         }
 
@@ -499,6 +503,7 @@ public class BiliApi {
     public String getAccessKeyByCookie(boolean refresh) {
         //如果缓存中存在，则直接返回
         if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))) {
+            log.debug("缓存中得到了accessKey={}", redisUtil.get(ACCESS_KEY));
             return (String) redisUtil.get(ACCESS_KEY);
         }
         String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
@@ -515,7 +520,7 @@ public class BiliApi {
                 .execute();
         String location = redirect.header(Header.LOCATION);
         String accessKey = DataUtil.getUrlQueryParam(location, "access_key");
-        log.info("获得的accessKey为：{}", accessKey);
+        log.debug("请求获得的accessKey为：{}", accessKey);
         redisUtil.setEx(ACCESS_KEY, accessKey, 29, TimeUnit.DAYS);
         return accessKey;
     }
@@ -681,6 +686,7 @@ public class BiliApi {
 
     /**
      * 获取签名后的参数，返回一个包含签名的map
+     *
      * @param params
      * @return
      */
@@ -709,37 +715,38 @@ public class BiliApi {
 
     /**
      * 获取wbi签名的字符串，返回一个拼接好的urlQuery: wts=xxxx&w_rid=xxxx
+     *
      * @param refresh
      * @return
      */
-    public Map<String,Object> getWbi(boolean refresh, final Map<String,Object> paramMap) {
+    public Map<String, Object> getWbi(boolean refresh, final Map<String, Object> paramMap) {
         //如果缓存中存在，则直接返回
         HashMap<String, Object> resultMap = new HashMap<>(paramMap);
         String imgKey;
         String subKey;
-        if (refresh ||  redisUtil.get(WBI)==null ) {
+        if (refresh || redisUtil.get(WBI) == null) {
             String url = "https://api.bilibili.com/x/web-interface/nav";
             String body = commonGet(url).body();
             JSONObject jsonObject = JSONObject.parseObject(body);
-            checkRespAndThrow(jsonObject,body);
+            checkRespAndThrow(jsonObject, body);
             JSONObject wbiImg = jsonObject.getJSONObject("data").getJSONObject("wbi_img");
 
             String imgUrl = wbiImg.getString("img_url");
             String subUrl = wbiImg.getString("sub_url");
 
-            imgKey = imgUrl.substring(imgUrl.lastIndexOf("/")+1).replace(".png","");
-            subKey = subUrl.substring(subUrl.lastIndexOf("/")+1).replace(".png","");
+            imgKey = imgUrl.substring(imgUrl.lastIndexOf("/") + 1).replace(".png", "");
+            subKey = subUrl.substring(subUrl.lastIndexOf("/") + 1).replace(".png", "");
 
             HashMap<String, Object> map = new HashMap<>();
-            map.put("imgKey",imgKey);
-            map.put("subKey",subKey);
+            map.put("imgKey", imgKey);
+            map.put("subKey", subKey);
             //20小时刷新一次
             redisUtil.setEx(WBI,
                     map,
                     20, TimeUnit.HOURS);
 
-        }else {
-            Map<String,String> map =   (Map<String,String>)redisUtil.get(WBI);
+        } else {
+            Map<String, String> map = (Map<String, String>) redisUtil.get(WBI);
             imgKey = map.get("imgKey");
             subKey = map.get("subKey");
         }
@@ -752,7 +759,7 @@ public class BiliApi {
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> param.add(entry.getKey() + "=" + URLUtil.encode(entry.getValue().toString())));
         String wbiSign = SecureUtil.md5(param + mixinKey);
-        resultMap.put("w_rid",wbiSign);
+        resultMap.put("w_rid", wbiSign);
 
         return resultMap;
     }
@@ -769,38 +776,39 @@ public class BiliApi {
 
     /**
      * 查询用户投稿的视频
-     * @param mid  用户id
+     *
+     * @param mid        用户id
      * @param pageNumber 页码
-     * @param keyword 搜索关键词
+     * @param keyword    搜索关键词
      */
     public List<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
-                                          int pageNumber,
-                                          String keyword
-                                          ){
+                                                               int pageNumber,
+                                                               String keyword
+    ) {
         String url = "https://api.bilibili.com/x/space/wbi/arc/search";
         String body = commonGet(url,
-               getWbi(false,
-                       Map.of(
-                               "mid", mid, //用户id
-                               "ps", 30,//每页数据大小
-                               "tid", 0, //不知具体用途
-                               "pn", pageNumber, //页码
-                               "keyword", keyword, //不知具体用途
-                               "order", "pubdate", //排序方式
-                               "platform", "web",
-                               "web_location", 1550101,//不知具体用途
-                               "order_avoided", true //不知具体用途
-                       )
-                       ),
+                getWbi(false,
+                        Map.of(
+                                "mid", mid, //用户id
+                                "ps", 30,//每页数据大小
+                                "tid", 0, //不知具体用途
+                                "pn", pageNumber, //页码
+                                "keyword", keyword, //不知具体用途
+                                "order", "pubdate", //排序方式
+                                "platform", "web",
+                                "web_location", 1550101,//不知具体用途
+                                "order_avoided", true //不知具体用途
+                        )
+                ),
                 Map.of(
                         "Referer", "https://space.bilibili.com/" + mid + "/video",
                         "Origin", "https://space.bilibili.com"
                 )
         ).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(jsonObject,body);
+        checkRespAndThrow(jsonObject, body);
 
-      return
+        return
                 jsonObject
                         .getJSONObject("data")
                         .getJSONObject("list")
@@ -812,20 +820,21 @@ public class BiliApi {
 
     /**
      * 获取视频非常详细的信息
-     *  view 视频基本信息
-     *  Card UP主信息
-     *  Tags 视频的标签信息
-     *  Reply 视频热评信息
-     *  Related 相关视频列表
+     * view 视频基本信息
+     * Card UP主信息
+     * Tags 视频的标签信息
+     * Reply 视频热评信息
+     * Related 相关视频列表
+     *
      * @param avid 视频id
      */
-    public VideoDetail getVideoDetail(Integer avid){
+    public VideoDetail getVideoDetail(Integer avid) {
         String url = "https://api.bilibili.com/x/web-interface/view/detail";
         String body = commonGet(url, Map.of("aid", avid)).body();
 
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(
-                jsonObject,body
+                jsonObject, body
         );
 
         JSONObject data = jsonObject.getJSONObject("data");

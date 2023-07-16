@@ -56,13 +56,18 @@ public class BaiduApi {
     public BaiduImageClassify getGender(String imgBase64Str) {
 
 
-        JSONObject jsonObject = checkRespAndRetry(() -> JSONObject.parseObject(HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken(false))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .header("Accept", "application/json")
-                .body("image=" + imgBase64Str)
-                .execute()
-                .body()));
-
+        JSONObject jsonObject =
+                checkRespAndRetry(
+                        () -> JSONObject.parseObject(
+                                HttpRequest.post("https://aip.baidubce.com/rest/2.0/image-classify/v1/body_attr?access_token=" + getAccessToken(false))
+                                        .header("Content-Type", "application/x-www-form-urlencoded")
+                                        .header("Accept", "application/json")
+                                        .body("image=" + imgBase64Str)
+                                        .execute()
+                                        .body()
+                        )
+                );
+        log.debug(jsonObject.toString());
         return jsonObject.to(BaiduImageClassify.class);
     }
 
@@ -83,6 +88,7 @@ public class BaiduApi {
                     .execute()
                     .body()));
 
+            log.debug(jsonObject.toString());
             if (jsonObject.getIntValue("result_num") < 1) {
                 return false;
             } else {

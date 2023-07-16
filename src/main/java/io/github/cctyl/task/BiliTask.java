@@ -48,9 +48,9 @@ public class BiliTask {
     private BiliApi biliApi;
 
 
-    @Autowired
-    @Qualifier("vchat")
-    private WebSocketClient vchatCliet;
+    //@Autowired
+    //@Qualifier("vchat")
+    //private WebSocketClient vchatCliet;
 
 
     /**
@@ -110,7 +110,6 @@ public class BiliTask {
                     //处理挑选结果
                     biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
                     ThreadUtil.sleep(5);
-
                 });
             }
             ThreadUtil.sleep(3);
@@ -183,7 +182,6 @@ public class BiliTask {
         }
         videoLogOutput(thumbUpVideoList, dislikeVideoList);
     }
-
 
     /**
      * 执行完毕后输出日志

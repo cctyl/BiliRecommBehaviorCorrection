@@ -40,6 +40,7 @@ public class InitFromRedis implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        log.debug("初始化...从redis中加载数据...");
         //0.加载cookie
         Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
         if (CollUtil.isNotEmpty(cookiesFromRedis)) {
@@ -83,22 +84,22 @@ public class InitFromRedis implements ApplicationRunner {
         GlobalVariables.whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
 
         //8.最小播放时间
-        if (applicationProperties.getMinPlaySecond()==null){
+        if (applicationProperties.getMinPlaySecond() == null) {
             applicationProperties.setMinPlaySecond(50);
         }
 
         //9.白名单关键词列表
         GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(
                 o -> {
-                    return (WhitelistRule)o;
+                    return (WhitelistRule) o;
                 }
         ).collect(Collectors.toList());
 
         //10.加载停顿词
-       if ( redisUtil.sMembers(STOP_WORDS_KEY).size()==0){
-           ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
-           redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
-       }
+        if (redisUtil.sMembers(STOP_WORDS_KEY).size() == 0) {
+            ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
+            redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
+        }
 
     }
 

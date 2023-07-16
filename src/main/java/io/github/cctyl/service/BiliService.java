@@ -14,6 +14,7 @@ import io.github.cctyl.utils.SegmenterUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -61,6 +62,7 @@ public class BiliService {
      * 更新一下必要的cookie
      */
     public void updateCookie() {
+        log.debug("更新一次cookie");
         biliApi.getHome();
     }
 
@@ -92,6 +94,7 @@ public class BiliService {
                             int avid
     ) {
 
+        log.debug("处理视频avid={}", avid);
         if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, avid)) {
             log.info("视频：{} 之前已处理过", avid);
             return;
@@ -108,7 +111,6 @@ public class BiliService {
                 //加日志
                 dislikeVideoList.add(videoDetail);
                 recordHandleVideo(videoDetail, HandleType.DISLIKE);
-
             } else if (whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
@@ -331,8 +333,6 @@ public class BiliService {
      * @return
      */
     private boolean isTagMatch(VideoDetail videoDetail) {
-
-
         boolean match = videoDetail.getTags()
                 .stream().map(Tag::getTagName)
                 .anyMatch(s -> GlobalVariables.blackTagTree.isMatch(s));
@@ -353,13 +353,11 @@ public class BiliService {
      * @param videoDetail
      */
     public void playAndThumbUp(VideoDetail videoDetail) {
-
         //模拟播放
         String url = biliApi.getVideoUrl(videoDetail.getBvid(), videoDetail.getCid());
         log.debug("模拟播放，获得的urk={}", url);
         ThreadUtil.sleep(1);
         simulatePlay(videoDetail.getAid(), videoDetail.getCid(), videoDetail.getDuration());
-
         //点赞
         biliApi.thumpUp(videoDetail.getAid());
     }
@@ -370,10 +368,7 @@ public class BiliService {
      * 必须有从开始到结束的几个心跳
      */
     public void simulatePlay(int aid, int cid, int videoDuration) {
-
-
         long start_ts = System.currentTimeMillis() / 1000;
-
 
         //0.初始播放
         biliApi.reportHeartBeat(
@@ -488,9 +483,7 @@ public class BiliService {
     public WhitelistRule whiteKeyWordAutomaticCorrection(
             WhitelistRule whitelistRule,
             List<Integer> whiteAvidList) {
-
-        log.info("开始对:{} 规则进行训练",whitelistRule.getId());
-
+        log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(),whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
         List<String> tagNameProcess = new ArrayList<>();
@@ -538,9 +531,6 @@ public class BiliService {
         whitelistRule.getDescKeyWordList().addAll(topDescKeyWord);
 
         return whitelistRule;
-
-
-
     }
 
 
