@@ -174,6 +174,13 @@ public class VideoDetail {
      */
     private List<VideoDetail> relatedVideoList = new ArrayList<>();
 
+    @JSONField(name = "score")
+    private Integer score;
+
+    @JSONField(name = "others")
+    private List<VideoDetail> others;
+
+
     @NoArgsConstructor
     @Data
     public static class UserGarb {

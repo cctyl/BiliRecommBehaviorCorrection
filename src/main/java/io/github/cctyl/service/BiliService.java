@@ -169,7 +169,7 @@ public class BiliService {
                                 log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
                                 descMatch = item.descMatch(videoDetail.getDesc())
                                         ||
-                                        videoDetail.getDescV2().stream().anyMatch(
+                                   CollUtil.isNotEmpty( videoDetail.getDescV2()) &&    videoDetail.getDescV2().stream().anyMatch(
                                                 desc -> item.descMatch(desc.getRawText())
                                         );
                                 log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
@@ -185,6 +185,9 @@ public class BiliService {
                                         .map(Tag::getTagName)
                                         .collect(Collectors.toList()), tagMatch);
                             } catch (Exception e) {
+
+                                log.error("出现异常:{},视频信息：{}",e.getMessage(),videoDetail.toString());
+
                                 e.printStackTrace();
                             }
                             //两个以上的判断都通过，才表示
@@ -512,11 +515,15 @@ public class BiliService {
 
                 //2.描述
                 String desc = videoDetail.getDesc();
-                List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList());
+                if ( CollUtil.isNotEmpty( videoDetail.getDescV2()) ){
+                    List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
+                            .flatMap(Collection::stream)
+                            .collect(Collectors.toList());
+                    descProcess.addAll(descV2Process);
+                }
+
                 descProcess.addAll(SegmenterUtil.process(desc));
-                descProcess.addAll(descV2Process);
+
 
                 //3.标签
                 List<String> tagNameList = videoDetail.getTags().stream().map(Tag::getTagName).collect(Collectors.toList());

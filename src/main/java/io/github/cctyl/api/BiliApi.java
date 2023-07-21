@@ -179,6 +179,7 @@ public class BiliApi {
                 fastByteArrayOutputStream.write(buff, 0, len);
                 totalLength += len;
                 if (totalLength > PIC_MAX_SIZE) {
+                    log.error("图片过大:{}", picUrl);
                     throw new RuntimeException("图片过大，不采用");
                 }
             }
@@ -782,8 +783,8 @@ public class BiliApi {
      * @param keyword    搜索关键词
      */
     public PageBean<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
-                                                               long pageNumber,
-                                                               String keyword
+                                                                   long pageNumber,
+                                                                   String keyword
     ) {
         String url = "https://api.bilibili.com/x/space/wbi/arc/search";
         String body = commonGet(url,
@@ -808,7 +809,7 @@ public class BiliApi {
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
 
-        JSONObject data = jsonObject .getJSONObject("data");
+        JSONObject data = jsonObject.getJSONObject("data");
         List<UserSubmissionVideo> userSubmissionVideoList = data
                 .getJSONObject("list")
                 .getJSONArray("vlist")
@@ -847,4 +848,56 @@ public class BiliApi {
 
         return videoDetail;
     }
+
+    /**
+     * 获取指定分区内的最新视频
+     *
+     * @param pageNum 页码
+     * @param tid     分区id
+     */
+    public List<VideoDetail> getRegionLatestVideo(
+            int pageNum,
+            int tid
+    ) {
+        String url = "https://api.bilibili.com/x/web-interface/dynamic/region";
+        String body = commonGet(url, Map.of(
+                "rid", tid,
+                "ps", 20,
+                "pn", pageNum
+        ))
+                .body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+
+        return jsonObject.getJSONObject("data")
+                .getJSONArray("archives")
+                .toList(VideoDetail.class);
+
+
+    }
+
+
+    /**
+     * 获取指定分区的视频排行榜数据
+     *
+     * @param tid
+     */
+    public List<VideoDetail> getRankByTid(int tid) {
+
+        String url = "https://api.bilibili.com/x/web-interface/ranking/v2";
+        String body = commonGet(url, Map.of(
+                "tid", tid,
+                "type", "all"
+        ))
+                .body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+        return jsonObject.getJSONObject("data")
+                .getJSONArray("list")
+                .toList(VideoDetail.class);
+    }
+
+
 }
