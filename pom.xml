@@ -11,6 +11,7 @@
         <java.version>11</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
+        <local-libs>${project.basedir}/src/main/resources/libs</local-libs>
     </properties>
 
     <dependencyManagement>
@@ -47,8 +48,9 @@
             <groupId>com.huaban</groupId>
             <artifactId>jieba-analysis</artifactId>
             <version>1.0.3-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${local-libs}/jieba-analysis-1.0.3-SNAPSHOT.jar</systemPath>
         </dependency>
-
         <!--http-->
         <dependency>
             <groupId>cn.hutool</groupId>
