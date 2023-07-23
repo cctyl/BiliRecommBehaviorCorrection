@@ -83,6 +83,7 @@ public class BiliApi {
     private HttpResponse commonGet(String url) {
         HttpRequest request = HttpRequest.get(url)
                 .header("User-Agent", BROWSER_UA_STR)
+                .timeout(10000)
                 .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
@@ -103,6 +104,7 @@ public class BiliApi {
         HttpRequest request = HttpRequest.get(url)
                 .header("User-Agent", BROWSER_UA_STR)
                 .form(paramMap)
+                .timeout(10000)
                 .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
@@ -125,6 +127,7 @@ public class BiliApi {
         HttpRequest request = HttpRequest.get(url)
                 .header("User-Agent", BROWSER_UA_STR)
                 .form(paramMap)
+                .timeout(10000)
                 .cookie(getCookieStr());
 
         otherHeader.forEach(request::header);
@@ -149,6 +152,7 @@ public class BiliApi {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .header("User-Agent", BROWSER_UA_STR)
                         .form(paramMap)
+                        .timeout(10000)
                         .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
