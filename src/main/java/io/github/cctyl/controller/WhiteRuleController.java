@@ -3,10 +3,7 @@ package io.github.cctyl.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
-import io.github.cctyl.entity.PageBean;
-import io.github.cctyl.entity.R;
-import io.github.cctyl.entity.UserSubmissionVideo;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.*;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
@@ -20,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -124,5 +122,31 @@ public class WhiteRuleController {
 
     }
 
+    @ApiOperation(value = "对指定分区的 排行榜、热门视频进行点踩")
+    @PostMapping("/disklike-by-tid")
+    public R dislikeByTid(
+            @ApiParam(name = "tidList", value = "白名单条件id,为空表示创建新的规则")
+            @RequestParam Set<Integer> tidList
+    ) {
+
+        tidList.retainAll(biliApi.getAllRegion().stream().map(Region::getTid).collect(Collectors.toSet()));
+        if (tidList.size()==0){
+            return R.error().setMessage("分区列表不合法");
+        }
+
+        CompletableFuture.runAsync(() -> {
+            int disklikeNum = 0;
+            for (Integer tid : tidList) {
+               disklikeNum+= biliService.dislikeByTid(tid);
+            }
+
+            log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
+                    tidList.size(),
+                    tidList,
+                    disklikeNum
+                    );
+        });
+        return R.ok().setMessage("对指定分区点踩任务已开始");
+    }
 
 }

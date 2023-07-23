@@ -169,7 +169,7 @@ public class BiliService {
                                 log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
                                 descMatch = item.descMatch(videoDetail.getDesc())
                                         ||
-                                   CollUtil.isNotEmpty( videoDetail.getDescV2()) &&    videoDetail.getDescV2().stream().anyMatch(
+                                        CollUtil.isNotEmpty(videoDetail.getDescV2()) && videoDetail.getDescV2().stream().anyMatch(
                                                 desc -> item.descMatch(desc.getRawText())
                                         );
                                 log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
@@ -186,7 +186,7 @@ public class BiliService {
                                         .collect(Collectors.toList()), tagMatch);
                             } catch (Exception e) {
 
-                                log.error("出现异常:{},视频信息：{}",e.getMessage(),videoDetail.toString());
+                                log.error("出现异常:{},视频信息：{}", e.getMessage(), videoDetail.toString());
 
                                 e.printStackTrace();
                             }
@@ -243,6 +243,19 @@ public class BiliService {
      */
     public void dislike(int aid) {
         biliApi.dislike(aid);
+    }
+
+    /**
+     * 批量给视频点踩
+     * @param videoDetailList
+     */
+    public void dislike(List<VideoDetail> videoDetailList) {
+        for (VideoDetail videoDetail : videoDetailList) {
+            log.info("对视频{}-{}进行点踩",videoDetail.getAid(),videoDetail.getTitle());
+            recordHandleVideo(videoDetail,HandleType.DISLIKE);
+            biliApi.dislike(videoDetail.getAid());
+            ThreadUtil.sleep5Second();
+        }
     }
 
     /**
@@ -326,8 +339,8 @@ public class BiliService {
      * @return
      */
     private boolean isMidMatch(Set<String> blackUserIdSet, VideoDetail videoDetail) {
-        if (videoDetail.getOwner()==null || videoDetail.getOwner().getMid()==null){
-            log.error("视频:{}缺少up主信息",videoDetail.toString());
+        if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
+            log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
         }
         boolean match = blackUserIdSet
@@ -499,10 +512,10 @@ public class BiliService {
     public WhitelistRule train(
             WhitelistRule whitelistRule,
             List<Integer> whiteAvidList) {
-        if (whitelistRule==null){
+        if (whitelistRule == null) {
             whitelistRule = new WhitelistRule().setId(IdGenerator.nextId());
         }
-        log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(),whiteAvidList);
+        log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
         List<String> tagNameProcess = new ArrayList<>();
@@ -515,7 +528,7 @@ public class BiliService {
 
                 //2.描述
                 String desc = videoDetail.getDesc();
-                if ( CollUtil.isNotEmpty( videoDetail.getDescV2()) ){
+                if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
                     List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
                             .flatMap(Collection::stream)
                             .collect(Collectors.toList());
@@ -528,7 +541,7 @@ public class BiliService {
                 //3.标签
                 List<String> tagNameList = videoDetail.getTags().stream().map(Tag::getTagName).collect(Collectors.toList());
                 tagNameProcess.addAll(tagNameList);
-                log.info("获得视频信息:{}",videoDetail);
+                log.info("获得视频信息:{}", videoDetail);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -557,4 +570,28 @@ public class BiliService {
     }
 
 
+    /**
+     * 对指定分区的最新视频和排行榜视频进行点踩操作
+     * 为减少风控限制，分步执行点踩操作
+     * @param tid 分区id
+     * @return 本次点踩数量
+     */
+    public int dislikeByTid(Integer tid) {
+        log.debug("----开始对{}分区进行点踩----", tid);
+
+        //1.获取该分区的排行榜视频
+        List<VideoDetail> rankVideoList = biliApi.getRankByTid(tid);
+        ThreadUtil.sleep1Second();
+        //分步点踩
+        dislike(rankVideoList);
+
+        //2.获取该分区的最新视频
+        List<VideoDetail> regionLatestVideo = biliApi.getRegionLatestVideo(1, tid);
+        dislike(regionLatestVideo);
+
+        List<VideoDetail> regionLatestVideo02 = biliApi.getRegionLatestVideo(2, tid);
+        dislike(regionLatestVideo02);
+
+        return rankVideoList.size()+regionLatestVideo.size()+regionLatestVideo02.size();
+    }
 }
