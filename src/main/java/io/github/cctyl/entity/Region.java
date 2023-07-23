@@ -28,13 +28,13 @@ public class Region {
         //给每个节点找子级
         for (Region parent : list) {
             parent.setChildren(list.stream()
-                    .filter(region -> region.getPid().equals(parent.getPid()))
+                    .filter(region ->  region.getPid()!=null && region.getPid().equals(parent.getTid()))
                     .collect(Collectors.toList()));
         }
 
         List<Region> first = list
                 .stream()
-                .filter(region -> region.getPid() == null)
+                .filter(region -> region.getPid()==null)
                 .collect(Collectors.toList());
         return first;
     }
