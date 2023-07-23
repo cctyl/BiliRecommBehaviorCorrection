@@ -1,6 +1,7 @@
 package io.github.cctyl.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
@@ -592,6 +593,63 @@ public class BiliService {
         List<VideoDetail> regionLatestVideo02 = biliApi.getRegionLatestVideo(2, tid);
         dislike(regionLatestVideo02);
 
-        return rankVideoList.size()+regionLatestVideo.size()+regionLatestVideo02.size();
+
+
+        ArrayList<VideoDetail> allVideo = new ArrayList<>();
+        allVideo.addAll(rankVideoList);
+        allVideo.addAll(regionLatestVideo);
+        allVideo.addAll(regionLatestVideo02);
+        log.info("点踩完毕，开始训练黑名单");
+
+        List<String> titleProcess = new ArrayList<>();
+        List<String> descProcess = new ArrayList<>();
+        List<String> tagNameProcess = new ArrayList<>();
+
+
+
+
+        for (VideoDetail videoDetail : allVideo) {
+            if (videoDetail.getOwner()!=null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())){
+                GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
+            }
+            List<Tag> videoTag = videoDetail.getTags();
+            if (CollUtil.isEmpty(videoTag)){
+                 videoTag = biliApi.getVideoTag(videoDetail.getAid());
+                 ThreadUtil.sleep2Second();
+            }
+
+            //1. 标题处理
+            String title = videoDetail.getTitle();
+            titleProcess.addAll(SegmenterUtil.process(title));
+
+            //2.描述
+            String desc = videoDetail.getDesc();
+            if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
+                List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+                descProcess.addAll(descV2Process);
+            }
+            descProcess.addAll(SegmenterUtil.process(desc));
+            //3.标签
+            List<String> tagNameList = videoTag.stream().map(Tag::getTagName).collect(Collectors.toList());
+            tagNameProcess.addAll(tagNameList);
+        }
+        List<String> topDescKeyWord = SegmenterUtil.getTop5FrequentWord(titleProcess);
+        List<String> topTagName = SegmenterUtil.getTop5FrequentWord(descProcess);
+        List<String> topTitleKeyWord = SegmenterUtil.getTop5FrequentWord(tagNameProcess);
+
+
+        GlobalVariables.updateBlackUserId(GlobalVariables.blackUserIdSet);
+
+        GlobalVariables.blackKeywordSet.addAll(topDescKeyWord);
+        GlobalVariables.blackKeywordSet.addAll(topTitleKeyWord);
+        GlobalVariables.updateBlackKeyword(GlobalVariables.blackKeywordSet);
+
+        GlobalVariables.blackTagSet.addAll(topTagName);
+        GlobalVariables.updateBlackTagSet( GlobalVariables.blackTagSet);
+
+
+        return allVideo.size();
     }
 }

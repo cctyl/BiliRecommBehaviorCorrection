@@ -50,19 +50,29 @@ public class SegmenterUtil {
     }
 
     /**
-     * 生成词频统计map
      *
-     * @param titleProcess
+     * 生成词频统计map,并获取前5个出现频率最高的词
+     * @param strProcess
      * @return
      */
-    public static Map<String, Integer> generateFrequencyMap(List<String> titleProcess) {
+    public static List<String> getTop5FrequentWord(List<String> strProcess) {
+       return getTop5FrequentWord( generateFrequencyMap(strProcess));
+    }
+
+    /**
+     * 生成词频统计map
+     *
+     * @param strProcess
+     * @return
+     */
+    public static Map<String, Integer> generateFrequencyMap(List<String> strProcess) {
 
         if (redisUtil==null){
             redisUtil = BeanProvider.getApplicationContext().getBean(RedisUtil.class);
         }
 
         HashMap<String, Integer> map = new HashMap<>();
-        for (String s : titleProcess) {
+        for (String s : strProcess) {
 
             if (
                     Boolean.TRUE.equals(redisUtil.sIsMember(STOP_WORDS_KEY, s))

@@ -1,5 +1,6 @@
 package io.github.cctyl.config;
 
+import io.github.cctyl.utils.RedisUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -21,4 +22,8 @@ public class BeanProvider implements ApplicationContextAware {
         return applicationContext;
     }
 
+
+    public static RedisUtil getRedisUtil(){
+        return BeanProvider.getApplicationContext().getBean(RedisUtil.class);
+    }
 }

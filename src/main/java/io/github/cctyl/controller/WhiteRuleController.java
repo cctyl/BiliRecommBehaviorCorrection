@@ -128,18 +128,15 @@ public class WhiteRuleController {
             @ApiParam(name = "tidList", value = "白名单条件id,为空表示创建新的规则")
             @RequestParam Set<Integer> tidList
     ) {
-
         tidList.retainAll(biliApi.getAllRegion().stream().map(Region::getTid).collect(Collectors.toSet()));
         if (tidList.size()==0){
             return R.error().setMessage("分区列表不合法");
         }
-
         CompletableFuture.runAsync(() -> {
             int disklikeNum = 0;
             for (Integer tid : tidList) {
                disklikeNum+= biliService.dislikeByTid(tid);
             }
-
             log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
                     tidList.size(),
                     tidList,
