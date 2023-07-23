@@ -252,10 +252,25 @@ public class BiliService {
      */
     public void dislike(List<VideoDetail> videoDetailList) {
         for (VideoDetail videoDetail : videoDetailList) {
-            log.info("对视频{}-{}进行点踩",videoDetail.getAid(),videoDetail.getTitle());
-            recordHandleVideo(videoDetail,HandleType.DISLIKE);
-            biliApi.dislike(videoDetail.getAid());
-            ThreadUtil.sleep5Second();
+            try {
+                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, videoDetail.getAid())) {
+                    log.info("视频：{} 之前已处理过", videoDetail.getAid());
+                    continue;
+                }
+
+                //为了减少风控，做一些无意义的操作
+                if (CollUtil.isEmpty(videoDetail.getTags())) {
+                    videoDetail.setTags(biliApi.getVideoTag(videoDetail.getAid()));
+                    ThreadUtil.sleep5Second();
+                }
+                log.info("对视频{}-{}进行点踩",videoDetail.getAid(),videoDetail.getTitle());
+                recordHandleVideo(videoDetail,HandleType.DISLIKE);
+                biliApi.dislike(videoDetail.getAid());
+                ThreadUtil.sleep20Second();
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
         }
     }
 
@@ -592,32 +607,22 @@ public class BiliService {
 
         List<VideoDetail> regionLatestVideo02 = biliApi.getRegionLatestVideo(2, tid);
         dislike(regionLatestVideo02);
-
+        log.info("点踩完毕，结束对{}分区的点踩操作，开始训练黑名单",tid);
 
 
         ArrayList<VideoDetail> allVideo = new ArrayList<>();
         allVideo.addAll(rankVideoList);
         allVideo.addAll(regionLatestVideo);
         allVideo.addAll(regionLatestVideo02);
-        log.info("点踩完毕，开始训练黑名单");
 
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
         List<String> tagNameProcess = new ArrayList<>();
 
-
-
-
         for (VideoDetail videoDetail : allVideo) {
             if (videoDetail.getOwner()!=null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())){
                 GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
             }
-            List<Tag> videoTag = videoDetail.getTags();
-            if (CollUtil.isEmpty(videoTag)){
-                 videoTag = biliApi.getVideoTag(videoDetail.getAid());
-                 ThreadUtil.sleep2Second();
-            }
-
             //1. 标题处理
             String title = videoDetail.getTitle();
             titleProcess.addAll(SegmenterUtil.process(title));
@@ -625,21 +630,31 @@ public class BiliService {
             //2.描述
             String desc = videoDetail.getDesc();
             if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
-                List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
+                List<String> descV2Process = videoDetail.getDescV2()
+                        .stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
                         .flatMap(Collection::stream)
                         .collect(Collectors.toList());
                 descProcess.addAll(descV2Process);
             }
             descProcess.addAll(SegmenterUtil.process(desc));
             //3.标签
-            List<String> tagNameList = videoTag.stream().map(Tag::getTagName).collect(Collectors.toList());
-            tagNameProcess.addAll(tagNameList);
+            if(CollUtil.isNotEmpty(videoDetail.getTags())){
+                List<String> tagNameList = videoDetail.getTags()
+                        .stream()
+                        .map(Tag::getTagName)
+                        .collect(Collectors.toList());
+                tagNameProcess.addAll(tagNameList);
+            }
         }
         List<String> topDescKeyWord = SegmenterUtil.getTop5FrequentWord(titleProcess);
         List<String> topTagName = SegmenterUtil.getTop5FrequentWord(descProcess);
         List<String> topTitleKeyWord = SegmenterUtil.getTop5FrequentWord(tagNameProcess);
 
+        log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}",topDescKeyWord,
+                topTagName,
+                topTitleKeyWord);
 
+        //更新到redis中
         GlobalVariables.updateBlackUserId(GlobalVariables.blackUserIdSet);
 
         GlobalVariables.blackKeywordSet.addAll(topDescKeyWord);

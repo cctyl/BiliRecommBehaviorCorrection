@@ -908,7 +908,7 @@ public class BiliApi {
      *
      * @return
      */
-    public List<Region> getAllRegion() {
+    public List<Region> getAllRegion(boolean tree) {
         ArrayList<Region> regions = new ArrayList<>();
         regions.add(new Region(1,"douga","动画(主分区)","","/v/douga",null));
         regions.add(new Region(24,"mad","MAD·AMV","具有一定创作度的动/静画二次创作视频","/v/douga/mad",1));
@@ -1065,7 +1065,12 @@ public class BiliApi {
         regions.add(new Region(11,"tv","电视剧(主分区)","","/tv",null));
         regions.add(new Region(185,"mainland","国产剧","","/v/tv/mainland",11));
         regions.add(new Region(187,"overseas","海外剧","","/v/tv/overseas",11));
-        return Region.buildTree(regions);
+
+        if (tree){
+            return Region.buildTree(regions);
+        }else {
+            return regions;
+        }
     }
 
 

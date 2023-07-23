@@ -21,13 +21,6 @@
         </encoder>
     </appender>
 
-    <!--异步的appender 里面关联了 FILE 这个appender -->
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>512</queueSize>
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="FILE_HTML"/>
-        <appender-ref ref="ERR_HTML"/>
-    </appender>
 
     <!-- 生成一个html格式的日志 -->
     <appender name="FILE_HTML" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -57,6 +50,16 @@
             </layout>
         </encoder>
         <file>${LOG_HOME}/html/error-log.html</file>
+    </appender>
+
+
+
+    <!--异步的appender 里面关联了 多个appender，注意 ASYNC要放在被包含appender的下面，因为是按顺序读取的文件 -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="FILE_HTML"/>
+        <appender-ref ref="ERR_HTML"/>
     </appender>
 
     <!--根日志记录器，默认情况下它的配置被其他日志记录器给继承

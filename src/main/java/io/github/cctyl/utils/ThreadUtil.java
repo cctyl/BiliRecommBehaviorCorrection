@@ -26,4 +26,7 @@ public class ThreadUtil {
     public static void sleep10Second(){
         sleep(10);
     }
+    public static void sleep20Second(){
+        sleep(20);
+    }
 }

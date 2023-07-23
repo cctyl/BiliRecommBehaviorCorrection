@@ -2,6 +2,7 @@ package io.github.cctyl.controller;
 
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.R;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/region")
+@Slf4j
 public class BiliRegionController {
 
 
@@ -18,7 +20,7 @@ public class BiliRegionController {
 
     @GetMapping("/list")
     public R getRegionList(){
-        return R.data(biliApi.getAllRegion());
+        return R.data(biliApi.getAllRegion(true));
     }
 
 }
