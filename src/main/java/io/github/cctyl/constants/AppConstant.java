@@ -41,6 +41,11 @@ public class AppConstant {
     public static final String BLACK_KEY_WORD_KEY = PREFIX + "black_keywords";
 
     /**
+     * 可疑的cookie
+     */
+    public static final String SUSPICIOUS_COOKIE_KEY = PREFIX + "suspicious_cookie";
+
+    /**
      * 黑名单标签
      */
     public static final String BLACK_TAG_KEY = PREFIX + "black_tags";
@@ -105,6 +110,7 @@ public class AppConstant {
      * 浏览器端的userAgent
      */
     public static final String BROWSER_UA_STR = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0";
+
 
 
 
