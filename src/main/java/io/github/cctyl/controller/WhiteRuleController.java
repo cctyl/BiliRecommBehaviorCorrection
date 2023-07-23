@@ -132,7 +132,11 @@ public class WhiteRuleController {
         CompletableFuture.runAsync(() -> {
             int disklikeNum = 0;
             for (Integer tid : tidList) {
-               disklikeNum+= biliService.dislikeByTid(tid);
+                try {
+                    disklikeNum+= biliService.dislikeByTid(tid);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
                     tidList.size(),

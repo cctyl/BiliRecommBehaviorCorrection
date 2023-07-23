@@ -602,18 +602,20 @@ public class BiliService {
         dislike(rankVideoList);
 
         //2.获取该分区的最新视频
-        List<VideoDetail> regionLatestVideo = biliApi.getRegionLatestVideo(1, tid);
-        dislike(regionLatestVideo);
+        List<VideoDetail> regionLatestVideo = new ArrayList<>();
+        for (int i = 1 ; i <=10; i++) {
+            List<VideoDetail> curList = biliApi.getRegionLatestVideo(1, tid);
+            regionLatestVideo.addAll(curList);
+            dislike(regionLatestVideo);
 
-        List<VideoDetail> regionLatestVideo02 = biliApi.getRegionLatestVideo(2, tid);
-        dislike(regionLatestVideo02);
+        }
+
         log.info("点踩完毕，结束对{}分区的点踩操作，开始训练黑名单",tid);
 
 
         ArrayList<VideoDetail> allVideo = new ArrayList<>();
         allVideo.addAll(rankVideoList);
         allVideo.addAll(regionLatestVideo);
-        allVideo.addAll(regionLatestVideo02);
 
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();

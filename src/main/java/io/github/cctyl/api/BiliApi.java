@@ -884,7 +884,7 @@ public class BiliApi {
 
     /**
      * 获取指定分区的视频排行榜数据
-     *
+     * fixme: 该接口似乎不支持 主分区下的子分区
      * @param tid
      */
     public List<VideoDetail> getRankByTid(int tid) {

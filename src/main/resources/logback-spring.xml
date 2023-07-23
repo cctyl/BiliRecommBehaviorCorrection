@@ -17,7 +17,7 @@
         <!--日志编码-->
         <encoder>
             <charset>utf-8</charset>
-            <Pattern>%d %-5level [%thread] %logger{0}: %msg%n</Pattern>
+            <Pattern>%d %-5level [%thread] %logger{0} %M\(%F:%L\): %msg%n</Pattern>
         </encoder>
     </appender>
 
