@@ -1,5 +1,6 @@
 package io.github.cctyl.utils;
 
+import cn.hutool.core.util.StrUtil;
 import com.huaban.analysis.jieba.JiebaSegmenter;
 import io.github.cctyl.config.BeanProvider;
 
@@ -45,6 +46,7 @@ public class SegmenterUtil {
         return keywordFrequencyMap.entrySet().stream()
                 .sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
                 .map(Map.Entry::getKey)
+                .filter(StrUtil::isBlankIfStr)
                 .limit(5)
                 .collect(Collectors.toList());
     }
