@@ -134,6 +134,8 @@ public class WhiteRuleController {
             for (Integer tid : tidList) {
                 try {
                     disklikeNum+= biliService.dislikeByTid(tid);
+                    log.info("完成对{}分区的点踩任务",tid);
+                    ThreadUtil.sleep5Second();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -261,15 +261,14 @@ public class BiliService {
                 //为了减少风控，做一些无意义的操作
                 if (CollUtil.isEmpty(videoDetail.getTags())) {
                     videoDetail.setTags(biliApi.getVideoTag(videoDetail.getAid()));
-                    ThreadUtil.sleep5Second();
+                    ThreadUtil.sleep20Second();
                 }
                 log.info("对视频{}-{}进行点踩",videoDetail.getAid(),videoDetail.getTitle());
                 recordHandleVideo(videoDetail,HandleType.DISLIKE);
                 biliApi.dislike(videoDetail.getAid());
-                ThreadUtil.sleep20Second();
+                ThreadUtil.sleep30Second();
             } catch (Exception e) {
                 e.printStackTrace();
-                continue;
             }
         }
     }
@@ -596,12 +595,15 @@ public class BiliService {
         log.debug("----开始对{}分区进行点踩----", tid);
 
         //1.获取该分区的排行榜视频
+        log.info("开始排行榜数据点踩");
         List<VideoDetail> rankVideoList = biliApi.getRankByTid(tid);
-        ThreadUtil.sleep1Second();
+        ThreadUtil.sleep5Second();
         //分步点踩
         dislike(rankVideoList);
 
+
         //2.获取该分区的最新视频
+        log.info("开始分区最新视频点踩");
         List<VideoDetail> regionLatestVideo = new ArrayList<>();
         for (int i = 1 ; i <=10; i++) {
             List<VideoDetail> curList = biliApi.getRegionLatestVideo(1, tid);

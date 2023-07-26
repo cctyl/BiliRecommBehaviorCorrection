@@ -59,7 +59,7 @@
         <queueSize>512</queueSize>
         <appender-ref ref="FILE"/>
         <appender-ref ref="FILE_HTML"/>
-        <appender-ref ref="ERR_HTML"/>
+
     </appender>
 
     <!--根日志记录器，默认情况下它的配置被其他日志记录器给继承

@@ -46,7 +46,8 @@ public class SegmenterUtil {
         return keywordFrequencyMap.entrySet().stream()
                 .sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
                 .map(Map.Entry::getKey)
-                .filter(StrUtil::isBlankIfStr)
+                .filter(StrUtil::isNotBlank)
+                .filter(s -> s.length()>1)
                 .limit(5)
                 .collect(Collectors.toList());
     }
