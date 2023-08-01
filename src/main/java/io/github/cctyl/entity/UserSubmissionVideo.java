@@ -15,7 +15,7 @@ public class UserSubmissionVideo {
     @JSONField(name = "typeid")
     private Integer typeid;
     @JSONField(name = "play")
-    private Integer play;
+    private String play;
     @JSONField(name = "pic")
     private String pic;
     @JSONField(name = "subtitle")

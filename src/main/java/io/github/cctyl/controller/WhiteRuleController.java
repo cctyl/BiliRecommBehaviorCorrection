@@ -69,6 +69,7 @@ public class WhiteRuleController {
         }
 
         CompletableFuture.runAsync(() -> {
+            log.info("开始训练");
             List<WhitelistRule> whitelistRuleList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(WhitelistRule.class::cast).collect(Collectors.toList());
             WhitelistRule whitelistRule;
             if (id == null) {
@@ -84,6 +85,7 @@ public class WhiteRuleController {
             }
 
             if (CollUtil.isNotEmpty(trainedAvidList)) {
+                log.info("根据视频id进行训练");
                 //从给定的视频列表进行训练
                 whitelistRule = biliService.train(
                         whitelistRule,
@@ -92,15 +94,19 @@ public class WhiteRuleController {
 
             } else if (StrUtil.isNotBlank(mid)) {
                 //从给定的up主的投稿视频进行训练
-
+                log.info("根据up主id进行训练");
                 List<UserSubmissionVideo> allVideo = new ArrayList<>();
                 PageBean<UserSubmissionVideo> pageBean = biliApi.searchUserSubmissionVideo(mid, 1, "");
                 allVideo.addAll(pageBean.getData());
                 while (pageBean.hasMore()) {
-                    ThreadUtil.sleep10Second();
-                    pageBean = biliApi.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, "");
-                    allVideo.addAll(pageBean
-                            .getData());
+                    try {
+                        ThreadUtil.sleep10Second();
+                        pageBean = biliApi.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, "");
+                        allVideo.addAll(pageBean
+                                .getData());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
 
 
@@ -111,6 +117,7 @@ public class WhiteRuleController {
 
             }
 
+            log.info("训练完成，训练结果为:"+whitelistRule);
             whitelistRuleList.remove(whitelistRule);
             whitelistRuleList.add(whitelistRule);
             redisUtil.delete(WHITE_LIST_RULE_KEY);
