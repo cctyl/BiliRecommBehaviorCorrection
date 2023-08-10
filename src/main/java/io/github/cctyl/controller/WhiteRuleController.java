@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import io.github.classgraph.utils.WhiteBlackList;
@@ -117,7 +118,7 @@ public class WhiteRuleController {
 
             }
 
-            log.info("训练完成，训练结果为:"+whitelistRule);
+            log.info("训练完成，训练结果为:" + whitelistRule);
             whitelistRuleList.remove(whitelistRule);
             whitelistRuleList.add(whitelistRule);
             redisUtil.delete(WHITE_LIST_RULE_KEY);
@@ -140,8 +141,8 @@ public class WhiteRuleController {
             int disklikeNum = 0;
             for (Integer tid : tidList) {
                 try {
-                    disklikeNum+= biliService.dislikeByTid(tid);
-                    log.info("完成对{}分区的点踩任务",tid);
+                    disklikeNum += biliService.dislikeByTid(tid);
+                    log.info("完成对{}分区的点踩任务", tid);
                     ThreadUtil.sleep5Second();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -151,9 +152,75 @@ public class WhiteRuleController {
                     tidList.size(),
                     tidList,
                     disklikeNum
-                    );
+            );
         });
         return R.ok().setMessage("对指定分区点踩任务已开始");
     }
+
+
+    @ApiOperation(value = "添加或修改指定的白名单对象的值。存在则修改，不存在则添加")
+    @PostMapping("/")
+    public R addOrUpdateWhiteRule(
+            @ApiParam(name = "toUpdate", value = "将要修改的白名单对象")
+            @RequestBody WhitelistRule toUpdate
+    ) {
+
+
+        if (
+                CollUtil.isEmpty( toUpdate.getDescKeyWordList())
+                &&
+                        CollUtil.isEmpty( toUpdate.getTagNameList())
+                        &&
+                        CollUtil.isEmpty(toUpdate.getTitleKeyWordList())
+
+                        &&
+                        StrUtil.isEmpty(toUpdate.getCoverKeyword())
+        ){
+
+            return R.error().setMessage("无效数据");
+
+        }
+
+        if (toUpdate.getId() == null) {
+            //此时创建一个新的id
+            toUpdate.setId(IdGenerator.nextId());
+        }
+        List<WhitelistRule> whitelistRuleList =
+                redisUtil.sMembers(WHITE_LIST_RULE_KEY)
+                        .stream()
+                        .map(WhitelistRule.class::cast)
+                        .collect(Collectors.toList());
+        whitelistRuleList.remove(toUpdate);
+        whitelistRuleList.add(toUpdate);
+        redisUtil.delete(WHITE_LIST_RULE_KEY);
+        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRuleList.toArray());
+        return R.ok().setMessage("添加成功").setData(toUpdate);
+    }
+
+
+    @ApiOperation(value = "删除指定的白名单规则")
+    @DeleteMapping("/{id}")
+    public R addOrUpdateWhiteRule(
+            @ApiParam(name = "id", value = "需要删除的白名单的id")
+            @PathVariable("id") Long id
+    ) {
+        List<WhitelistRule> whitelistRuleList =
+                redisUtil.sMembers(WHITE_LIST_RULE_KEY)
+                        .stream()
+                        .map(WhitelistRule.class::cast)
+                        .collect(Collectors.toList());
+        WhitelistRule toDel = whitelistRuleList.stream().filter(whitelistRule -> whitelistRule.getId().equals(id))
+                .findAny()
+                .orElse(null);
+
+        if (toDel == null) {
+            return R.error().setMessage("id=" + id + "的白名单规则不存在");
+        }
+        whitelistRuleList.remove(toDel);
+        redisUtil.delete(WHITE_LIST_RULE_KEY);
+        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRuleList.toArray());
+        return R.ok().setMessage("删除成功");
+    }
+
 
 }

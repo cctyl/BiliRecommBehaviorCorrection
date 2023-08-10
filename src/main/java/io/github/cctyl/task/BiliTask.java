@@ -103,13 +103,23 @@ public class BiliTask {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
                 //执行搜索
-                List<SearchResult> searchRaw = biliApi.search(keyword, i);
+                List<SearchResult> searchRaw = null;
+                try {
+                    searchRaw = biliApi.search(keyword, i);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 ThreadUtil.sleep(3);
                 //随机挑选10个
                 DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
-                    biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
-                    ThreadUtil.sleep(5);
+                    try {
+                        biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
+                        ThreadUtil.sleep(5);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
             }
             ThreadUtil.sleep(3);
@@ -133,16 +143,26 @@ public class BiliTask {
         //2. 对排行榜数据进行处理，处理100条，即5页数据
         log.info("==============开始处理热门排行榜==================");
         for (int i = 1; i <= 10; i++) {
-            List<VideoDetail> hotRankVideo = biliApi.getHotRankVideo(i, 20);
+            List<VideoDetail> hotRankVideo = null;
+            try {
+                hotRankVideo = biliApi.getHotRankVideo(i, 20);
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
             //20条中随机抽10条
             DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
-                //处理挑选结果
-                biliService.handleVideo(
-                        thumbUpVideoList,
-                        dislikeVideoList,
-                        videoDetail.getAid()
-                        );
-                ThreadUtil.sleep(5);
+                try {
+                    //处理挑选结果
+                    biliService.handleVideo(
+                            thumbUpVideoList,
+                            dislikeVideoList,
+                            videoDetail.getAid()
+                            );
+                    ThreadUtil.sleep(5);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
             ThreadUtil.sleep(7);
         }
@@ -168,14 +188,19 @@ public class BiliTask {
         for (int i = 0; i < 10; i++) {
             List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
             DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
-                if ("av".equals(recommendCard.getCardGoto())) {
-                    //处理挑选结果
-                    biliService.handleVideo(
-                            thumbUpVideoList,
-                            dislikeVideoList,
-                            recommendCard.getArgs().getAid()
-                            );
-                    ThreadUtil.sleep(5);
+
+                try {
+                    if ("av".equals(recommendCard.getCardGoto())) {
+                        //处理挑选结果
+                        biliService.handleVideo(
+                                thumbUpVideoList,
+                                dislikeVideoList,
+                                recommendCard.getArgs().getAid()
+                                );
+                        ThreadUtil.sleep(5);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             });
             ThreadUtil.sleep(7);
