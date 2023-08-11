@@ -61,7 +61,7 @@ public class BiliApi {
     /**
      * 默认情况下web页面的cookie，用于鉴别异常cookie时的对比
      */
-    private Map<String,String> defaultCookie;
+    private Map<String, String> defaultCookie;
 
     /**
      * 用于获取wbi签名
@@ -76,11 +76,28 @@ public class BiliApi {
 
     /**
      * 获取请求头信息
+     *
      * @return
      */
-    public static Map<String,String> getHeader(){
+    public Map<String, List<String>> getHeader(String url) {
+        HashMap<String, List<String>> result = new HashMap<>();
+        String matchApi = GlobalVariables.apiHeaderMap
+                .keySet()
+                .stream()
+                .filter(url::contains)
+                .findFirst()
+                .orElse(null);
+        if (
+                matchApi != null
+                        && GlobalVariables.apiHeaderMap.get(matchApi) != null
+        ) {
+            GlobalVariables.apiHeaderMap.get(matchApi).getHeaders().forEach((k, v) -> result.put(k, Collections.singletonList(v)));
+            return result;
+        }
 
-        throw new RuntimeException("not implement");
+        GlobalVariables.commonHeaderMap.forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+        //返回默认的header
+        return result;
     }
 
     /**
@@ -94,9 +111,9 @@ public class BiliApi {
     private HttpResponse commonGet(String url) {
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
-                .header("User-Agent", BROWSER_UA_STR)
+                .header(getHeader(url),true)
                 .timeout(10000)
-                .cookie(getCookieStr());
+                .cookie(getCookieStr(url));
         HttpResponse response = request
                 .execute();
         updateCookie(response);
@@ -115,10 +132,10 @@ public class BiliApi {
     private HttpResponse commonGet(String url, Map<String, Object> paramMap) {
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
-                .header("User-Agent", BROWSER_UA_STR)
+                .header(getHeader(url),true)
                 .form(paramMap)
                 .timeout(10000)
-                .cookie(getCookieStr());
+                .cookie(getCookieStr(url));
         HttpResponse response = request
                 .execute();
         log.debug("body={}", response.body());
@@ -139,10 +156,10 @@ public class BiliApi {
                                    Map<String, String> otherHeader) {
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
-                .header("User-Agent", BROWSER_UA_STR)
+                .header(getHeader(url),true)
                 .form(paramMap)
                 .timeout(10000)
-                .cookie(getCookieStr());
+                .cookie(getCookieStr(url));
 
         otherHeader.forEach(request::header);
         HttpResponse response = request
@@ -165,11 +182,11 @@ public class BiliApi {
         HttpRequest request =
                 HttpRequest.post(url)
                         .clearHeaders()
+                        .header(getHeader(url),true)
                         .header("Content-Type", "application/x-www-form-urlencoded")
-                        .header("User-Agent", BROWSER_UA_STR)
                         .form(paramMap)
                         .timeout(10000)
-                        .cookie(getCookieStr());
+                        .cookie(getCookieStr(url));
         HttpResponse response = request
                 .execute();
         log.debug("body={}", response.body());
@@ -186,8 +203,8 @@ public class BiliApi {
      */
     public byte[] getPicByte(String picUrl) throws IOException {
         HttpResponse response = HttpRequest.get(picUrl)
-                .header("User-Agent", BROWSER_UA_STR)
-                .cookie(getCookieStr())
+                .header(getHeader(picUrl))
+                .cookie(getCookieStr(picUrl))
                 .executeAsync();
         InputStream inputStream = response.bodyStream();
         FastByteArrayOutputStream fastByteArrayOutputStream = new FastByteArrayOutputStream();
@@ -248,8 +265,32 @@ public class BiliApi {
      *
      * @return
      */
-    public String getCookieStr() {
-        return GlobalVariables.cookieMap.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
+    public String getCookieStr(String url) {
+
+        String matchApi = GlobalVariables.apiHeaderMap
+                .keySet()
+                .stream()
+                .filter(url::contains)
+                .findFirst()
+                .orElse(null);
+
+        Map<String, String> cookies = null;
+
+        if (matchApi != null) {
+            ApiHeader apiHeader = GlobalVariables.apiHeaderMap.get(matchApi);
+            if (apiHeader == null) {
+                cookies = apiHeader.getCookies();
+            }
+        }
+        if (cookies!=null){
+
+            cookies.putAll(GlobalVariables.cookieMap);
+        }else {
+            cookies = GlobalVariables.cookieMap;
+        }
+
+
+        return cookies.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
     }
 
@@ -275,13 +316,13 @@ public class BiliApi {
             defaultCookie = DataUtil.splitCookie(applicationProperties.getDefaultData().getCookie());
         }
         newCookieKeySet.removeAll(defaultCookie.keySet());
-        if (newCookieKeySet.size()!=0){
-            log.warn("发现可疑cookie:{}",newCookieKeySet);
+        if (newCookieKeySet.size() != 0) {
+            log.warn("发现可疑cookie:{}", newCookieKeySet);
             Object[] objects = cookies.stream().filter(httpCookie -> newCookieKeySet.contains(httpCookie.getName()))
                     .map(httpCookie -> httpCookie.getName() + "=" + httpCookie.getValue())
                     .toArray();
-            redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY,objects);
-        }else {
+            redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
+        } else {
             log.debug("本次响应未出现可疑cookie");
         }
 
@@ -555,8 +596,8 @@ public class BiliApi {
         }
         String confirmUri = first.getJSONObject("data").getString("confirm_uri");
         HttpResponse redirect = HttpRequest.head(confirmUri)
-                .header("User-Agent", BROWSER_UA_STR)
-                .cookie(getCookieStr())
+                .header(getHeader(url))
+                .cookie(getCookieStr(url))
                 .execute();
         String location = redirect.header(Header.LOCATION);
         String accessKey = DataUtil.getUrlQueryParam(location, "access_key");

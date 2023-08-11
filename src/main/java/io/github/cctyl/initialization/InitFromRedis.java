@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.ApiHeader;
 import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -101,6 +103,18 @@ public class InitFromRedis implements ApplicationRunner {
             redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
         }
 
+        //11.加载ApiHeader相关
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(API_HEADER_MAP).entrySet()) {
+            GlobalVariables.apiHeaderMap .put((String) entry.getKey(), (ApiHeader) entry.getValue());
+        }
+
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
+            GlobalVariables.commonCookieMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
+
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_HEADER_MAP).entrySet()) {
+            GlobalVariables.commonHeaderMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
     }
 
 }

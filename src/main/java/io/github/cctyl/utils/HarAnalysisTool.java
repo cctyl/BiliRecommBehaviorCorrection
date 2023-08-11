@@ -4,6 +4,7 @@ import de.sstoehr.harreader.HarReader;
 import de.sstoehr.harreader.HarReaderException;
 import de.sstoehr.harreader.HarReaderMode;
 import de.sstoehr.harreader.model.*;
+import io.github.cctyl.entity.ApiHeader;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,27 +101,3 @@ public class HarAnalysisTool {
 }
 
 
-/**
- * 各Api 所需要用到的cookie 和 header 的集合
- */
-@Data
-@Accessors(chain = true)
-class ApiHeader implements Serializable {
-
-    /**
-     * api地址，不包含参数
-     */
-    private String url;
-
-
-    /**
-     * 该api将会用到的cookie
-     */
-    private Map<String, String> cookies;
-
-    /**
-     * 该api将会用到的请求头
-     */
-    private Map<String, String> headers;
-
-}

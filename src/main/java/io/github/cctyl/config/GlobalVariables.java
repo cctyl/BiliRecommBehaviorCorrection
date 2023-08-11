@@ -1,6 +1,7 @@
 package io.github.cctyl.config;
 
 import cn.hutool.dfa.WordTree;
+import io.github.cctyl.entity.ApiHeader;
 import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.Data;
@@ -78,6 +79,15 @@ public class GlobalVariables {
      * 白名单关键词列表
      */
     public static List<WhitelistRule> whiteKeyWordList;
+
+
+    /**
+     * ApiHeader 相关
+     */
+    public static Map<String, ApiHeader> apiHeaderMap = new HashMap<>();
+    public static Map<String, String> commonCookieMap = new HashMap<>();
+    public static Map<String, String> commonHeaderMap = new HashMap<>();
+
 
     /**
      * 更新blackUserIdSet
