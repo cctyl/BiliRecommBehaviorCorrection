@@ -75,6 +75,15 @@ public class BiliApi {
 
 
     /**
+     * 获取请求头信息
+     * @return
+     */
+    public static Map<String,String> getHeader(){
+
+        throw new RuntimeException("not implement");
+    }
+
+    /**
      * 封装通用的get
      * 携带cookie、ua
      * 记忆cookie

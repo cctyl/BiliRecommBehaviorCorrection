@@ -168,6 +168,9 @@ public class RedisUtil {
     public void hPutAll(String key, Map<String, String> maps) {
         this.redisTemplate.opsForHash().putAll(key, maps);
     }
+    public void hPutAllObject(String key, Map<String, Object> maps) {
+        this.redisTemplate.opsForHash().putAll(key, maps);
+    }
 
     public Boolean hPutIfAbsent(String key, String hashKey, String value) {
         return this.redisTemplate.opsForHash().putIfAbsent(key, hashKey, value);

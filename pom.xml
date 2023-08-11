@@ -37,6 +37,14 @@
     <dependencies>
 
 
+        <!--har分析工具-->
+        <dependency>
+            <groupId>de.sstoehr</groupId>
+            <artifactId>har-reader</artifactId>
+            <version>2.2.1</version>
+        </dependency>
+
+
         <!--基本的springboot环境-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

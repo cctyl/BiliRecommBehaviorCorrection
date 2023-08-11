@@ -21,6 +21,21 @@ public class AppConstant {
     public static final String WBI = PREFIX + "wbi";
 
     /**
+     * 每个api对应需要用到的header
+     */
+    public static final String API_HEADER_MAP = PREFIX + "api_header";
+
+    /**
+     * 当找不到对应的header时，使用公共的header
+     */
+    public static final String COMMON_COOKIE_MAP = PREFIX + "common_cookie";
+    /**
+     * 找不到header时使用公共的header
+     */
+    public static final String COMMON_HEADER_MAP = PREFIX + "common_header";
+
+
+    /**
      * 关键词列表
      */
     public static final String KEY_WORD_KEY = PREFIX + "keywords";
