@@ -92,14 +92,15 @@ public class BaiduApi {
             if (jsonObject.getIntValue("result_num") < 1) {
                 return false;
             } else {
-                String word = jsonObject.getJSONArray("result")
-                        .stream().map(o ->
+
+                return  jsonObject.getJSONArray("result")
+                        .stream().anyMatch(o ->
                                 {
                                     var j = (JSONObject) o;
-                                    return j.getString("keyword") + j.getString("root");
+                                    return  (j.getString("keyword") + j.getString("root")).contains("女")
+                                            && j.getDouble("score")>0.5;
                                 }
-                        ).collect(Collectors.joining());
-                return word.contains("女");
+                        );
             }
         } catch (HttpException e) {
             e.printStackTrace();
