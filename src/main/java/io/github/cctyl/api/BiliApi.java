@@ -94,9 +94,13 @@ public class BiliApi {
             GlobalVariables.apiHeaderMap.get(matchApi).getHeaders().forEach((k, v) -> result.put(k, Collections.singletonList(v)));
             return result;
         }
-
+        //没有匹配的，就返回默认的header
         GlobalVariables.commonHeaderMap.forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
-        //返回默认的header
+
+        //公共header时，需要修改host
+        result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
+
+
         return result;
     }
 

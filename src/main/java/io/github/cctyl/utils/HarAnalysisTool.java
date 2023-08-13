@@ -16,8 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static io.github.cctyl.constants.AppConstant.*;
 
@@ -33,30 +32,52 @@ public class HarAnalysisTool {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+
+    /**
+     * 需要忽略的cookie 或者header
+     */
+    private static List<String> ignoreString = Arrays.asList(
+            "bili_ticket_expires",
+            "bili_ticket",
+            "b_nut",
+            "Referer",
+            "Cookie",
+            "Host",
+            "Content-Length"
+
+    );
+
+
     /**
      * 从指定路径加载har
      *
      * @param path
      */
-    public void load(String path) {
-
+    public void load(String path, boolean refresh) {
         if (path == null) {
             path = "E:\\temp\\www.bilibili.com.har";
         }
-        load(new File(path));
+        load(new File(path), refresh);
     }
 
     /**
      * 从指定har文件中重新加载header
      *
      * @param harFile
+     * @param refresh
      */
-    public void load(File harFile) {
+    public void load(File harFile, boolean refresh) {
         HarReader harReader = new HarReader();
         Har har = null;
+
         try {
             har = harReader.readFromFile(harFile, HarReaderMode.LAX);
 
+            if (refresh) {
+                GlobalVariables.commonHeaderMap = new HashMap<>();
+                GlobalVariables.commonCookieMap = new HashMap<>();
+                GlobalVariables.apiHeaderMap = new HashMap<>();
+            }
             har.getLog().getEntries()
                     .stream().forEach(harEntry -> {
                 HarRequest request = harEntry.getRequest();
@@ -74,15 +95,18 @@ public class HarAnalysisTool {
 
                 HashMap<String, String> curCookieMap = new HashMap<>();
                 for (HarCookie cookie : request.getCookies()) {
-                    curCookieMap.put(cookie.getName(), cookie.getValue());
+                    if (!ignoreString.contains(cookie.getName()))
+                        curCookieMap.put(cookie.getName(), cookie.getValue());
                 }
                 GlobalVariables.commonCookieMap.putAll(curCookieMap);
 
                 HashMap<String, String> curHeaderMap = new HashMap<>();
                 for (HarHeader header : request.getHeaders()) {
-                    curCookieMap.put(header.getName(), header.getValue());
+                    if (!ignoreString.contains(header.getName()))
+                        curHeaderMap.put(header.getName(), header.getValue());
                 }
-                GlobalVariables.commonHeaderMap.putAll(curCookieMap);
+                GlobalVariables.commonHeaderMap.putAll(curHeaderMap);
+
                 ApiHeader apiHeader = new ApiHeader()
                         .setUrl(extractedUrl)
                         .setCookies(curCookieMap)

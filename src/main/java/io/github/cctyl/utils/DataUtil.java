@@ -124,4 +124,23 @@ public class DataUtil {
         }
         return map;
     }
+
+
+    /**
+     * 获得url中的host
+     * @param url
+     * @return
+     */
+    public static String getHost(String url){
+        String noProtocol = url.replaceAll("https://", "")
+                .replace("http://", "");
+        int i = noProtocol
+                .indexOf("/");
+        if (i==-1){
+            return noProtocol;
+        }else {
+           return   noProtocol.substring(0,i);
+        }
+
+    }
 }

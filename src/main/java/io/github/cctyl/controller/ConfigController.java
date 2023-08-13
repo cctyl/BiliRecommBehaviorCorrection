@@ -59,7 +59,7 @@ public class ConfigController {
 
     @PostMapping("/load-har")
     @ApiOperation(value = "上传har，更新cookie 和 header")
-    public R loadHar(MultipartFile multipartFile) throws IOException {
+    public R loadHar(MultipartFile multipartFile, @RequestParam Boolean refresh) throws IOException {
 
         //保存到临时文件夹
         File tempDir = new File(new ApplicationHome().getDir().getPath(),"temp");
@@ -71,10 +71,13 @@ public class ConfigController {
         String fileName = IdGenerator.nextId() + "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth()+".har";
         File harFile = new File(tempDir, fileName);
         multipartFile.transferTo(harFile);
-        harAnalysisTool.load(harFile);
+        harAnalysisTool.load(harFile,refresh);
 
         return R.ok().setData( Map.of("cookieMap",GlobalVariables.cookieMap,
                 "headerMap",GlobalVariables.commonHeaderMap
         ));
     }
+
+
+
 }
