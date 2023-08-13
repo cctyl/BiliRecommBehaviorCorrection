@@ -44,7 +44,11 @@ public class BiliTaskController {
     @ApiOperation(value = "触发关键词任务")
     public R startSearchTask() {
         CompletableFuture.runAsync(() -> {
-            biliTask.searchTask();
+            try {
+                biliTask.searchTask();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
         return R.ok();
     }
@@ -52,7 +56,11 @@ public class BiliTaskController {
     @ApiOperation(value = "触发热门排行榜任务")
     public R startHotRankTask() {
         CompletableFuture.runAsync(() -> {
-            biliTask.hotRankTask();
+            try {
+                biliTask.hotRankTask();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
         return R.ok();
     }
@@ -61,7 +69,11 @@ public class BiliTaskController {
     @ApiOperation(value = "触发首页推荐任务")
     public R startHomeRecommendTask() {
         CompletableFuture.runAsync(() -> {
-            biliTask.homeRecommendTask();
+            try {
+                biliTask.homeRecommendTask();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
         return R.ok();
     }

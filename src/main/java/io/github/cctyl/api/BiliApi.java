@@ -276,18 +276,21 @@ public class BiliApi {
 
         Map<String, String> cookies = null;
 
-        if (matchApi != null) {
-            ApiHeader apiHeader = GlobalVariables.apiHeaderMap.get(matchApi);
-            if (apiHeader != null) {
-                cookies = apiHeader.getCookies();
-            }
-        }
-        if (cookies!=null){
-            cookies.putAll(GlobalVariables.cookieMap);
-        }else {
-            cookies = GlobalVariables.cookieMap;
+        //找到了特定的，就使用特定的
+        if (matchApi != null
+                && GlobalVariables.apiHeaderMap.get(matchApi) != null) {
+            cookies = GlobalVariables.apiHeaderMap.get(matchApi).getCookies();
         }
 
+        //没找到就使用通用的
+        if (cookies==null){
+            cookies = GlobalVariables.commonCookieMap;
+        }
+        //不应该改变默认的map
+        cookies = new HashMap<>(cookies);
+
+        //通用的基础上，更新一些会过期的cookie
+        cookies.putAll(GlobalVariables.cookieMap);
 
         return cookies.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
