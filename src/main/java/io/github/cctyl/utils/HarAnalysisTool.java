@@ -70,6 +70,10 @@ public class HarAnalysisTool {
         HarReader harReader = new HarReader();
         Har har = null;
 
+        Map<String, String> commonCookieMap = new HashMap<>();
+        Map<String, String> commonHeaderMap = new HashMap<>();
+        HashMap<String, Integer> frequencyMap = new HashMap<>();
+
         try {
             har = harReader.readFromFile(harFile, HarReaderMode.LAX);
 
@@ -78,8 +82,7 @@ public class HarAnalysisTool {
                 GlobalVariables.commonCookieMap = new HashMap<>();
                 GlobalVariables.apiHeaderMap = new HashMap<>();
             }
-            har.getLog().getEntries()
-                    .stream().forEach(harEntry -> {
+            har.getLog().getEntries().forEach(harEntry -> {
                 HarRequest request = harEntry.getRequest();
 
                 String url = request.getUrl();
@@ -93,28 +96,48 @@ public class HarAnalysisTool {
                     extractedUrl = "https://www.bilibili.com/video/";
                 }
 
+
                 HashMap<String, String> curCookieMap = new HashMap<>();
                 for (HarCookie cookie : request.getCookies()) {
-                    if (!ignoreString.contains(cookie.getName()))
+                    if (!ignoreString.contains(cookie.getName())){
+                        DataUtil.countFrequency(frequencyMap,cookie.getName());
                         curCookieMap.put(cookie.getName(), cookie.getValue());
+                    }
                 }
-                GlobalVariables.commonCookieMap.putAll(curCookieMap);
+                commonCookieMap.putAll(curCookieMap);
+
 
                 HashMap<String, String> curHeaderMap = new HashMap<>();
                 for (HarHeader header : request.getHeaders()) {
-                    if (!ignoreString.contains(header.getName()))
+                    if (!ignoreString.contains(header.getName())){
+                        DataUtil.countFrequency(frequencyMap,header.getName());
                         curHeaderMap.put(header.getName(), header.getValue());
+                    }
                 }
-                GlobalVariables.commonHeaderMap.putAll(curHeaderMap);
+                commonHeaderMap.putAll(curHeaderMap);
+
+
 
                 ApiHeader apiHeader = new ApiHeader()
                         .setUrl(extractedUrl)
                         .setCookies(curCookieMap)
                         .setHeaders(curHeaderMap);
-
                 GlobalVariables.apiHeaderMap.put(extractedUrl, apiHeader);
 
             });
+
+            //只保留出现次数大于3的header和cookie
+            for (Map.Entry<String, String> entry : commonCookieMap.entrySet()) {
+                if (frequencyMap.getOrDefault( entry.getKey(),0)>2){
+                    GlobalVariables.commonCookieMap.put(entry.getKey(),entry.getValue());
+                }
+            }
+            for (Map.Entry<String, String> entry : commonHeaderMap.entrySet()) {
+                if (frequencyMap.getOrDefault( entry.getKey(),0)>2){
+                    GlobalVariables.commonHeaderMap.put(entry.getKey(),entry.getValue());
+                }
+            }
+
 
             redisUtil.delete(API_HEADER_MAP);
             redisUtil.delete(COMMON_COOKIE_MAP);
@@ -130,6 +153,9 @@ public class HarAnalysisTool {
             e.printStackTrace();
         }
     }
+
+
+
 }
 
 

@@ -46,9 +46,9 @@ public class InitFromRedis implements ApplicationRunner {
         //0.加载cookie
         Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
         if (CollUtil.isNotEmpty(cookiesFromRedis)) {
-            cookiesFromRedis.keySet().forEach(o -> {
-                GlobalVariables.cookieMap.put((String) o, (String) cookiesFromRedis.get(o));
-            });
+            for (Map.Entry<Object, Object> entry : cookiesFromRedis.entrySet()) {
+                GlobalVariables.cookieMap.put((String) entry.getKey(), (String) entry.getValue());
+            }
         } else {
             throw new RuntimeException("cookie为空");
         }

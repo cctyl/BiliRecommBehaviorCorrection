@@ -17,7 +17,7 @@ import static io.github.cctyl.constants.AppConstant.STOP_WORDS_KEY;
  */
 public class SegmenterUtil {
 
-    private static final JiebaSegmenter jiebaSegmenter  = new JiebaSegmenter();
+    private static final JiebaSegmenter jiebaSegmenter = new JiebaSegmenter();
 
 
     private static RedisUtil redisUtil;
@@ -29,16 +29,18 @@ public class SegmenterUtil {
 
     /**
      * 分词
+     *
      * @param str
      * @return
      */
-    public static List<String> process(String str){
-        return  jiebaSegmenter.process(str, JiebaSegmenter.SegMode.SEARCH)
+    public static List<String> process(String str) {
+        return jiebaSegmenter.process(str, JiebaSegmenter.SegMode.SEARCH)
                 .stream().map(segToken -> segToken.word).collect(Collectors.toList());
     }
 
     /**
      * 获取前5个出现频率最高的词
+     *
      * @param keywordFrequencyMap
      * @return
      */
@@ -47,19 +49,19 @@ public class SegmenterUtil {
                 .sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
                 .map(Map.Entry::getKey)
                 .filter(StrUtil::isNotBlank)
-                .filter(s -> s.length()>1)
+                .filter(s -> s.length() > 1)
                 .limit(5)
                 .collect(Collectors.toList());
     }
 
     /**
-     *
      * 生成词频统计map,并获取前5个出现频率最高的词
+     *
      * @param strProcess
      * @return
      */
     public static List<String> getTop5FrequentWord(List<String> strProcess) {
-       return getTop5FrequentWord( generateFrequencyMap(strProcess));
+        return getTop5FrequentWord(generateFrequencyMap(strProcess));
     }
 
     /**
@@ -70,18 +72,17 @@ public class SegmenterUtil {
      */
     public static Map<String, Integer> generateFrequencyMap(List<String> strProcess) {
 
-        if (redisUtil==null){
+        if (redisUtil == null) {
             redisUtil = BeanProvider.getApplicationContext().getBean(RedisUtil.class);
         }
 
         HashMap<String, Integer> map = new HashMap<>();
         for (String s : strProcess) {
-
             if (
                     Boolean.TRUE.equals(redisUtil.sIsMember(STOP_WORDS_KEY, s))
-            ||
-                   punctuationPattern.matcher(s).matches()
-            ){
+                            ||
+                            punctuationPattern.matcher(s).matches()
+            ) {
                 //停用词，不算在内
                 continue;
             }

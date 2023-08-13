@@ -143,4 +143,15 @@ public class DataUtil {
         }
 
     }
+
+
+    /**
+     * 统计该key的出现频率
+     * @param frequencyMap
+     * @param key
+     */
+    public static<K> void countFrequency(Map<K,Integer> frequencyMap,K key){
+        Integer count = frequencyMap.getOrDefault(key,0);
+        frequencyMap.put(key,++count);
+    }
 }

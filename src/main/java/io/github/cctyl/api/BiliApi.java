@@ -292,7 +292,6 @@ public class BiliApi {
         }
         //不应该改变默认的map
         cookies = new HashMap<>(cookies);
-
         //通用的基础上，更新一些会过期的cookie
         cookies.putAll(GlobalVariables.cookieMap);
 
