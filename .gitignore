@@ -15,6 +15,7 @@ npm-debug.log.*
 /.cache-loader/*
 /logs
 
+/temp
 ######################
 # SASS
 ######################

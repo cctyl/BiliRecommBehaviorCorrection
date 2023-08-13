@@ -4,9 +4,11 @@ import de.sstoehr.harreader.HarReader;
 import de.sstoehr.harreader.HarReaderException;
 import de.sstoehr.harreader.HarReaderMode;
 import de.sstoehr.harreader.model.*;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.ApiHeader;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,7 @@ import static io.github.cctyl.constants.AppConstant.*;
  * har 分析工具
  */
 @Component
+@Slf4j
 public class HarAnalysisTool {
 
     @Autowired
@@ -30,22 +33,29 @@ public class HarAnalysisTool {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+    /**
+     * 从指定路径加载har
+     *
+     * @param path
+     */
+    public void load(String path) {
 
-    private static Map<String, ApiHeader> apiHeaderMap = new HashMap<>();
-    private static Map<String, String> commonCookieMap = new HashMap<>();
-    private static Map<String, String> commonHeaderMap = new HashMap<>();
-
+        if (path == null) {
+            path = "E:\\temp\\www.bilibili.com.har";
+        }
+        load(new File(path));
+    }
 
     /**
-     * 从har中重新加载header
+     * 从指定har文件中重新加载header
+     *
+     * @param harFile
      */
-    public void load() {
-
-
+    public void load(File harFile) {
         HarReader harReader = new HarReader();
         Har har = null;
         try {
-            har = harReader.readFromFile(new File("E:\\temp\\www.bilibili.com.har"), HarReaderMode.LAX);
+            har = harReader.readFromFile(harFile, HarReaderMode.LAX);
 
             har.getLog().getEntries()
                     .stream().forEach(harEntry -> {
@@ -66,34 +76,32 @@ public class HarAnalysisTool {
                 for (HarCookie cookie : request.getCookies()) {
                     curCookieMap.put(cookie.getName(), cookie.getValue());
                 }
-                commonCookieMap.putAll(curCookieMap);
+                GlobalVariables.commonCookieMap.putAll(curCookieMap);
 
                 HashMap<String, String> curHeaderMap = new HashMap<>();
                 for (HarHeader header : request.getHeaders()) {
                     curCookieMap.put(header.getName(), header.getValue());
                 }
-                commonHeaderMap.putAll(curCookieMap);
+                GlobalVariables.commonHeaderMap.putAll(curCookieMap);
                 ApiHeader apiHeader = new ApiHeader()
                         .setUrl(extractedUrl)
                         .setCookies(curCookieMap)
                         .setHeaders(curHeaderMap);
 
-                apiHeaderMap.put(extractedUrl, apiHeader);
+                GlobalVariables.apiHeaderMap.put(extractedUrl, apiHeader);
 
             });
-
 
             redisUtil.delete(API_HEADER_MAP);
             redisUtil.delete(COMMON_COOKIE_MAP);
             redisUtil.delete(COMMON_HEADER_MAP);
 
-            redisTemplate.opsForHash().putAll(API_HEADER_MAP, apiHeaderMap);
-            redisUtil.hPutAll(COMMON_COOKIE_MAP,commonCookieMap);
-            redisUtil.hPutAll(COMMON_HEADER_MAP,commonHeaderMap);
+            //这是加载到redis中
+            redisTemplate.opsForHash().putAll(API_HEADER_MAP, GlobalVariables.apiHeaderMap);
+            redisUtil.hPutAll(COMMON_COOKIE_MAP, GlobalVariables.commonCookieMap);
+            redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
 
-            redisUtil.hGet(COMMON_COOKIE_MAP,"bili_jct");
-
-            System.out.println(har.getLog().getCreator().getName());
+            log.info("har加载完毕！");
         } catch (HarReaderException e) {
             e.printStackTrace();
         }

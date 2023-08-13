@@ -8,6 +8,11 @@ spring:
         max-wait: -1ms
         max-idle: 8
         min-idle: 0
+
+  servlet:
+     multipart:
+        max-file-size: 100MB
+        max-request-size: 150MB
 server:
   port: 8080
 
