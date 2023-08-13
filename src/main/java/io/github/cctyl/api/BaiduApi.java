@@ -163,12 +163,17 @@ public class BaiduApi {
     public JSONObject checkRespAndRetry(Supplier<JSONObject> supplier) {
 
         JSONObject jsonObject = supplier.get();
-        if (jsonObject.get("error_code") != null && jsonObject.getIntValue("error_code") == 110) {
-            getAccessToken(true);
-            log.debug("刷新token并重试一次");
-            jsonObject = supplier.get();
-        }
+        if (jsonObject.get("error_code") != null
 
+        ) {
+            if (jsonObject.getIntValue("error_code") == 110 || jsonObject.getIntValue("error_code") == 6) {
+                getAccessToken(true);
+                log.debug("刷新token并重试一次");
+                jsonObject = supplier.get();
+            }else {
+                log.error("出现意料之外的异常:{}",jsonObject);
+            }
+        }
         return jsonObject;
     }
 
