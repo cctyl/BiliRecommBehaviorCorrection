@@ -60,9 +60,8 @@ public class BiliTask {
         //0.1 检查cookie
         boolean cookieStatus = biliService.checkCookie();
         if (!cookieStatus) {
-            log.error("cookie过期，请更新cookie");
             //todo 发送提醒
-            return;
+            throw new RuntimeException("cookie过期，请更新cookie");
         }
 
         //0.2 检查accessKey
@@ -71,7 +70,7 @@ public class BiliTask {
             log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("accessKey验证不通过，请检查");
+            throw new RuntimeException("accessKey验证不通过，请检查");
         }
 
         //0.3 更新一下必要的cookie

@@ -278,12 +278,11 @@ public class BiliApi {
 
         if (matchApi != null) {
             ApiHeader apiHeader = GlobalVariables.apiHeaderMap.get(matchApi);
-            if (apiHeader == null) {
+            if (apiHeader != null) {
                 cookies = apiHeader.getCookies();
             }
         }
         if (cookies!=null){
-
             cookies.putAll(GlobalVariables.cookieMap);
         }else {
             cookies = GlobalVariables.cookieMap;
