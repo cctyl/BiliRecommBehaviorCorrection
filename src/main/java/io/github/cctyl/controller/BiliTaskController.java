@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -39,15 +41,25 @@ public class BiliTaskController {
     @Autowired
     private BiliTask biliTask;
 
+    /**
+     * 任务的锁
+     */
+    private static Set<String> taskLock = new HashSet<>();
 
     @PostMapping("/search-task")
     @ApiOperation(value = "触发关键词任务")
     public R startSearchTask() {
+        if (taskLock.contains("searchTask")){
+            return R.error().setMessage("searchTask 任务正在进行中");
+        }
+        taskLock.add("searchTask");
         CompletableFuture.runAsync(() -> {
             try {
                 biliTask.searchTask();
             } catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                taskLock.remove("searchTask");
             }
         });
         return R.ok();
@@ -55,11 +67,17 @@ public class BiliTaskController {
     @PostMapping("/hot-rank-task")
     @ApiOperation(value = "触发热门排行榜任务")
     public R startHotRankTask() {
+        if (taskLock.contains("hotRankTask")){
+            return R.error().setMessage("hotRankTask 任务正在进行中");
+        }
+        taskLock.add("hotRankTask");
         CompletableFuture.runAsync(() -> {
             try {
                 biliTask.hotRankTask();
             } catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                taskLock.remove("hotRankTask");
             }
         });
         return R.ok();
@@ -68,11 +86,17 @@ public class BiliTaskController {
     @PostMapping("/home-recommend-task")
     @ApiOperation(value = "触发首页推荐任务")
     public R startHomeRecommendTask() {
+        if (taskLock.contains("homeRecommendTask")){
+            return R.error().setMessage("hotRankTask 任务正在进行中");
+        }
+        taskLock.add("homeRecommendTask");
         CompletableFuture.runAsync(() -> {
             try {
                 biliTask.homeRecommendTask();
             } catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                taskLock.remove("homeRecommendTask");
             }
         });
         return R.ok();
