@@ -158,7 +158,7 @@ public class WhiteRuleController {
     }
 
 
-    @ApiOperation(value = "添加或修改指定的白名单对象的值。存在则修改，不存在则添加")
+    @ApiOperation(value = "添加或修改指定的白名单对象")
     @PostMapping("/")
     public R addOrUpdateWhiteRule(
             @ApiParam(name = "toUpdate", value = "将要修改的白名单对象")
@@ -200,7 +200,7 @@ public class WhiteRuleController {
 
     @ApiOperation(value = "删除指定的白名单规则")
     @DeleteMapping("/{id}")
-    public R addOrUpdateWhiteRule(
+    public R delWhiteRule(
             @ApiParam(name = "id", value = "需要删除的白名单的id")
             @PathVariable("id") Long id
     ) {
