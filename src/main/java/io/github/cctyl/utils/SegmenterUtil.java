@@ -90,9 +90,13 @@ public class SegmenterUtil {
         HashMap<String, Integer> map = new HashMap<>();
         for (String s : strProcess) {
             if (
+                    StrUtil.isBlank(s)
+                    ||
+                    s.length() < 2
+                    ||
                     Boolean.TRUE.equals(redisUtil.sIsMember(STOP_WORDS_KEY, s))
-                            ||
-                            punctuationPattern.matcher(s).matches()
+                    ||
+                    punctuationPattern.matcher(s).matches()
             ) {
                 //停用词，不算在内
                 continue;
