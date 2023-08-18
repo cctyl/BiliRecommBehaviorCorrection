@@ -530,6 +530,11 @@ public class BiliService {
         if (whitelistRule == null) {
             whitelistRule = new WhitelistRule().setId(IdGenerator.nextId());
         }
+
+
+        //根据数据量的大小计算出需要保留的数据量
+        int limit = Math.max(whiteAvidList.size()/100,5);
+
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
@@ -568,9 +573,9 @@ public class BiliService {
         Map<String, Integer> descKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(descProcess);
         Map<String, Integer> tagNameFrequencyMap = SegmenterUtil.generateFrequencyMap(tagNameProcess);
         Map<String, Integer> titleKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(titleProcess);
-        List<String> topDescKeyWord = SegmenterUtil.getTop5FrequentWord(descKeywordFrequencyMap);
-        List<String> topTagName = SegmenterUtil.getTop5FrequentWord(tagNameFrequencyMap);
-        List<String> topTitleKeyWord = SegmenterUtil.getTop5FrequentWord(titleKeywordFrequencyMap);
+        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(descKeywordFrequencyMap);
+        List<String> topTagName = SegmenterUtil.getTopFrequentWord(tagNameFrequencyMap);
+        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(titleKeywordFrequencyMap);
 
         log.info("本次训练结束 \r\n\t前5的标题关键词是:{} \r\n\t 前5的标签名是:{} \r\n\t 前5的描述关键词是:{}",
                 topTitleKeyWord,
@@ -650,9 +655,9 @@ public class BiliService {
                 tagNameProcess.addAll(tagNameList);
             }
         }
-        List<String> topDescKeyWord = SegmenterUtil.getTop5FrequentWord(titleProcess);
-        List<String> topTagName = SegmenterUtil.getTop5FrequentWord(descProcess);
-        List<String> topTitleKeyWord = SegmenterUtil.getTop5FrequentWord(tagNameProcess);
+        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess);
+        List<String> topTagName = SegmenterUtil.getTopFrequentWord(descProcess);
+        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(tagNameProcess);
 
         log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}",topDescKeyWord,
                 topTagName,

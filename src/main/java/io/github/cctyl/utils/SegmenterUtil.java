@@ -44,15 +44,20 @@ public class SegmenterUtil {
      * @param keywordFrequencyMap
      * @return
      */
-    public static List<String> getTop5FrequentWord(Map<String, Integer> keywordFrequencyMap) {
+    public static List<String> getTopFrequentWord(Map<String, Integer> keywordFrequencyMap,int limit) {
         return keywordFrequencyMap.entrySet().stream()
                 .sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
                 .map(Map.Entry::getKey)
                 .filter(StrUtil::isNotBlank)
                 .filter(s -> s.length() > 1)
-                .limit(5)
+                .limit(limit)
                 .collect(Collectors.toList());
     }
+
+    public static List<String> getTopFrequentWord(Map<String, Integer> keywordFrequencyMap) {
+        return getTopFrequentWord(keywordFrequencyMap,Math.max(keywordFrequencyMap.size()/100,5));
+    }
+
 
     /**
      * 生成词频统计map,并获取前5个出现频率最高的词
@@ -60,9 +65,15 @@ public class SegmenterUtil {
      * @param strProcess
      * @return
      */
-    public static List<String> getTop5FrequentWord(List<String> strProcess) {
-        return getTop5FrequentWord(generateFrequencyMap(strProcess));
+    public static List<String> getTopFrequentWord(List<String> strProcess,int limit) {
+        return getTopFrequentWord(generateFrequencyMap(strProcess),limit);
     }
+
+    public static List<String> getTopFrequentWord(List<String> strProcess) {
+        return getTopFrequentWord(generateFrequencyMap(strProcess),Math.max(strProcess.size()/100,5));
+    }
+
+
 
     /**
      * 生成词频统计map
