@@ -63,27 +63,25 @@ public class InitFromRedis implements ApplicationRunner {
         }
 
         //1. 加载关键字数据
-        GlobalVariables.keywordSet = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        GlobalVariables.setKeywordSet(redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //2. 加载黑名单用户id列表
-        GlobalVariables.blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        GlobalVariables.setBlackUserIdSet(redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //3. 加载黑名单关键词列表
-        GlobalVariables.blackKeywordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        GlobalVariables.blackKeywordTree.addWords(GlobalVariables.blackKeywordSet);
+        GlobalVariables.setBlackKeywordSet(redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //4. 加载黑名单分区id列表
-        GlobalVariables.blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        GlobalVariables.setBlackTidSet(redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //5.黑名单标签列表
-        GlobalVariables.blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
+        GlobalVariables.setBlackTagSet(redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //6.白名单用户id
-        GlobalVariables.whiteUserIdSet = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        GlobalVariables.setWhiteUserIdSet(redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //7.白名单分区id
-        GlobalVariables.whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        GlobalVariables.setWhiteTidSet(redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet()));
 
         //8.最小播放时间
         if (applicationProperties.getMinPlaySecond() == null) {
@@ -91,11 +89,9 @@ public class InitFromRedis implements ApplicationRunner {
         }
 
         //9.白名单关键词列表
-        GlobalVariables.whiteKeyWordList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(
-                o -> {
-                    return (WhitelistRule) o;
-                }
-        ).collect(Collectors.toList());
+        GlobalVariables.setWhitelistRules(redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(
+                o -> (WhitelistRule) o
+        ).collect(Collectors.toList()));
 
         //10.加载停顿词
         if (redisUtil.sMembers(STOP_WORDS_KEY).size() == 0) {
@@ -105,7 +101,8 @@ public class InitFromRedis implements ApplicationRunner {
 
         //11.加载ApiHeader相关
         for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(API_HEADER_MAP).entrySet()) {
-            GlobalVariables.apiHeaderMap .put((String) entry.getKey(), (ApiHeader) entry.getValue());
+            GlobalVariables.apiHeaderMap.put((String) entry.getKey(), (ApiHeader) entry.getValue());
+
         }
 
         for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {

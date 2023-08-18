@@ -219,13 +219,13 @@ public class GlobalVariables {
     }
 
 
-    public static void setWhiteKeyWordList(List<WhitelistRule> whiteKeyWordList) {
+    public static void setWhitelistRules(List<WhitelistRule> whiteKeyWordList) {
         GlobalVariables.whitelistRules = whiteKeyWordList;
         redisUtil.delete(WHITE_LIST_RULE_KEY);
         redisUtil.sAdd(WHITE_LIST_RULE_KEY, whiteKeyWordList.toArray());
     }
 
-    public static void addWhiteKeyWordList(List<WhitelistRule> whiteKeyWordList) {
+    public static void addWhitelistRules(List<WhitelistRule> whiteKeyWordList) {
         GlobalVariables.whitelistRules.addAll(whiteKeyWordList);
         redisUtil.delete(WHITE_LIST_RULE_KEY);
         redisUtil.sAdd(WHITE_LIST_RULE_KEY, whiteKeyWordList.toArray());
@@ -237,8 +237,8 @@ public class GlobalVariables {
         redisTemplate.opsForHash().putAll(API_HEADER_MAP, GlobalVariables.apiHeaderMap);
     }
 
-    public static void addApiHeaderMap(Map<String, ApiHeader> apiHeaderMap) {
-        GlobalVariables.apiHeaderMap .putAll( apiHeaderMap);
+    public static void addApiHeader(String key, ApiHeader value) {
+        GlobalVariables.apiHeaderMap.put(key, value);
         redisUtil.delete(API_HEADER_MAP);
         redisTemplate.opsForHash().putAll(API_HEADER_MAP, GlobalVariables.apiHeaderMap);
     }
@@ -250,8 +250,8 @@ public class GlobalVariables {
         redisUtil.hPutAll(COMMON_COOKIE_MAP, GlobalVariables.commonCookieMap);
     }
 
-    public static void addCommonCookieMap(Map<String, String> commonCookieMap) {
-        GlobalVariables.commonCookieMap.putAll(commonCookieMap);
+    public static void addCommonCookieMap(String key, String value) {
+        GlobalVariables.commonCookieMap.put(key,value);
         redisUtil.delete(COMMON_COOKIE_MAP);
         redisUtil.hPutAll(COMMON_COOKIE_MAP, GlobalVariables.commonCookieMap);
     }
@@ -263,8 +263,8 @@ public class GlobalVariables {
     }
 
 
-    public static void addCommonHeaderMap(Map<String, String> commonHeaderMap) {
-        GlobalVariables.commonHeaderMap.putAll(commonHeaderMap);
+    public static void addCommonHeaderMap(String key, String value) {
+        GlobalVariables.commonHeaderMap.put(key,value);
         redisUtil.delete(COMMON_HEADER_MAP);
         redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
     }

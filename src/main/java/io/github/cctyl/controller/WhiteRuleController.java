@@ -161,15 +161,15 @@ public class WhiteRuleController {
 
 
         if (
-                CollUtil.isEmpty( toUpdate.getDescKeyWordList())
-                &&
-                        CollUtil.isEmpty( toUpdate.getTagNameList())
+                CollUtil.isEmpty(toUpdate.getDescKeyWordList())
+                        &&
+                        CollUtil.isEmpty(toUpdate.getTagNameList())
                         &&
                         CollUtil.isEmpty(toUpdate.getTitleKeyWordList())
 
                         &&
                         StrUtil.isEmpty(toUpdate.getCoverKeyword())
-        ){
+        ) {
 
             return R.error().setMessage("无效数据");
 
