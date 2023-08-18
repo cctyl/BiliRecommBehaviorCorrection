@@ -124,32 +124,6 @@ public class WhiteRuleController {
         return R.ok().setMessage("训练任务已开始");
     }
 
-    @ApiOperation(value = "对指定分区的 排行榜、热门视频进行点踩")
-    @PostMapping("/disklike-by-tid")
-    public R dislikeByTid(
-            @ApiParam(name = "tidList", value = "白名单条件id,为空表示创建新的规则")
-            @RequestParam List<Integer> tidList
-    ) {
-
-        CompletableFuture.runAsync(() -> {
-            int disklikeNum = 0;
-            for (Integer tid : tidList) {
-                try {
-                    disklikeNum += biliService.dislikeByTid(tid);
-                    log.info("完成对{}分区的点踩任务", tid);
-                    ThreadUtil.sleep5Second();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
-                    tidList.size(),
-                    tidList,
-                    disklikeNum
-            );
-        });
-        return R.ok().setMessage("对指定分区点踩任务已开始");
-    }
 
 
     @ApiOperation(value = "添加或修改指定的白名单对象")

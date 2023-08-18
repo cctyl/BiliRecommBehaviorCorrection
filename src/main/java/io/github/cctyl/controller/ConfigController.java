@@ -20,8 +20,6 @@ import java.net.HttpCookie;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static io.github.cctyl.constants.AppConstant.COOKIES_KEY;
-import static io.github.cctyl.constants.AppConstant.SUSPICIOUS_COOKIE_KEY;
 
 @RestController
 @RequestMapping("/config")
@@ -52,7 +50,7 @@ public class ConfigController {
             GlobalVariables.cookieMap.put(entry.getKey(), entry.getValue());
         }
         //缓存
-        redisUtil.hPutAll(COOKIES_KEY, GlobalVariables.cookieMap);
+        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
         return R.ok().setData(cookieMap);
     }
 
