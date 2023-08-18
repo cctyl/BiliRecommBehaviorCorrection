@@ -139,14 +139,10 @@ public class HarAnalysisTool {
             }
 
 
-            redisUtil.delete(API_HEADER_MAP);
-            redisUtil.delete(COMMON_COOKIE_MAP);
-            redisUtil.delete(COMMON_HEADER_MAP);
+            GlobalVariables.setApiHeaderMap(GlobalVariables.apiHeaderMap);
+            GlobalVariables.setCommonCookieMap(GlobalVariables.commonCookieMap);
+            GlobalVariables.setCommonHeaderMap(GlobalVariables.commonHeaderMap);
 
-            //这是加载到redis中
-            redisTemplate.opsForHash().putAll(API_HEADER_MAP, GlobalVariables.apiHeaderMap);
-            redisUtil.hPutAll(COMMON_COOKIE_MAP, GlobalVariables.commonCookieMap);
-            redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
 
             log.info("har加载完毕！");
         } catch (HarReaderException e) {

@@ -4,9 +4,12 @@ import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.R;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,10 +24,10 @@ public class TestController {
 
     @PostMapping("/cookie-header")
     public R testCookieAndHeader(
-            @RequestBody List<Map<String,String>> paramList
-            ){
+            @RequestBody List<Map<String, String>> paramList
+    ) {
 
-        if (paramList.size()<2){
+        if (paramList.size() < 2) {
             return R.error().setMessage("参数缺失");
         }
         GlobalVariables.commonHeaderMap = paramList.get(0);
@@ -36,9 +39,12 @@ public class TestController {
     }
 
     @GetMapping("/cookie-header")
-    public R getCookieAndHeader(){
+    public R getCookieAndHeader() {
         return R.ok().setData(
                 Arrays.asList(GlobalVariables.cookieMap, GlobalVariables.commonHeaderMap
-        ));
+                ));
     }
+
+
+
 }
