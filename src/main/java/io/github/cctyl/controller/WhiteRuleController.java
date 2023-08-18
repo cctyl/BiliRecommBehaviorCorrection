@@ -110,24 +110,18 @@ public class WhiteRuleController {
                     }
                 }
 
-
                 whitelistRule = biliService.train(
                         whitelistRule,
                         allVideo.stream().map(UserSubmissionVideo::getAid).collect(Collectors.toList())
                 );
-
             }
-
             log.info("训练完成，训练结果为:" + whitelistRule);
             whitelistRuleList.remove(whitelistRule);
             whitelistRuleList.add(whitelistRule);
             redisUtil.delete(WHITE_LIST_RULE_KEY);
             redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRuleList.toArray());
         });
-
         return R.ok().setMessage("训练任务已开始");
-
-
     }
 
     @ApiOperation(value = "对指定分区的 排行榜、热门视频进行点踩")
