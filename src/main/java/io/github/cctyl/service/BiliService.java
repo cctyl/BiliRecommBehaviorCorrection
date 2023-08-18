@@ -157,7 +157,7 @@ public class BiliService {
          *      起码，这个up主在范围内（直接用up主id不就行了），分区在范围内，封面在范围内
          *      所以关键词部分，至少满足： 标题 描述 关键词匹配，分区匹配，封面包含指定关键词 三个条件中两个条件满足
          */
-        boolean keyWordFlag = GlobalVariables.whiteKeyWordList
+        boolean keyWordFlag = GlobalVariables.whitelistRules
                 .stream()
                 .anyMatch(item ->
                         {
@@ -664,14 +664,14 @@ public class BiliService {
                 topTitleKeyWord);
 
         //更新到redis中
-        GlobalVariables.updateBlackUserId(GlobalVariables.blackUserIdSet);
+        GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
 
         GlobalVariables.blackKeywordSet.addAll(topDescKeyWord);
         GlobalVariables.blackKeywordSet.addAll(topTitleKeyWord);
-        GlobalVariables.updateBlackKeyword(GlobalVariables.blackKeywordSet);
+        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
 
         GlobalVariables.blackTagSet.addAll(topTagName);
-        GlobalVariables.updateBlackTagSet( GlobalVariables.blackTagSet);
+        GlobalVariables.setBlackTagSet( GlobalVariables.blackTagSet);
 
 
         return allVideo.size();

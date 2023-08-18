@@ -337,7 +337,7 @@ public class BiliApi {
         }
 
         //缓存
-        redisUtil.hPutAll(COOKIES_KEY, GlobalVariables.cookieMap);
+        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
     }
 
     /**
