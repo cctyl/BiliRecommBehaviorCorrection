@@ -1,6 +1,7 @@
 package io.github.cctyl.controller;
 
 
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.config.ApplicationProperties;
@@ -17,8 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpCookie;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Map;
+
+import static io.github.cctyl.constants.AppConstant.STOP_WORDS_KEY;
 
 
 @RestController
@@ -74,6 +79,20 @@ public class ConfigController {
         return R.ok().setData( Map.of("cookieMap",GlobalVariables.cookieMap,
                 "headerMap",GlobalVariables.commonHeaderMap
         ));
+    }
+
+    @ApiOperation(value = "更新停顿词列表")
+    @PostMapping("/reload-stopword")
+    public R reloadStopWord(){
+
+        ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
+        redisUtil.delete(STOP_WORDS_KEY);
+        try {
+            redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return R.ok().setMessage("停顿词列表长度为:"+redisUtil.sSize(STOP_WORDS_KEY));
     }
 
 
