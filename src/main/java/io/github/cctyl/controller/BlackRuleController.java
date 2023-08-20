@@ -1,5 +1,6 @@
 package io.github.cctyl.controller;
 
+import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.R;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/black-rule")
@@ -81,6 +83,17 @@ public class BlackRuleController {
     public R getBlackKeywordSet(){
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
+
+
+    @ApiOperation("添加一串黑名单关键词")
+    @PostMapping("/keyword")
+    public R addBlackKeyWord(@RequestBody List<String> keywordList){
+        Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank)
+                .collect(Collectors.toSet());
+        GlobalVariables.addBlackKeyword(collect);
+        return R.ok().setData(GlobalVariables.blackKeywordSet);
+    }
+
 
     @ApiOperation("更新黑名单关键词列表")
     @PutMapping("/keyword")
