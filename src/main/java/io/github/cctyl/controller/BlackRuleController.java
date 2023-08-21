@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.R;
+import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
@@ -14,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -34,6 +37,49 @@ public class BlackRuleController {
     @Autowired
     private BiliApi biliApi;
 
+    @ApiOperation("指定视频是否符合黑名单")
+    @GetMapping("/check-video")
+    public R checkVideo(
+            @ApiParam(name = "aid", value = "avid")
+            @RequestParam(required = false) Integer aid,
+            @ApiParam(name = "bvid", value = "bvid")
+                           @RequestParam(required = false) String bvid
+                           ){
+
+        VideoDetail videoDetail;
+        if (aid!=null){
+
+            videoDetail = biliApi.getVideoDetail(aid);
+        }else if (StrUtil.isNotBlank(bvid)){
+            videoDetail = biliApi.getVideoDetail(bvid);
+        }else {
+            return R.error().setMessage("参数缺失");
+        }
+        boolean titleMatch = biliService.isTitleMatch(GlobalVariables.blackKeywordTree, videoDetail);
+        //1.2 简介是否触发黑名单关键词
+        boolean descMatch = biliService.isDescMatch(GlobalVariables.blackKeywordTree, videoDetail);
+        //1.3 标签是否触发关键词,需要先获取标签
+        boolean tagMatch = biliService.isTagMatch(videoDetail);
+        //1.4 up主id是否在黑名单内
+        boolean midMatch = biliService.isMidMatch(GlobalVariables.blackUserIdSet, videoDetail);
+        //1.5 分区是否触发
+        boolean tidMatch = biliService.isTidMatch(GlobalVariables.blackTidSet, videoDetail);
+        //1.6 封面是否触发
+        boolean coverMatch = biliService.isCoverMatch(videoDetail);
+
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("videoDetail",videoDetail);
+        map.put("titleMatch",titleMatch);
+        map.put("descMatch",descMatch);
+        map.put("tagMatch",tagMatch);
+        map.put("midMatch",midMatch);
+        map.put("tidMatch",tidMatch);
+        map.put("coverMatch",coverMatch);
+
+        return R.data(map);
+
+    }
 
     @ApiOperation("对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
