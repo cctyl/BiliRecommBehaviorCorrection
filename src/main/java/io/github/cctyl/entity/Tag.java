@@ -76,5 +76,11 @@ public class Tag implements Serializable {
     }
 
 
-
+    @Override
+    public String toString() {
+        return "Tag{" +
+                "tagId=" + tagId +
+                ", tagName='" + tagName + '\'' +
+                '}';
+    }
 }

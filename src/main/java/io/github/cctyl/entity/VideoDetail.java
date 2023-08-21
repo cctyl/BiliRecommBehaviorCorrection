@@ -200,7 +200,8 @@ public class VideoDetail implements Serializable {
      * 返回简洁的信息
      * @return
      */
-    public String simpleInfo() {
+    @Override
+    public String toString() {
         return "VideoDetail{" +
                 "aid=" + aid +
                 ", tid=" + tid +
