@@ -5,12 +5,13 @@ import io.github.cctyl.entity.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
 @Data
-public class VideoDetail {
+public class VideoDetail implements Serializable {
 
 
     /**
@@ -183,12 +184,14 @@ public class VideoDetail {
 
     @NoArgsConstructor
     @Data
-    public static class UserGarb {
+    public static class UserGarb  implements Serializable{
+        private String id;
     }
 
     @NoArgsConstructor
     @Data
-    public static class HonorReply {
+    public static class HonorReply  implements Serializable{
+        private String id;
     }
 
 

@@ -4,9 +4,11 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @NoArgsConstructor
 @Data
-public  class Pages {
+public  class Pages implements Serializable {
     @JSONField(name = "cid")
     private Integer cid;
     @JSONField(name = "page")

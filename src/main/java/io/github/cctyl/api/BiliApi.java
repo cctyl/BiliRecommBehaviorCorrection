@@ -464,7 +464,7 @@ public class BiliApi {
     }
 
     /**
-     * 根据bvid获取视频详情
+     * 根据avid获取视频详情
      *
      * @param avid
      */
@@ -475,6 +475,19 @@ public class BiliApi {
         checkRespAndThrow(jsonObject, body);
         return jsonObject.getJSONObject("data").to(VideoDetail.class);
     }
+    /**
+     * 根据bvid获取视频详情
+     *
+     * @param bvid
+     */
+    public VideoDetail getVideoCommonInfo(String bvid) {
+        String url = "https://api.bilibili.com/x/web-interface/view";
+        String body = commonGet(url, Map.of("bvid", bvid)).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+        return jsonObject.getJSONObject("data").to(VideoDetail.class);
+    }
+
 
     /**
      * 获取视频的播放地址
@@ -929,6 +942,23 @@ public class BiliApi {
 
         return videoDetail;
     }
+    public VideoDetail getVideoDetail(String bvid ) {
+        String url = "https://api.bilibili.com/x/web-interface/view/detail";
+        String body = commonGet(url, Map.of("bvid", bvid )).body();
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(
+                jsonObject, body
+        );
+
+        JSONObject data = jsonObject.getJSONObject("data");
+        VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
+        videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
+        videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
+
+        return videoDetail;
+    }
+
 
     /**
      * 获取指定分区内的最新视频

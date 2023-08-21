@@ -4,9 +4,11 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @NoArgsConstructor
 @Data
-public  class Dimension {
+public  class Dimension implements Serializable {
     @JSONField(name = "width")
     private Integer width;
     @JSONField(name = "height")

@@ -4,9 +4,11 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @NoArgsConstructor
 @Data
-public class DescV2 {
+public class DescV2 implements Serializable {
 
 
     @JSONField(name = "raw_text")

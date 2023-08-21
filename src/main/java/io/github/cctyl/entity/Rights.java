@@ -4,9 +4,11 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @NoArgsConstructor
 @Data
-public  class Rights {
+public  class Rights implements Serializable {
     @JSONField(name = "bp")
     private Integer bp;
     @JSONField(name = "elec")

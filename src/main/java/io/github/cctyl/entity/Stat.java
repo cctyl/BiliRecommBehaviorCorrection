@@ -4,13 +4,15 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 视频的相关数据
  * 弹幕数、硬币数、点赞数
  */
 @NoArgsConstructor
 @Data
-public class Stat {
+public class Stat  implements Serializable {
     @JSONField(name = "aid")
     private Integer aid;
     @JSONField(name = "view")
