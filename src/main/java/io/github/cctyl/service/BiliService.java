@@ -279,7 +279,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isCoverMatch(VideoDetail videoDetail) {
+    public boolean isCoverMatch(VideoDetail videoDetail) {
         try {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
             boolean human = imageGenderDetectService.isHuman(picByte);
@@ -299,7 +299,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isTitleMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
+    public boolean isTitleMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
         boolean match = blackKeywordTree.isMatch(videoDetail.getTitle());
         log.debug("视频:{}-{}的标题：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getTitle(), match);
         return match;
@@ -312,7 +312,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isDescMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
+    public boolean isDescMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
         boolean result = blackKeywordTree.isMatch(videoDetail.getDesc());
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
@@ -334,7 +334,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isTidMatch(Set<String> blackTidSet, VideoDetail videoDetail) {
+    public boolean isTidMatch(Set<String> blackTidSet, VideoDetail videoDetail) {
         boolean match = blackTidSet.contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
@@ -353,7 +353,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isMidMatch(Set<String> blackUserIdSet, VideoDetail videoDetail) {
+    public boolean isMidMatch(Set<String> blackUserIdSet, VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
@@ -376,7 +376,7 @@ public class BiliService {
      * @param videoDetail
      * @return
      */
-    private boolean isTagMatch(VideoDetail videoDetail) {
+    public boolean isTagMatch(VideoDetail videoDetail) {
         boolean match = videoDetail.getTags()
                 .stream().map(Tag::getTagName)
                 .anyMatch(s -> GlobalVariables.blackTagTree.isMatch(s));
