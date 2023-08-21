@@ -43,7 +43,8 @@ public class HarAnalysisTool {
             "Referer",
             "Cookie",
             "Host",
-            "Content-Length"
+            "Content-Length",
+            "accept-encoding"
 
     );
 
@@ -111,7 +112,7 @@ public class HarAnalysisTool {
                 for (HarHeader header : request.getHeaders()) {
                     if (!ignoreString.contains(header.getName())){
                         DataUtil.countFrequency(frequencyMap,header.getName());
-                        curHeaderMap.put(header.getName(), header.getValue());
+                        curHeaderMap.put(header.getName().replaceAll(":",""), header.getValue());
                     }
                 }
                 commonHeaderMap.putAll(curHeaderMap);
