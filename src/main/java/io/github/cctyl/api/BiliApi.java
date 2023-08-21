@@ -121,7 +121,7 @@ public class BiliApi {
         HttpResponse response = request
                 .execute();
         updateCookie(response);
-        log.debug("body={}", response.body());
+        log.trace("body={}", response.body());
         return response;
     }
 
@@ -142,7 +142,7 @@ public class BiliApi {
                 .cookie(getCookieStr(url));
         HttpResponse response = request
                 .execute();
-        log.debug("body={}", response.body());
+        log.trace("body={}", response.body());
         updateCookie(response);
         return response;
     }
@@ -168,7 +168,7 @@ public class BiliApi {
         otherHeader.forEach(request::header);
         HttpResponse response = request
                 .execute();
-        log.debug("body={}", response.body());
+        log.trace("body={}", response.body());
         updateCookie(response);
         return response;
     }
@@ -193,7 +193,7 @@ public class BiliApi {
                         .cookie(getCookieStr(url));
         HttpResponse response = request
                 .execute();
-        log.debug("body={}", response.body());
+        log.trace("body={}", response.body());
         updateCookie(response);
         return response;
     }

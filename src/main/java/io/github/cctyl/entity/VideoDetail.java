@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Data
@@ -195,4 +196,33 @@ public class VideoDetail implements Serializable {
     }
 
 
+    /**
+     * 返回简洁的信息
+     * @return
+     */
+    public String simpleInfo() {
+        return "VideoDetail{" +
+                "aid=" + aid +
+                ", tid=" + tid +
+                ", tname='" + tname + '\'' +
+                ", pic='" + pic + '\'' +
+                ", title='" + title + '\'' +
+                ", pubdate=" + pubdate +
+                ", ctime=" + ctime +
+                ", desc='" + desc + '\'' +
+                ", duration=" + duration +
+                ", bvid='" + bvid + '\'' +
+                ", owner=" + owner +
+                ", tags=" +
+                (tags != null ?
+                        tags.stream().map(
+                                tag -> "tagId:" + tag.getTagId() + " tagName:" + tag.getTagName()
+                        )
+                        :
+                        "[]"
+                )
+                +
+                ", subtitle=" + subtitle +
+                '}';
+    }
 }
