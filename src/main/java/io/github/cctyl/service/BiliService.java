@@ -300,8 +300,15 @@ public class BiliService {
      * @return
      */
     public boolean isTitleMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
-        boolean match = blackKeywordTree.isMatch(videoDetail.getTitle());
-        log.debug("视频:{}-{}的标题：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getTitle(), match);
+        String matchWord = blackKeywordTree.match(videoDetail.getTitle());
+        boolean match = matchWord!=null;
+        log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getTitle(),
+                match,
+                matchWord
+                );
         return match;
     }
 
@@ -313,17 +320,20 @@ public class BiliService {
      * @return
      */
     public boolean isDescMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
-        boolean result = blackKeywordTree.isMatch(videoDetail.getDesc());
+        String match = blackKeywordTree.match(videoDetail.getDesc());
+        boolean result = match!=null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
             result = result || videoDetail.getDescV2().stream().map(DescV2::getRawText).anyMatch(blackKeywordTree::isMatch);
             desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
         }
-        log.debug("视频:{}-{}的 简介：{}，匹配结果：{}",
+        log.debug("视频:{}-{}的 简介：{}，匹配结果：{},匹配到的关键词：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
                 desc,
-                result);
+                result,
+                result
+                );
         return result;
     }
 
@@ -377,15 +387,18 @@ public class BiliService {
      * @return
      */
     public boolean isTagMatch(VideoDetail videoDetail) {
-        boolean match = videoDetail.getTags()
+        String matchWord = videoDetail.getTags()
                 .stream().map(Tag::getTagName)
-                .anyMatch(s -> GlobalVariables.blackTagTree.isMatch(s));
-
-        log.debug("视频:{}-{}的 tag：{}，匹配结果：{}",
+                .filter(s -> GlobalVariables.blackTagTree.isMatch(s))
+                .findAny().orElse(null);
+        boolean match = matchWord!=null;
+        log.debug("视频:{}-{}的 tag：{}，匹配结果：{},匹配到的关键词：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
                 videoDetail.getTags(),
-                match);
+                match,
+                matchWord
+                );
 
         return match;
     }
