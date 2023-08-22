@@ -1181,4 +1181,50 @@ public class BiliApi {
     }
 
 
+    /**
+     * 根据短网址获得视频的bvid
+     * @param shortUrl
+     * @return
+     */
+    public String getBvidByShortUrl(String shortUrl){
+        HttpResponse response = commonGet(shortUrl);
+        String pcUrl = response.body().replaceAll("<a href=\"", "")
+                .replaceAll("\">Found</a>.", "");
+        return getBvidByUrl(pcUrl);
+    }
+
+
+    /**
+     * 根据pc端url获得bvid
+     * @param url
+     * @return
+     */
+    public String getBvidByUrl(String url){
+        String s = url.replaceAll("https://www.bilibili.com/video/", "");
+        s = s.substring(0,s.indexOf("?"));
+        return s;
+    }
+
+    /**
+     * 根据pc端url获得avid
+     * @param url
+     * @return
+     */
+    public Integer getAvidByUrl(String url){
+        return DataUtil.bvidToAid(getBvidByUrl(url));
+    }
+
+
+    /**
+     * 根据短链接获得avid
+     * @param shortUrl
+     * @return
+     */
+    public Integer getAvidByShortUrl(String shortUrl){
+        String bvid = getBvidByShortUrl(shortUrl);
+        return DataUtil.bvidToAid(bvid);
+    }
+
+
+
 }

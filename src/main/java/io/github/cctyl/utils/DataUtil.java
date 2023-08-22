@@ -9,7 +9,49 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class DataUtil {
+    private static final String TABLE = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF";
+    private static final int[] S = new int[]{11, 10, 3, 8, 4, 6};
+    private static final int XOR = 177451812;
+    private static final long ADD = 8728348608L;
+    private static final Map<Character, Integer> TABLE_MAP = new HashMap<>();
 
+    static {
+        for (int i = 0; i < 58; i++) {
+            TABLE_MAP.put(TABLE.charAt(i), i);
+        }
+    }
+
+    /**
+     * av号转换bv号
+     * 参考 https://github.com/SocialSisterYi/bilibili-API-collect/blob/b52187a48bd05bf985b70ae7fe3afde38c254052/docs/misc/bvid_desc.md
+     * @param aid
+     * @return
+     */
+    public static String aidToBvid(int aid) {
+        long x = (aid ^ XOR) + ADD;
+        char[] chars = new char[]{'B', 'V', '1', ' ', ' ', '4', ' ', '1', ' ', '7', ' ', ' '};
+        for (int i = 0; i < 6; i++) {
+            int pow = (int) Math.pow(58, i);
+            long i1 = x / pow;
+            int index = (int) (i1 % 58);
+            chars[S[i]] = TABLE.charAt(index);
+        }
+        return String.valueOf(chars);
+    }
+
+    /**
+     * bv转换av号
+     * 参考 https://github.com/SocialSisterYi/bilibili-API-collect/blob/b52187a48bd05bf985b70ae7fe3afde38c254052/docs/misc/bvid_desc.md
+     * @param bvid
+     * @return
+     */
+    public static int bvidToAid(String bvid) {
+        long r = 0;
+        for (int i = 0; i < 6; i++) {
+            r += TABLE_MAP.get(bvid.charAt(S[i])) * Math.pow(58, i);
+        }
+        return (int) ((r - ADD) ^ XOR);
+    }
 
     /**
      * 获取一个指定长度的随机数列表，支持指定边界，边界为[start,end]
