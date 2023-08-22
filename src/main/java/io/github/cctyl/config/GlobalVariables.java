@@ -8,10 +8,7 @@ import lombok.Data;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -98,7 +95,7 @@ public class GlobalVariables {
         GlobalVariables.redisTemplate = redisTemplate;
     }
 
-    public static void addBlackUserId(Set<String> param) {
+    public static void addBlackUserId(Collection<String> param) {
         GlobalVariables.blackUserIdSet.addAll(param);
         redisUtil.delete(BLACK_USER_ID_KEY);
         redisUtil.sAdd(BLACK_USER_ID_KEY, GlobalVariables.blackUserIdSet.toArray());
@@ -127,7 +124,7 @@ public class GlobalVariables {
         GlobalVariables.blackKeywordTree.addWords(GlobalVariables.blackKeywordSet);
     }
 
-    public static void addBlackKeyword(Set<String> param) {
+    public static void addBlackKeyword(Collection<String> param) {
         GlobalVariables.blackKeywordSet.addAll(param);
         redisUtil.delete(BLACK_KEY_WORD_KEY);
         redisUtil.sAdd(BLACK_KEY_WORD_KEY, GlobalVariables.blackKeywordSet.toArray());
@@ -146,7 +143,7 @@ public class GlobalVariables {
         GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
     }
 
-    public static void addBlackTagSet(Set<String> param) {
+    public static void addBlackTagSet(Collection<String> param) {
         GlobalVariables.blackTagSet.addAll(param);
         redisUtil.delete(BLACK_TAG_KEY);
         redisUtil.sAdd(BLACK_TAG_KEY, GlobalVariables.blackTagSet.toArray());
@@ -159,7 +156,7 @@ public class GlobalVariables {
         redisUtil.sAdd(WHITE_USER_ID_KEY, GlobalVariables.whiteUserIdSet.toArray());
     }
 
-    public static void addWhiteUserId(Set<String> whiteUserIdSet) {
+    public static void addWhiteUserId(Collection<String> whiteUserIdSet) {
         GlobalVariables.whiteUserIdSet.addAll(whiteUserIdSet);
         redisUtil.delete(WHITE_USER_ID_KEY);
         redisUtil.sAdd(WHITE_USER_ID_KEY, GlobalVariables.whiteUserIdSet.toArray());
@@ -171,7 +168,7 @@ public class GlobalVariables {
         redisUtil.sAdd(BLACK_TID_KEY, GlobalVariables.blackTidSet.toArray());
     }
 
-    public static void addBlackTid(Set<String> blackTidSet) {
+    public static void addBlackTid(Collection<String> blackTidSet) {
         GlobalVariables.blackTidSet.addAll(blackTidSet);
         redisUtil.delete(BLACK_TID_KEY);
         redisUtil.sAdd(BLACK_TID_KEY, GlobalVariables.blackTidSet.toArray());
@@ -183,7 +180,7 @@ public class GlobalVariables {
         redisUtil.sAdd(WHITE_TID_KEY, GlobalVariables.whiteTidSet.toArray());
     }
 
-    public static void addWhiteTid(Set<String> whiteTidSet) {
+    public static void addWhiteTid(Collection<String> whiteTidSet) {
         GlobalVariables.whiteTidSet.addAll(whiteTidSet);
         redisUtil.delete(WHITE_TID_KEY);
         redisUtil.sAdd(WHITE_TID_KEY, GlobalVariables.whiteTidSet.toArray());
@@ -212,7 +209,7 @@ public class GlobalVariables {
         redisUtil.sAdd(KEY_WORD_KEY, GlobalVariables.keywordSet.toArray());
     }
 
-    public static void addKeywordSet(Set<String> keywordSet) {
+    public static void addKeywordSet(Collection<String> keywordSet) {
         GlobalVariables.keywordSet.addAll(keywordSet);
         redisUtil.delete(KEY_WORD_KEY);
         redisUtil.sAdd(KEY_WORD_KEY, GlobalVariables.keywordSet.toArray());

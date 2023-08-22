@@ -3,6 +3,7 @@ package io.github.cctyl.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.IdGenerator;
@@ -69,7 +70,7 @@ public class WhiteRuleController {
             return R.error().setMessage("视频来源参数缺失");
         }
 
-        CompletableFuture.runAsync(() -> {
+        TaskPool.putTask(() -> {
             log.info("开始训练");
             List<WhitelistRule> whitelistRuleList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(WhitelistRule.class::cast).collect(Collectors.toList());
             WhitelistRule whitelistRule;

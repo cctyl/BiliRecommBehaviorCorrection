@@ -689,4 +689,16 @@ public class BiliService {
 
         return allVideo.size();
     }
+
+    /**
+     * 根据用户id进行点踩
+     * @param userId
+     * @return
+     */
+    public int dislikeByUserId(String userId) {
+        //该用户会被加入黑名单
+        GlobalVariables.addBlackUserId(Collections.singleton(userId));
+
+        return 0;
+    }
 }

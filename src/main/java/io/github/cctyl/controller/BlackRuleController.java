@@ -3,6 +3,7 @@ package io.github.cctyl.controller;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.R;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
@@ -43,8 +44,8 @@ public class BlackRuleController {
             @ApiParam(name = "aid", value = "avid")
             @RequestParam(required = false) Integer aid,
             @ApiParam(name = "bvid", value = "bvid")
-                           @RequestParam(required = false) String bvid
-                           ){
+            @RequestParam(required = false) String bvid
+    ) {
 
         VideoDetail videoDetail;
         if (aid!=null){
@@ -84,11 +85,12 @@ public class BlackRuleController {
     @ApiOperation("对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
     public R dislikeByTid(
-            @ApiParam(name = "tidList", value = "白名单条件id,为空表示创建新的规则")
+            @ApiParam(name = "tidList", value = "需要点踩的分区id")
             @RequestParam List<Integer> tidList
     ) {
 
-        CompletableFuture.runAsync(() -> {
+
+        TaskPool.putTask(() -> {
             int disklikeNum = 0;
             for (Integer tid : tidList) {
                 try {
@@ -102,6 +104,32 @@ public class BlackRuleController {
             log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
                     tidList.size(),
                     tidList,
+                    disklikeNum
+            );
+        });
+        return R.ok().setMessage("对指定分区点踩任务已开始");
+    }
+
+    @ApiOperation("对指定用户的视频进行点踩")
+    @PostMapping("/disklike-by-uid")
+    public R dislikeByUserId(
+            @ApiParam(name = "userIdList", value = "需要点踩的用户id")
+            @RequestParam List<String> userIdList
+    ) {
+        TaskPool.putTask(() -> {
+            int disklikeNum = 0;
+            for (String userId : userIdList) {
+                try {
+                    disklikeNum += biliService.dislikeByUserId(userId);
+                    log.info("完成对{}分区的点踩任务", userId);
+                    ThreadUtil.sleep20Second();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            log.info("本次共对{}个用户:{}进行点踩，共点踩{}个视频",
+                    userIdList.size(),
+                    userIdList,
                     disklikeNum
             );
         });

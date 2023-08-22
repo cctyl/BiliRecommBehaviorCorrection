@@ -35,6 +35,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>io.github.cctyl</groupId>
+            <artifactId>jdbcTemplatePlus</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
         <!-- 引入aop支持 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
