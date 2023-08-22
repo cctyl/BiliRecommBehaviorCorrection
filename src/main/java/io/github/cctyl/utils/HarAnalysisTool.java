@@ -40,10 +40,13 @@ public class HarAnalysisTool {
             "bili_ticket_expires",
             "bili_ticket",
             "b_nut",
-            "Referer",
-            "Cookie",
-            "Host",
-            "Content-Length",
+            "referer",
+            "cookie",
+            "host",
+            "content-length",
+            "accept-encoding",
+            "grpc-encoding",
+            "grpc-accept-encoding",
             "accept-encoding"
 
     );
@@ -100,7 +103,7 @@ public class HarAnalysisTool {
 
                 HashMap<String, String> curCookieMap = new HashMap<>();
                 for (HarCookie cookie : request.getCookies()) {
-                    if (!ignoreString.contains(cookie.getName())){
+                    if (!ignoreString.contains(cookie.getName().toLowerCase())){
                         DataUtil.countFrequency(frequencyMap,cookie.getName());
                         curCookieMap.put(cookie.getName(), cookie.getValue());
                     }
@@ -110,7 +113,7 @@ public class HarAnalysisTool {
 
                 HashMap<String, String> curHeaderMap = new HashMap<>();
                 for (HarHeader header : request.getHeaders()) {
-                    if (!ignoreString.contains(header.getName())){
+                    if (!ignoreString.contains(header.getName().toLowerCase())){
                         DataUtil.countFrequency(frequencyMap,header.getName());
                         curHeaderMap.put(header.getName().replaceAll(":",""), header.getValue());
                     }

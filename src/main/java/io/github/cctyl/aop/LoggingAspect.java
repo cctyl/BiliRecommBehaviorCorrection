@@ -86,7 +86,7 @@ public class LoggingAspect {
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         log.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>正在访问方法: {}#{}(),参数 = {}",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
-                joinPoint.getSignature().getName(), getArgs(joinPoint));
+                joinPoint.getSignature().getName(), Arrays.toString(joinPoint.getArgs()));
         Object result = joinPoint.proceed();
         if (log.isDebugEnabled()) {
 
@@ -97,23 +97,6 @@ public class LoggingAspect {
     }
 
 
-    public String getArgs(ProceedingJoinPoint joinPoint) {
-
-        StringBuilder sb = new StringBuilder();
-        for (Object arg : joinPoint.getArgs()) {
-            if (null==arg){
-                continue;
-            }
-            if ("io.github.cctyl.entity.VideoDetail".equals(arg.getClass().getName())) {
-                sb.append(((VideoDetail) arg).simpleInfo());
-            } else {
-                sb.append(arg.toString());
-            }
-
-            sb.append(",");
-        }
-        return sb.toString();
-    }
 
 
 }

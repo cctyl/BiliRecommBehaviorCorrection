@@ -100,7 +100,6 @@ public class BiliApi {
         //公共header时，需要修改host
         result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
 
-
         return result;
     }
 
@@ -112,7 +111,7 @@ public class BiliApi {
      * @param url
      * @return
      */
-    private HttpResponse commonGet(String url) {
+    public HttpResponse commonGet(String url) {
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
                 .header(getHeader(url),true)
