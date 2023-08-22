@@ -66,6 +66,18 @@ public class AppConstant {
     public static final String BLACK_TAG_KEY = PREFIX + "black_tags";
 
     /**
+     * 黑名单关键词缓存
+     */
+    public static final String BLACK_KEYWORD_CACHE = PREFIX + "black_keyword_cache";
+
+    /**
+     * 黑名单分区名缓存
+     */
+    public static final String BLACK_TAG_NAME_CACHE = PREFIX + "black_tag_name_cache";
+
+
+
+    /**
      * 黑名单分区id集合
      */
     public static final String BLACK_TID_KEY = PREFIX + "black_tids";

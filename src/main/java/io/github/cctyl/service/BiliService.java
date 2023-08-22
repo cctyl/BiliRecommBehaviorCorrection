@@ -687,12 +687,16 @@ public class BiliService {
         //更新到redis中
         GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
 
-        GlobalVariables.blackKeywordSet.addAll(topDescKeyWord);
-        GlobalVariables.blackKeywordSet.addAll(topTitleKeyWord);
-        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
+        topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        redisUtil.sAdd(BLACK_KEYWORD_CACHE,topDescKeyWord.toArray());
 
-        GlobalVariables.blackTagSet.addAll(topTagName);
-        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
+        topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        redisUtil.sAdd(BLACK_KEYWORD_CACHE,topTitleKeyWord.toArray());
+
+        topTagName.removeAll(GlobalVariables.blackTagSet);
+        redisUtil.sAdd(BLACK_TAG_NAME_CACHE,topTagName.toArray());
+
+
     }
 
     /**

@@ -17,12 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static io.github.cctyl.constants.AppConstant.BLACK_KEYWORD_CACHE;
+import static io.github.cctyl.constants.AppConstant.BLACK_TAG_NAME_CACHE;
 
 @RestController
 @RequestMapping("/black-rule")
@@ -137,6 +137,45 @@ public class BlackRuleController {
         return R.ok().setMessage("对指定分区点踩任务已开始");
     }
 
+
+
+    @ApiOperation("获得缓存的训练结果")
+    @GetMapping("/cache-train-result")
+    public R getCacheTrainResult(){
+        Set<String> keywordSet = redisUtil.sMembers(BLACK_KEYWORD_CACHE).stream().map(Object::toString)
+                .collect(Collectors.toSet());
+        Set<String> tagNameSet = redisUtil.sMembers(BLACK_TAG_NAME_CACHE).stream().map(Object::toString)
+                .collect(Collectors.toSet());
+
+        return R.data(Map.of(
+                "keywordSet",keywordSet,
+                "tagNameSet",tagNameSet
+        ));
+    }
+
+
+    @ApiOperation("将缓存的结果存入")
+    @PutMapping("/cache-train-result")
+    public R getCacheTrainResult(
+            @RequestBody Map<String,Set<String>> map
+    ) {
+        Set<String> keywordSet = map.getOrDefault("keywordSet", Collections.emptySet());
+        Set<String> tagNameSet = map.getOrDefault("tagNameSet", Collections.emptySet());
+
+        GlobalVariables.blackKeywordSet.addAll(keywordSet);
+        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
+        GlobalVariables.blackTagSet.addAll(tagNameSet);
+        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
+
+        //清空缓存结果
+        redisUtil.delete(BLACK_KEYWORD_CACHE);
+        redisUtil.delete(BLACK_TAG_NAME_CACHE);
+
+        return R.data(Map.of(
+                "keywordSet", GlobalVariables.blackKeywordSet,
+                "tagNameSet", GlobalVariables.blackTagSet
+        ));
+    }
 
     @ApiOperation("获得黑名单分区id")
     @GetMapping("/tid")
