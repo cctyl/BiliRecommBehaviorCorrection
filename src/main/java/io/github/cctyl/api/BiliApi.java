@@ -326,8 +326,6 @@ public class BiliApi {
                     .map(httpCookie -> httpCookie.getName() + "=" + httpCookie.getValue())
                     .toArray();
             redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
-        } else {
-            log.debug("本次响应未出现可疑cookie");
         }
 
         for (HttpCookie cookie : cookies) {

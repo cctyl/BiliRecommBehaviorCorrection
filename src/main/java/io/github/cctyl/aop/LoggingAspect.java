@@ -28,7 +28,8 @@ public class LoggingAspect {
     @Pointcut(
             "within(@org.springframework.stereotype.Repository *)" +
                     " || within(@org.springframework.stereotype.Service *)" +
-                    " || within(@org.springframework.web.bind.annotation.RestController *)"
+                    " || within(@org.springframework.web.bind.annotation.RestController *)" +
+                    " || within(@org.springframework.stereotype.Component *)"
     )
     public void springBeanPointcut() {
     }
@@ -40,8 +41,8 @@ public class LoggingAspect {
             "within(io.github.cctyl.service..*)" +
                     " || within(io.github.cctyl.controller..*)" +
                     " || within(io.github.cctyl.initialization..*)" +
-                    " || within(io.github.cctyl.task..*)" +
-                    " || within(io.github.cctyl.api..*)"
+                    " || within(io.github.cctyl.task..*) " +
+                    " || within(io.github.cctyl.api..*) "
     )
     public void applicationPackagePointcut() {
     }
