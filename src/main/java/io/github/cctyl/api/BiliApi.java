@@ -872,7 +872,7 @@ public class BiliApi {
      * 查询用户投稿的视频
      *
      * @param mid        用户id
-     * @param pageNumber 页码
+     * @param pageNumber 页码 1开始
      * @param keyword    搜索关键词
      */
     public PageBean<UserSubmissionVideo> searchUserSubmissionVideo(String mid,
@@ -887,7 +887,7 @@ public class BiliApi {
                                 "ps", 30,//每页数据大小
                                 "tid", 0, //不知具体用途
                                 "pn", pageNumber, //页码
-                                "keyword", keyword, //不知具体用途
+                                "keyword", keyword, //搜索该用户视频使用的关键词
                                 "order", "pubdate", //排序方式
                                 "platform", "web",
                                 "web_location", 1550101,//不知具体用途

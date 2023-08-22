@@ -1,7 +1,5 @@
 package io.github.cctyl.utils;
 
-import io.github.cctyl.utils.LambdaUtil;
-import io.github.cctyl.utils.SFunction;
 import lombok.experimental.UtilityClass;
 import org.springframework.cglib.core.CodeGenerationException;
 import org.springframework.lang.Nullable;

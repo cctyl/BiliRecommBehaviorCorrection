@@ -1,5 +1,6 @@
 package io.github.cctyl.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -113,7 +114,7 @@ public class BlackRuleController {
     @ApiOperation("对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
     public R dislikeByUserId(
-            @ApiParam(name = "userIdList", value = "需要点踩的用户id")
+            @ApiParam(name = "userIdList", value = "二选一，需要点踩的用户id")
             @RequestParam List<String> userIdList
     ) {
         TaskPool.putTask(() -> {

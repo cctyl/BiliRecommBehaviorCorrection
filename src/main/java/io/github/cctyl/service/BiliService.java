@@ -619,7 +619,6 @@ public class BiliService {
         //分步点踩
         dislike(rankVideoList);
 
-
         //2.获取该分区的最新视频
         log.info("开始分区最新视频点踩");
         List<VideoDetail> regionLatestVideo = new ArrayList<>();
@@ -627,22 +626,31 @@ public class BiliService {
             List<VideoDetail> curList = biliApi.getRegionLatestVideo(1, tid);
             regionLatestVideo.addAll(curList);
             dislike(regionLatestVideo);
-
         }
 
         log.info("点踩完毕，结束对{}分区的点踩操作，开始训练黑名单",tid);
-
-
         ArrayList<VideoDetail> allVideo = new ArrayList<>();
         allVideo.addAll(rankVideoList);
         allVideo.addAll(regionLatestVideo);
+        trainBlacklistByVideoList(allVideo);
+
+        return allVideo.size();
+    }
+
+    /**
+     * 根据视频列表训练黑名单
+     * @param videoList
+     */
+    public void trainBlacklistByVideoList(
+            Collection<VideoDetail> videoList
+    ) {
 
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
         List<String> tagNameProcess = new ArrayList<>();
 
-        for (VideoDetail videoDetail : allVideo) {
-            if (videoDetail.getOwner()!=null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())){
+        for (VideoDetail videoDetail : videoList) {
+            if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
                 GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
             }
             //1. 标题处理
@@ -660,7 +668,7 @@ public class BiliService {
             }
             descProcess.addAll(SegmenterUtil.process(desc));
             //3.标签
-            if(CollUtil.isNotEmpty(videoDetail.getTags())){
+            if (CollUtil.isNotEmpty(videoDetail.getTags())) {
                 List<String> tagNameList = videoDetail.getTags()
                         .stream()
                         .map(Tag::getTagName)
@@ -672,7 +680,7 @@ public class BiliService {
         List<String> topTagName = SegmenterUtil.getTopFrequentWord(descProcess);
         List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(tagNameProcess);
 
-        log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}",topDescKeyWord,
+        log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}", topDescKeyWord,
                 topTagName,
                 topTitleKeyWord);
 
@@ -684,10 +692,7 @@ public class BiliService {
         GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
 
         GlobalVariables.blackTagSet.addAll(topTagName);
-        GlobalVariables.setBlackTagSet( GlobalVariables.blackTagSet);
-
-
-        return allVideo.size();
+        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
     }
 
     /**
@@ -698,6 +703,41 @@ public class BiliService {
     public int dislikeByUserId(String userId) {
         //该用户会被加入黑名单
         GlobalVariables.addBlackUserId(Collections.singleton(userId));
+
+        //视频详情
+        List<VideoDetail> videoDetailList = new ArrayList<>();
+
+        //获取该用户的所有投稿视频
+        List<UserSubmissionVideo> allVideo = new ArrayList<>();
+        PageBean<UserSubmissionVideo> pageBean;
+        int pageNum = 1;
+        do {
+            pageBean = biliApi.searchUserSubmissionVideo(userId, pageNum, "");
+            allVideo.addAll(pageBean.getData());
+
+            ThreadUtil.sleep20Second();
+            pageNum++;
+        }while (pageBean.hasMore());
+
+
+        //全部进行点踩
+        DataUtil.randomAccessList(
+                allVideo,
+                allVideo.size(),
+                video -> {
+                    //获取视频详情
+                    VideoDetail videoDetail = biliApi.getVideoDetail(video.getAid());
+                    videoDetailList.add(videoDetail);
+                    ThreadUtil.sleep2Second();
+
+                    //点踩
+                    dislike(video.getAid());
+                    ThreadUtil.sleep20Second();
+                }
+        );
+
+        //开始训练黑名单
+        trainBlacklistByVideoList(videoDetailList);
 
         return 0;
     }
