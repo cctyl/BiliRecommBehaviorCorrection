@@ -1,0 +1,194 @@
+package io.github.cctyl.service;
+
+import cn.hutool.core.collection.CollUtil;
+import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.Tag;
+import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.WhitelistRule;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * 白名单相关规则
+ */
+@Service
+@Slf4j
+public class WhiteRuleService {
+
+    @Autowired
+    private BiliApi biliApi;
+
+    @Autowired
+    private BiliService biliService;
+
+
+    /**
+     * 白名单判断
+     *
+     * @param videoDetail
+     * @return
+     */
+    public boolean whiteMatch(VideoDetail videoDetail) {
+
+        /**
+         * 假设，白名单使用一个专门的条件构造器，一个对象。里面包含 关键词 分区 up主id 等多个条件
+         * 白名单匹配时，需要在单个对象上，找到两个匹配的条件，则表示该条件匹配
+         *
+         * 那么此时与黑名单产生了割裂，黑名单是任意一个匹配
+         *
+         * 而关键词列表，不再作为白名单的判断条件
+         *
+         *
+         * 或者说，白名单的关键词 要 配合分区 或 up主id ，达到两个条件以上
+         *
+         * 错误案例：
+         *      刘三金
+         *      本来是搜索猫猫的视频，但是出现了一些标题带有刘三金的视频
+         *      也进行了点赞，这样非常的不符合。
+         *      起码，这个up主在范围内（直接用up主id不就行了），分区在范围内，封面在范围内
+         *      所以关键词部分，至少满足： 标题 描述 关键词匹配，分区匹配，封面包含指定关键词 三个条件中两个条件满足
+         */
+
+        try {
+            //白名单规则匹配
+            boolean whitelistRuleMatch = isWhitelistRuleMatch(videoDetail);
+
+            //up主id匹配
+            boolean userIdMatch = isUserIdMatch(videoDetail);
+
+            //分区id匹配
+            boolean tidMatch = isTidMatch(videoDetail);
+            return
+                    whitelistRuleMatch
+                            ||
+                            userIdMatch
+                            ||
+                            tidMatch
+                    ;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 用户id是否匹配白名单
+     * @param videoDetail
+     * @return
+     */
+    private boolean isUserIdMatch(VideoDetail videoDetail) {
+        if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
+            log.error("视频:{}缺少up主信息", videoDetail.toString());
+            return false;
+        }
+        boolean match = GlobalVariables.whiteUserIdSet
+                .contains(videoDetail.getOwner().getMid());
+
+        log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getOwner().getMid(),
+                videoDetail.getOwner().getName(),
+                match);
+        if (match){
+            videoDetail.setThumbUpReason("up主:"+videoDetail.getOwner().getName()+
+                    " id:"+ videoDetail.getOwner().getMid() +" 匹配成功");
+        }
+
+        return match;
+    }
+
+    /**
+     * tid是否匹配白名单
+     * @param videoDetail
+     * @return
+     */
+    private boolean isTidMatch(VideoDetail videoDetail) {
+
+
+        boolean match =  GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+
+        log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getTid(),
+                videoDetail.getTname(),
+                match);
+
+        if (match){
+            videoDetail.setThumbUpReason("分区id:"+videoDetail.getTid()+"匹配成功");
+        }
+        return match;
+    }
+
+    /**
+     * 在白名单列表中是否找到匹配的
+     * @param videoDetail
+     * @return
+     */
+    private boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
+        WhitelistRule whitelistRule = GlobalVariables.whitelistRules
+                .stream()
+                .filter(item ->
+                        {
+                            boolean titleMatch = false;
+                            boolean descMatch =
+                                    false;
+                            boolean tagMatch = false;
+                            try {
+                                titleMatch = item.titleMatch(videoDetail.getTitle());
+                                log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
+                                descMatch = item.descMatch(videoDetail.getDesc())
+                                        ||
+                                        CollUtil.isNotEmpty(videoDetail.getDescV2()) && videoDetail.getDescV2().stream().anyMatch(
+                                                desc -> item.descMatch(desc.getRawText())
+                                        );
+                                log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
+                                tagMatch = CollUtil.isNotEmpty(videoDetail.getTags()) &&
+                                        item.tagNameMatch(
+                                                videoDetail.getTags()
+                                                        .stream()
+                                                        .map(Tag::getTagName)
+                                                        .collect(Collectors.toList())
+                                        );
+                                log.info("tag {}匹配结果{}", videoDetail.getTags()
+                                        .stream()
+                                        .map(Tag::getTagName)
+                                        .collect(Collectors.toList()), tagMatch);
+                            } catch (Exception e) {
+
+                                log.error("出现异常:{},视频信息：{}", e.getMessage(), videoDetail.toString());
+
+                                e.printStackTrace();
+                            }
+                            //两个以上的判断都通过，才表示通过
+                            return Stream.of(titleMatch, descMatch, tagMatch).filter(Boolean.TRUE::equals).count() > 1;
+                        }
+
+                )
+                .findFirst()
+                .orElse(null);
+
+        boolean match = whitelistRule!=null;
+        if (match){
+            videoDetail.setThumbUpReason("匹配到了白名单："+whitelistRule.toString());
+        }
+
+        log.debug("视频:{}-{}，匹配白名单：{}，匹配结果：{} ",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                whitelistRule,
+                match
+        );
+
+        return match;
+    }
+
+
+
+}

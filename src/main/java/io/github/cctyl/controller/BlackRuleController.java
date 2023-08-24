@@ -9,6 +9,7 @@ import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.R;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import io.swagger.annotations.Api;
@@ -37,6 +38,9 @@ public class BlackRuleController {
     private BiliService biliService;
 
     @Autowired
+    private BlackRuleService blackRuleService;
+
+    @Autowired
     private BiliApi biliApi;
 
     @ApiOperation("指定视频是否符合黑名单")
@@ -57,17 +61,17 @@ public class BlackRuleController {
         }else {
             return R.error().setMessage("参数缺失");
         }
-        boolean titleMatch = biliService.isTitleMatch(GlobalVariables.blackKeywordTree, videoDetail);
+        boolean titleMatch = blackRuleService.isTitleMatch( videoDetail);
         //1.2 简介是否触发黑名单关键词
-        boolean descMatch = biliService.isDescMatch(GlobalVariables.blackKeywordTree, videoDetail);
+        boolean descMatch = blackRuleService.isDescMatch( videoDetail);
         //1.3 标签是否触发关键词,需要先获取标签
-        boolean tagMatch = biliService.isTagMatch(videoDetail);
+        boolean tagMatch = blackRuleService.isTagMatch(videoDetail);
         //1.4 up主id是否在黑名单内
-        boolean midMatch = biliService.isMidMatch(GlobalVariables.blackUserIdSet, videoDetail);
+        boolean midMatch = blackRuleService.isMidMatch( videoDetail);
         //1.5 分区是否触发
-        boolean tidMatch = biliService.isTidMatch(GlobalVariables.blackTidSet, videoDetail);
+        boolean tidMatch = blackRuleService.isTidMatch( videoDetail);
         //1.6 封面是否触发
-        boolean coverMatch = biliService.isCoverMatch(videoDetail);
+        boolean coverMatch = blackRuleService.isCoverMatch(videoDetail);
 
 
         HashMap<String, Object> map = new HashMap<>();
