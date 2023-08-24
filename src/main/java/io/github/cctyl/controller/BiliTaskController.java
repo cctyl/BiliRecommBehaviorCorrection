@@ -157,6 +157,11 @@ public class BiliTaskController {
 
             //执行点踩
             for (VideoVo vo : dislikeVoList) {
+                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY,vo.getAid())){
+                    log.debug("{}-{}已处理过",vo.getAid(),vo.getTitle());
+                    continue;
+                }
+
                 VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
                 if (videoDetail!=null){
                     biliService.dislike(videoDetail.getAid());
@@ -168,6 +173,10 @@ public class BiliTaskController {
 
             //执行点赞
             for (VideoVo vo : thumbUpVoList) {
+                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY,vo.getAid())){
+                    log.debug("{}-{}已处理过",vo.getAid(),vo.getTitle());
+                    continue;
+                }
 
                 VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
                 if (videoDetail!=null){
