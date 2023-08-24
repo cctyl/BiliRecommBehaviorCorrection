@@ -98,6 +98,12 @@ public class AppConstant {
     public static final String HANDLE_VIDEO_ID_KEY = PREFIX + "handle_video_id_list";
 
     /**
+     * 将要处理的视频的缓存
+     */
+    public static final String READY_HANDLE_DISLIKE_VIDEO = PREFIX + "ready_handle_dislike_video";
+    public static final String READY_HANDLE_THUMB_UP_VIDEO = PREFIX + "ready_handle_thumb_up_video";
+
+    /**
      * 白名单关键词列表
      */
     public static final String WHITE_LIST_RULE_KEY = PREFIX + "white_list_rule";

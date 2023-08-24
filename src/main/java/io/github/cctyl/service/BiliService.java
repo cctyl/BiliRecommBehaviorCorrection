@@ -76,6 +76,23 @@ public class BiliService {
         redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY, videoDetail);
     }
 
+
+    /**
+     * 添加一个准备要删除的视频到缓存中
+     * @param videoDetail
+     */
+    public void addReadyToDislikeVideo(VideoDetail videoDetail) {
+        redisUtil.sAdd(READY_HANDLE_DISLIKE_VIDEO,videoDetail);
+    }
+
+    /**
+     * 添加一个准备要点赞的视频到缓存中
+     * @param videoDetail
+     */
+    public void addReadyToThumbUpVideo(VideoDetail videoDetail) {
+        redisUtil.sAdd(READY_HANDLE_THUMB_UP_VIDEO,videoDetail);
+    }
+
     /**
      * 处理搜索结果
      * 根据视频信息判断，
@@ -105,17 +122,15 @@ public class BiliService {
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackMatch(videoDetail)) {
                 //点踩
-                dislike(videoDetail.getAid());
+                addReadyToDislikeVideo(videoDetail);
                 //加日志
                 dislikeVideoList.add(videoDetail);
-                recordHandleVideo(videoDetail, HandleType.DISLIKE);
             } else if (whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
-                playAndThumbUp(videoDetail);
+                addReadyToThumbUpVideo(videoDetail);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
-                recordHandleVideo(videoDetail, HandleType.THUMB_UP);
             } else {
                 log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
                 recordHandleVideo(videoDetail, HandleType.OTHER);
