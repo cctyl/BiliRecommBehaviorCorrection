@@ -702,16 +702,33 @@ public class BiliService {
         //更新到redis中
         GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
 
+        //拿到需要忽略的黑名单关键词
+        Set<String> ignoreKeyWordSet = getIgnoreKeyWordSet();
+
         topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topDescKeyWord.removeAll(ignoreKeyWordSet);
         redisUtil.sAdd(BLACK_KEYWORD_CACHE,topDescKeyWord.toArray());
 
         topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topTitleKeyWord.removeAll(ignoreKeyWordSet);
         redisUtil.sAdd(BLACK_KEYWORD_CACHE,topTitleKeyWord.toArray());
 
         topTagName.removeAll(GlobalVariables.blackTagSet);
+        topTagName.removeAll(ignoreKeyWordSet);
         redisUtil.sAdd(BLACK_TAG_NAME_CACHE,topTagName.toArray());
 
 
+    }
+
+    /**
+     * 获得忽略的黑名单关键词
+     * @return
+     */
+    public Set<String> getIgnoreKeyWordSet() {
+        return redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
+                    .stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toSet());
     }
 
     /**

@@ -2,6 +2,7 @@ package io.github.cctyl.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
@@ -21,8 +22,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.constants.AppConstant.BLACK_KEYWORD_CACHE;
-import static io.github.cctyl.constants.AppConstant.BLACK_TAG_NAME_CACHE;
+import static io.github.cctyl.constants.AppConstant.*;
 
 @RestController
 @RequestMapping("/black-rule")
@@ -199,22 +199,28 @@ public class BlackRuleController {
     }
 
 
-    @ApiOperation("添加一串黑名单关键词")
+    @ApiOperation("添加/更新黑名单关键词")
     @PostMapping("/keyword")
-    public R addBlackKeyWord(@RequestBody List<String> keywordList){
+    public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList,
+                                     @RequestParam Boolean add
+                                     ){
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
         Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank)
+                //移除忽略关键词
+                .filter(s -> !ignoreKeyWordSet.contains(s))
                 .collect(Collectors.toSet());
-        GlobalVariables.addBlackKeyword(collect);
+        if (Boolean.TRUE.equals(add)){
+            GlobalVariables.addBlackKeyword(collect);
+        }else {
+            GlobalVariables.setBlackKeywordSet(collect);
+            GlobalVariables.blackKeywordTree = new WordTree();
+        }
+        GlobalVariables.blackKeywordTree.addWords(collect);
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
 
 
-    @ApiOperation("更新黑名单关键词列表")
-    @PutMapping("/keyword")
-    public R updateBlackKeywordSet(@RequestBody Set<String> blackKeywordSet ){
-        GlobalVariables.setBlackKeywordSet(blackKeywordSet);
-        return R.ok().setData(GlobalVariables.blackKeywordSet);
-    }
+
 
 
     @ApiOperation("获得黑名单用户id列表")
@@ -240,8 +246,29 @@ public class BlackRuleController {
 
     @ApiOperation("更新黑名单分区列表")
     @PutMapping("/tag")
-    public R updateBlackTagSet(@RequestBody Set<String> blackTagSet ){
-        GlobalVariables.setBlackTagSet(blackTagSet);
+    public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        Set<String> collect = blackTagSet.stream().filter(StrUtil::isNotBlank)
+                //移除忽略关键词
+                .filter(s -> !ignoreKeyWordSet.contains(s))
+                .collect(Collectors.toSet());
+        GlobalVariables.setBlackTagSet(collect);
+        GlobalVariables.blackTagTree = new WordTree();
+        GlobalVariables.blackTagTree.addWords(blackTagSet);
         return R.ok().setData(GlobalVariables.blackTagSet);
+    }
+
+
+    @ApiOperation("获得忽略关键词列表")
+    @GetMapping("/ignore")
+    public R getIgnoreKeyWordSet(){
+        return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
+    }
+
+    @ApiOperation("添加到忽略关键词列表")
+    @PostMapping("/ignore")
+    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
+        redisUtil.sAdd(IGNORE_BLACK_KEYWORD,ignoreKeyWordSet.toArray());
+        return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
     }
 }

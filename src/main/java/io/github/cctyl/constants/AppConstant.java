@@ -104,6 +104,11 @@ public class AppConstant {
     public static final String READY_HANDLE_THUMB_UP_VIDEO = PREFIX + "ready_handle_thumb_up_video";
 
     /**
+     * 忽略的黑名单关键词
+     */
+    public static final String IGNORE_BLACK_KEYWORD = PREFIX + "ignore_black_keyword";
+
+    /**
      * 白名单关键词列表
      */
     public static final String WHITE_LIST_RULE_KEY = PREFIX + "white_list_rule";
