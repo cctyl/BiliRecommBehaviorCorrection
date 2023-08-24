@@ -78,6 +78,7 @@ public class BlackRuleController {
         map.put("midMatch",midMatch);
         map.put("tidMatch",tidMatch);
         map.put("coverMatch",coverMatch);
+        map.put("blackReason",videoDetail.getBlackReason());
 
         return R.data(map);
 

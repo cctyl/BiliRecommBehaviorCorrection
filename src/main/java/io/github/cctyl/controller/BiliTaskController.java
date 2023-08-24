@@ -101,14 +101,21 @@ public class BiliTaskController {
                 .sMembers(READY_HANDLE_DISLIKE_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle()))
+                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
+                        v.getBlackReason(),
+                        v.getThumbUpReason()
+
+                ))
                 .collect(Collectors.toList());
 
         List<VideoVo> thumbUpList = redisUtil
                 .sMembers(READY_HANDLE_THUMB_UP_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle()))
+                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
+                        v.getBlackReason(),
+                        v.getThumbUpReason()
+                        ))
                 .collect(Collectors.toList());
 
         return R.data(Map.of(

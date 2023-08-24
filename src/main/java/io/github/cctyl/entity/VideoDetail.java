@@ -184,6 +184,18 @@ public class VideoDetail implements Serializable {
     private List<VideoDetail> others;
 
 
+    /**
+     * 点踩原因
+     */
+    private String blackReason;
+
+    /**
+     * 点赞原因
+     */
+    private String thumbUpReason;
+
+
+
     @NoArgsConstructor
     @Data
     public static class UserGarb  implements Serializable{
@@ -195,6 +207,8 @@ public class VideoDetail implements Serializable {
     public static class HonorReply  implements Serializable{
         private String id;
     }
+
+
 
 
     /**

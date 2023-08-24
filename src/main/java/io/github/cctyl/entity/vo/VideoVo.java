@@ -12,5 +12,6 @@ public class VideoVo {
     private Integer aid;
     private String bvid;
     private String title;
-
+    private String blackReason;
+    private String thumbUpReason;
 }

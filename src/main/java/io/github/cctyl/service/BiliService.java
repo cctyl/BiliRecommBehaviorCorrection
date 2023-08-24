@@ -299,6 +299,9 @@ public class BiliService {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
             boolean human = imageGenderDetectService.isHuman(picByte);
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
+            if (human){
+                videoDetail.setBlackReason("封面:"+videoDetail.getPic()+" 匹配成功");
+            }
             return human;
         } catch (Exception e) {
             log.error("获取图片字节码出错：{}", e.getMessage());
@@ -324,6 +327,9 @@ public class BiliService {
                 match,
                 matchWord
                 );
+        if (match){
+            videoDetail.setBlackReason("标题:"+videoDetail.getTitle()+" 匹配到了关键词："+matchWord);
+        }
         return match;
     }
 
@@ -335,21 +341,24 @@ public class BiliService {
      * @return
      */
     public boolean isDescMatch(WordTree blackKeywordTree, VideoDetail videoDetail) {
-        String match = blackKeywordTree.match(videoDetail.getDesc());
-        boolean result = match!=null;
+        String matchWord = blackKeywordTree.match(videoDetail.getDesc());
+        boolean match = matchWord!=null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
-            result = result || videoDetail.getDescV2().stream().map(DescV2::getRawText).anyMatch(blackKeywordTree::isMatch);
+            match = match || videoDetail.getDescV2().stream().map(DescV2::getRawText).anyMatch(blackKeywordTree::isMatch);
             desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
         }
         log.debug("视频:{}-{}的 简介：{}，匹配结果：{},匹配到的关键词：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
                 desc,
-                result,
-                match
+                match,
+                matchWord
                 );
-        return result;
+        if (match){
+            videoDetail.setBlackReason("描述:"+desc+" 匹配到了关键词："+matchWord);
+        }
+        return match;
     }
 
     /**
@@ -368,6 +377,10 @@ public class BiliService {
                 videoDetail.getTid(),
                 videoDetail.getTname(),
                 match);
+
+        if (match){
+            videoDetail.setBlackReason("分区id:"+videoDetail.getTid()+"匹配成功");
+        }
         return match;
     }
 
@@ -392,6 +405,10 @@ public class BiliService {
                 videoDetail.getOwner().getMid(),
                 videoDetail.getOwner().getName(),
                 match);
+        if (match){
+            videoDetail.setBlackReason("up主:"+videoDetail.getOwner().getName()+
+                    " id:"+ videoDetail.getOwner().getMid() +" 匹配成功");
+        }
         return match;
     }
 
@@ -406,6 +423,7 @@ public class BiliService {
                 .stream().map(Tag::getTagName)
                 .filter(s -> GlobalVariables.blackTagTree.isMatch(s))
                 .findAny().orElse(null);
+
         boolean match = matchWord!=null;
         log.debug("视频:{}-{}的 tag：{}，匹配结果：{},匹配到的关键词：{}",
                 videoDetail.getBvid(),
@@ -414,7 +432,9 @@ public class BiliService {
                 match,
                 matchWord
                 );
-
+        if (match){
+            videoDetail.setBlackReason("Tag:"+matchWord+" 匹配到了关键词："+ GlobalVariables.blackTagTree.match(matchWord));
+        }
         return match;
     }
 
