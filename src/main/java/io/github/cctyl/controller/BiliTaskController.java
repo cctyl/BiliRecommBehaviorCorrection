@@ -138,49 +138,49 @@ public class BiliTaskController {
         }
 
         TaskPool.putTask(() -> {
-
-            List<VideoDetail> thumbUpList = redisUtil
+            Map<Integer, VideoDetail> handleVideoMap = redisUtil
                     .sMembers(READY_HANDLE_THUMB_UP_VIDEO)
                     .stream()
                     .map(VideoDetail.class::cast)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toMap(VideoDetail::getAid, v -> v, (o1, o2) -> o1));
 
-            List<VideoDetail> dislikeList = redisUtil
+            redisUtil
                     .sMembers(READY_HANDLE_DISLIKE_VIDEO)
                     .stream()
                     .map(VideoDetail.class::cast)
-                    .collect(Collectors.toList());
+                    .forEach(videoDetail -> {
+                        handleVideoMap.put(videoDetail.getAid(), videoDetail);
+                    });
 
+            List<VideoVo> dislikeVoList = map.get("dislikeList");
+            List<VideoVo> thumbUpVoList = map.get("thumbUpList");
 
-            List<VideoVo> dislikeNameList = map.get("dislikeList");
-            List<VideoVo> thumbUpNameList = map.get("thumbUpList");
-
-            for (VideoVo vo : dislikeNameList) {
-                dislikeList.stream()
-                        .filter(videoDetail -> videoDetail.getAid().equals(vo.getAid()))
-                        .findFirst()
-                        .ifPresentOrElse(videoDetail -> {
-                            biliService.dislike(videoDetail.getAid());
-                            biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
-                        },() -> {
-                            log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
-                        });
+            //执行点踩
+            for (VideoVo vo : dislikeVoList) {
+                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
+                if (videoDetail!=null){
+                    biliService.dislike(videoDetail.getAid());
+                    biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
+                }else {
+                    log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
+                }
             }
 
+            //执行点赞
+            for (VideoVo vo : thumbUpVoList) {
 
-            for (VideoVo vo : thumbUpNameList) {
-
-                thumbUpList.stream()
-                        .filter(videoDetail -> videoDetail.getAid().equals(vo.getAid()))
-                        .findFirst()
-                        .ifPresentOrElse(videoDetail -> {
-                            biliService.playAndThumbUp(videoDetail);
-                            biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
-                        },() -> {
-                            log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
-                        });
+                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
+                if (videoDetail!=null){
+                    biliService.playAndThumbUp(videoDetail);
+                    biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
+                }else {
+                    log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
+                }
             }
 
+            //清空待处理数据
+            redisUtil.delete(READY_HANDLE_THUMB_UP_VIDEO);
+            redisUtil.delete(READY_HANDLE_DISLIKE_VIDEO);
 
         });
         return R.ok();
