@@ -285,7 +285,7 @@ public class BiliService {
             boolean human = imageGenderDetectService.isHuman(picByte);
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
             return human;
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("获取图片字节码出错：{}", e.getMessage());
             e.printStackTrace();
         }
@@ -332,7 +332,7 @@ public class BiliService {
                 videoDetail.getTitle(),
                 desc,
                 result,
-                result
+                match
                 );
         return result;
     }
