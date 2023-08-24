@@ -96,22 +96,20 @@ public class BiliTaskController {
     @ApiOperation("获取等待处理的数据")
     @GetMapping("/ready2handle")
     public R getReady2HandleVideo(){
-        List<String> dislikeList = redisUtil
+
+        List<VideoVo> dislikeList = redisUtil
                 .sMembers(READY_HANDLE_DISLIKE_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(VideoDetail::getTitle)
+                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle()))
                 .collect(Collectors.toList());
 
-
-
-        List<String> thumbUpList = redisUtil
+        List<VideoVo> thumbUpList = redisUtil
                 .sMembers(READY_HANDLE_THUMB_UP_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(VideoDetail::getTitle)
+                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle()))
                 .collect(Collectors.toList());
-
 
         return R.data(Map.of(
                 "dislikeList",dislikeList,
@@ -123,7 +121,7 @@ public class BiliTaskController {
     @ApiOperation("处理等待处理的数据")
     @PostMapping("/ready2handle")
     public R processReady2HandleVideo(
-            @RequestBody Map<String,List<String>> map
+            @RequestBody Map<String,List<VideoVo>> map
     ){
 
         if (map.get("dislikeList") == null &&
@@ -147,32 +145,32 @@ public class BiliTaskController {
                     .collect(Collectors.toList());
 
 
-            List<String> dislikeNameList = map.get("dislikeList");
-            List<String> thumbUpNameList = map.get("thumbUpList");
+            List<VideoVo> dislikeNameList = map.get("dislikeList");
+            List<VideoVo> thumbUpNameList = map.get("thumbUpList");
 
-            for (String videoName : dislikeNameList) {
+            for (VideoVo vo : dislikeNameList) {
                 dislikeList.stream()
-                        .filter(videoDetail -> videoDetail.getTitle().equals(videoName))
+                        .filter(videoDetail -> videoDetail.getAid().equals(vo.getAid()))
                         .findFirst()
                         .ifPresentOrElse(videoDetail -> {
                             biliService.dislike(videoDetail.getAid());
                             biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
                         },() -> {
-                            log.debug("{} 未找到匹配的视频",videoName);
+                            log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
                         });
             }
 
 
-            for (String videoName : thumbUpNameList) {
+            for (VideoVo vo : thumbUpNameList) {
 
                 thumbUpList.stream()
-                        .filter(videoDetail -> videoDetail.getTitle().equals(videoName))
+                        .filter(videoDetail -> videoDetail.getAid().equals(vo.getAid()))
                         .findFirst()
                         .ifPresentOrElse(videoDetail -> {
                             biliService.playAndThumbUp(videoDetail);
                             biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
                         },() -> {
-                            log.debug("{} 未找到匹配的视频",videoName);
+                            log.debug("{} - {} 未找到匹配的视频",vo.getBvid(),vo.getTitle());
                         });
             }
 
