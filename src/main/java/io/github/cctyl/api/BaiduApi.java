@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
+import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.entity.BaiduImageClassify;
 import io.github.cctyl.utils.RedisUtil;
@@ -53,6 +54,7 @@ public class BaiduApi {
      * @param imgBase64Str
      * @return
      */
+    @NoLog
     public BaiduImageClassify getGender(String imgBase64Str) {
 
 
@@ -78,6 +80,7 @@ public class BaiduApi {
      * @param imgBase64Str
      * @return
      */
+    @NoLog
     public boolean isHuman(String imgBase64Str) {
         try {
 
@@ -118,6 +121,7 @@ public class BaiduApi {
      * @return base64编码信息，不带文件头
      * @throws IOException IO异常
      */
+    @NoLog
     public String getFileContentAsBase64(byte[] bytes) {
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return URLEncoder.encode(base64, StandardCharsets.UTF_8);

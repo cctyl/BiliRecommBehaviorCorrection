@@ -743,6 +743,6 @@ public class BiliService {
         //开始训练黑名单
         trainBlacklistByVideoList(videoDetailList);
 
-        return 0;
+        return videoDetailList.size();
     }
 }

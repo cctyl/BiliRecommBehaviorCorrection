@@ -1,6 +1,7 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.api.BaiduApi;
 import io.github.cctyl.entity.BaiduImageClassify;
 import io.github.cctyl.service.ImageGenderDetectService;
@@ -50,6 +51,7 @@ public class BaiduHumanRecognitionService implements ImageGenderDetectService {
     }
 
     @Override
+    @NoLog
     public boolean isHuman(byte[] bytes) {
         return baiduApi.isHuman(baiduApi.getFileContentAsBase64(bytes));
     }

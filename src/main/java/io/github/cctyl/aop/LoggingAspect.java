@@ -47,6 +47,10 @@ public class LoggingAspect {
     public void applicationPackagePointcut() {
     }
 
+
+    @Pointcut("@annotation(io.github.cctyl.anno.NoLog)")
+    public void excludePointcut(){}
+
     /**
      * 获取类对应的logger
      *
@@ -63,7 +67,7 @@ public class LoggingAspect {
      * @param joinPoint
      * @param e
      */
-    @AfterThrowing(pointcut = "applicationPackagePointcut() && springBeanPointcut()", throwing = "e")
+    @AfterThrowing(pointcut = "applicationPackagePointcut() && springBeanPointcut()  && !excludePointcut()", throwing = "e")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
         logger(joinPoint)
                 .error(
@@ -83,7 +87,7 @@ public class LoggingAspect {
      * @return
      * @throws Throwable
      */
-    @Around("applicationPackagePointcut() && springBeanPointcut()")
+    @Around("applicationPackagePointcut() && springBeanPointcut() &&!excludePointcut()")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         log.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>正在访问方法: {}#{}(),参数 = {}",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
