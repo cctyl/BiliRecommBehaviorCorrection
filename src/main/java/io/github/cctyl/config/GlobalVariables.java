@@ -3,6 +3,7 @@ package io.github.cctyl.config;
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.entity.ApiHeader;
 import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.Data;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -89,10 +90,15 @@ public class GlobalVariables {
 
     private static RedisUtil redisUtil;
     private static RedisTemplate<String, Object> redisTemplate;
+    private static BiliService biliService;
 
-    public GlobalVariables(RedisUtil redisUtil, RedisTemplate<String, Object> redisTemplate) {
+    public GlobalVariables(RedisUtil redisUtil,
+                           RedisTemplate<String, Object> redisTemplate,
+                           BiliService biliService
+                           ) {
         GlobalVariables.redisUtil = redisUtil;
         GlobalVariables.redisTemplate = redisTemplate;
+        GlobalVariables.biliService = biliService;
     }
 
     public static void addBlackUserId(Collection<String> param) {
@@ -118,16 +124,25 @@ public class GlobalVariables {
      * @param param
      */
     public static void setBlackKeywordSet(Set<String> param) {
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        param.removeAll(ignoreKeyWordSet);
+
         GlobalVariables.blackKeywordSet = param;
         redisUtil.delete(BLACK_KEY_WORD_KEY);
         redisUtil.sAdd(BLACK_KEY_WORD_KEY, GlobalVariables.blackKeywordSet.toArray());
+
+        GlobalVariables.blackKeywordTree = new WordTree();
         GlobalVariables.blackKeywordTree.addWords(GlobalVariables.blackKeywordSet);
     }
 
     public static void addBlackKeyword(Collection<String> param) {
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        param.removeAll(ignoreKeyWordSet);
+
         GlobalVariables.blackKeywordSet.addAll(param);
         redisUtil.delete(BLACK_KEY_WORD_KEY);
         redisUtil.sAdd(BLACK_KEY_WORD_KEY, GlobalVariables.blackKeywordSet.toArray());
+
         GlobalVariables.blackKeywordTree.addWords(param);
     }
 
@@ -137,16 +152,25 @@ public class GlobalVariables {
      * @param param
      */
     public static void setBlackTagSet(Set<String> param) {
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        param.removeAll(ignoreKeyWordSet);
+
         GlobalVariables.blackTagSet = param;
         redisUtil.delete(BLACK_TAG_KEY);
         redisUtil.sAdd(BLACK_TAG_KEY, GlobalVariables.blackTagSet.toArray());
+
+        GlobalVariables.blackTagTree = new WordTree();
         GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
     }
 
     public static void addBlackTagSet(Collection<String> param) {
+        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        param.removeAll(ignoreKeyWordSet);
+
         GlobalVariables.blackTagSet.addAll(param);
         redisUtil.delete(BLACK_TAG_KEY);
         redisUtil.sAdd(BLACK_TAG_KEY, GlobalVariables.blackTagSet.toArray());
+
         GlobalVariables.blackTagTree.addWords(param);
     }
 

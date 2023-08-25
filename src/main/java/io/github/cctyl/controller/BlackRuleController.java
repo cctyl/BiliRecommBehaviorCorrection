@@ -209,18 +209,13 @@ public class BlackRuleController {
     public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList,
                                      @RequestParam Boolean add
                                      ){
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
         Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank)
-                //移除忽略关键词
-                .filter(s -> !ignoreKeyWordSet.contains(s))
                 .collect(Collectors.toSet());
         if (Boolean.TRUE.equals(add)){
             GlobalVariables.addBlackKeyword(collect);
         }else {
             GlobalVariables.setBlackKeywordSet(collect);
-            GlobalVariables.blackKeywordTree = new WordTree();
         }
-        GlobalVariables.blackKeywordTree.addWords(collect);
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
 
@@ -252,14 +247,10 @@ public class BlackRuleController {
     @ApiOperation("更新黑名单分区列表")
     @PutMapping("/tag")
     public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+
         Set<String> collect = blackTagSet.stream().filter(StrUtil::isNotBlank)
-                //移除忽略关键词
-                .filter(s -> !ignoreKeyWordSet.contains(s))
                 .collect(Collectors.toSet());
         GlobalVariables.setBlackTagSet(collect);
-        GlobalVariables.blackTagTree = new WordTree();
-        GlobalVariables.blackTagTree.addWords(blackTagSet);
         return R.ok().setData(GlobalVariables.blackTagSet);
     }
 
@@ -274,6 +265,13 @@ public class BlackRuleController {
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
         redisUtil.sAdd(IGNORE_BLACK_KEYWORD,ignoreKeyWordSet.toArray());
+
+
+        //更新黑名单关键词
+        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
+        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
+
+
         return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
     }
 }
