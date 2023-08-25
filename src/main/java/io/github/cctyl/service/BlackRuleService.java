@@ -97,14 +97,17 @@ public class BlackRuleService {
 
         topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
+        if (CollUtil.isNotEmpty(topDescKeyWord))
         redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
 
         topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
+        if (CollUtil.isNotEmpty(topTitleKeyWord))
         redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
 
         topTagName.removeAll(GlobalVariables.blackTagSet);
         topTagName.removeAll(ignoreKeyWordSet);
+        if (CollUtil.isNotEmpty(topTagName))
         redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
 
 
