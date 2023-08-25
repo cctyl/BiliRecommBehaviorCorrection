@@ -3,6 +3,7 @@ package io.github.cctyl.service;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.DescV2;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhitelistRule;
@@ -10,6 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,10 +83,11 @@ public class WhiteRuleService {
 
     /**
      * 用户id是否匹配白名单
+     *
      * @param videoDetail
      * @return
      */
-    private boolean isUserIdMatch(VideoDetail videoDetail) {
+    public boolean isUserIdMatch(VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
@@ -95,9 +101,9 @@ public class WhiteRuleService {
                 videoDetail.getOwner().getMid(),
                 videoDetail.getOwner().getName(),
                 match);
-        if (match){
-            videoDetail.setThumbUpReason("up主:"+videoDetail.getOwner().getName()+
-                    " id:"+ videoDetail.getOwner().getMid() +" 匹配成功");
+        if (match) {
+            videoDetail.setThumbUpReason("up主:" + videoDetail.getOwner().getName() +
+                    " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
         }
 
         return match;
@@ -105,13 +111,14 @@ public class WhiteRuleService {
 
     /**
      * tid是否匹配白名单
+     *
      * @param videoDetail
      * @return
      */
-    private boolean isTidMatch(VideoDetail videoDetail) {
+    public boolean isTidMatch(VideoDetail videoDetail) {
 
 
-        boolean match =  GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+        boolean match = GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -120,75 +127,163 @@ public class WhiteRuleService {
                 videoDetail.getTname(),
                 match);
 
-        if (match){
-            videoDetail.setThumbUpReason("分区id:"+videoDetail.getTid()+"匹配成功");
+        if (match) {
+            videoDetail.setThumbUpReason("分区id:" + videoDetail.getTid() + "匹配成功");
         }
         return match;
     }
 
     /**
      * 在白名单列表中是否找到匹配的
+     *
      * @param videoDetail
      * @return
      */
-    private boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
+    public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
+        String[] matchWordArr = new String[8];
         WhitelistRule whitelistRule = GlobalVariables.whitelistRules
                 .stream()
                 .filter(item ->
                         {
-                            boolean titleMatch = false;
-                            boolean descMatch =
-                                    false;
-                            boolean tagMatch = false;
+                            AtomicBoolean titleMatch = new AtomicBoolean(false);
+                            AtomicBoolean descMatch = new AtomicBoolean(false);
+                            AtomicBoolean tagMatch = new AtomicBoolean(false);
                             try {
-                                titleMatch = item.titleMatch(videoDetail.getTitle());
-                                log.info("标题{}匹配结果{}", videoDetail.getTitle(), titleMatch);
-                                descMatch = item.descMatch(videoDetail.getDesc())
-                                        ||
-                                        CollUtil.isNotEmpty(videoDetail.getDescV2()) && videoDetail.getDescV2().stream().anyMatch(
-                                                desc -> item.descMatch(desc.getRawText())
-                                        );
-                                log.info("desc {},{}匹配结果{}", videoDetail.getDesc(), videoDetail.getDescV2(), descMatch);
-                                tagMatch = CollUtil.isNotEmpty(videoDetail.getTags()) &&
-                                        item.tagNameMatch(
-                                                videoDetail.getTags()
-                                                        .stream()
-                                                        .map(Tag::getTagName)
-                                                        .collect(Collectors.toList())
-                                        );
-                                log.info("tag {}匹配结果{}", videoDetail.getTags()
-                                        .stream()
-                                        .map(Tag::getTagName)
-                                        .collect(Collectors.toList()), tagMatch);
+
+                                //重新初始化
+                                Arrays.fill(matchWordArr, null);
+
+                                //标题
+                                item.getTitleKeyWordList().stream().filter(keyword -> {
+                                    return videoDetail.getTitle().contains(keyword);
+                                })
+                                        .findFirst()
+                                        .ifPresent(s -> {
+                                            titleMatch.set(true);
+                                            matchWordArr[0] = s;
+                                            matchWordArr[1] = videoDetail.getTitle();
+                                        });
+
+                                log.info("标题{} 匹配结果{}, 关键词：{}",
+                                        videoDetail.getTitle(),
+                                        titleMatch,
+                                        matchWordArr[0]
+                                );
+
+
+                                //desc
+                                item.getDescKeyWordList().stream()
+                                        .filter(s -> videoDetail.getDesc().contains(s))
+                                        .findFirst()
+                                        .ifPresent(s -> {
+                                            descMatch.set(true);
+                                            matchWordArr[2] = s;
+                                            matchWordArr[3] = videoDetail.getDesc();
+                                        });
+
+                                //descV2
+                                if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
+                                    List<String> descV2TextList = videoDetail.getDescV2()
+                                            .stream()
+                                            .map(DescV2::getRawText)
+                                            .collect(Collectors.toList());
+
+                                    for (String keyword : item.getDescKeyWordList()) {
+                                        String descV2Found = descV2TextList.stream()
+                                                .filter(descV2Text -> descV2Text.contains(keyword))
+                                                .findFirst().orElse(null);
+
+                                        if (descV2Found != null) {
+                                            descMatch.set(true);
+                                            matchWordArr[4] = keyword;
+                                            matchWordArr[5] = descV2Found;
+                                            break;
+                                        }
+                                    }
+
+                                }
+
+                                log.info("desc {},{} 匹配结果{}, 关键词:{}-{}",
+                                        videoDetail.getDesc(),
+                                        videoDetail.getDescV2(),
+                                        descMatch,
+                                        matchWordArr[4],
+                                        matchWordArr[5]
+                                );
+
+
+                                //tag
+                                if (CollUtil.isNotEmpty(videoDetail.getTags())) {
+                                    List<String> tagNameList = videoDetail.getTags()
+                                            .stream()
+                                            .map(Tag::getTagName)
+                                            .collect(Collectors.toList());
+
+                                    for (String keyword : item.getTagNameList()) {
+
+                                        String tagNameFound = tagNameList.stream()
+                                                .filter(keyword::contains)
+                                                .findFirst().orElse(null);
+
+                                        if (tagNameFound != null) {
+                                            tagMatch.set(true);
+                                            matchWordArr[6] = keyword;
+                                            matchWordArr[7] = tagNameFound;
+                                            break;
+                                        }
+                                    }
+
+
+                                }
+
+                                log.info("tagName:{} 匹配结果{},具体匹配：{}，关键词{}",
+                                        videoDetail.getTags()
+                                                .stream()
+                                                .map(Tag::getTagName)
+                                                .collect(Collectors.toList()),
+                                        tagMatch,
+                                        matchWordArr[7],
+                                        matchWordArr[6]
+                                );
                             } catch (Exception e) {
-
                                 log.error("出现异常:{},视频信息：{}", e.getMessage(), videoDetail.toString());
-
                                 e.printStackTrace();
                             }
                             //两个以上的判断都通过，才表示通过
-                            return Stream.of(titleMatch, descMatch, tagMatch).filter(Boolean.TRUE::equals).count() > 1;
+                            return Stream.of(titleMatch, descMatch, tagMatch)
+                                    .filter(atomicBoolean -> Boolean.TRUE.equals(atomicBoolean.get()))
+                                    .count() > 1;
                         }
 
                 )
                 .findFirst()
                 .orElse(null);
 
-        boolean match = whitelistRule!=null;
-        if (match){
-            videoDetail.setThumbUpReason("匹配到了白名单："+whitelistRule.toString());
+        boolean match = whitelistRule != null;
+        String matchDetail = "";
+        if (match) {
+
+            matchDetail =
+                    " \t 关键词："+matchWordArr[0]+"\t 标题："+matchWordArr[1]+"\n"+
+                    " \t 关键词："+matchWordArr[2]+"\t desc："+matchWordArr[3]+"\n"+
+                    " \t 关键词："+matchWordArr[4]+"\t descV2："+matchWordArr[5]+"\n"+
+                    " \t 关键词："+matchWordArr[6]+"\t tagName："+matchWordArr[7]+"\n";
+
+            videoDetail.setThumbUpReason("匹配到了白名单：" + whitelistRule.toString()
+                    + "， 具体如下：\n" + matchDetail
+            );
         }
 
-        log.debug("视频:{}-{}，匹配白名单：{}，匹配结果：{} ",
+        log.debug("视频:{}-{}，匹配白名单：{}，匹配结果：{} , 具体如下：\n\t{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
                 whitelistRule,
-                match
+                match,
+                matchDetail
         );
 
         return match;
     }
-
 
 
 }

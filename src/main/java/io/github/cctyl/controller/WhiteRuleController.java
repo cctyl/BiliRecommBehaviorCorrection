@@ -6,6 +6,7 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.WhiteRuleService;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -43,6 +45,48 @@ public class WhiteRuleController {
 
     @Autowired
     private BiliApi biliApi;
+
+    @Autowired
+    private WhiteRuleService whiteRuleService;
+
+
+    @ApiOperation("指定视频是否符合白名单")
+    @GetMapping("/check-video")
+    public R checkVideo(
+            @ApiParam(name = "aid", value = "avid")
+            @RequestParam(required = false) Integer aid,
+            @ApiParam(name = "bvid", value = "bvid")
+            @RequestParam(required = false) String bvid
+    ) {
+
+        VideoDetail videoDetail;
+        if (aid != null) {
+
+            videoDetail = biliApi.getVideoDetail(aid);
+        } else if (StrUtil.isNotBlank(bvid)) {
+            videoDetail = biliApi.getVideoDetail(bvid);
+        } else {
+            return R.error().setMessage("参数缺失");
+        }
+        //白名单规则匹配
+        boolean whitelistRuleMatch = whiteRuleService.isWhitelistRuleMatch(videoDetail);
+        //up主id匹配
+        boolean userIdMatch = whiteRuleService.isUserIdMatch(videoDetail);
+
+        //分区id匹配
+        boolean tidMatch = whiteRuleService.isTidMatch(videoDetail);
+
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("videoDetail", videoDetail);
+        map.put("whitelistRuleMatch", whitelistRuleMatch);
+        map.put("userIdMatch", userIdMatch);
+        map.put("tidMatch", tidMatch);
+        map.put("thumbUpReason", videoDetail.getThumbUpReason());
+
+        return R.data(map);
+
+    }
 
 
     @GetMapping("/list")
@@ -124,7 +168,6 @@ public class WhiteRuleController {
         });
         return R.ok().setMessage("训练任务已开始");
     }
-
 
 
     @ApiOperation(value = "添加或修改指定的白名单对象")
