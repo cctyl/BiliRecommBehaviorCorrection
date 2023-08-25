@@ -109,6 +109,11 @@ public class AppConstant {
     public static final String IGNORE_BLACK_KEYWORD = PREFIX + "ignore_black_keyword";
 
     /**
+     * 忽略的白名单关键词
+     */
+    public static final String IGNORE_WHITE_KEYWORD = PREFIX + "ignore_white_keyword";
+
+    /**
      * 白名单关键词列表
      */
     public static final String WHITE_LIST_RULE_KEY = PREFIX + "white_list_rule";

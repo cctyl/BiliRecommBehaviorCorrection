@@ -1,18 +1,26 @@
 package io.github.cctyl.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.DescV2;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.SegmenterUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static io.github.cctyl.constants.AppConstant.*;
 
 /**
  * 黑名单相关的方法
@@ -27,8 +35,94 @@ public class BlackRuleService {
     private BiliApi biliApi;
 
     @Autowired
+    private RedisUtil redisUtil;
+
+
+    @Autowired
     private ImageGenderDetectService imageGenderDetectService;
 
+    /**
+     * 根据视频列表训练黑名单
+     *
+     * @param videoList
+     */
+    public void trainBlacklistByVideoList(
+            Collection<VideoDetail> videoList
+    ) {
+
+        List<String> titleProcess = new ArrayList<>();
+        List<String> descProcess = new ArrayList<>();
+        List<String> tagNameProcess = new ArrayList<>();
+
+        for (VideoDetail videoDetail : videoList) {
+            if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
+                GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
+            }
+            //1. 标题处理
+            String title = videoDetail.getTitle();
+            titleProcess.addAll(SegmenterUtil.process(title));
+
+            //2.描述
+            String desc = videoDetail.getDesc();
+            if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
+                List<String> descV2Process = videoDetail.getDescV2()
+                        .stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+                descProcess.addAll(descV2Process);
+            }
+            descProcess.addAll(SegmenterUtil.process(desc));
+            //3.标签
+            if (CollUtil.isNotEmpty(videoDetail.getTags())) {
+                List<String> tagNameList = videoDetail.getTags()
+                        .stream()
+                        .map(Tag::getTagName)
+                        .collect(Collectors.toList());
+                tagNameProcess.addAll(tagNameList);
+            }
+        }
+        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess);
+        List<String> topTagName = SegmenterUtil.getTopFrequentWord(descProcess);
+        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(tagNameProcess);
+
+        log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}", topDescKeyWord,
+                topTagName,
+                topTitleKeyWord);
+
+        //更新到redis中
+        GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
+
+        //拿到需要忽略的黑名单关键词
+        Set<String> ignoreKeyWordSet = getIgnoreKeyWordSet();
+
+        topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topDescKeyWord.removeAll(ignoreKeyWordSet);
+        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
+
+        topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topTitleKeyWord.removeAll(ignoreKeyWordSet);
+        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
+
+        topTagName.removeAll(GlobalVariables.blackTagSet);
+        topTagName.removeAll(ignoreKeyWordSet);
+        redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
+
+
+    }
+
+
+
+    /**
+     * 获得忽略的黑名单关键词
+     *
+     * @return
+     */
+    public Set<String> getIgnoreKeyWordSet() {
+        return redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
+    }
 
 
     /**

@@ -3,6 +3,7 @@ package io.github.cctyl.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.service.BiliService;
@@ -10,19 +11,16 @@ import io.github.cctyl.service.WhiteRuleService;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
-import io.github.classgraph.utils.WhiteBlackList;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -133,7 +131,7 @@ public class WhiteRuleController {
             if (CollUtil.isNotEmpty(trainedAvidList)) {
                 log.info("根据视频id进行训练");
                 //从给定的视频列表进行训练
-                whitelistRule = biliService.train(
+                whitelistRule = whiteRuleService.trainWhitelistRule(
                         whitelistRule,
                         trainedAvidList
                 );
@@ -155,7 +153,7 @@ public class WhiteRuleController {
                     }
                 }
 
-                whitelistRule = biliService.train(
+                whitelistRule = whiteRuleService.trainWhitelistRule(
                         whitelistRule,
                         allVideo.stream().map(UserSubmissionVideo::getAid).collect(Collectors.toList())
                 );
@@ -176,8 +174,6 @@ public class WhiteRuleController {
             @ApiParam(name = "toUpdate", value = "将要修改的白名单对象")
             @RequestBody WhitelistRule toUpdate
     ) {
-
-
         if (
                 CollUtil.isEmpty(toUpdate.getDescKeyWordList())
                         &&
@@ -188,24 +184,17 @@ public class WhiteRuleController {
                         &&
                         StrUtil.isEmpty(toUpdate.getCoverKeyword())
         ) {
-
             return R.error().setMessage("无效数据");
-
         }
-
+        List<WhitelistRule> whitelistRuleList = GlobalVariables.whitelistRules;
         if (toUpdate.getId() == null) {
             //此时创建一个新的id
             toUpdate.setId(IdGenerator.nextId());
+        } else {
+            whitelistRuleList.remove(toUpdate);
         }
-        List<WhitelistRule> whitelistRuleList =
-                redisUtil.sMembers(WHITE_LIST_RULE_KEY)
-                        .stream()
-                        .map(WhitelistRule.class::cast)
-                        .collect(Collectors.toList());
-        whitelistRuleList.remove(toUpdate);
         whitelistRuleList.add(toUpdate);
-        redisUtil.delete(WHITE_LIST_RULE_KEY);
-        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRuleList.toArray());
+        GlobalVariables.setWhitelistRules(whitelistRuleList);
         return R.ok().setMessage("添加成功").setData(toUpdate);
     }
 
@@ -216,12 +205,10 @@ public class WhiteRuleController {
             @ApiParam(name = "id", value = "需要删除的白名单的id")
             @PathVariable("id") Long id
     ) {
-        List<WhitelistRule> whitelistRuleList =
-                redisUtil.sMembers(WHITE_LIST_RULE_KEY)
-                        .stream()
-                        .map(WhitelistRule.class::cast)
-                        .collect(Collectors.toList());
-        WhitelistRule toDel = whitelistRuleList.stream().filter(whitelistRule -> whitelistRule.getId().equals(id))
+        List<WhitelistRule> whitelistRuleList = GlobalVariables.whitelistRules;
+        WhitelistRule toDel = whitelistRuleList
+                .stream()
+                .filter(whitelistRule -> whitelistRule.getId().equals(id))
                 .findAny()
                 .orElse(null);
 
@@ -229,9 +216,25 @@ public class WhiteRuleController {
             return R.error().setMessage("id=" + id + "的白名单规则不存在");
         }
         whitelistRuleList.remove(toDel);
-        redisUtil.delete(WHITE_LIST_RULE_KEY);
-        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRuleList.toArray());
+        GlobalVariables.setWhitelistRules(whitelistRuleList);
         return R.ok().setMessage("删除成功");
+    }
+
+
+    @ApiOperation("获得忽略关键词列表")
+    @GetMapping("/ignore")
+    public R getIgnoreKeyWordSet(){
+        return R.ok().setData(redisUtil.sMembers(IGNORE_WHITE_KEYWORD));
+    }
+
+    @ApiOperation("添加到忽略关键词列表")
+    @PostMapping("/ignore")
+    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
+        redisUtil.sAdd(IGNORE_WHITE_KEYWORD,ignoreKeyWordSet.toArray());
+        //更新白名单关键词规则
+        GlobalVariables.setWhitelistRules(GlobalVariables.whitelistRules);
+
+        return R.ok().setData(redisUtil.sMembers(IGNORE_WHITE_KEYWORD));
     }
 
 

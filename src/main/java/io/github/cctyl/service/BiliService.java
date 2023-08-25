@@ -307,81 +307,6 @@ public class BiliService {
 
     }
 
-
-    /**
-     * 白名单关键词自动修正补全
-     * 传入一个指定的白名单规则对象，
-     * 传入你认为应当符合该规则的视频id
-     *
-     * @param whitelistRule 需要训练的白名单规则
-     * @param whiteAvidList 应当符号白名单规则的视频id集合
-     */
-    public WhitelistRule train(
-            WhitelistRule whitelistRule,
-            List<Integer> whiteAvidList) {
-        if (whitelistRule == null) {
-            whitelistRule = new WhitelistRule().setId(IdGenerator.nextId());
-        }
-
-
-        //根据数据量的大小计算出需要保留的数据量
-        int limit = Math.max(whiteAvidList.size() / 100, 5);
-
-        log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
-        List<String> titleProcess = new ArrayList<>();
-        List<String> descProcess = new ArrayList<>();
-        List<String> tagNameProcess = new ArrayList<>();
-        for (Integer avid : whiteAvidList) {
-            try {
-                VideoDetail videoDetail = biliApi.getVideoDetail(avid);
-                //1. 标题处理
-                String title = videoDetail.getTitle();
-                titleProcess.addAll(SegmenterUtil.process(title));
-
-                //2.描述
-                String desc = videoDetail.getDesc();
-                if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
-                    List<String> descV2Process = videoDetail.getDescV2().stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toList());
-                    descProcess.addAll(descV2Process);
-                }
-
-                descProcess.addAll(SegmenterUtil.process(desc));
-
-
-                //3.标签
-                List<String> tagNameList = videoDetail.getTags().stream().map(Tag::getTagName).collect(Collectors.toList());
-                tagNameProcess.addAll(tagNameList);
-                log.info("获得视频信息:{}", videoDetail);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            ThreadUtil.sleep(10);
-        }
-
-        //统计频次
-        Map<String, Integer> descKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(descProcess);
-        Map<String, Integer> tagNameFrequencyMap = SegmenterUtil.generateFrequencyMap(tagNameProcess);
-        Map<String, Integer> titleKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(titleProcess);
-        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(descKeywordFrequencyMap);
-        List<String> topTagName = SegmenterUtil.getTopFrequentWord(tagNameFrequencyMap);
-        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(titleKeywordFrequencyMap);
-
-        log.info("本次训练结束 \r\n\t前5的标题关键词是:{} \r\n\t 前5的标签名是:{} \r\n\t 前5的描述关键词是:{}",
-                topTitleKeyWord,
-                topTagName,
-                topDescKeyWord
-        );
-        whitelistRule.getTagNameList().addAll(topTagName);
-        whitelistRule.getTitleKeyWordList().addAll(topTitleKeyWord);
-        whitelistRule.getDescKeyWordList().addAll(topDescKeyWord);
-
-        return whitelistRule;
-    }
-
-
     /**
      * 对指定分区的最新视频和排行榜视频进行点踩操作
      * 为减少风控限制，分步执行点踩操作
@@ -412,90 +337,9 @@ public class BiliService {
         ArrayList<VideoDetail> allVideo = new ArrayList<>();
         allVideo.addAll(rankVideoList);
         allVideo.addAll(regionLatestVideo);
-        trainBlacklistByVideoList(allVideo);
+        blackRuleService. trainBlacklistByVideoList(allVideo);
 
         return allVideo.size();
-    }
-
-    /**
-     * 根据视频列表训练黑名单
-     *
-     * @param videoList
-     */
-    public void trainBlacklistByVideoList(
-            Collection<VideoDetail> videoList
-    ) {
-
-        List<String> titleProcess = new ArrayList<>();
-        List<String> descProcess = new ArrayList<>();
-        List<String> tagNameProcess = new ArrayList<>();
-
-        for (VideoDetail videoDetail : videoList) {
-            if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
-                GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
-            }
-            //1. 标题处理
-            String title = videoDetail.getTitle();
-            titleProcess.addAll(SegmenterUtil.process(title));
-
-            //2.描述
-            String desc = videoDetail.getDesc();
-            if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
-                List<String> descV2Process = videoDetail.getDescV2()
-                        .stream().map(descV2 -> SegmenterUtil.process(descV2.getRawText()))
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList());
-                descProcess.addAll(descV2Process);
-            }
-            descProcess.addAll(SegmenterUtil.process(desc));
-            //3.标签
-            if (CollUtil.isNotEmpty(videoDetail.getTags())) {
-                List<String> tagNameList = videoDetail.getTags()
-                        .stream()
-                        .map(Tag::getTagName)
-                        .collect(Collectors.toList());
-                tagNameProcess.addAll(tagNameList);
-            }
-        }
-        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess);
-        List<String> topTagName = SegmenterUtil.getTopFrequentWord(descProcess);
-        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(tagNameProcess);
-
-        log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}", topDescKeyWord,
-                topTagName,
-                topTitleKeyWord);
-
-        //更新到redis中
-        GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
-
-        //拿到需要忽略的黑名单关键词
-        Set<String> ignoreKeyWordSet = getIgnoreKeyWordSet();
-
-        topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
-        topDescKeyWord.removeAll(ignoreKeyWordSet);
-        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
-
-        topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
-        topTitleKeyWord.removeAll(ignoreKeyWordSet);
-        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
-
-        topTagName.removeAll(GlobalVariables.blackTagSet);
-        topTagName.removeAll(ignoreKeyWordSet);
-        redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
-
-
-    }
-
-    /**
-     * 获得忽略的黑名单关键词
-     *
-     * @return
-     */
-    public Set<String> getIgnoreKeyWordSet() {
-        return redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
-                .stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
     }
 
     /**
@@ -541,7 +385,7 @@ public class BiliService {
         );
 
         //开始训练黑名单
-        trainBlacklistByVideoList(videoDetailList);
+       blackRuleService. trainBlacklistByVideoList(videoDetailList);
 
         return videoDetailList.size();
     }

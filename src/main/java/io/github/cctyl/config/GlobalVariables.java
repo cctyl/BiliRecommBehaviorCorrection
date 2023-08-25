@@ -4,6 +4,8 @@ import cn.hutool.dfa.WordTree;
 import io.github.cctyl.entity.ApiHeader;
 import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.BlackRuleService;
+import io.github.cctyl.service.WhiteRuleService;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.Data;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -91,14 +93,20 @@ public class GlobalVariables {
     private static RedisUtil redisUtil;
     private static RedisTemplate<String, Object> redisTemplate;
     private static BiliService biliService;
+    private static BlackRuleService blackRuleService;
+    private static WhiteRuleService whiteRuleService;
 
     public GlobalVariables(RedisUtil redisUtil,
                            RedisTemplate<String, Object> redisTemplate,
-                           BiliService biliService
+                           BiliService biliService,
+                           BlackRuleService blackRuleService,
+                           WhiteRuleService whiteRuleService
                            ) {
         GlobalVariables.redisUtil = redisUtil;
         GlobalVariables.redisTemplate = redisTemplate;
         GlobalVariables.biliService = biliService;
+        GlobalVariables.blackRuleService = blackRuleService;
+        GlobalVariables.whiteRuleService = whiteRuleService;
     }
 
     public static void addBlackUserId(Collection<String> param) {
@@ -124,7 +132,7 @@ public class GlobalVariables {
      * @param param
      */
     public static void setBlackKeywordSet(Set<String> param) {
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
         param.removeAll(ignoreKeyWordSet);
 
         GlobalVariables.blackKeywordSet = param;
@@ -136,7 +144,7 @@ public class GlobalVariables {
     }
 
     public static void addBlackKeyword(Collection<String> param) {
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
         param.removeAll(ignoreKeyWordSet);
 
         GlobalVariables.blackKeywordSet.addAll(param);
@@ -152,7 +160,7 @@ public class GlobalVariables {
      * @param param
      */
     public static void setBlackTagSet(Set<String> param) {
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
         param.removeAll(ignoreKeyWordSet);
 
         GlobalVariables.blackTagSet = param;
@@ -164,7 +172,7 @@ public class GlobalVariables {
     }
 
     public static void addBlackTagSet(Collection<String> param) {
-        Set<String> ignoreKeyWordSet = biliService.getIgnoreKeyWordSet();
+        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
         param.removeAll(ignoreKeyWordSet);
 
         GlobalVariables.blackTagSet.addAll(param);
@@ -240,16 +248,32 @@ public class GlobalVariables {
     }
 
 
-    public static void setWhitelistRules(List<WhitelistRule> whiteKeyWordList) {
-        GlobalVariables.whitelistRules = whiteKeyWordList;
+    public static void setWhitelistRules(List<WhitelistRule> whitelistRules) {
+
+        //需要忽略的词汇不要存入规则中
+        Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
+        for (WhitelistRule whitelistRule : whitelistRules) {
+            whitelistRule.getDescKeyWordList().removeAll(ignoreKeyWordSet);
+            whitelistRule.getTitleKeyWordList().removeAll(ignoreKeyWordSet);
+            whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);
+        }
+        GlobalVariables.whitelistRules = whitelistRules;
         redisUtil.delete(WHITE_LIST_RULE_KEY);
-        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whiteKeyWordList.toArray());
+        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRules.toArray());
     }
 
-    public static void addWhitelistRules(List<WhitelistRule> whiteKeyWordList) {
-        GlobalVariables.whitelistRules.addAll(whiteKeyWordList);
+    public static void addWhitelistRules(List<WhitelistRule> whitelistRules) {
+        //需要忽略的词汇不要存入规则中
+        Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
+        for (WhitelistRule whitelistRule : whitelistRules) {
+            whitelistRule.getDescKeyWordList().removeAll(ignoreKeyWordSet);
+            whitelistRule.getTitleKeyWordList().removeAll(ignoreKeyWordSet);
+            whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);
+        }
+
+        GlobalVariables.whitelistRules.addAll(whitelistRules);
         redisUtil.delete(WHITE_LIST_RULE_KEY);
-        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whiteKeyWordList.toArray());
+        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRules.toArray());
     }
 
     public static void setApiHeaderMap(Map<String, ApiHeader> apiHeaderMap) {

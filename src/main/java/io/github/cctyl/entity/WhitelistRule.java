@@ -51,49 +51,6 @@ public class WhitelistRule implements Serializable {
         id = IdGenerator.nextId();
     }
 
-    /**
-     * 标题是否匹配了对应的关键词
-     *
-     * @param title
-     * @return
-     */
-    public boolean titleMatch(String title) {
-        //todo 同义词分析优化
-        return titleKeyWordList.stream().anyMatch(title::contains);
-    }
-
-    /**
-     * 标签是否匹配
-     *
-     * @return
-     */
-    public boolean tagNameMatch(List<String> tagNameListParam) {
-        List<String> collect = new ArrayList<>(tagNameListParam);
-        collect.retainAll(tagNameList);
-        return collect.size() > 0;
-    }
-
-
-    /**
-     * 描述是否匹配
-     *
-     * @return
-     */
-    public boolean descMatch(String desc) {
-        return descKeyWordList.stream().anyMatch(desc::contains);
-    }
-
-    /**
-     * 封面是否匹配
-     *
-     * @param picUrl
-     * @return
-     */
-    public boolean coverMatch(String picUrl) {
-        //todo 尚未实现
-        return false;
-    }
-
 
     @Override
     public boolean equals(Object o) {

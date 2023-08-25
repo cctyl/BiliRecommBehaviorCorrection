@@ -89,9 +89,12 @@ public class InitFromRedis implements ApplicationRunner {
         }
 
         //9.白名单关键词列表
-        GlobalVariables.setWhitelistRules(redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(
-                o -> (WhitelistRule) o
-        ).collect(Collectors.toList()));
+        GlobalVariables.setWhitelistRules(
+                redisUtil.sMembers(WHITE_LIST_RULE_KEY)
+                        .stream().map(
+                            o -> (WhitelistRule) o
+                        ).collect(Collectors.toList())
+        );
 
         //10.加载停顿词
         if (redisUtil.sMembers(STOP_WORDS_KEY).size() == 0) {
@@ -102,7 +105,6 @@ public class InitFromRedis implements ApplicationRunner {
         //11.加载ApiHeader相关
         for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(API_HEADER_MAP).entrySet()) {
             GlobalVariables.apiHeaderMap.put((String) entry.getKey(), (ApiHeader) entry.getValue());
-
         }
 
         for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {

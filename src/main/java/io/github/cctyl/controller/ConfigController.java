@@ -65,7 +65,7 @@ public class ConfigController {
     public R loadHar(MultipartFile multipartFile, @RequestParam Boolean refresh) throws IOException {
 
         //保存到临时文件夹
-        File tempDir = new File(new ApplicationHome().getDir().getPath(),"temp");
+        File tempDir = new File(new ApplicationHome().getDir().getParentFile().getPath(),"upload");
         if (!tempDir.exists()) {
             tempDir.mkdir();
         }

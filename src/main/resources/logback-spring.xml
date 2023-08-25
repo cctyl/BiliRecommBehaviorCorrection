@@ -4,7 +4,7 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <!-- 定义日志的根目录 -->
-    <property name="LOG_HOME" value="./logs" />
+    <property name="LOG_HOME" value="../logs/BiliRecommBehaviorCorrection" />
 
 
     <!--具体的输出到文件的 appender -->
