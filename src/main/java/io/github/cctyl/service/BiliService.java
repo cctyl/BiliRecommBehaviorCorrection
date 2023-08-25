@@ -80,21 +80,13 @@ public class BiliService {
 
 
     /**
-     * 添加一个准备要删除的视频到缓存中
+     * 添加一个需要处理的视频到缓存中
      *
      * @param videoDetail
      */
-    public void addReadyToDislikeVideo(VideoDetail videoDetail) {
-        redisUtil.sAdd(READY_HANDLE_DISLIKE_VIDEO, videoDetail);
-    }
-
-    /**
-     * 添加一个准备要点赞的视频到缓存中
-     *
-     * @param videoDetail
-     */
-    public void addReadyToThumbUpVideo(VideoDetail videoDetail) {
-        redisUtil.sAdd(READY_HANDLE_THUMB_UP_VIDEO, videoDetail);
+    public void addReadyToHandleVideo(VideoDetail videoDetail) {
+        redisUtil.sAdd(READY_HANDLE_VIDEO, videoDetail);
+        redisUtil.sAdd(READY_HANDLE_VIDEO_ID, videoDetail.getAid());
     }
 
     /**
@@ -114,7 +106,10 @@ public class BiliService {
     ) {
 
         log.debug("处理视频avid={}", avid);
-        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, avid)) {
+        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, avid)
+        ||
+                redisUtil.sIsMember(READY_HANDLE_VIDEO_ID,avid)
+        ) {
             log.info("视频：{} 之前已处理过", avid);
             return;
         }
@@ -126,13 +121,13 @@ public class BiliService {
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackRuleService.blackMatch(videoDetail)) {
                 //点踩
-                addReadyToDislikeVideo(videoDetail);
+                addReadyToHandleVideo(videoDetail);
                 //加日志
                 dislikeVideoList.add(videoDetail);
             } else if (whiteRuleService.whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
-                addReadyToThumbUpVideo(videoDetail);
+                addReadyToHandleVideo(videoDetail);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
             } else {

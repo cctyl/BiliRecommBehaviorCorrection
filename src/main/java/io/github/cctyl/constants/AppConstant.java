@@ -100,8 +100,8 @@ public class AppConstant {
     /**
      * 将要处理的视频的缓存
      */
-    public static final String READY_HANDLE_DISLIKE_VIDEO = PREFIX + "ready_handle_dislike_video";
-    public static final String READY_HANDLE_THUMB_UP_VIDEO = PREFIX + "ready_handle_thumb_up_video";
+    public static final String READY_HANDLE_VIDEO = PREFIX + "ready_handle_video";
+    public static final String READY_HANDLE_VIDEO_ID = PREFIX + "ready_handle_video_id";
 
     /**
      * 忽略的黑名单关键词

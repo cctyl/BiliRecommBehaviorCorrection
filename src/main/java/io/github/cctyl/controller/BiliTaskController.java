@@ -40,7 +40,6 @@ public class BiliTaskController {
     @Autowired
     private BiliService biliService;
 
-
     @Autowired
     private RedisUtil redisUtil;
 
@@ -96,27 +95,23 @@ public class BiliTaskController {
     @ApiOperation("获取等待处理的数据")
     @GetMapping("/ready2handle")
     public R getReady2HandleVideo(){
-
-        List<VideoVo> dislikeList = redisUtil
-                .sMembers(READY_HANDLE_DISLIKE_VIDEO)
+        List<VideoVo> thumbUpList = new ArrayList<>();
+        List<VideoVo> dislikeList = new ArrayList<>();
+        redisUtil
+                .sMembers(READY_HANDLE_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
                 .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
                         v.getBlackReason(),
                         v.getThumbUpReason()
-
                 ))
-                .collect(Collectors.toList());
-
-        List<VideoVo> thumbUpList = redisUtil
-                .sMembers(READY_HANDLE_THUMB_UP_VIDEO)
-                .stream()
-                .map(VideoDetail.class::cast)
-                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
-                        v.getBlackReason(),
-                        v.getThumbUpReason()
-                        ))
-                .collect(Collectors.toList());
+                .forEach(videoVo -> {
+                    if (videoVo.getBlackReason() != null) {
+                        dislikeList.add(videoVo);
+                    } else {
+                        thumbUpList.add(videoVo);
+                    }
+                });
 
         return R.data(Map.of(
                 "dislikeList",dislikeList,
@@ -139,18 +134,10 @@ public class BiliTaskController {
 
         TaskPool.putTask(() -> {
             Map<Integer, VideoDetail> handleVideoMap = redisUtil
-                    .sMembers(READY_HANDLE_THUMB_UP_VIDEO)
+                    .sMembers(READY_HANDLE_VIDEO)
                     .stream()
                     .map(VideoDetail.class::cast)
                     .collect(Collectors.toMap(VideoDetail::getAid, v -> v, (o1, o2) -> o1));
-
-            redisUtil
-                    .sMembers(READY_HANDLE_DISLIKE_VIDEO)
-                    .stream()
-                    .map(VideoDetail.class::cast)
-                    .forEach(videoDetail -> {
-                        handleVideoMap.put(videoDetail.getAid(), videoDetail);
-                    });
 
             List<VideoVo> dislikeVoList = map.get("dislikeList");
             List<VideoVo> thumbUpVoList = map.get("thumbUpList");
@@ -188,8 +175,8 @@ public class BiliTaskController {
             }
 
             //清空待处理数据
-            redisUtil.delete(READY_HANDLE_THUMB_UP_VIDEO);
-            redisUtil.delete(READY_HANDLE_DISLIKE_VIDEO);
+            redisUtil.delete(READY_HANDLE_VIDEO);
+            redisUtil.delete(READY_HANDLE_VIDEO_ID);
 
         });
         return R.ok();
