@@ -2,6 +2,9 @@
   "resources":{
   "includes":[
     {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-2d0bd799.eb48b7f1.js\\E"
+    }, 
+    {
       "pattern":"\\QMETA-INF/spring-autoconfigure-metadata.properties\\E"
     }, 
     {
@@ -21,6 +24,9 @@
     }, 
     {
       "pattern":"\\Qio/github/cctyl/Application.class\\E"
+    }, 
+    {
+      "pattern":"\\Qio/github/cctyl/\\E"
     }, 
     {
       "pattern":"\\Qio/github/cctyl/anno/NoLog.class\\E"
@@ -54,9 +60,6 @@
     }, 
     {
       "pattern":"\\Qio/github/cctyl/config/GlobalVariables.class\\E"
-    }, 
-    {
-      "pattern":"\\Qio/github/cctyl/config/Knife4jConfiguration.class\\E"
     }, 
     {
       "pattern":"\\Qio/github/cctyl/config/RedisConfig.class\\E"
@@ -116,7 +119,10 @@
       "pattern":"\\Qio/github/cctyl/utils/RedisUtil.class\\E"
     }, 
     {
-      "pattern":"\\Qio/swagger/annotations/Api.class\\E"
+      "pattern":"\\Qio/swagger/v3/oas/annotations/Hidden.class\\E"
+    }, 
+    {
+      "pattern":"\\Qio/swagger/v3/oas/annotations/tags/Tag.class\\E"
     }, 
     {
       "pattern":"\\Qlogback-spring.xml\\E"
@@ -146,6 +152,132 @@
       "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
     }, 
     {
+      "pattern":"\\Qorg/springdoc/core/AbstractSwaggerUiConfigProperties$Direction.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/AbstractSwaggerUiConfigProperties$SwaggerUrl.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/AbstractSwaggerUiConfigProperties.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/CacheOrGroupedOpenApiCondition$OnCacheDisabled.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/CacheOrGroupedOpenApiCondition$OnMultipleOpenApiSupportCondition.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/CacheOrGroupedOpenApiCondition.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiGroupsCondition$OnGroupConfigProperty.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiGroupsCondition$OnGroupedOpenApiBean.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiGroupsCondition.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiSupportCondition$OnActuatorDifferentPort.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiSupportCondition$OnMultipleOpenApiSupportCondition.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/MultipleOpenApiSupportCondition.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$ApiDocs.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$Cache.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$GroupConfig.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$Groups.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$ModelConverters.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties$Webjars.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfigProperties.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$OpenApiResourceAdvice.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocActuatorConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocFunctionCatalogConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocPageableConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocRepositoryRestConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocSortConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocSpringDataWebPropertiesProvider.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$SpringDocWebFluxSupportConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration$WebConversionServiceConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SpringDocUIConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SwaggerUiConfigParameters.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SwaggerUiConfigProperties$Csrf.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SwaggerUiConfigProperties$SyntaxHighlight.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SwaggerUiConfigProperties.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/core/SwaggerUiOAuthProperties.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/core/MultipleOpenApiSupportConfiguration$SpringDocWebMvcActuatorDifferentConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/core/MultipleOpenApiSupportConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/core/SpringDocWebMvcConfiguration$SpringDocWebMvcActuatorConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/core/SpringDocWebMvcConfiguration$SpringDocWebMvcRouterConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/core/SpringDocWebMvcConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/ui/SwaggerConfig$SwaggerActuatorWelcomeConfiguration.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springdoc/webmvc/ui/SwaggerConfig.class\\E"
+    }, 
+    {
       "pattern":"\\Qorg/springframework/beans/factory/Aware.class\\E"
     }, 
     {
@@ -153,6 +285,9 @@
     }, 
     {
       "pattern":"\\Qorg/springframework/beans/factory/BeanFactoryAware.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springframework/beans/factory/InitializingBean.class\\E"
     }, 
     {
       "pattern":"\\Qorg/springframework/beans/factory/config/BeanFactoryPostProcessor.class\\E"
@@ -392,6 +527,9 @@
       "pattern":"\\Qorg/springframework/boot/autoconfigure/transaction/TransactionAutoConfiguration.class\\E"
     }, 
     {
+      "pattern":"\\Qorg/springframework/boot/autoconfigure/validation/ValidationAutoConfiguration.class\\E"
+    }, 
+    {
       "pattern":"\\Qorg/springframework/boot/autoconfigure/web/client/RestTemplateAutoConfiguration$NotReactiveWebApplicationCondition$ReactiveWebApplication.class\\E"
     }, 
     {
@@ -563,9 +701,6 @@
       "pattern":"\\Qorg/springframework/context/annotation/AutoProxyRegistrar.class\\E"
     }, 
     {
-      "pattern":"\\Qorg/springframework/context/annotation/ComponentScan.class\\E"
-    }, 
-    {
       "pattern":"\\Qorg/springframework/context/annotation/Conditional.class\\E"
     }, 
     {
@@ -582,6 +717,9 @@
     }, 
     {
       "pattern":"\\Qorg/springframework/context/annotation/ImportBeanDefinitionRegistrar.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springframework/context/annotation/Lazy.class\\E"
     }, 
     {
       "pattern":"\\Qorg/springframework/context/annotation/Role.class\\E"
@@ -618,12 +756,6 @@
     }, 
     {
       "pattern":"\\Qorg/springframework/data/web/config/SpringDataWebConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qorg/springframework/plugin/core/config/EnablePluginRegistries.class\\E"
-    }, 
-    {
-      "pattern":"\\Qorg/springframework/plugin/core/config/PluginRegistriesBeanDefinitionRegistrar.class\\E"
     }, 
     {
       "pattern":"\\Qorg/springframework/scheduling/annotation/AbstractAsyncConfiguration.class\\E"
@@ -668,6 +800,9 @@
       "pattern":"\\Qorg/springframework/transaction/annotation/TransactionManagementConfigurationSelector.class\\E"
     }, 
     {
+      "pattern":"\\Qorg/springframework/web/bind/annotation/ControllerAdvice.class\\E"
+    }, 
+    {
       "pattern":"\\Qorg/springframework/web/bind/annotation/Mapping.class\\E"
     }, 
     {
@@ -678,6 +813,9 @@
     }, 
     {
       "pattern":"\\Qorg/springframework/web/bind/annotation/RestController.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springframework/web/bind/annotation/RestControllerAdvice.class\\E"
     }, 
     {
       "pattern":"\\Qorg/springframework/web/context/ServletContextAware.class\\E"
@@ -695,31 +833,24 @@
       "pattern":"\\Qorg/springframework/web/servlet/config/annotation/WebMvcConfigurer.class\\E"
     }, 
     {
-      "pattern":"\\Qspringfox/documentation/schema/configuration/ModelsConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qspringfox/documentation/spring/web/SpringfoxWebConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qspringfox/documentation/spring/web/SpringfoxWebMvcConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qspringfox/documentation/swagger/configuration/SwaggerCommonConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qspringfox/documentation/swagger2/annotations/EnableSwagger2WebMvc.class\\E"
-    }, 
-    {
-      "pattern":"\\Qspringfox/documentation/swagger2/configuration/Swagger2DocumentationWebMvcConfiguration.class\\E"
+      "pattern":"\\Qspringdoc.config.properties\\E"
     }
   ]},
   "bundles":[
+    {
+      "name":"javax.servlet.LocalStrings",
+      "locales":[""]
+    }, 
     {
       "name":"javax.servlet.http.LocalStrings",
       "locales":[""]
     }, 
     {
       "name":"org.apache.catalina.authenticator.LocalStrings",
+      "locales":[""]
+    }, 
+    {
+      "name":"org.apache.catalina.authenticator.jaspic.LocalStrings",
       "locales":[""]
     }, 
     {
@@ -783,6 +914,10 @@
       "locales":[""]
     }, 
     {
+      "name":"org.apache.coyote.http11.filters.LocalStrings",
+      "locales":[""]
+    }, 
+    {
       "name":"org.apache.naming.LocalStrings",
       "locales":[""]
     }, 
@@ -807,6 +942,10 @@
       "locales":[""]
     }, 
     {
+      "name":"org.apache.tomcat.util.http.parser.LocalStrings",
+      "locales":[""]
+    }, 
+    {
       "name":"org.apache.tomcat.util.modeler.LocalStrings",
       "locales":[""]
     }, 
@@ -816,6 +955,10 @@
     }, 
     {
       "name":"org.apache.tomcat.util.scan.LocalStrings",
+      "locales":[""]
+    }, 
+    {
+      "name":"org.apache.tomcat.util.threads.LocalStrings",
       "locales":[""]
     }, 
     {

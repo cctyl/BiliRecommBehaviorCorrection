@@ -38,7 +38,7 @@
     </dependencyManagement>
 
     <!--graalvm 插件不在中央库，所以还需要指定 repository-->
-    <repositories>
+    <!--<repositories>
         <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
@@ -51,7 +51,7 @@
             <name>Spring Milestones</name>
             <url>https://repo.spring.io/milestone</url>
         </pluginRepository>
-    </pluginRepositories>
+    </pluginRepositories>-->
     <dependencies>
         <dependency>
             <groupId>org.graalvm.sdk</groupId>
@@ -184,41 +184,31 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!--  graalvm 打包 插件-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-indexer</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.experimental</groupId>
-            <artifactId>spring-graalvm-native</artifactId>
-            <version>0.8.3</version>
-        </dependency>
+
 
     </dependencies>
     <build>
         <plugins>
-            <!--    <plugin>
-                    <groupId>org.graalvm.nativeimage</groupId>
-                    <artifactId>native-image-maven-plugin</artifactId>
-                    <version>21.2.0</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>native-image</goal>
-                            </goals>
-                            <phase>package</phase>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <skip>false</skip>
-                        <mainClass>io.github.cctyl.Application</mainClass>
-                        <buildArgs>
-                            &#45;&#45;no-fallback
-                        </buildArgs>
-                    </configuration>
-                </plugin>-->
+  <!--          <plugin>
+                <groupId>org.graalvm.nativeimage</groupId>
+                <artifactId>native-image-maven-plugin</artifactId>
+                <version>21.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>native-image</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>false</skip>
+                    <mainClass>io.github.cctyl.Application</mainClass>
+                    <buildArgs>
+                        &#45;&#45;no-fallback
+                    </buildArgs>
+                </configuration>
+            </plugin>-->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
