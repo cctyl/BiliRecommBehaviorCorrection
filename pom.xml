@@ -14,7 +14,6 @@
         <local-libs>${project.basedir}/src/main/resources/libs</local-libs>
         <graalvm.version>22.3.1</graalvm.version>
         <springboot.version>2.7.15</springboot.version>
-        <knife4j.version>3.0.3</knife4j.version>
     </properties>
 
     <dependencyManagement>
@@ -34,9 +33,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
-    <!--    graalvm 插件不在中央库，所以还需要指定 repository-->
+
+    <!--graalvm 插件不在中央库，所以还需要指定 repository-->
     <repositories>
         <repository>
             <id>spring-milestones</id>
@@ -65,14 +66,12 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-
         <!--har分析工具-->
         <dependency>
             <groupId>de.sstoehr</groupId>
             <artifactId>har-reader</artifactId>
             <version>2.2.1</version>
         </dependency>
-
 
         <!--基本的springboot环境-->
         <dependency>
@@ -88,11 +87,13 @@
             <scope>system</scope>
             <systemPath>${local-libs}/jieba-analysis-1.0.3-SNAPSHOT.jar</systemPath>
         </dependency>
+
         <!--http-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-http</artifactId>
         </dependency>
+
         <!--dfa-->
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -128,6 +129,7 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
+
         <!--json-->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -147,7 +149,6 @@
             <artifactId>Java-WebSocket</artifactId>
             <version>1.5.3</version>
         </dependency>
-
 
         <!--测试相关-->
         <dependency>
@@ -169,12 +170,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!--web相关-->
         <!--swagger-->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>${knife4j.version}</version>
+            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+            <version>4.3.0</version>
         </dependency>
 
 
@@ -195,29 +195,30 @@
             <artifactId>spring-graalvm-native</artifactId>
             <version>0.8.3</version>
         </dependency>
+
     </dependencies>
     <build>
         <plugins>
-        <!--    <plugin>
-                <groupId>org.graalvm.nativeimage</groupId>
-                <artifactId>native-image-maven-plugin</artifactId>
-                <version>21.2.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>native-image</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <skip>false</skip>
-                    <mainClass>io.github.cctyl.Application</mainClass>
-                    <buildArgs>
-                        &#45;&#45;no-fallback
-                    </buildArgs>
-                </configuration>
-            </plugin>-->
+            <!--    <plugin>
+                    <groupId>org.graalvm.nativeimage</groupId>
+                    <artifactId>native-image-maven-plugin</artifactId>
+                    <version>21.2.0</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>native-image</goal>
+                            </goals>
+                            <phase>package</phase>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <skip>false</skip>
+                        <mainClass>io.github.cctyl.Application</mainClass>
+                        <buildArgs>
+                            &#45;&#45;no-fallback
+                        </buildArgs>
+                    </configuration>
+                </plugin>-->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

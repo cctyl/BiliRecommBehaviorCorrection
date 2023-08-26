@@ -1,6 +1,6 @@
 package io.github.cctyl.entity;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -17,16 +17,17 @@ public class R {
     private static final int SUCCESS = 20000;
     private static final int FAIL = 50000;
 
-    @ApiModelProperty(value = "是否成功")
+    @Schema(name = "是否成功")
     private Boolean success;
 
-    @ApiModelProperty(value = "返回码")
+    @Schema(name = "返回码")
+
     private Integer code;
 
-    @ApiModelProperty(value = "返回消息")
+    @Schema(name = "返回消息")
     private String message;
 
-    @ApiModelProperty(value = "返回数据")
+    @Schema(name = "返回数据")
     private Object data;
 
     private R() {

@@ -12,9 +12,9 @@ import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +27,7 @@ import static io.github.cctyl.constants.AppConstant.*;
 
 @RestController
 @RequestMapping("/black-rule")
-@Api(tags = "黑名单规则模块")
+@Tag(name = "黑名单规则模块")
 @Slf4j
 public class BlackRuleController {
 
@@ -43,12 +43,12 @@ public class BlackRuleController {
     @Autowired
     private BiliApi biliApi;
 
-    @ApiOperation("指定视频是否符合黑名单")
+    @Operation(summary = "指定视频是否符合黑名单")
     @GetMapping("/check-video")
     public R checkVideo(
-            @ApiParam(name = "aid", value = "avid")
+            @Parameter(name = "aid", description = "avid")
             @RequestParam(required = false) Integer aid,
-            @ApiParam(name = "bvid", value = "bvid")
+            @Parameter(name = "bvid", description = "bvid")
             @RequestParam(required = false) String bvid
     ) {
 
@@ -88,10 +88,10 @@ public class BlackRuleController {
 
     }
 
-    @ApiOperation("对指定分区的 排行榜、热门视频进行点踩")
+    @Operation(summary ="对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
     public R dislikeByTid(
-            @ApiParam(name = "tidList", value = "需要点踩的分区id")
+            @Parameter(name = "tidList", description = "需要点踩的分区id")
             @RequestParam List<Integer> tidList
     ) {
 
@@ -116,10 +116,10 @@ public class BlackRuleController {
         return R.ok().setMessage("对指定分区点踩任务已开始");
     }
 
-    @ApiOperation("对指定用户的视频进行点踩")
+    @Operation(summary ="对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
     public R dislikeByUserId(
-            @ApiParam(name = "userIdList", value = "二选一，需要点踩的用户id")
+            @Parameter(name = "userIdList", description = "二选一，需要点踩的用户id")
             @RequestParam List<String> userIdList
     ) {
         TaskPool.putTask(() -> {
@@ -144,7 +144,7 @@ public class BlackRuleController {
 
 
 
-    @ApiOperation("获得缓存的训练结果")
+    @Operation(summary ="获得缓存的训练结果")
     @GetMapping("/cache-train-result")
     public R getCacheTrainResult(){
         Set<String> keywordSet = redisUtil.sMembers(BLACK_KEYWORD_CACHE).stream().map(Object::toString)
@@ -159,7 +159,7 @@ public class BlackRuleController {
     }
 
 
-    @ApiOperation("将缓存的结果存入")
+    @Operation(summary ="将缓存的结果存入")
     @PutMapping("/cache-train-result")
     public R getCacheTrainResult(
             @RequestBody Map<String,Set<String>> map
@@ -182,13 +182,13 @@ public class BlackRuleController {
         ));
     }
 
-    @ApiOperation("获得黑名单分区id")
+    @Operation(summary ="获得黑名单分区id")
     @GetMapping("/tid")
     public R getBlackTidSet(){
         return R.ok().setData(GlobalVariables.blackTidSet);
     }
 
-    @ApiOperation("更新黑名单分区id")
+    @Operation(summary ="更新黑名单分区id")
     @PutMapping("/tid")
     public R updateBlackTidSet(@RequestBody Set<String> blackTidSet ){
         GlobalVariables.setBlackTidSet(blackTidSet);
@@ -197,14 +197,14 @@ public class BlackRuleController {
 
 
 
-    @ApiOperation("获得黑名单关键词列表")
+    @Operation(summary ="获得黑名单关键词列表")
     @GetMapping("/keyword")
     public R getBlackKeywordSet(){
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
 
 
-    @ApiOperation("添加/更新黑名单关键词")
+    @Operation(summary ="添加/更新黑名单关键词")
     @PostMapping("/keyword")
     public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList,
                                      @RequestParam Boolean add
@@ -223,13 +223,13 @@ public class BlackRuleController {
 
 
 
-    @ApiOperation("获得黑名单用户id列表")
+    @Operation(summary ="获得黑名单用户id列表")
     @GetMapping("/user-id")
     public R getBlackUserIdSet(){
         return R.ok().setData(GlobalVariables.blackUserIdSet);
     }
 
-    @ApiOperation("更新黑名单用户id列表")
+     @Operation(summary ="更新黑名单用户id列表")
     @PutMapping("/user-id")
     public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet ){
         GlobalVariables.setBlackUserIdSet(blackUserIdSet);
@@ -238,13 +238,13 @@ public class BlackRuleController {
 
 
 
-    @ApiOperation("获得黑名单分区列表")
+     @Operation(summary ="获得黑名单分区列表")
     @GetMapping("/tag")
     public R getBlackTagSet(){
         return R.ok().setData(GlobalVariables.blackTagSet);
     }
 
-    @ApiOperation("更新黑名单分区列表")
+     @Operation(summary ="更新黑名单分区列表")
     @PutMapping("/tag")
     public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
 
@@ -255,13 +255,13 @@ public class BlackRuleController {
     }
 
 
-    @ApiOperation("获得忽略关键词列表")
+     @Operation(summary ="获得忽略关键词列表")
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet(){
         return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
     }
 
-    @ApiOperation("添加到忽略关键词列表")
+     @Operation(summary ="添加到忽略关键词列表")
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
         redisUtil.sAdd(IGNORE_BLACK_KEYWORD,ignoreKeyWordSet.toArray());

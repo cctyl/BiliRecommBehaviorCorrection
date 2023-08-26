@@ -11,7 +11,9 @@ import io.github.cctyl.service.WhiteRuleService;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +33,7 @@ import static io.github.cctyl.constants.AppConstant.*;
  */
 @RestController
 @RequestMapping("/white-rule")
-@Api(tags = "白名单规则模块")
+@Tag(name = "白名单规则模块")
 @Slf4j
 public class WhiteRuleController {
 
@@ -48,12 +50,12 @@ public class WhiteRuleController {
     private WhiteRuleService whiteRuleService;
 
 
-    @ApiOperation("指定视频是否符合白名单")
+    @Operation(summary = "指定视频是否符合白名单")
     @GetMapping("/check-video")
     public R checkVideo(
-            @ApiParam(name = "aid", value = "avid")
+            @Parameter(name = "aid", description = "avid")
             @RequestParam(required = false) Integer aid,
-            @ApiParam(name = "bvid", value = "bvid")
+            @Parameter(name = "bvid", description = "bvid")
             @RequestParam(required = false) String bvid
     ) {
 
@@ -88,7 +90,7 @@ public class WhiteRuleController {
 
 
     @GetMapping("/list")
-    @ApiOperation(value = "查询所有的白名单规则")
+    @Operation(summary = "查询所有的白名单规则")
     public R getAllWhiteRule() {
         return R.data(redisUtil.sMembers(WHITE_LIST_RULE_KEY));
     }
@@ -100,12 +102,12 @@ public class WhiteRuleController {
      * @param mid
      * @return
      */
-    @ApiOperation(value = "输入指定的视频训练白名单规则")
+    @Operation(summary = "输入指定的视频训练白名单规则")
     @PostMapping("/train")
     public R addTrain(
-            @ApiParam(name = "id", value = "白名单条件id,为空表示创建新的规则") @RequestParam(required = false) Long id,
-            @ApiParam(name = "trainedAvidList", value = "用于训练的视频avid列表，与mid二选一") @RequestParam(required = false) List<Integer> trainedAvidList,
-            @ApiParam(name = "mid", value = "up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一") @RequestParam(required = false) String mid
+            @Parameter(name = "id", description = "白名单条件id,为空表示创建新的规则") @RequestParam(required = false) Long id,
+            @Parameter(name = "trainedAvidList", description = "用于训练的视频avid列表，与mid二选一") @RequestParam(required = false) List<Integer> trainedAvidList,
+            @Parameter(name = "mid", description = "up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一") @RequestParam(required = false) String mid
     ) {
 
         if (CollUtil.isEmpty(trainedAvidList) && StrUtil.isBlank(mid)) {
@@ -168,10 +170,10 @@ public class WhiteRuleController {
     }
 
 
-    @ApiOperation(value = "添加或修改指定的白名单对象")
+    @Operation(summary = "添加或修改指定的白名单对象")
     @PostMapping("/")
     public R addOrUpdateWhiteRule(
-            @ApiParam(name = "toUpdate", value = "将要修改的白名单对象")
+            @Parameter(name = "toUpdate", description = "将要修改的白名单对象")
             @RequestBody WhitelistRule toUpdate
     ) {
         if (
@@ -199,10 +201,10 @@ public class WhiteRuleController {
     }
 
 
-    @ApiOperation(value = "删除指定的白名单规则")
+    @Operation(summary = "删除指定的白名单规则")
     @DeleteMapping("/{id}")
     public R delWhiteRule(
-            @ApiParam(name = "id", value = "需要删除的白名单的id")
+            @Parameter(name = "id", description = "需要删除的白名单的id")
             @PathVariable("id") Long id
     ) {
         List<WhitelistRule> whitelistRuleList = GlobalVariables.whitelistRules;
@@ -221,16 +223,16 @@ public class WhiteRuleController {
     }
 
 
-    @ApiOperation("获得忽略关键词列表")
+    @Operation(summary = "获得忽略关键词列表")
     @GetMapping("/ignore")
-    public R getIgnoreKeyWordSet(){
+    public R getIgnoreKeyWordSet() {
         return R.ok().setData(redisUtil.sMembers(IGNORE_WHITE_KEYWORD));
     }
 
-    @ApiOperation("添加到忽略关键词列表")
+    @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
-    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
-        redisUtil.sAdd(IGNORE_WHITE_KEYWORD,ignoreKeyWordSet.toArray());
+    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
+        redisUtil.sAdd(IGNORE_WHITE_KEYWORD, ignoreKeyWordSet.toArray());
         //更新白名单关键词规则
         GlobalVariables.setWhitelistRules(GlobalVariables.whitelistRules);
 

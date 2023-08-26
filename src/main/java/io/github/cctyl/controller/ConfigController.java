@@ -8,8 +8,8 @@ import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.R;
 import io.github.cctyl.utils.*;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,7 @@ import static io.github.cctyl.constants.AppConstant.STOP_WORDS_KEY;
 
 @RestController
 @RequestMapping("/config")
-@Api(tags = "配置模块")
+@Tag(name = "配置模块")
 public class ConfigController {
 
     @Autowired
@@ -41,7 +41,7 @@ public class ConfigController {
     private HarAnalysisTool harAnalysisTool;
 
     @PutMapping("/cookie")
-    @ApiOperation(value = "更新cookie")
+    @Operation(summary = "更新cookie")
     public R updateCookie(
             @RequestParam String cookieStr
     ) {
@@ -61,29 +61,29 @@ public class ConfigController {
 
 
     @PostMapping("/load-har")
-    @ApiOperation(value = "上传har，更新cookie 和 header")
+    @Operation(summary = "上传har，更新cookie 和 header")
     public R loadHar(MultipartFile multipartFile, @RequestParam Boolean refresh) throws IOException {
 
         //保存到临时文件夹
-        File tempDir = new File(new ApplicationHome().getDir().getParentFile().getPath(),"upload");
+        File tempDir = new File(new ApplicationHome().getDir().getParentFile().getPath(), "upload");
         if (!tempDir.exists()) {
             tempDir.mkdir();
         }
 
         LocalDateTime now = LocalDateTime.now();
-        String fileName = IdGenerator.nextId() + "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth()+".har";
+        String fileName = IdGenerator.nextId() + "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth() + ".har";
         File harFile = new File(tempDir, fileName);
         multipartFile.transferTo(harFile);
-        harAnalysisTool.load(harFile,refresh);
+        harAnalysisTool.load(harFile, refresh);
 
-        return R.ok().setData( Map.of("cookieMap",GlobalVariables.cookieMap,
-                "headerMap",GlobalVariables.commonHeaderMap
+        return R.ok().setData(Map.of("cookieMap", GlobalVariables.cookieMap,
+                "headerMap", GlobalVariables.commonHeaderMap
         ));
     }
 
-    @ApiOperation(value = "更新停顿词列表")
+    @Operation(summary = "更新停顿词列表")
     @PostMapping("/reload-stopword")
-    public R reloadStopWord(){
+    public R reloadStopWord() {
 
         ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
         redisUtil.delete(STOP_WORDS_KEY);
@@ -92,9 +92,8 @@ public class ConfigController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return R.ok().setMessage("停顿词列表长度为:"+redisUtil.sSize(STOP_WORDS_KEY));
+        return R.ok().setMessage("停顿词列表长度为:" + redisUtil.sSize(STOP_WORDS_KEY));
     }
-
 
 
 }
