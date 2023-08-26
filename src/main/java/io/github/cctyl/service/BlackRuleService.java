@@ -28,8 +28,6 @@ import static io.github.cctyl.constants.AppConstant.*;
 @Service
 @Slf4j
 public class BlackRuleService {
-    @Autowired
-    private BiliService biliService;
 
     @Autowired
     private BiliApi biliApi;

@@ -33,9 +33,6 @@ public class WhiteRuleService {
     private BiliApi biliApi;
 
     @Autowired
-    private BiliService biliService;
-
-    @Autowired
     private RedisUtil redisUtil;
 
 
