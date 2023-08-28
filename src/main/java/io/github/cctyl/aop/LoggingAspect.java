@@ -71,7 +71,7 @@ public class LoggingAspect {
     public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
         logger(joinPoint)
                 .error(
-                        "Exception in {}() with cause = \'{}\' and exception = \'{}\'",
+                        "Exception in {}() with cause = '{}' and exception = '{}'",
                         joinPoint.getSignature().getName(),
                         e.getCause() != null ? e.getCause() : "NULL",
                         e.getMessage(),
@@ -89,13 +89,13 @@ public class LoggingAspect {
      */
     @Around("applicationPackagePointcut() && springBeanPointcut() &&!excludePointcut()")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>正在访问方法: {}#{}(),参数 = {}",
+        log.debug("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>正在访问方法: {}#{}(),参数 = {}",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(), Arrays.toString(joinPoint.getArgs()));
         Object result = joinPoint.proceed();
         if (log.isDebugEnabled()) {
 
-            log.debug("<<<<<<<<<<<<<<<<<<<<<<<<<<<{}#{}() 结束", joinPoint.getSignature().getDeclaringType().getSimpleName(),
+            log.debug("\n*************************{}#{}() 结束", joinPoint.getSignature().getDeclaringType().getSimpleName(),
                     joinPoint.getSignature().getName());
         }
         return result;

@@ -53,42 +53,42 @@ public class BlackRuleController {
     ) {
 
         VideoDetail videoDetail;
-        if (aid!=null){
+        if (aid != null) {
 
             videoDetail = biliApi.getVideoDetail(aid);
-        }else if (StrUtil.isNotBlank(bvid)){
+        } else if (StrUtil.isNotBlank(bvid)) {
             videoDetail = biliApi.getVideoDetail(bvid);
-        }else {
+        } else {
             return R.error().setMessage("参数缺失");
         }
-        boolean titleMatch = blackRuleService.isTitleMatch( videoDetail);
+        boolean titleMatch = blackRuleService.isTitleMatch(videoDetail);
         //1.2 简介是否触发黑名单关键词
-        boolean descMatch = blackRuleService.isDescMatch( videoDetail);
+        boolean descMatch = blackRuleService.isDescMatch(videoDetail);
         //1.3 标签是否触发关键词,需要先获取标签
         boolean tagMatch = blackRuleService.isTagMatch(videoDetail);
         //1.4 up主id是否在黑名单内
-        boolean midMatch = blackRuleService.isMidMatch( videoDetail);
+        boolean midMatch = blackRuleService.isMidMatch(videoDetail);
         //1.5 分区是否触发
-        boolean tidMatch = blackRuleService.isTidMatch( videoDetail);
+        boolean tidMatch = blackRuleService.isTidMatch(videoDetail);
         //1.6 封面是否触发
         boolean coverMatch = blackRuleService.isCoverMatch(videoDetail);
 
 
         HashMap<String, Object> map = new HashMap<>();
-        map.put("videoDetail",videoDetail);
-        map.put("titleMatch",titleMatch);
-        map.put("descMatch",descMatch);
-        map.put("tagMatch",tagMatch);
-        map.put("midMatch",midMatch);
-        map.put("tidMatch",tidMatch);
-        map.put("coverMatch",coverMatch);
-        map.put("blackReason",videoDetail.getBlackReason());
+        map.put("videoDetail", videoDetail);
+        map.put("titleMatch", titleMatch);
+        map.put("descMatch", descMatch);
+        map.put("tagMatch", tagMatch);
+        map.put("midMatch", midMatch);
+        map.put("tidMatch", tidMatch);
+        map.put("coverMatch", coverMatch);
+        map.put("blackReason", videoDetail.getBlackReason());
 
         return R.data(map);
 
     }
 
-    @Operation(summary ="对指定分区的 排行榜、热门视频进行点踩")
+    @Operation(summary = "对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
     public R dislikeByTid(
             @Parameter(name = "tidList", description = "需要点踩的分区id")
@@ -116,7 +116,7 @@ public class BlackRuleController {
         return R.ok().setMessage("对指定分区点踩任务已开始");
     }
 
-    @Operation(summary ="对指定用户的视频进行点踩")
+    @Operation(summary = "对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
     public R dislikeByUserId(
             @Parameter(name = "userIdList", description = "二选一，需要点踩的用户id")
@@ -139,30 +139,29 @@ public class BlackRuleController {
                     disklikeNum
             );
         });
-        return R.ok().setMessage("对指定分区点踩任务已开始");
+        return R.ok().setMessage("对指定用户点踩任务已开始");
     }
 
 
-
-    @Operation(summary ="获得缓存的训练结果")
+    @Operation(summary = "获得缓存的训练结果")
     @GetMapping("/cache-train-result")
-    public R getCacheTrainResult(){
+    public R getCacheTrainResult() {
         Set<String> keywordSet = redisUtil.sMembers(BLACK_KEYWORD_CACHE).stream().map(Object::toString)
                 .collect(Collectors.toSet());
         Set<String> tagNameSet = redisUtil.sMembers(BLACK_TAG_NAME_CACHE).stream().map(Object::toString)
                 .collect(Collectors.toSet());
 
         return R.data(Map.of(
-                "keywordSet",keywordSet,
-                "tagNameSet",tagNameSet
+                "keywordSet", keywordSet,
+                "tagNameSet", tagNameSet
         ));
     }
 
 
-    @Operation(summary ="将缓存的结果存入")
+    @Operation(summary = "将缓存的结果存入")
     @PutMapping("/cache-train-result")
     public R getCacheTrainResult(
-            @RequestBody Map<String,Set<String>> map
+            @RequestBody Map<String, Set<String>> map
     ) {
         Set<String> keywordSet = map.getOrDefault("keywordSet", Collections.emptySet());
         Set<String> tagNameSet = map.getOrDefault("tagNameSet", Collections.emptySet());
@@ -182,69 +181,64 @@ public class BlackRuleController {
         ));
     }
 
-    @Operation(summary ="获得黑名单分区id")
+    @Operation(summary = "获得黑名单分区id")
     @GetMapping("/tid")
-    public R getBlackTidSet(){
+    public R getBlackTidSet() {
         return R.ok().setData(GlobalVariables.blackTidSet);
     }
 
-    @Operation(summary ="更新黑名单分区id")
+    @Operation(summary = "更新黑名单分区id")
     @PutMapping("/tid")
-    public R updateBlackTidSet(@RequestBody Set<String> blackTidSet ){
+    public R updateBlackTidSet(@RequestBody Set<String> blackTidSet) {
         GlobalVariables.setBlackTidSet(blackTidSet);
         return R.ok().setData(GlobalVariables.blackTidSet);
     }
 
 
-
-    @Operation(summary ="获得黑名单关键词列表")
+    @Operation(summary = "获得黑名单关键词列表")
     @GetMapping("/keyword")
-    public R getBlackKeywordSet(){
+    public R getBlackKeywordSet() {
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
 
 
-    @Operation(summary ="添加/更新黑名单关键词")
+    @Operation(summary = "添加/更新黑名单关键词")
     @PostMapping("/keyword")
     public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList,
                                      @RequestParam Boolean add
-                                     ){
+    ) {
         Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank)
                 .collect(Collectors.toSet());
-        if (Boolean.TRUE.equals(add)){
+        if (Boolean.TRUE.equals(add)) {
             GlobalVariables.addBlackKeyword(collect);
-        }else {
+        } else {
             GlobalVariables.setBlackKeywordSet(collect);
         }
         return R.ok().setData(GlobalVariables.blackKeywordSet);
     }
 
 
-
-
-
-    @Operation(summary ="获得黑名单用户id列表")
+    @Operation(summary = "获得黑名单用户id列表")
     @GetMapping("/user-id")
-    public R getBlackUserIdSet(){
+    public R getBlackUserIdSet() {
         return R.ok().setData(GlobalVariables.blackUserIdSet);
     }
 
-     @Operation(summary ="更新黑名单用户id列表")
+    @Operation(summary = "更新黑名单用户id列表")
     @PutMapping("/user-id")
-    public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet ){
+    public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
         GlobalVariables.setBlackUserIdSet(blackUserIdSet);
         return R.ok().setData(GlobalVariables.blackUserIdSet);
     }
 
 
-
-     @Operation(summary ="获得黑名单分区列表")
+    @Operation(summary = "获得黑名单分区列表")
     @GetMapping("/tag")
-    public R getBlackTagSet(){
+    public R getBlackTagSet() {
         return R.ok().setData(GlobalVariables.blackTagSet);
     }
 
-     @Operation(summary ="更新黑名单分区列表")
+    @Operation(summary = "更新黑名单分区列表")
     @PutMapping("/tag")
     public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
 
@@ -255,16 +249,16 @@ public class BlackRuleController {
     }
 
 
-     @Operation(summary ="获得忽略关键词列表")
+    @Operation(summary = "获得忽略关键词列表")
     @GetMapping("/ignore")
-    public R getIgnoreKeyWordSet(){
+    public R getIgnoreKeyWordSet() {
         return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
     }
 
-     @Operation(summary ="添加到忽略关键词列表")
+    @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
-    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet ){
-        redisUtil.sAdd(IGNORE_BLACK_KEYWORD,ignoreKeyWordSet.toArray());
+    public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
+        redisUtil.sAdd(IGNORE_BLACK_KEYWORD, ignoreKeyWordSet.toArray());
 
 
         //更新黑名单关键词
