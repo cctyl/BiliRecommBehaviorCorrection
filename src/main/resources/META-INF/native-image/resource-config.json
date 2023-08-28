@@ -2,13 +2,61 @@
   "resources":{
   "includes":[
     {
+      "pattern":"\\QMETA-INF/resources/doc.html\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/css/app.ac23e017.css\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/css/chunk-75464e7e.8fb93ba5.css\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/css/chunk-d7d5f59c.a9ffbfcb.css\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/css/chunk-vendors.f24a310a.css\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/app.51033393.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-069eb437.327773c4.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-0d102d5a.b2bddffc.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-260d712a.390177fe.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-2d0af44e.392afcd6.js\\E"
+    }, 
+    {
       "pattern":"\\QMETA-INF/resources/webjars/js/chunk-2d0bd799.eb48b7f1.js\\E"
     }, 
     {
-      "pattern":"\\QMETA-INF/spring-autoconfigure-metadata.properties\\E"
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-2d0da532.591ad7fc.js\\E"
     }, 
     {
-      "pattern":"\\QMETA-INF/spring.components\\E"
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-589faee0.5bfd1708.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-735c675c.5b409314.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-75464e7e.b130271b.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-adb9e944.2c7f24fe.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-d7d5f59c.e61130f3.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/resources/webjars/js/chunk-vendors.d51cf6f8.js\\E"
+    }, 
+    {
+      "pattern":"\\QMETA-INF/spring-autoconfigure-metadata.properties\\E"
     }, 
     {
       "pattern":"\\QMETA-INF/spring.factories\\E"
@@ -21,9 +69,6 @@
     }, 
     {
       "pattern":"\\Qcom/github/xiaoymin/knife4j/spring/configuration/Knife4jAutoConfiguration.class\\E"
-    }, 
-    {
-      "pattern":"\\Qio/github/cctyl/Application.class\\E"
     }, 
     {
       "pattern":"\\Qio/github/cctyl/\\E"
@@ -107,9 +152,6 @@
       "pattern":"\\Qio/github/cctyl/service/impl/BaiduHumanRecognitionService.class\\E"
     }, 
     {
-      "pattern":"\\Qio/github/cctyl/service/impl/ImageGenderDetectServiceDefaultImpl.class\\E"
-    }, 
-    {
       "pattern":"\\Qio/github/cctyl/task/BiliTask.class\\E"
     }, 
     {
@@ -147,6 +189,21 @@
     }, 
     {
       "pattern":"\\Qorg/aspectj/lang/annotation/Aspect.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/java_websocket/AbstractWebSocket.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/java_websocket/WebSocket.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/java_websocket/WebSocketAdapter.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/java_websocket/WebSocketListener.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/java_websocket/client/WebSocketClient.class\\E"
     }, 
     {
       "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
@@ -758,6 +815,9 @@
       "pattern":"\\Qorg/springframework/data/web/config/SpringDataWebConfiguration.class\\E"
     }, 
     {
+      "pattern":"\\Qorg/springframework/http/mime.types\\E"
+    }, 
+    {
       "pattern":"\\Qorg/springframework/scheduling/annotation/AbstractAsyncConfiguration.class\\E"
     }, 
     {
@@ -798,6 +858,9 @@
     }, 
     {
       "pattern":"\\Qorg/springframework/transaction/annotation/TransactionManagementConfigurationSelector.class\\E"
+    }, 
+    {
+      "pattern":"\\Qorg/springframework/util/ReflectionUtils.class\\E"
     }, 
     {
       "pattern":"\\Qorg/springframework/web/bind/annotation/ControllerAdvice.class\\E"
