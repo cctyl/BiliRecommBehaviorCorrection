@@ -1,8 +1,6 @@
 package io.github.cctyl.controller;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
@@ -20,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
@@ -102,7 +99,7 @@ public class BlackRuleController {
                 try {
                     disklikeNum += biliService.dislikeByTid(tid);
                     log.info("完成对{}分区的点踩任务", tid);
-                    ThreadUtil.sleep5Second();
+                    ThreadUtil.s5();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -128,7 +125,7 @@ public class BlackRuleController {
                 try {
                     disklikeNum += biliService.dislikeByUserId(userId);
                     log.info("完成对{}分区的点踩任务", userId);
-                    ThreadUtil.sleep20Second();
+                    ThreadUtil.s20();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

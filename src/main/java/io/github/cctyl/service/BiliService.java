@@ -1,8 +1,6 @@
 package io.github.cctyl.service;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.dfa.WordTree;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.ApplicationProperties;
@@ -12,13 +10,9 @@ import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.github.cctyl.constants.AppConstant.*;
 
@@ -170,12 +164,12 @@ public class BiliService {
                 //为了减少风控，做一些无意义的操作
                 if (CollUtil.isEmpty(videoDetail.getTags())) {
                     videoDetail.setTags(biliApi.getVideoTag(videoDetail.getAid()));
-                    ThreadUtil.sleep20Second();
+                    ThreadUtil.s20();
                 }
                 log.info("对视频{}-{}进行点踩", videoDetail.getAid(), videoDetail.getTitle());
                 recordHandleVideo(videoDetail, HandleType.DISLIKE);
                 biliApi.dislike(videoDetail.getAid());
-                ThreadUtil.sleep30Second();
+                ThreadUtil.s30();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -320,7 +314,7 @@ public class BiliService {
         //1.获取该分区的排行榜视频
         log.info("开始排行榜数据点踩");
         List<VideoDetail> rankVideoList = biliApi.getRankByTid(tid);
-        ThreadUtil.sleep5Second();
+        ThreadUtil.s5();
         //分步点踩
         dislike(rankVideoList);
 
@@ -363,7 +357,7 @@ public class BiliService {
             pageBean = biliApi.searchUserSubmissionVideo(userId, pageNum, "");
             allVideo.addAll(pageBean.getData());
 
-            ThreadUtil.sleep20Second();
+            ThreadUtil.s20();
             pageNum++;
         } while (pageBean.hasMore());
 
@@ -376,11 +370,11 @@ public class BiliService {
                     //获取视频详情
                     VideoDetail videoDetail = biliApi.getVideoDetail(video.getAid());
                     videoDetailList.add(videoDetail);
-                    ThreadUtil.sleep2Second();
+                    ThreadUtil.s2();
 
                     //点踩
                     dislike(video.getAid());
-                    ThreadUtil.sleep20Second();
+                    ThreadUtil.s20();
                 }
         );
 

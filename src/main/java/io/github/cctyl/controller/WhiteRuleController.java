@@ -146,7 +146,7 @@ public class WhiteRuleController {
                 allVideo.addAll(pageBean.getData());
                 while (pageBean.hasMore()) {
                     try {
-                        ThreadUtil.sleep10Second();
+                        ThreadUtil.s10();
                         pageBean = biliApi.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, "");
                         allVideo.addAll(pageBean
                                 .getData());
