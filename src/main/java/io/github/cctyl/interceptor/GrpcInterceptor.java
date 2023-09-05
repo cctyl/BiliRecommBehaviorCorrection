@@ -136,12 +136,12 @@ public class GrpcInterceptor implements ClientInterceptor {
         return DeviceRpcProto.Device.newBuilder()
                 .setMobiApp("android")
                 .setPlatform("android")
-                .setBuild(7110300)
+                .setBuild(7380300)
                 .setChannel("alifenfa")
                 .setBuvid(fakeBuvid())
                 .setDevice("phone")
                 .setOsver("10")
-                .setModel("MIUI")
+                .setModel("HUAWEI")
                 .setVersionName("7.38.0")
                 .build()
                 .toByteArray();
@@ -154,7 +154,7 @@ public class GrpcInterceptor implements ClientInterceptor {
                 .setAccessKey(biliApi.getAccessKeyByCookie(false))
                 .setMobiApp("android")
                 .setPlatform("android")
-                .setBuild(7110300)
+                .setBuild(7380300)
                 .setChannel("alifenfa")
                 .setBuvid(fakeBuvid())
                 .setDevice("phone")
@@ -249,7 +249,7 @@ public class GrpcInterceptor implements ClientInterceptor {
         return FawkesRpcProto.FawkesReq.newBuilder()
                 .setAppkey("android64")
                 .setEnv("prod")
-                .setSessionId("dedf8669")
+                .setSessionId(randomId())
                 .build()
                 .toByteArray();
     }
