@@ -44,7 +44,7 @@ public class GrpcInterceptor implements ClientInterceptor {
                 log.debug("经过grpc拦截器");
                 headers.put(
                         Metadata.Key.of("authorization", ASCII_STRING_MARSHALLER),
-                        "identify_v1 {" + biliApi.getAccessKeyByCookie(false) + "}"
+                        "identify_v1 "  + biliApi.getAccessKeyByCookie(false)
                 );
 
                 headers.put(
