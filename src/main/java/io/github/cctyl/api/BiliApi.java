@@ -1224,5 +1224,40 @@ public class BiliApi {
     }
 
 
+    /**
+     * 反馈不喜欢原因
+     * @param dislikeReason
+     * @param dislikeMid
+     * @param dislikeTid
+     * @param dislikeTagId
+     */
+    public void dislikeByReason(DislikeReason dislikeReason,
+                                String dislikeMid,
+                                Integer dislikeTid,
+                                Integer dislikeTagId,
+                                Integer aid
+                                ) {
 
+        String url = "https://app.bilibili.com/x/feed/dislike";
+        Map<String,String> map = new HashMap<>();
+        map.put( "access_key", getAccessKeyByCookie(false));
+        map.put( "goto", "av");
+        map.put( "id", String.valueOf(aid));
+        map.put( "mid", dislikeMid);
+        map.put( "reason_id", String.valueOf(dislikeReason.getId()));
+        map.put( "rid", String.valueOf(dislikeTid));
+        map.put( "tag_id", String.valueOf(dislikeTagId));
+        map.put( "ts", String.valueOf(getTs()));
+        map.put( "platform","android");
+        map.put( "mobi_app","android");
+        map.put( "build","7110300");
+        map.put("appkey", ANDROID_PINK_APPKEY);
+        Map<String, Object> paramSignMap = getAppSign(map);
+
+        String body = commonGet(url, paramSignMap).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+
+
+    }
 }

@@ -383,4 +383,26 @@ public class BiliService {
 
         return videoDetailList.size();
     }
+
+    /**
+     * 带理由的不喜欢
+     * @param dislikeReason
+     * @param dislikeMid
+     * @param dislikeTid
+     * @param dislikeTagId
+     */
+    public void dislikeByReason(DislikeReason dislikeReason,
+                                String dislikeMid,
+                                Integer dislikeTid,
+                                Integer dislikeTagId,
+                                Integer aid
+                                ) {
+
+        biliApi.dislikeByReason(dislikeReason,
+                dislikeMid,
+                dislikeTid,
+                dislikeTagId,
+                aid
+                );
+    }
 }

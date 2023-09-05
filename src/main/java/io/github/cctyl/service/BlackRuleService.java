@@ -97,21 +97,20 @@ public class BlackRuleService {
         topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topDescKeyWord))
-        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
+            redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
 
         topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTitleKeyWord))
-        redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
+            redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
 
         topTagName.removeAll(GlobalVariables.blackTagSet);
         topTagName.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTagName))
-        redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
+            redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
 
 
     }
-
 
 
     /**
@@ -138,8 +137,8 @@ public class BlackRuleService {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
             boolean human = imageGenderDetectService.isHuman(picByte);
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
-            if (human){
-                videoDetail.setBlackReason("封面:"+videoDetail.getPic()+" 匹配成功");
+            if (human) {
+                videoDetail.setBlackReason("封面:" + videoDetail.getPic() + " 匹配成功");
                 //封面匹配，认为是不喜欢这个up
                 videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
             }
@@ -157,9 +156,9 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTitleMatch( VideoDetail videoDetail) {
+    public boolean isTitleMatch(VideoDetail videoDetail) {
         String matchWord = GlobalVariables.blackKeywordTree.match(videoDetail.getTitle());
-        boolean match = matchWord!=null;
+        boolean match = matchWord != null;
         log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
@@ -167,8 +166,8 @@ public class BlackRuleService {
                 match,
                 matchWord
         );
-        if (match){
-            videoDetail.setBlackReason("标题:"+videoDetail.getTitle()+" 匹配到了关键词："+matchWord);
+        if (match) {
+            videoDetail.setBlackReason("标题:" + videoDetail.getTitle() + " 匹配到了关键词：" + matchWord);
             //标题匹配到关键字，认为不感兴趣
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
 
@@ -184,7 +183,7 @@ public class BlackRuleService {
      */
     public boolean isDescMatch(VideoDetail videoDetail) {
         String matchWord = GlobalVariables.blackKeywordTree.match(videoDetail.getDesc());
-        boolean match = matchWord!=null;
+        boolean match = matchWord != null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
             match = match || videoDetail.getDescV2()
@@ -200,8 +199,8 @@ public class BlackRuleService {
                 match,
                 matchWord
         );
-        if (match){
-            videoDetail.setBlackReason("描述:"+desc+" 匹配到了关键词："+matchWord);
+        if (match) {
+            videoDetail.setBlackReason("描述:" + desc + " 匹配到了关键词：" + matchWord);
             //描述匹配，则认为是不感兴趣。因为描述的准确度不是很高
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
         }
@@ -214,7 +213,7 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTidMatch( VideoDetail videoDetail) {
+    public boolean isTidMatch(VideoDetail videoDetail) {
         boolean match = GlobalVariables.blackTidSet.contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
@@ -224,9 +223,10 @@ public class BlackRuleService {
                 videoDetail.getTname(),
                 match);
 
-        if (match){
-            videoDetail.setBlackReason("分区id:"+videoDetail.getTid()+"匹配成功");
+        if (match) {
+            videoDetail.setBlackReason("分区id:" + videoDetail.getTid() + "匹配成功");
             videoDetail.setDislikeReason(DislikeReason.tid(videoDetail.getTname()));
+            videoDetail.setDislikeTid(videoDetail.getTid());
         }
         return match;
     }
@@ -237,7 +237,7 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isMidMatch( VideoDetail videoDetail) {
+    public boolean isMidMatch(VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
@@ -251,9 +251,9 @@ public class BlackRuleService {
                 videoDetail.getOwner().getMid(),
                 videoDetail.getOwner().getName(),
                 match);
-        if (match){
-            videoDetail.setBlackReason("up主:"+videoDetail.getOwner().getName()+
-                    " id:"+ videoDetail.getOwner().getMid() +" 匹配成功");
+        if (match) {
+            videoDetail.setBlackReason("up主:" + videoDetail.getOwner().getName() +
+                    " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
 
             videoDetail.setDislikeMid(Integer.parseInt(videoDetail.getOwner().getMid()));
             videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
@@ -268,26 +268,27 @@ public class BlackRuleService {
      * @return
      */
     public boolean isTagMatch(VideoDetail videoDetail) {
-        String matchWord = videoDetail.getTags()
-                .stream().map(Tag::getTagName)
-                .filter(s -> GlobalVariables.blackTagTree.isMatch(s))
+        Tag matchTag = videoDetail.getTags()
+                .stream()
+                .filter(tag -> GlobalVariables.blackTagTree.isMatch(tag.getTagName()))
                 .findAny().orElse(null);
 
-        boolean match = matchWord!=null;
+        boolean match = matchTag != null;
         log.debug("视频:{}-{}的 tag：{}，匹配结果：{},匹配到的关键词：{}",
                 videoDetail.getBvid(),
                 videoDetail.getTitle(),
                 videoDetail.getTags(),
                 match,
-                matchWord
+                matchTag.getTagName()
         );
-        if (match){
-            videoDetail.setBlackReason("Tag:"+matchWord+" 匹配到了关键词："+ GlobalVariables.blackTagTree.match(matchWord));
+        if (match) {
+            videoDetail.setBlackReason("Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
+                    GlobalVariables.blackTagTree.match(matchTag.getTagName()));
             videoDetail.setDislikeReason(DislikeReason.channel());
+            videoDetail.setDislikeTagId(matchTag.getTagId());
         }
         return match;
     }
-
 
     /**
      * 黑名单判断
@@ -297,19 +298,19 @@ public class BlackRuleService {
      */
     public boolean blackMatch(VideoDetail videoDetail) {
         //1.1 标题是否触发黑名单关键词
-        return isTitleMatch( videoDetail)
+        return isTitleMatch(videoDetail)
                 ||
                 //1.2 简介是否触发黑名单关键词
-                isDescMatch( videoDetail)
+                isDescMatch(videoDetail)
                 ||
                 //1.3 标签是否触发关键词,需要先获取标签
                 isTagMatch(videoDetail)
                 ||
                 //1.4 up主id是否在黑名单内
-                isMidMatch( videoDetail)
+                isMidMatch(videoDetail)
                 ||
                 //1.5 分区是否触发
-                isTidMatch( videoDetail)
+                isTidMatch(videoDetail)
                 || //1.6 封面是否触发
                 isCoverMatch(videoDetail);
     }

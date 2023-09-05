@@ -2,6 +2,8 @@ package io.github.cctyl.entity;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  *  {
  *    "id": 4,
@@ -35,7 +37,7 @@ import lombok.Data;
  *  }
  */
 @Data
-public class DislikeReason {
+public class DislikeReason implements Serializable {
     private int id;
     private String name;
     private String toast;

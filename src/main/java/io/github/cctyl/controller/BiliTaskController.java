@@ -148,6 +148,14 @@ public class BiliTaskController {
 
                 VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
                 if (videoDetail != null) {
+                    if (videoDetail.getDislikeReason()!=null){
+                        biliService.dislikeByReason(videoDetail.getDislikeReason(),
+                                String.valueOf(videoDetail.getDislikeMid()),
+                                videoDetail.getDislikeTid(),
+                                videoDetail.getDislikeTagId(),
+                                videoDetail.getAid()
+                                );
+                    }
                     biliService.dislike(videoDetail.getAid());
                     biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
                 } else {

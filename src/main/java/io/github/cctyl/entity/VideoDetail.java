@@ -195,16 +195,16 @@ public class VideoDetail implements Serializable {
     /**
      * 点踩的up id
      */
-    private int dislikeMid;
+    private Integer dislikeMid;
     /**
      * 点踩的对象板块id
      */
-    private int dislikeRid;
+    private Integer dislikeTid;
 
     /**
      * 点踩的tag id
      */
-    private int dislikeTagId;
+    private Integer dislikeTagId;
 
 
     /**
