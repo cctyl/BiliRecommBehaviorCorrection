@@ -279,7 +279,7 @@ public class BlackRuleService {
                 videoDetail.getTitle(),
                 videoDetail.getTags(),
                 match,
-                matchTag.getTagName()
+                match?matchTag.getTagName():""
         );
         if (match) {
             videoDetail.setBlackReason("Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
