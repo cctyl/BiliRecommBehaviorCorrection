@@ -6,6 +6,7 @@ import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.entity.DescV2;
+import io.github.cctyl.entity.DislikeReason;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.utils.RedisUtil;
@@ -139,6 +140,8 @@ public class BlackRuleService {
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
             if (human){
                 videoDetail.setBlackReason("封面:"+videoDetail.getPic()+" 匹配成功");
+                //封面匹配，认为是不喜欢这个up
+                videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
             }
             return human;
         } catch (Exception e) {
@@ -166,6 +169,9 @@ public class BlackRuleService {
         );
         if (match){
             videoDetail.setBlackReason("标题:"+videoDetail.getTitle()+" 匹配到了关键词："+matchWord);
+            //标题匹配到关键字，认为不感兴趣
+            videoDetail.setDislikeReason(DislikeReason.notInteresting());
+
         }
         return match;
     }
@@ -196,6 +202,8 @@ public class BlackRuleService {
         );
         if (match){
             videoDetail.setBlackReason("描述:"+desc+" 匹配到了关键词："+matchWord);
+            //描述匹配，则认为是不感兴趣。因为描述的准确度不是很高
+            videoDetail.setDislikeReason(DislikeReason.notInteresting());
         }
         return match;
     }
@@ -218,6 +226,7 @@ public class BlackRuleService {
 
         if (match){
             videoDetail.setBlackReason("分区id:"+videoDetail.getTid()+"匹配成功");
+            videoDetail.setDislikeReason(DislikeReason.tid(videoDetail.getTname()));
         }
         return match;
     }
@@ -245,6 +254,9 @@ public class BlackRuleService {
         if (match){
             videoDetail.setBlackReason("up主:"+videoDetail.getOwner().getName()+
                     " id:"+ videoDetail.getOwner().getMid() +" 匹配成功");
+
+            videoDetail.setDislikeMid(Integer.parseInt(videoDetail.getOwner().getMid()));
+            videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
         }
         return match;
     }
@@ -271,6 +283,7 @@ public class BlackRuleService {
         );
         if (match){
             videoDetail.setBlackReason("Tag:"+matchWord+" 匹配到了关键词："+ GlobalVariables.blackTagTree.match(matchWord));
+            videoDetail.setDislikeReason(DislikeReason.channel());
         }
         return match;
     }

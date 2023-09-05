@@ -188,6 +188,24 @@ public class VideoDetail implements Serializable {
      * 点踩原因
      */
     private String blackReason;
+    /**
+     * 点踩原因id
+     */
+    private DislikeReason dislikeReason;
+    /**
+     * 点踩的up id
+     */
+    private int dislikeMid;
+    /**
+     * 点踩的对象板块id
+     */
+    private int dislikeRid;
+
+    /**
+     * 点踩的tag id
+     */
+    private int dislikeTagId;
+
 
     /**
      * 点赞原因
