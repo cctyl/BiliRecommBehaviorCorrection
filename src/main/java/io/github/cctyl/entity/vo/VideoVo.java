@@ -1,5 +1,6 @@
 package io.github.cctyl.entity.vo;
 
+import io.github.cctyl.entity.DislikeReason;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,4 +15,6 @@ public class VideoVo {
     private String title;
     private String blackReason;
     private String thumbUpReason;
+    private DislikeReason dislikeReason;
+
 }

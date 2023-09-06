@@ -100,7 +100,8 @@ public class BiliTaskController {
                 .map(VideoDetail.class::cast)
                 .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
                         v.getBlackReason(),
-                        v.getThumbUpReason()
+                        v.getThumbUpReason(),
+                        v.getDislikeReason()
                 ))
                 .forEach(videoVo -> {
                     if (videoVo.getBlackReason() != null) {
