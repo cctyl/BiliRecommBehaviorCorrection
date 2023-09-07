@@ -113,7 +113,8 @@ public class BiliTaskController {
 
         return R.data(Map.of(
                 "dislikeList", dislikeList,
-                "thumbUpList", thumbUpList
+                "thumbUpList", thumbUpList,
+                "other",Collections.emptyList()
         ));
     }
 
@@ -139,6 +140,7 @@ public class BiliTaskController {
 
             List<VideoVo> dislikeVoList = map.get("dislikeList");
             List<VideoVo> thumbUpVoList = map.get("thumbUpList");
+            List<VideoVo> other = map.get("other");
 
             //执行点踩
             for (VideoVo vo : dislikeVoList) {
@@ -179,6 +181,18 @@ public class BiliTaskController {
                     log.debug("{} - {} 未找到匹配的视频", vo.getBvid(), vo.getTitle());
                 }
             }
+
+            //不处理的
+            for (VideoVo vo : other) {
+                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
+                    log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
+                    continue;
+                }
+
+                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
+                biliService.recordHandleVideo(videoDetail, HandleType.OTHER);
+            }
+
 
             //清空待处理数据
             redisUtil.delete(READY_HANDLE_VIDEO);
