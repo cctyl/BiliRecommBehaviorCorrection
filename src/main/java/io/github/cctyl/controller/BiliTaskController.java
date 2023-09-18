@@ -6,6 +6,7 @@ import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.enumeration.HandleType;
 import io.github.cctyl.entity.vo.VideoVo;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.task.BiliTask;
 import io.github.cctyl.utils.RedisUtil;
 
@@ -38,6 +39,9 @@ public class BiliTaskController {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private BlackRuleService blackRuleService;
 
     @PostMapping("/search-task")
     @Operation(summary = "触发关键词任务")
@@ -142,6 +146,7 @@ public class BiliTaskController {
             List<VideoVo> thumbUpVoList = map.get("thumbUpList");
             List<VideoVo> other = map.get("other");
 
+            List<VideoDetail> blackTrainVideoList = new ArrayList<>();
             //执行点踩
             for (VideoVo vo : dislikeVoList) {
                 if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
@@ -151,6 +156,7 @@ public class BiliTaskController {
 
                 VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
                 if (videoDetail != null) {
+                    blackTrainVideoList.add(videoDetail);
                     if (videoDetail.getDislikeReason()!=null){
                         biliService.dislikeByReason(videoDetail.getDislikeReason(),
                                 String.valueOf(videoDetail.getDislikeMid()),
@@ -165,6 +171,8 @@ public class BiliTaskController {
                     log.debug("{} - {} 未找到匹配的视频", vo.getBvid(), vo.getTitle());
                 }
             }
+            //进行黑名单训练
+            blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
 
             //执行点赞
             for (VideoVo vo : thumbUpVoList) {
