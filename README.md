@@ -79,8 +79,8 @@ bilibili就会减少搞笑分区的投稿。
 # 后续开发计划
 功能    |  功能描述 |  开发进度 
 -------- | --------- | -----
-增加web调试接口 | 提供http的方式，用于本地调试时添加关键词黑白名单 | 进行中
-整合protobuf | 添加基于grpc的api 调用 | 尚未开始
+增加web调试接口 | 提供http的方式，用于本地调试时添加关键词黑白名单 | 完成
+整合protobuf | 添加基于grpc的api 调用 | 完成
 关键词同义词分析 | 对标题进行分词，生成同义词，再与关键词匹配，从而减少匹配误差 | 尚未开始
  与[vchat](https://github.com/cctyl/v_chat)联动 | 基于vchat进行消息推送、日志记录、指令发送 | 尚未开始，等待vchat重构
 编写[Greasyfork](https://greasyfork.org/zh-CN/users/416601-cctyl  ) 配套脚本| 基于脚本，实现在web端指定视频：关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 尚未开始
