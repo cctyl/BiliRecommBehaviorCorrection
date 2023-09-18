@@ -45,7 +45,11 @@ public class SegmenterUtil {
      * @return
      */
     public static List<String> getTopFrequentWord(Map<String, Integer> keywordFrequencyMap,int limit) {
-        return keywordFrequencyMap.entrySet().stream()
+        return keywordFrequencyMap
+                .entrySet()
+                .stream()
+                //出现三次以上的关键词
+                .filter(entry-> entry.getValue()>3)
                 .sorted((o1, o2) -> -o1.getValue().compareTo(o2.getValue()))
                 .map(Map.Entry::getKey)
                 .filter(StrUtil::isNotBlank)
