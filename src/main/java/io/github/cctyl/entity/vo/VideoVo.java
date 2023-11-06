@@ -1,6 +1,8 @@
 package io.github.cctyl.entity.vo;
 
 import io.github.cctyl.entity.DislikeReason;
+import io.github.cctyl.entity.Owner;
+import io.github.cctyl.entity.enumeration.HandleType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,5 +18,10 @@ public class VideoVo {
     private String blackReason;
     private String thumbUpReason;
     private DislikeReason dislikeReason;
+    private String upName;
+    private String desc;
+    public HandleType handleType;
+    private String coverUrl;
+
 
 }

@@ -102,10 +102,17 @@ public class BiliTaskController {
                 .sMembers(READY_HANDLE_VIDEO)
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(v -> new VideoVo(v.getAid(), v.getBvid(), v.getTitle(),
+                .map(v -> new VideoVo(
+                        v.getAid(),
+                        v.getBvid(),
+                        v.getTitle(),
                         v.getBlackReason(),
                         v.getThumbUpReason(),
-                        v.getDislikeReason()
+                        v.getDislikeReason(),
+                        v.getOwner().getName(),
+                        v.getDesc(),
+                        v.getHandleType(),
+                        v.getPic()
                 ))
                 .forEach(videoVo -> {
                     if (videoVo.getBlackReason() != null) {
