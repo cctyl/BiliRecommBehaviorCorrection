@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -117,8 +118,10 @@ public class BiliTaskController {
                 .forEach(videoVo -> {
                     if (videoVo.getBlackReason() != null) {
                         dislikeList.add(videoVo);
+                        videoVo.setHandleType(HandleType.DISLIKE);
                     } else {
                         thumbUpList.add(videoVo);
+                        videoVo.setHandleType(HandleType.THUMB_UP);
                     }
                 });
 
@@ -232,6 +235,18 @@ public class BiliTaskController {
             redisUtil.sAdd(READY_HANDLE_VIDEO_ID,videoDetailList.stream().map(VideoDetail::getAid).toArray());
         });
         return R.ok();
+    }
+
+
+    @Operation(summary = "处理单条处理的数据")
+    @PutMapping("/process")
+    public R processSingleVideo(
+            @RequestParam Integer aid,
+            @RequestParam HandleType handleType
+    ) {
+
+        throw new RuntimeException("暂未实现");
+
     }
 
 }
