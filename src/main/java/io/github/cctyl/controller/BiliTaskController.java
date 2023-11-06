@@ -143,6 +143,9 @@ public class BiliTaskController {
         }
 
         TaskPool.putTask(() -> {
+
+            Set<Integer> removeIdSet = new HashSet<>();
+
             Map<Integer, VideoDetail> handleVideoMap = redisUtil
                     .sMembers(READY_HANDLE_VIDEO)
                     .stream()
@@ -156,8 +159,10 @@ public class BiliTaskController {
             List<VideoDetail> blackTrainVideoList = new ArrayList<>();
             //执行点踩
             for (VideoVo vo : dislikeVoList) {
+                removeIdSet.add(vo.getAid());
                 if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
                     log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
+
                     continue;
                 }
 
@@ -183,6 +188,7 @@ public class BiliTaskController {
 
             //执行点赞
             for (VideoVo vo : thumbUpVoList) {
+                removeIdSet.add(vo.getAid());
                 if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
                     log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
                     continue;
@@ -199,6 +205,7 @@ public class BiliTaskController {
 
             //不处理的
             for (VideoVo vo : other) {
+                removeIdSet.add(vo.getAid());
                 if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
                     log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
                     continue;
@@ -209,10 +216,20 @@ public class BiliTaskController {
             }
 
 
+
+            List<VideoDetail> videoDetailList = redisUtil
+                    .sMembers(READY_HANDLE_VIDEO)
+                    .stream()
+                    .map(VideoDetail.class::cast)
+                    .filter(videoDetail -> !removeIdSet.contains(videoDetail.getAid()) )
+                    .collect(Collectors.toList());
+
+
             //清空待处理数据
             redisUtil.delete(READY_HANDLE_VIDEO);
+            redisUtil.sAdd(READY_HANDLE_VIDEO,videoDetailList.toArray());
             redisUtil.delete(READY_HANDLE_VIDEO_ID);
-
+            redisUtil.sAdd(READY_HANDLE_VIDEO_ID,videoDetailList.stream().map(VideoDetail::getAid).toArray());
         });
         return R.ok();
     }

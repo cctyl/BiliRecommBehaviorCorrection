@@ -266,11 +266,12 @@ public class VideoDetail implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VideoDetail that = (VideoDetail) o;
-        return Objects.equals(aid, that.aid);
+        return Objects.equals(aid, that.aid) &&
+                Objects.equals(bvid, that.bvid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(aid);
+        return Objects.hash(aid, bvid);
     }
 }
