@@ -1,8 +1,8 @@
 package io.github.cctyl.config;
 
 import cn.hutool.dfa.WordTree;
-import io.github.cctyl.entity.ApiHeader;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.pojo.ApiHeader;
+import io.github.cctyl.pojo.WhitelistRule;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.service.WhiteRuleService;
@@ -12,7 +12,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.github.cctyl.constants.AppConstant.*;
 

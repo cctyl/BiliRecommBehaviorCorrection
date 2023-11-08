@@ -14,6 +14,7 @@
         <local-libs>${project.basedir}/src/main/resources/libs</local-libs>
         <graalvm.version>22.3.1</graalvm.version>
         <springboot.version>2.7.15</springboot.version>
+        <mybatis-plus.version>3.5.2</mybatis-plus.version>
     </properties>
 
     <dependencyManagement>
@@ -37,21 +38,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <!--graalvm 插件不在中央库，所以还需要指定 repository-->
-    <!--<repositories>
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-        </pluginRepository>
-    </pluginRepositories>-->
+
     <dependencies>
         <dependency>
             <groupId>org.graalvm.sdk</groupId>
@@ -197,6 +184,21 @@
             <artifactId>grpc-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+
+        <!--数据库相关-->
+        <!--sqlite-->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+        </dependency>
+        <!--mybatis-plus 持久层-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
+        </dependency>
+
 
     </dependencies>
     <build>

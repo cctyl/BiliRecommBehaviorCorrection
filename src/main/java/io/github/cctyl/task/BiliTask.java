@@ -1,34 +1,24 @@
 package io.github.cctyl.task;
 
-import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.RecommendCard;
-import io.github.cctyl.entity.SearchResult;
+import io.github.cctyl.pojo.RecommendCard;
+import io.github.cctyl.pojo.SearchResult;
 
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import static io.github.cctyl.constants.AppConstant.*;
 
 /**
  * bilibili相关的任务

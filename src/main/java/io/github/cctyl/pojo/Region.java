@@ -1,4 +1,4 @@
-package io.github.cctyl.entity;
+package io.github.cctyl.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

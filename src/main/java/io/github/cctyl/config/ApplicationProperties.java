@@ -1,6 +1,6 @@
 package io.github.cctyl.config;
 
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.pojo.WhitelistRule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

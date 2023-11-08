@@ -1,4 +1,4 @@
-package io.github.cctyl.entity;
+package io.github.cctyl.pojo;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;

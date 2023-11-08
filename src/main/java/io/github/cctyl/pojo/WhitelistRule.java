@@ -1,7 +1,6 @@
-package io.github.cctyl.entity;
+package io.github.cctyl.pojo;
 
 import io.github.cctyl.utils.IdGenerator;
-import io.github.cctyl.utils.SnowFlake;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;

@@ -2,11 +2,10 @@ package io.github.cctyl.controller;
 
 
 import cn.hutool.core.io.resource.ClassPathResource;
-import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.R;
+import io.github.cctyl.pojo.R;
 import io.github.cctyl.utils.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpCookie;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;

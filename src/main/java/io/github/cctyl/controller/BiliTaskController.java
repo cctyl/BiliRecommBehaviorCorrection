@@ -1,10 +1,10 @@
 package io.github.cctyl.controller;
 
 import io.github.cctyl.config.TaskPool;
-import io.github.cctyl.entity.R;
+import io.github.cctyl.pojo.R;
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.enumeration.HandleType;
-import io.github.cctyl.entity.vo.VideoVo;
+import io.github.cctyl.pojo.enumeration.HandleType;
+import io.github.cctyl.pojo.vo.VideoVo;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.task.BiliTask;
@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.*;
 import java.util.stream.Collectors;

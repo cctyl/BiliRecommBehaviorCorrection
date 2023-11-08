@@ -1,5 +1,6 @@
-package io.github.cctyl.entity;
+package io.github.cctyl.pojo;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

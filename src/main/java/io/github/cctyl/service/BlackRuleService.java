@@ -2,12 +2,11 @@ package io.github.cctyl.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.DescV2;
-import io.github.cctyl.entity.DislikeReason;
-import io.github.cctyl.entity.Tag;
+import io.github.cctyl.pojo.DescV2;
+import io.github.cctyl.pojo.DislikeReason;
+import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;

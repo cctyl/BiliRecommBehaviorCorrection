@@ -5,9 +5,7 @@ import de.sstoehr.harreader.HarReaderException;
 import de.sstoehr.harreader.HarReaderMode;
 import de.sstoehr.harreader.model.*;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.ApiHeader;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import io.github.cctyl.pojo.ApiHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,10 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.io.Serializable;
 import java.util.*;
-
-import static io.github.cctyl.constants.AppConstant.*;
 
 /**
  * har 分析工具

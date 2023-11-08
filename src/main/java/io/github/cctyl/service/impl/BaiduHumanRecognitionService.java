@@ -3,14 +3,13 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.api.BaiduApi;
-import io.github.cctyl.entity.BaiduImageClassify;
+import io.github.cctyl.pojo.BaiduImageClassify;
 import io.github.cctyl.service.ImageGenderDetectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 
-import java.net.http.HttpRequest;
 import java.util.List;
 
 /**

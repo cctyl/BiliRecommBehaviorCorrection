@@ -1,4 +1,4 @@
-package io.github.cctyl.entity;
+package io.github.cctyl.pojo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

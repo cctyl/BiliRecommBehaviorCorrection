@@ -1,8 +1,7 @@
-package io.github.cctyl.entity.vo;
+package io.github.cctyl.pojo.vo;
 
-import io.github.cctyl.entity.DislikeReason;
-import io.github.cctyl.entity.Owner;
-import io.github.cctyl.entity.enumeration.HandleType;
+import io.github.cctyl.pojo.DislikeReason;
+import io.github.cctyl.pojo.enumeration.HandleType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

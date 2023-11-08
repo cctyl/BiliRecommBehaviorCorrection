@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
-import io.github.cctyl.entity.R;
+import io.github.cctyl.pojo.R;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;

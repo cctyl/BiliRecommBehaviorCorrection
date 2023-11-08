@@ -1,7 +1,11 @@
 package io.github.cctyl.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import io.github.cctyl.entity.enumeration.HandleType;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.cctyl.pojo.*;
+import io.github.cctyl.pojo.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,18 +13,21 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Data
-public class VideoDetail implements Serializable {
+public class VideoDetail extends AuditingEntity implements Serializable {
 
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    private String id;
 
     /**
      * aid
      */
     @JSONField(name = "aid")
     private Integer aid;
+
+
     @JSONField(name = "videos")
     private Integer videos;
     /**
@@ -55,6 +62,7 @@ public class VideoDetail implements Serializable {
      */
     @JSONField(name = "pubdate")
     private Integer pubdate;
+
     @JSONField(name = "ctime")
     private Integer ctime;
 
@@ -107,56 +115,93 @@ public class VideoDetail implements Serializable {
      * 视频所有者信息
      */
     @JSONField(name = "owner")
+    @TableField(exist = false)
     private Owner owner;
+
+    private String ownerId;
+
     /**
      * 视频的数据
      */
     @JSONField(name = "stat")
+    @TableField(exist = false)
     private Stat stat;
+
+    private String statId;
 
     /**
      * 标签列表
      */
+    @TableField(exist = false)
     List<Tag> tags;
 
     @JSONField(name = "rights")
+    @TableField(exist = false)
     private Rights rights;
 
+    private String rightsId;
 
     @JSONField(name = "dimension")
+    @TableField(exist = false)
     private Dimension dimension;
+
+    private String dimensionId;
+
     @JSONField(name = "premiere")
+    @TableField(exist = false)
     private Object premiere;
+
+
     @JSONField(name = "teenage_mode")
     private Integer teenageMode;
+
     @JSONField(name = "is_chargeable_season")
     private Boolean isChargeableSeason;
+
     @JSONField(name = "is_story")
     private Boolean isStory;
+
     @JSONField(name = "is_upower_exclusive")
     private Boolean isUpowerExclusive;
+
     @JSONField(name = "is_upower_play")
     private Boolean isUpowerPlay;
+
     @JSONField(name = "no_cache")
     private Boolean noCache;
+
     @JSONField(name = "pages")
+    @TableField(exist = false)
     private List<Pages> pages;
+
     @JSONField(name = "subtitle")
+    @TableField(exist = false)
     private Subtitle subtitle;
+
+
     @JSONField(name = "is_season_display")
     private Boolean isSeasonDisplay;
+
     @JSONField(name = "user_garb")
+    @TableField(exist = false)
     private UserGarb userGarb;
+
+
     @JSONField(name = "honor_reply")
+    @TableField(exist = false)
     private HonorReply honorReply;
+
+
     @JSONField(name = "like_icon")
     private String likeIcon;
+
     @JSONField(name = "need_jump_bv")
     private Boolean needJumpBv;
 
     private HandleType handleType;
 
     @JSONField(name = "desc_v2")
+    @TableField(exist = false)
     private List<DescV2> descV2 = new ArrayList<>();
 
 
@@ -166,6 +211,7 @@ public class VideoDetail implements Serializable {
 
     @JSONField(name = "disable_show_up_info")
     private Boolean disableShowUpInfo;
+
     @JSONField(name = "up_from_v2")
     private Integer upFromV2;
 
@@ -175,56 +221,53 @@ public class VideoDetail implements Serializable {
     /**
      * 相关推荐视频列表
      */
+    @TableField(exist = false)
     private List<VideoDetail> relatedVideoList = new ArrayList<>();
 
     @JSONField(name = "score")
     private Integer score;
 
     @JSONField(name = "others")
+    @TableField(exist = false)
     private List<VideoDetail> others;
 
 
     /**
      * 点踩原因
      */
+    @TableField(exist = false)
     private String blackReason;
     /**
      * 点踩原因id
      */
+    @TableField(exist = false)
     private DislikeReason dislikeReason;
     /**
      * 点踩的up id
      */
+    @TableField(exist = false)
     private Integer dislikeMid;
     /**
      * 点踩的对象板块id
      */
+    @TableField(exist = false)
     private Integer dislikeTid;
 
     /**
      * 点踩的tag id
      */
+    @TableField(exist = false)
     private Integer dislikeTagId;
 
 
     /**
      * 点赞原因
      */
+    @TableField(exist = false)
     private String thumbUpReason;
 
 
 
-    @NoArgsConstructor
-    @Data
-    public static class UserGarb  implements Serializable{
-        private String id;
-    }
-
-    @NoArgsConstructor
-    @Data
-    public static class HonorReply  implements Serializable{
-        private String id;
-    }
 
 
 
