@@ -34,8 +34,7 @@ public class InitFromRedis implements ApplicationRunner {
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void runback(ApplicationArguments args) throws Exception {
         log.debug("初始化...从redis中加载数据...");
         //0.加载cookie
         Map<Object, Object> cookiesFromRedis = redisUtil.hGetAll(COOKIES_KEY);
@@ -110,4 +109,9 @@ public class InitFromRedis implements ApplicationRunner {
         }
     }
 
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
+        log.error("暂未从redis中加载数据");
+    }
 }

@@ -6,9 +6,10 @@ CREATE TABLE dict
     value VARCHAR(255) NULL,
 	access_type varchar(50) null,
 	dict_type varchar(50) null,
-
-	created_date DATETIME  null,
-	last_modified_date DATETIME  null,
+	outer_id varchar(60) NULL,
+	
+	created_date DATE  null,
+	last_modified_date DATE  null,
 	is_deleted tinyint(1)  default 0,
 	version int  default 1,
     CONSTRAINT pk_dict PRIMARY KEY (id)
@@ -23,8 +24,8 @@ CREATE TABLE owner
     mid      VARCHAR(100) unique not null,
     name     VARCHAR(100) not null ,
     face     VARCHAR(350) NULL,
-	created_date DATETIME  null,
-	last_modified_date DATETIME  null,
+	created_date DATE  null,
+	last_modified_date DATE  null,
 	is_deleted tinyint(1)  default 0,
 	version int  default 1
 
@@ -50,8 +51,8 @@ CREATE TABLE stat
     vt       INT          NULL,
     vv       INT          NULL,
     video_id  char(30)  NULL,
-     created_date DATETIME  null,
-	last_modified_date DATETIME  null,
+    created_date DATE  null,
+	last_modified_date DATE  null,
 	is_deleted tinyint(1)  default 0,
 	version int  default 1,
     CONSTRAINT pk_stat PRIMARY KEY (id)
@@ -79,7 +80,7 @@ CREATE TABLE video_detail
     dynamic              VARCHAR(255) NULL,
     cid                  INT          NULL,
     season_id            INT          NULL,
-    short_linkv2         VARCHAR(255) NULL,
+    short_link_v2         VARCHAR(255) NULL,
     first_frame          VARCHAR(255) NULL,
     pub_location         VARCHAR(255) NULL,
     bvid                 VARCHAR(255) not null unique,
@@ -102,12 +103,12 @@ CREATE TABLE video_detail
     need_jump_bv         TINYINT(1)       NULL,
     enable_vt            INT          NULL,
     disable_show_up_info TINYINT(1)       NULL,
-    up_fromv2            INT          NULL,
+    up_from_v2            INT          NULL,
     rcmd_reason          VARCHAR(255) NULL,
     score                INT          NULL,
     handle_type        varchar(50) null,
-	created_date DATETIME  null,
-	last_modified_date DATETIME  null,
+	created_date DATE  null,
+	last_modified_date DATE  null,
 	is_deleted tinyint(1)  default 0,
 	version int  default 1,
     CONSTRAINT pk_video_detail PRIMARY KEY (id)
@@ -120,8 +121,8 @@ CREATE TABLE white_list_rule
 (
     id char(30) NOT NULL,
     info varchar(100) null,
-    created_date DATETIME  null,
-	last_modified_date DATETIME  null,
+    created_date DATE  null,
+	last_modified_date DATE  null,
 	is_deleted tinyint(1)  default 0,
 	version int  default 1,
     CONSTRAINT pk_white_list_rule PRIMARY KEY (id)

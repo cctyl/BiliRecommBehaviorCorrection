@@ -1,13 +1,22 @@
 package io.github.cctyl.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.cctyl.pojo.AuditingEntity;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 @Data
+@Accessors(chain = true)
+@AllArgsConstructor
+@NoArgsConstructor
+//@TableName(autoResultMap = true)
 public class Dict extends AuditingEntity {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
@@ -28,5 +37,13 @@ public class Dict extends AuditingEntity {
      * 字典值
      */
     private String value;
+
+    /**
+     * 外部关联id，例如 白名单对象id
+     */
+    private String outerId;
+
+
+
 
 }

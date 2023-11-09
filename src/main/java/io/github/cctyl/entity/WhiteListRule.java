@@ -57,6 +57,7 @@ public class WhiteListRule extends AuditingEntity implements Serializable {
     private Set<Dict>  coverKeyword =  new HashSet<>();
 
 
+    private String info;
 
 
     @Override

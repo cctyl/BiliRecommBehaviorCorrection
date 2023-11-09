@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@MapperScan("io.github.cctyl.mapper")
 public class MybatisPlusConfiguration {
     /**
      * mybatisPlus 插件集中配置

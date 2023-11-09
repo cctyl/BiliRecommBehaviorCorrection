@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.IEnum;
 /**
  * 视频的处理结果
  */
-public enum  HandleType implements StringEnum {
+public enum  HandleType  {
     /**
      * 点赞
      */
@@ -19,6 +19,6 @@ public enum  HandleType implements StringEnum {
     /**
      * 未点赞也未点踩，暂时不匹配白名单也不匹配黑名单
      */
-    OTHER;
+    OTHER
 
 }

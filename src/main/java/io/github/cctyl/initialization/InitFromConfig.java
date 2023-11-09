@@ -33,8 +33,7 @@ public class InitFromConfig implements ApplicationRunner {
 
 
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
+   /* public void runback(ApplicationArguments args) throws Exception {
         log.info("===========开始执行初始化任务========");
 
         ApplicationProperties.DefaultData defaultData = applicationProperties.getDefaultData();
@@ -84,5 +83,10 @@ public class InitFromConfig implements ApplicationRunner {
             log.debug("从配置文件中加载 WHITE_LIST_RULE_KEY...");
             redisUtil.sAdd(WHITE_LIST_RULE_KEY,defaultData.getWhitleRuleList().toArray());
         }
+    }*/
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+
     }
 }

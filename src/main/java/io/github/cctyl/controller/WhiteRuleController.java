@@ -185,15 +185,14 @@ public class WhiteRuleController {
                         &&
                         CollUtil.isEmpty(toUpdate.getTitleKeyWordList())
 
-                        &&
-                        StrUtil.isEmpty(toUpdate.getCoverKeyword())
+                        && CollUtil.isEmpty(toUpdate.getCoverKeyword())
         ) {
             return R.error().setMessage("无效数据");
         }
         List<WhiteListRule> whitelistRuleList = GlobalVariables.whitelistRules;
         if (toUpdate.getId() == null) {
             //此时创建一个新的id
-            toUpdate.setId(IdGenerator.nextId());
+            toUpdate.setId(String.valueOf(IdGenerator.nextId()));
         } else {
             whitelistRuleList.remove(toUpdate);
         }

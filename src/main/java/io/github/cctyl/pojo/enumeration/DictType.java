@@ -1,6 +1,8 @@
 package io.github.cctyl.pojo.enumeration;
 
-public enum DictType implements StringEnum {
+import com.baomidou.mybatisplus.annotation.IEnum;
+
+public enum DictType {
 
 
     /**
@@ -32,5 +34,7 @@ public enum DictType implements StringEnum {
      * 分区id
      */
     TID,
+    ;
+
 
 }

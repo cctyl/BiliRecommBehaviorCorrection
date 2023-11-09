@@ -192,6 +192,7 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
         </dependency>
+
         <!--mybatis-plus 持久层-->
         <dependency>
             <groupId>com.baomidou</groupId>

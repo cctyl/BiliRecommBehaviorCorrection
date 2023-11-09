@@ -3,10 +3,13 @@ package io.github.cctyl.service;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.Dict;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.pojo.enumeration.AccessType;
+import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;
@@ -159,12 +162,12 @@ public class WhiteRuleService {
 
                                 //标题
                                 item.getTitleKeyWordList().stream().filter(keyword -> {
-                                    return videoDetail.getTitle().contains(keyword);
+                                    return videoDetail.getTitle().contains(keyword.getValue());
                                 })
                                         .findFirst()
                                         .ifPresent(s -> {
                                             titleMatch.set(true);
-                                            matchWordArr[0] = s;
+                                            matchWordArr[0] = s.getValue();
                                             matchWordArr[1] = videoDetail.getTitle();
                                         });
 
@@ -177,11 +180,11 @@ public class WhiteRuleService {
 
                                 //desc
                                 item.getDescKeyWordList().stream()
-                                        .filter(s -> videoDetail.getDesc().contains(s))
+                                        .filter(s -> videoDetail.getDesc().contains(s.getValue()))
                                         .findFirst()
                                         .ifPresent(s -> {
                                             descMatch.set(true);
-                                            matchWordArr[2] = s;
+                                            matchWordArr[2] = s.getValue();
                                             matchWordArr[3] = videoDetail.getDesc();
                                         });
 
@@ -192,14 +195,14 @@ public class WhiteRuleService {
                                             .map(DescV2::getRawText)
                                             .collect(Collectors.toList());
 
-                                    for (String keyword : item.getDescKeyWordList()) {
+                                    for (Dict keyword : item.getDescKeyWordList()) {
                                         String descV2Found = descV2TextList.stream()
-                                                .filter(descV2Text -> descV2Text.contains(keyword))
+                                                .filter(descV2Text -> descV2Text.contains(keyword.getValue()))
                                                 .findFirst().orElse(null);
 
                                         if (descV2Found != null) {
                                             descMatch.set(true);
-                                            matchWordArr[4] = keyword;
+                                            matchWordArr[4] = keyword.getValue();
                                             matchWordArr[5] = descV2Found;
                                             break;
                                         }
@@ -223,15 +226,15 @@ public class WhiteRuleService {
                                             .map(Tag::getTagName)
                                             .collect(Collectors.toList());
 
-                                    for (String keyword : item.getTagNameList()) {
+                                    for (Dict keyword : item.getTagNameList()) {
 
                                         String tagNameFound = tagNameList.stream()
-                                                .filter(keyword::contains)
+                                                .filter(s -> keyword.getValue().contains(s))
                                                 .findFirst().orElse(null);
 
                                         if (tagNameFound != null) {
                                             tagMatch.set(true);
-                                            matchWordArr[6] = keyword;
+                                            matchWordArr[6] = keyword.getValue();
                                             matchWordArr[7] = tagNameFound;
                                             break;
                                         }
@@ -314,7 +317,7 @@ public class WhiteRuleService {
             WhiteListRule whitelistRule,
             List<Integer> whiteAvidList) {
         if (whitelistRule == null) {
-            whitelistRule = new WhiteListRule().setId(IdGenerator.nextId());
+            whitelistRule = new WhiteListRule().setId(String.valueOf(IdGenerator.nextId()));
         }
 
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
@@ -367,11 +370,27 @@ public class WhiteRuleService {
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
 
-        whitelistRule.getTagNameList().addAll(topTagName);
-        whitelistRule.getTitleKeyWordList().addAll(topTitleKeyWord);
-        whitelistRule.getDescKeyWordList().addAll(topDescKeyWord);
+        WhiteListRule finalWhitelistRule = whitelistRule;
+        whitelistRule.getTagNameList().addAll(
+                keyword2Dict(topTagName,DictType.TAG,finalWhitelistRule.getId())
+        );
+        whitelistRule.getTitleKeyWordList().addAll(
+                keyword2Dict(topTitleKeyWord,DictType.TITLE,finalWhitelistRule.getId())
+                );
+        whitelistRule.getDescKeyWordList().addAll(
+                keyword2Dict(topDescKeyWord,DictType.DESC,finalWhitelistRule.getId())
+        );
 
         return whitelistRule;
+    }
+
+    public List<Dict> keyword2Dict(Collection<String> valueCollection,DictType dictType,String outerId){
+       return   valueCollection.stream().map(s -> new Dict()
+               .setAccessType(AccessType.WHITE)
+               .setDictType(dictType)
+               .setOuterId(outerId)
+               .setValue(s) )
+               .collect(Collectors.toList());
     }
 
 }

@@ -3,59 +3,37 @@ package io.github.cctyl.pojo;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
-public class AuditingEntity implements Serializable {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class AuditingEntity implements Serializable {
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "created_date",fill = FieldFill.INSERT
+    )
     @JsonFormat(shape=JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime createdDate;
+    private Date createdDate;
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "is_deleted",fill = FieldFill.INSERT)
+    @TableLogic
     private Integer isDeleted;
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "version",fill = FieldFill.INSERT)
     @Version
     private Integer version;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "last_modified_date",fill = FieldFill.INSERT_UPDATE
+    )
     @JsonFormat(shape=JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime lastModifiedDate;
-
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Integer getIsDeleted() {
-        return isDeleted;
-    }
-
-    public void setIsDeleted(Integer isDeleted) {
-        this.isDeleted = isDeleted;
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
-
-    public LocalDateTime getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
+    private Date lastModifiedDate;
 }
