@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 /**
  * 黑名单相关的方法

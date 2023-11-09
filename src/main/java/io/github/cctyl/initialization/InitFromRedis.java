@@ -6,7 +6,7 @@ import cn.hutool.core.io.resource.ClassPathResource;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.ApiHeader;
-import io.github.cctyl.pojo.WhitelistRule;
+import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 @Slf4j
 @Component

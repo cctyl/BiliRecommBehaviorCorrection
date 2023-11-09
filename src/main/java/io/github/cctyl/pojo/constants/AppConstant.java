@@ -1,4 +1,4 @@
-package io.github.cctyl.constants;
+package io.github.cctyl.pojo.constants;
 
 /**
  * 常量

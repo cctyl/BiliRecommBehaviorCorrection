@@ -3,6 +3,7 @@ package io.github.cctyl.pojo;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.Serializable;
@@ -18,6 +19,7 @@ public class AuditingEntity implements Serializable {
     private Integer isDeleted;
 
     @TableField(fill = FieldFill.INSERT)
+    @Version
     private Integer version;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)

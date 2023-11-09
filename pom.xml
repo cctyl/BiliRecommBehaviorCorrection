@@ -199,6 +199,13 @@
             <version>${mybatis-plus.version}</version>
         </dependency>
 
+        <!--数据库迁移支持-->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+
 
     </dependencies>
     <build>

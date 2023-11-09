@@ -6,7 +6,7 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.pojo.WhitelistRule;
+import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.github.cctyl.constants.AppConstant.IGNORE_WHITE_KEYWORD;
+import static io.github.cctyl.pojo.constants.AppConstant.IGNORE_WHITE_KEYWORD;
 
 /**
  * 白名单相关规则

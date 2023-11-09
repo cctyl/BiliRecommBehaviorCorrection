@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static io.github.cctyl.constants.AppConstant.STOP_WORDS_KEY;
+import static io.github.cctyl.pojo.constants.AppConstant.STOP_WORDS_KEY;
 
 
 @RestController

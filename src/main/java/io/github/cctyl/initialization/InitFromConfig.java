@@ -2,10 +2,8 @@ package io.github.cctyl.initialization;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.ApplicationProperties;
-import io.github.cctyl.service.BiliService;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 @Slf4j
 @Component

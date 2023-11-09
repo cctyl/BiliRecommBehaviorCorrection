@@ -1,8 +1,13 @@
-package io.github.cctyl.pojo;
+package io.github.cctyl.entity;
 
-import io.github.cctyl.utils.IdGenerator;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.cctyl.pojo.AuditingEntity;
+import io.github.cctyl.pojo.enumeration.DictType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
@@ -20,35 +25,39 @@ import java.util.*;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
-public class WhitelistRule implements Serializable {
+public class WhitelistRule extends AuditingEntity implements Serializable {
 
-    private Long id;
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    private String id;
 
     /**
      * 标签名
      */
-    private Set<String> tagNameList = new HashSet<>();
+    @TableField(exist = false)
+    private Set<Dict> tagNameList = new HashSet<>();
 
     /**
      * 视频描述应当包含的关键词
      */
-    private Set<String> descKeyWordList = new HashSet<>();
+    @TableField(exist = false)
+    private Set<Dict> descKeyWordList = new HashSet<>();
 
 
     /**
      * 视频标题应当包含的关键词
      */
-    private Set<String> titleKeyWordList= new HashSet<>();
+    @TableField(exist = false)
+    private Set<Dict> titleKeyWordList= new HashSet<>();
 
     /**
      * 封面信息应当包含的关键词
      */
-    private String coverKeyword = "";
+    @TableField(exist = false)
+    private Set<Dict>  coverKeyword =  new HashSet<>();
 
-    public WhitelistRule() {
-        id = IdGenerator.nextId();
-    }
+
 
 
     @Override

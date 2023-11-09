@@ -9,7 +9,7 @@ import cn.hutool.http.*;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.constants.ErrorCode;
+import io.github.cctyl.pojo.constants.ErrorCode;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.*;
 import io.github.cctyl.utils.DataUtil;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 /**
  * bilibili相关api都在这里

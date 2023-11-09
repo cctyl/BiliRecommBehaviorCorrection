@@ -6,6 +6,7 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.WhitelistRule;
 import io.github.cctyl.pojo.*;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.WhiteRuleService;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 
 /**

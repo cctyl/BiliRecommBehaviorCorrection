@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.IEnum;
 /**
  * 视频的处理结果
  */
-public enum  HandleType implements IEnum<String> {
+public enum  HandleType implements StringEnum {
     /**
      * 点赞
      */
@@ -21,8 +21,4 @@ public enum  HandleType implements IEnum<String> {
      */
     OTHER;
 
-    @Override
-    public String getValue() {
-        return this.toString();
-    }
 }

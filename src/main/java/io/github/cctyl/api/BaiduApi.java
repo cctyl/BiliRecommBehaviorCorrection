@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static io.github.cctyl.constants.AppConstant.BAIDU_ASK_KEY;
+import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
 
 /**
  * 百度相关api

@@ -71,6 +71,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "desc")
     private String desc;
+
     @JSONField(name = "state")
     private Integer state;
     /**
@@ -78,6 +79,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "duration")
     private Integer duration;
+
     @JSONField(name = "mission_id")
     private Integer missionId;
 
@@ -86,12 +88,16 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "dynamic")
     private String dynamic;
+
     @JSONField(name = "cid")
     private Integer cid;
+
     @JSONField(name = "season_id")
     private Integer seasonId;
+
     @JSONField(name = "short_link_v2")
     private String shortLinkV2;
+
     @JSONField(name = "first_frame")
     private String firstFrame;
     /**
@@ -104,11 +110,15 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "bvid")
     private String bvid;
+
     @JSONField(name = "season_type")
     private Integer seasonType;
+
     @JSONField(name = "is_ogv")
     private Boolean isOgv;
+
     @JSONField(name = "ogv_info")
+    @TableField(exist = false)
     private Object ogvInfo;
 
     /**

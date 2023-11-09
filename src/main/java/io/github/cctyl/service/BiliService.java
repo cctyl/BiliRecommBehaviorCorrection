@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static io.github.cctyl.constants.AppConstant.*;
+import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 /**
  * 相关任务处理

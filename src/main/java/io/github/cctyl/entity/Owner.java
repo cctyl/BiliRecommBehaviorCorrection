@@ -26,5 +26,4 @@ public class Owner extends AuditingEntity implements Serializable {
     @JsonProperty("face")
     private String face;
 
-    private String videoId;
 }

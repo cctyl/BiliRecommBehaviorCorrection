@@ -7,12 +7,10 @@ import bilibili.metadata.locale.LocaleRpcProto;
 import bilibili.metadata.network.NetworkRpcProto;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.constants.AppConstant;
 import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.interceptor.GrpcGlobalClientInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

@@ -1,6 +1,4 @@
-package io.github.cctyl.constants;
-
-import lombok.Data;
+package io.github.cctyl.pojo.constants;
 
 
 public enum ErrorCode {
