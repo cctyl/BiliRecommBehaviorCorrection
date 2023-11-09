@@ -1,6 +1,6 @@
 package io.github.cctyl.config;
 
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.WhiteListRule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -62,7 +62,7 @@ public class ApplicationProperties {
         private List<String> blackTid;
         private List<String> whiteTid;
         private List<String> whiteUserId;
-        private List<WhitelistRule> whitleRuleList;
+        private List<WhiteListRule> whitleRuleList;
     }
 
 }

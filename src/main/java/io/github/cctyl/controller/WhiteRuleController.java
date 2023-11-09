@@ -6,7 +6,7 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.pojo.*;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.WhiteRuleService;
@@ -118,18 +118,18 @@ public class WhiteRuleController {
 
         TaskPool.putTask(() -> {
             log.info("开始训练");
-            List<WhitelistRule> whitelistRuleList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(WhitelistRule.class::cast).collect(Collectors.toList());
-            WhitelistRule whitelistRule;
+            List<WhiteListRule> whitelistRuleList = redisUtil.sMembers(WHITE_LIST_RULE_KEY).stream().map(WhiteListRule.class::cast).collect(Collectors.toList());
+            WhiteListRule whitelistRule;
             if (id == null) {
                 //创建新规则
-                whitelistRule = new WhitelistRule();
+                whitelistRule = new WhiteListRule();
             } else {
                 //从redis中找
                 whitelistRule =
                         whitelistRuleList.stream()
                                 .filter(w -> id.equals(w.getId()))
                                 .findFirst()
-                                .orElse(new WhitelistRule());
+                                .orElse(new WhiteListRule());
             }
 
             if (CollUtil.isNotEmpty(trainedAvidList)) {
@@ -176,7 +176,7 @@ public class WhiteRuleController {
     @PostMapping("/")
     public R addOrUpdateWhiteRule(
             @Parameter(name = "toUpdate", description = "将要修改的白名单对象")
-            @RequestBody WhitelistRule toUpdate
+            @RequestBody WhiteListRule toUpdate
     ) {
         if (
                 CollUtil.isEmpty(toUpdate.getDescKeyWordList())
@@ -190,7 +190,7 @@ public class WhiteRuleController {
         ) {
             return R.error().setMessage("无效数据");
         }
-        List<WhitelistRule> whitelistRuleList = GlobalVariables.whitelistRules;
+        List<WhiteListRule> whitelistRuleList = GlobalVariables.whitelistRules;
         if (toUpdate.getId() == null) {
             //此时创建一个新的id
             toUpdate.setId(IdGenerator.nextId());
@@ -209,8 +209,8 @@ public class WhiteRuleController {
             @Parameter(name = "id", description = "需要删除的白名单的id")
             @PathVariable("id") Long id
     ) {
-        List<WhitelistRule> whitelistRuleList = GlobalVariables.whitelistRules;
-        WhitelistRule toDel = whitelistRuleList
+        List<WhiteListRule> whitelistRuleList = GlobalVariables.whitelistRules;
+        WhiteListRule toDel = whitelistRuleList
                 .stream()
                 .filter(whitelistRule -> whitelistRule.getId().equals(id))
                 .findAny()

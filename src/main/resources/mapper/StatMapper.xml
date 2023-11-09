@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.StatMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Stat">
+        <id column="id" property="id"/>
+        <result column="aid" property="aid"/>
+        <result column="view" property="view"/>
+        <result column="danmaku" property="danmaku"/>
+        <result column="reply" property="reply"/>
+        <result column="favorite" property="favorite"/>
+        <result column="coin" property="coin"/>
+        <result column="share" property="share"/>
+        <result column="now_rank" property="nowRank"/>
+        <result column="his_rank" property="hisRank"/>
+        <result column="like" property="like"/>
+        <result column="dislike" property="dislike"/>
+        <result column="vt" property="vt"/>
+        <result column="vv" property="vv"/>
+        <result column="video_id" property="videoId"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Stat">
+        <id column="stat_id" property="id"/>
+        <result column="stat_aid" property="aid"/>
+        <result column="stat_view" property="view"/>
+        <result column="stat_danmaku" property="danmaku"/>
+        <result column="stat_reply" property="reply"/>
+        <result column="stat_favorite" property="favorite"/>
+        <result column="stat_coin" property="coin"/>
+        <result column="stat_share" property="share"/>
+        <result column="stat_now_rank" property="nowRank"/>
+        <result column="stat_his_rank" property="hisRank"/>
+        <result column="stat_like" property="like"/>
+        <result column="stat_dislike" property="dislike"/>
+        <result column="stat_vt" property="vt"/>
+        <result column="stat_vv" property="vv"/>
+        <result column="stat_video_id" property="videoId"/>
+        <result column="stat_created_date" property="createdDate"/>
+        <result column="stat_last_modified_date" property="lastModifiedDate"/>
+        <result column="stat_is_deleted" property="isDeleted"/>
+        <result column="stat_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, aid, view, danmaku, reply, favorite, coin, share, now_rank, his_rank, like, dislike, vt, vv, video_id, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        stat.id as stat_id,
+        stat.aid as stat_aid,
+        stat.view as stat_view,
+        stat.danmaku as stat_danmaku,
+        stat.reply as stat_reply,
+        stat.favorite as stat_favorite,
+        stat.coin as stat_coin,
+        stat.share as stat_share,
+        stat.now_rank as stat_now_rank,
+        stat.his_rank as stat_his_rank,
+        stat.like as stat_like,
+        stat.dislike as stat_dislike,
+        stat.vt as stat_vt,
+        stat.vv as stat_vv,
+        stat.video_id as stat_video_id,
+        stat.created_date as stat_created_date,
+        stat.last_modified_date as stat_last_modified_date,
+        stat.is_deleted as stat_is_deleted,
+        stat.version as stat_version
+    </sql>
+
+</mapper>

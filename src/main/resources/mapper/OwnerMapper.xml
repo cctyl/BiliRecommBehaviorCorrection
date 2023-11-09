@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.OwnerMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Owner">
+        <id column="id" property="id"/>
+        <result column="mid" property="mid"/>
+        <result column="name" property="name"/>
+        <result column="face" property="face"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Owner">
+        <id column="owner_id" property="id"/>
+        <result column="owner_mid" property="mid"/>
+        <result column="owner_name" property="name"/>
+        <result column="owner_face" property="face"/>
+        <result column="owner_created_date" property="createdDate"/>
+        <result column="owner_last_modified_date" property="lastModifiedDate"/>
+        <result column="owner_is_deleted" property="isDeleted"/>
+        <result column="owner_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, mid, name, face, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        owner.id as owner_id,
+        owner.mid as owner_mid,
+        owner.name as owner_name,
+        owner.face as owner_face,
+        owner.created_date as owner_created_date,
+        owner.last_modified_date as owner_last_modified_date,
+        owner.is_deleted as owner_is_deleted,
+        owner.version as owner_version
+    </sql>
+
+</mapper>

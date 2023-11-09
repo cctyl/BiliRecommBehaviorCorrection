@@ -6,7 +6,7 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;
@@ -145,7 +145,7 @@ public class WhiteRuleService {
      */
     public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
         String[] matchWordArr = new String[8];
-        WhitelistRule whitelistRule = GlobalVariables.whitelistRules
+        WhiteListRule whitelistRule = GlobalVariables.whitelistRules
                 .stream()
                 .filter(item ->
                         {
@@ -310,11 +310,11 @@ public class WhiteRuleService {
      * @param whitelistRule 需要训练的白名单规则
      * @param whiteAvidList 应当符号白名单规则的视频id集合
      */
-    public WhitelistRule trainWhitelistRule(
-            WhitelistRule whitelistRule,
+    public WhiteListRule trainWhitelistRule(
+            WhiteListRule whitelistRule,
             List<Integer> whiteAvidList) {
         if (whitelistRule == null) {
-            whitelistRule = new WhitelistRule().setId(IdGenerator.nextId());
+            whitelistRule = new WhiteListRule().setId(IdGenerator.nextId());
         }
 
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);

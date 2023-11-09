@@ -2,7 +2,7 @@ package io.github.cctyl.config;
 
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.pojo.ApiHeader;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.service.WhiteRuleService;
@@ -80,7 +80,7 @@ public class GlobalVariables {
     /**
      * 白名单关键词列表
      */
-    public static List<WhitelistRule> whitelistRules;
+    public static List<WhiteListRule> whitelistRules;
 
     /**
      * ApiHeader 相关
@@ -247,11 +247,11 @@ public class GlobalVariables {
     }
 
 
-    public static void setWhitelistRules(List<WhitelistRule> whitelistRules) {
+    public static void setWhitelistRules(List<WhiteListRule> whitelistRules) {
 
         //需要忽略的词汇不要存入规则中
         Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
-        for (WhitelistRule whitelistRule : whitelistRules) {
+        for (WhiteListRule whitelistRule : whitelistRules) {
             whitelistRule.getDescKeyWordList().removeAll(ignoreKeyWordSet);
             whitelistRule.getTitleKeyWordList().removeAll(ignoreKeyWordSet);
             whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);
@@ -261,10 +261,10 @@ public class GlobalVariables {
         redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRules.toArray());
     }
 
-    public static void addWhitelistRules(List<WhitelistRule> whitelistRules) {
+    public static void addWhitelistRules(List<WhiteListRule> whitelistRules) {
         //需要忽略的词汇不要存入规则中
         Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
-        for (WhitelistRule whitelistRule : whitelistRules) {
+        for (WhiteListRule whitelistRule : whitelistRules) {
             whitelistRule.getDescKeyWordList().removeAll(ignoreKeyWordSet);
             whitelistRule.getTitleKeyWordList().removeAll(ignoreKeyWordSet);
             whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);

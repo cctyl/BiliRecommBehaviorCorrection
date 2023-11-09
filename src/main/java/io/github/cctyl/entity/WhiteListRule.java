@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.github.cctyl.pojo.AuditingEntity;
-import io.github.cctyl.pojo.enumeration.DictType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,7 +26,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class WhitelistRule extends AuditingEntity implements Serializable {
+public class WhiteListRule extends AuditingEntity implements Serializable {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;
@@ -64,7 +63,7 @@ public class WhitelistRule extends AuditingEntity implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WhitelistRule that = (WhitelistRule) o;
+        WhiteListRule that = (WhiteListRule) o;
         return Objects.equals(id, that.id);
     }
 

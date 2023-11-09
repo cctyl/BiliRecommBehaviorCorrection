@@ -1,7 +1,7 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.entity.Owner;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import io.github.cctyl.entity.VideoDetail;
  * @author tyl
  * @since 2023-11-09
  */
-public interface VideoDetailService extends IService<VideoDetail> {
+public interface OwnerService extends IService<Owner> {
 
 }

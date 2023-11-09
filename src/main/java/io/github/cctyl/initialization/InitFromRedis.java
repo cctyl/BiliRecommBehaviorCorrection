@@ -6,7 +6,7 @@ import cn.hutool.core.io.resource.ClassPathResource;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.ApiHeader;
-import io.github.cctyl.entity.WhitelistRule;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +86,7 @@ public class InitFromRedis implements ApplicationRunner {
         GlobalVariables.setWhitelistRules(
                 redisUtil.sMembers(WHITE_LIST_RULE_KEY)
                         .stream().map(
-                            o -> (WhitelistRule) o
+                            o -> (WhiteListRule) o
                         ).collect(Collectors.toList())
         );
 

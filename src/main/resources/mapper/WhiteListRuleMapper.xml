@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.WhiteListRuleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.WhiteListRule">
+        <id column="id" property="id"/>
+        <result column="info" property="info"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.WhiteListRule">
+        <id column="whiteListRule_id" property="id"/>
+        <result column="whiteListRule_info" property="info"/>
+        <result column="whiteListRule_created_date" property="createdDate"/>
+        <result column="whiteListRule_last_modified_date" property="lastModifiedDate"/>
+        <result column="whiteListRule_is_deleted" property="isDeleted"/>
+        <result column="whiteListRule_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, info, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        whiteListRule.id as whiteListRule_id,
+        whiteListRule.info as whiteListRule_info,
+        whiteListRule.created_date as whiteListRule_created_date,
+        whiteListRule.last_modified_date as whiteListRule_last_modified_date,
+        whiteListRule.is_deleted as whiteListRule_is_deleted,
+        whiteListRule.version as whiteListRule_version
+    </sql>
+
+</mapper>
