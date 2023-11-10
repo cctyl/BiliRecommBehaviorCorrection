@@ -27,8 +27,6 @@ public class ApplicationProperties {
 
     private Ws ws;
 
-    private DefaultData defaultData;
-
 
 
     @Data
@@ -49,21 +47,5 @@ public class ApplicationProperties {
         private String url;
     }
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class DefaultData{
-        private String cookie;
-        private String mid;
-        private List<String> keyWord;
-        private List<String> blackUserId;
-        private List<String> blackKeyWord;
-        private List<String> blackTag;
-        private List<String> blackTid;
-        private List<String> whiteTid;
-        private List<String> whiteUserId;
-        //TODO 报错
-        //private List<WhiteListRule> whitleRuleList;
-    }
 
 }
