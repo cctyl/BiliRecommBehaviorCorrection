@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 @RestController
 @Tag(name = "dictCRUD接口")
-@RequestMapping("/cctyl/dict")
+@RequestMapping("/dict")
 public class DictController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class DictController {
     public R getById(@PathVariable("id") String id) {
 
         Dict dict = dictService.getById(id);
-        return R.ok().data("data",dict);
+        return R.data("data",dict);
     }
 
     /**
@@ -61,7 +61,7 @@ public class DictController {
         Page<Dict> pageBean = new Page<>(page, limit);
         IPage<Dict> iPage = dictService.page(pageBean, null);
         List<Dict> records = iPage.getRecords();
-        return R.ok().data("list", records);
+        return R.data("list", records);
     }
 
 

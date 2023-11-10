@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 @RestController
 @Tag(name = "statCRUD接口")
-@RequestMapping("/cctyl/stat")
+@RequestMapping("/stat")
 public class StatController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class StatController {
     public R getById(@PathVariable("id") String id) {
 
         Stat stat = statService.getById(id);
-        return R.ok().data("data",stat);
+        return R.data("data",stat);
     }
 
     /**
@@ -61,7 +61,7 @@ public class StatController {
         Page<Stat> pageBean = new Page<>(page, limit);
         IPage<Stat> iPage = statService.page(pageBean, null);
         List<Stat> records = iPage.getRecords();
-        return R.ok().data("list", records);
+        return R.data("list", records);
     }
 
 

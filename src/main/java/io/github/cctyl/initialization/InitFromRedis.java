@@ -34,6 +34,8 @@ public class InitFromRedis implements ApplicationRunner {
     @Autowired
     private ApplicationProperties applicationProperties;
 
+
+
     public void runback(ApplicationArguments args) throws Exception {
         log.debug("初始化...从redis中加载数据...");
         //0.加载cookie

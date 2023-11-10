@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 @RestController
 @Tag(name = "whiteListRuleCRUD接口")
-@RequestMapping("/cctyl/white-list-rule")
+@RequestMapping("/white-list-rule")
 public class WhiteListRuleController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class WhiteListRuleController {
     public R getById(@PathVariable("id") String id) {
 
         WhiteListRule whiteListRule = whiteListRuleService.getById(id);
-        return R.ok().data("data",whiteListRule);
+        return R.data("data",whiteListRule);
     }
 
     /**
@@ -61,7 +61,7 @@ public class WhiteListRuleController {
         Page<WhiteListRule> pageBean = new Page<>(page, limit);
         IPage<WhiteListRule> iPage = whiteListRuleService.page(pageBean, null);
         List<WhiteListRule> records = iPage.getRecords();
-        return R.ok().data("list", records);
+        return R.data("list", records);
     }
 
 

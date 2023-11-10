@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 @RestController
 @Tag(name = "ownerCRUD接口")
-@RequestMapping("/cctyl/owner")
+@RequestMapping("/owner")
 public class OwnerController {
 
     @Autowired
@@ -41,7 +41,7 @@ public class OwnerController {
     public R getById(@PathVariable("id") String id) {
 
         Owner owner = ownerService.getById(id);
-        return R.ok().data("data",owner);
+        return R.data("data",owner);
     }
 
     /**
@@ -62,7 +62,7 @@ public class OwnerController {
         Page<Owner> pageBean = new Page<>(page, limit);
         IPage<Owner> iPage = ownerService.page(pageBean, null);
         List<Owner> records = iPage.getRecords();
-        return R.ok().data("list", records);
+        return R.data("list", records);
     }
 
 

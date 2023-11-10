@@ -301,22 +301,23 @@ public class BiliApi {
      */
     public void updateCookie(HttpResponse response) {
         List<HttpCookie> cookies = response.getCookies();
-        Set<String> newCookieKeySet = cookies
-                .stream()
-                .map(HttpCookie::getName)
-                .collect(Collectors.toSet());
+        //Set<String> newCookieKeySet = cookies
+        //        .stream()
+        //        .map(HttpCookie::getName)
+        //        .collect(Collectors.toSet());
 
-        if (defaultCookie == null) {
-            defaultCookie = DataUtil.splitCookie(applicationProperties.getDefaultData().getCookie());
-        }
-        newCookieKeySet.removeAll(defaultCookie.keySet());
-        if (newCookieKeySet.size() != 0) {
-            log.warn("发现可疑cookie:{}", newCookieKeySet);
-            Object[] objects = cookies.stream().filter(httpCookie -> newCookieKeySet.contains(httpCookie.getName()))
-                    .map(httpCookie -> httpCookie.getName() + "=" + httpCookie.getValue())
-                    .toArray();
-            redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
-        }
+        //TODO 如果需要判断异常cookie，那么需要一个对比，到底和谁对比呢？
+        //if (defaultCookie == null) {
+        //    defaultCookie = DataUtil.splitCookie(applicationProperties.getDefaultData().getCookie());
+        //}
+        //newCookieKeySet.removeAll(defaultCookie.keySet());
+        //if (newCookieKeySet.size() != 0) {
+        //    log.warn("发现可疑cookie:{}", newCookieKeySet);
+        //    Object[] objects = cookies.stream().filter(httpCookie -> newCookieKeySet.contains(httpCookie.getName()))
+        //            .map(httpCookie -> httpCookie.getName() + "=" + httpCookie.getValue())
+        //            .toArray();
+        //    redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
+        //}
 
         for (HttpCookie cookie : cookies) {
             String name = cookie.getName();

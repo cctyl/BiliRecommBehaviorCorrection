@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.CookieHeaderDataMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.CookieHeaderData">
+        <id column="id" property="id"/>
+        <result column="url" property="url"/>
+        <result column="ckey" property="ckey"/>
+        <result column="cvalue" property="cvalue"/>
+        <result column="type" property="type"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.CookieHeaderData">
+        <id column="cookieHeaderData_id" property="id"/>
+        <result column="cookieHeaderData_url" property="url"/>
+        <result column="cookieHeaderData_ckey" property="ckey"/>
+        <result column="cookieHeaderData_cvalue" property="cvalue"/>
+        <result column="cookieHeaderData_type" property="type"/>
+        <result column="cookieHeaderData_created_date" property="createdDate"/>
+        <result column="cookieHeaderData_last_modified_date" property="lastModifiedDate"/>
+        <result column="cookieHeaderData_is_deleted" property="isDeleted"/>
+        <result column="cookieHeaderData_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, url, ckey, cvalue, type, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        cookieHeaderData.id as cookieHeaderData_id,
+        cookieHeaderData.url as cookieHeaderData_url,
+        cookieHeaderData.ckey as cookieHeaderData_ckey,
+        cookieHeaderData.cvalue as cookieHeaderData_cvalue,
+        cookieHeaderData.type as cookieHeaderData_type,
+        cookieHeaderData.created_date as cookieHeaderData_created_date,
+        cookieHeaderData.last_modified_date as cookieHeaderData_last_modified_date,
+        cookieHeaderData.is_deleted as cookieHeaderData_is_deleted,
+        cookieHeaderData.version as cookieHeaderData_version
+    </sql>
+
+</mapper>

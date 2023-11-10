@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 @RestController
 @Tag(name = "videoDetailCRUD接口")
-@RequestMapping("/cctyl/video-detail")
+@RequestMapping("/video-detail")
 public class VideoDetailController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class VideoDetailController {
     public R getById(@PathVariable("id") String id) {
 
         VideoDetail videoDetail = videoDetailService.getById(id);
-        return R.ok().data("data",videoDetail);
+        return R.data("data",videoDetail);
     }
 
     /**
@@ -61,7 +61,7 @@ public class VideoDetailController {
         Page<VideoDetail> pageBean = new Page<>(page, limit);
         IPage<VideoDetail> iPage = videoDetailService.page(pageBean, null);
         List<VideoDetail> records = iPage.getRecords();
-        return R.ok().data("list", records);
+        return R.data("list", records);
     }
 
 
