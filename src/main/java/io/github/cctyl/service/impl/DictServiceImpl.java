@@ -115,4 +115,9 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     public List<Dict> findWhiteTid() {
         return this.findByDictTypeAndAccessType(DictType.TID,AccessType.WHITE);
     }
+
+    @Override
+    public List<Dict> findWhiteIgnoreKeyWord() {
+        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
+    }
 }

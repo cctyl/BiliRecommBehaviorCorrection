@@ -55,7 +55,7 @@ public class BlackRuleService {
 
         for (VideoDetail videoDetail : videoList) {
             if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
-                GlobalVariables.blackUserIdSet.add(videoDetail.getOwner().getMid());
+                GlobalVariables.addBlackUserId(videoDetail.getOwner().getMid());
             }
             //1. 标题处理
             String title = videoDetail.getTitle();
@@ -88,8 +88,6 @@ public class BlackRuleService {
                 topTagName,
                 topTitleKeyWord);
 
-        //更新到redis中
-        GlobalVariables.setBlackUserIdSet(GlobalVariables.blackUserIdSet);
 
         //拿到需要忽略的黑名单关键词
         Set<String> ignoreKeyWordSet = getIgnoreKeyWordSet();

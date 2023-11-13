@@ -36,8 +36,7 @@ public class WhiteRuleService {
     private BiliApi biliApi;
 
     @Autowired
-    private RedisUtil redisUtil;
-
+    private DictService dictService;
 
     /**
      * 白名单判断
@@ -99,8 +98,9 @@ public class WhiteRuleService {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
         }
-        boolean match = GlobalVariables.whiteUserIdSet
-                .contains(videoDetail.getOwner().getMid());
+        boolean match = GlobalVariables.getWhiteUserIdSet()
+                .stream().map(Dict::getValue)
+                .anyMatch(s -> s.equals(videoDetail.getOwner().getMid()));
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -125,7 +125,10 @@ public class WhiteRuleService {
     public boolean isTidMatch(VideoDetail videoDetail) {
 
 
-        boolean match = GlobalVariables.whiteTidSet.contains(String.valueOf(videoDetail.getTid()));
+        boolean match = GlobalVariables.getWhiteTidSet()
+                .stream().map(Dict::getValue)
+                .anyMatch(s-> s.equals(String.valueOf(videoDetail.getTid())))
+                ;
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -148,7 +151,7 @@ public class WhiteRuleService {
      */
     public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
         String[] matchWordArr = new String[8];
-        WhiteListRule whitelistRule = GlobalVariables.whitelistRules
+        WhiteListRule whitelistRule = GlobalVariables.getWhitelistRules()
                 .stream()
                 .filter(item ->
                         {
@@ -269,7 +272,6 @@ public class WhiteRuleService {
         boolean match = whitelistRule != null;
         String matchDetail = "";
         if (match) {
-
             matchDetail =
                     " \t 关键词："+matchWordArr[0]+"\t 标题："+matchWordArr[1]+"\n"+
                     " \t 关键词："+matchWordArr[2]+"\t desc："+matchWordArr[3]+"\n"+
@@ -299,10 +301,8 @@ public class WhiteRuleService {
      * @return
      */
     public Set<String> getWhiteIgnoreKeyWord() {
-//        return redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
-//                .stream()
-//                .map(Object::toString)
-//                .collect(Collectors.toSet());
+        List<Dict> dictList = dictService.findWhiteIgnoreKeyWord();
+        return dictList.stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 
     /**

@@ -34,4 +34,6 @@ public interface DictService extends IService<Dict> {
     List<Dict>  findWhiteUserId();
 
     List<Dict> findWhiteTid();
+
+    List<Dict> findWhiteIgnoreKeyWord();
 }

@@ -5,6 +5,8 @@ import cn.hutool.dfa.WordTree;
 import io.github.cctyl.entity.Dict;
 import io.github.cctyl.pojo.ApiHeader;
 import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.pojo.enumeration.AccessType;
+import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.*;
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -26,17 +28,17 @@ public class GlobalVariables {
     /**
      * 黑名单up主 id列表
      */
-    private static Set<Dict> blackUserIdSet;
+    private static Set<String> blackUserIdSet;
 
     /**
      * 白名单up主id列表
      */
-    private static Set<Dict> whiteUserIdSet;
+    private static Set<String> whiteUserIdSet;
 
     /**
      * 黑名单关键词列表
      */
-    private static Set<Dict> blackKeywordSet;
+    private static Set<String> blackKeywordSet;
 
     /**
      * 黑名单关键词树
@@ -46,17 +48,17 @@ public class GlobalVariables {
     /**
      * 黑名单分区id列表
      */
-    private static Set<Dict> blackTidSet;
+    private static Set<String> blackTidSet;
 
     /**
      * 白名单分区id列表
      */
-    private static Set<Dict> whiteTidSet;
+    private static Set<String> whiteTidSet;
 
     /**
      * 黑名单标签列表
      */
-    private static Set<Dict> blackTagSet;
+    private static Set<String> blackTagSet;
 
     /**
      * 黑名单标签树
@@ -76,7 +78,7 @@ public class GlobalVariables {
     /**
      * 关键词列表
      */
-    private static Set<Dict> keywordSet;
+    private static Set<String> keywordSet;
 
     /**
      * 白名单关键词列表
@@ -485,5 +487,20 @@ public class GlobalVariables {
 
     public static void initCookieMap() {
         GlobalVariables.cookieMap = cookieHeaderDataService.findCookieMap();
+    }
+
+    /**
+     * 添加一个黑名单用户id
+     * @param mid
+     */
+    public static void addBlackUserId(String mid) {
+
+        Dict dict = new Dict()
+                .setDictType(DictType.MID)
+                .setAccessType(AccessType.BLACK)
+                .setValue(mid);
+        dictService.save(dict);
+
+
     }
 }

@@ -44,7 +44,11 @@ public enum DictType {
      * 通用的关键词，对于没有细分是标题还是封面还是描述的关键词等使用的类型
      */
     KEYWORD,
-    ;
+
+    /**
+     * 需要忽略的关键词
+     */
+    IGNORE_KEYWORD
 
 
 }
