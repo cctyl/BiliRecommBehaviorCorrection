@@ -2,6 +2,7 @@ package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.Dict;
+import io.github.cctyl.pojo.enumeration.DictType;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,4 +37,8 @@ public interface DictService extends IService<Dict> {
     List<Dict> findWhiteTid();
 
     List<Dict> findWhiteIgnoreKeyWord();
+
+    void addBlackCache(List<String> topDescKeyWord, DictType desc);
+
+    List<Dict> findBlackIgnoreKeyWord();
 }

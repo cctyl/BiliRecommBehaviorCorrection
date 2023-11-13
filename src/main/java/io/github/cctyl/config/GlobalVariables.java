@@ -109,8 +109,11 @@ public class GlobalVariables {
      * 停顿词列表
      */
     private static WordTree stopWordTree = new WordTree();
-
-
+    /**
+     * 黑白名单忽略关键词列表
+     */
+    private static Set<String> ignoreBlackKeyWordSet;
+    private static Set<String> ignoreWhiteKeyWordSet;
 
     private static BlackRuleService blackRuleService;
     private static WhiteRuleService whiteRuleService;
@@ -153,7 +156,6 @@ public class GlobalVariables {
      * 添加到缓存
      * 添加到数据库
      *
-     * @param param
      *//*
     public static void addBlackKeyword(Collection<String> param) {
         //1.加载需要忽略的东西
@@ -301,15 +303,15 @@ public class GlobalVariables {
     }*/
 
 
-    public static Set<Dict> getBlackUserIdSet() {
+    public static Set<String> getBlackUserIdSet() {
         return blackUserIdSet;
     }
 
-    public static Set<Dict> getWhiteUserIdSet() {
+    public static Set<String> getWhiteUserIdSet() {
         return whiteUserIdSet;
     }
 
-    public static Set<Dict> getBlackKeywordSet() {
+    public static Set<String> getBlackKeywordSet() {
         return blackKeywordSet;
     }
 
@@ -317,15 +319,15 @@ public class GlobalVariables {
         return blackKeywordTree;
     }
 
-    public static Set<Dict> getBlackTidSet() {
+    public static Set<String> getBlackTidSet() {
         return blackTidSet;
     }
 
-    public static Set<Dict> getWhiteTidSet() {
+    public static Set<String> getWhiteTidSet() {
         return whiteTidSet;
     }
 
-    public static Set<Dict> getBlackTagSet() {
+    public static Set<String> getBlackTagSet() {
         return blackTagSet;
     }
 
@@ -341,7 +343,7 @@ public class GlobalVariables {
         return mid;
     }
 
-    public static Set<Dict> getKeywordSet() {
+    public static Set<String> getKeywordSet() {
         return keywordSet;
     }
 
@@ -369,12 +371,32 @@ public class GlobalVariables {
         return stopWordTree;
     }
 
+    public static Set<String> getIgnoreBlackKeyWordSet() {
+        return ignoreBlackKeyWordSet;
+    }
+
+    public static Set<String> getIgnoreWhiteKeyWordSet() {
+        return ignoreWhiteKeyWordSet;
+    }
+
+    /**
+     *
+     * 黑白名单忽略关键词列表的加载
+     */
+    public static void initIgnoreKeyWord() {
+        ignoreBlackKeyWordSet = dictService.findBlackIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+        ignoreWhiteKeyWordSet = dictService.findWhiteIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+    }
 
     /**
      * 更新blackUserIdSet
      */
     public static void initBlackUserIdSet() {
-        GlobalVariables.blackUserIdSet = new HashSet<>(dictService.findBlackUserId());
+        GlobalVariables.blackUserIdSet = dictService
+                .findBlackUserId()
+                .stream()
+                .map(Dict::getValue)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -382,18 +404,18 @@ public class GlobalVariables {
      */
     public static void initBlackKeywordSet() {
         //1.加载需要忽略的东西
-        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
-
 
         //2. 黑名单关键词列表
         GlobalVariables.blackKeywordSet = dictService.findBlackKeyWord()
                 .stream()
-                .filter(dict -> !ignoreKeyWordSet.contains(dict.getValue())).collect(Collectors.toSet());
-        Set<String> wordStrSet = GlobalVariables.blackKeywordSet.stream().map(Dict::getValue).collect(Collectors.toSet());
+                .map(Dict::getValue)
+                .collect(Collectors.toSet())
+        ;
+        GlobalVariables.blackKeywordSet.removeAll(ignoreBlackKeyWordSet);
 
         //3.构建dfa Tree
         GlobalVariables.blackKeywordTree = new WordTree();
-        GlobalVariables.blackKeywordTree.addWords(wordStrSet);
+        GlobalVariables.blackKeywordTree.addWords( GlobalVariables.blackKeywordSet);
     }
 
     /**
@@ -401,28 +423,39 @@ public class GlobalVariables {
      */
     public static void initBlackTagSet() {
         //1.加载需要忽略的东西
-        Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
-        GlobalVariables.blackTagSet = new HashSet<>(dictService.findBlackTag())
+
+        GlobalVariables.blackTagSet =
+               dictService.findBlackTag()
                 .stream()
-                .filter(dict -> !ignoreKeyWordSet.contains(dict.getValue())).collect(Collectors.toSet());
+                       .map(Dict::getValue)
+                .collect(Collectors.toSet());
 
-        Set<String> blackTagStrSet = GlobalVariables.blackTagSet.stream().map(Dict::getValue).collect(Collectors.toSet());
-
+        GlobalVariables.blackTagSet.removeAll(ignoreBlackKeyWordSet);
 
         GlobalVariables.blackTagTree = new WordTree();
-        GlobalVariables.blackTagTree.addWords(blackTagStrSet);
+        GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
     }
 
     public static void initWhiteUserIdSet() {
-    GlobalVariables.whiteUserIdSet = new HashSet<>(dictService.findWhiteUserId());
+    GlobalVariables.whiteUserIdSet = dictService
+            .findWhiteUserId()
+            .stream().map(Dict::getValue)
+            .collect(Collectors.toSet());
 }
 
     public static void initBlackTidSet() {
-        GlobalVariables.blackTidSet = new HashSet<>(dictService.findBlackTid());
+        GlobalVariables.blackTidSet = dictService
+                .findBlackTid()
+                .stream().map(Dict::getValue)
+                .collect(Collectors.toSet());
     }
 
     public static void initWhiteTidSet() {
-        GlobalVariables.whiteTidSet = new HashSet<>(dictService.findWhiteTid());
+        GlobalVariables.whiteTidSet = dictService
+                .findWhiteTid()
+                .stream()
+                .map(Dict::getValue)
+                .collect(Collectors.toSet());
 
     }
 
@@ -445,7 +478,8 @@ public class GlobalVariables {
     }
 
     public static void initKeywordSet() {
-        GlobalVariables.keywordSet = new HashSet<>(dictService.findSearchKeyWord());
+        GlobalVariables.keywordSet = dictService.findSearchKeyWord()
+        .stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 
     public static void initWhitelistRules() {
@@ -453,11 +487,11 @@ public class GlobalVariables {
         List<WhiteListRule> whitelistRules = whiteListRuleService.findAll();
 
         //需要忽略的词汇不要存入规则中
-        Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
+
         for (WhiteListRule whitelistRule : whitelistRules) {
-            whitelistRule.getDescKeyWordList().removeAll(ignoreKeyWordSet);
-            whitelistRule.getTitleKeyWordList().removeAll(ignoreKeyWordSet);
-            whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);
+            whitelistRule.getDescKeyWordList().removeAll(ignoreWhiteKeyWordSet);
+            whitelistRule.getTitleKeyWordList().removeAll(ignoreWhiteKeyWordSet);
+            whitelistRule.getTagNameList().removeAll(ignoreWhiteKeyWordSet);
         }
         GlobalVariables.whitelistRules = whitelistRules;
 
@@ -479,9 +513,7 @@ public class GlobalVariables {
 
         GlobalVariables.commonCookieMap = cookieHeaderDataService.findCookieMap();
         GlobalVariables.commonHeaderMap = cookieHeaderDataService.findHeaderMap();
-
         GlobalVariables.apiHeaderMap =  cookieHeaderDataService.findApiHeaderMap();
-
 
     }
 
@@ -501,6 +533,6 @@ public class GlobalVariables {
                 .setValue(mid);
         dictService.save(dict);
 
-
+        GlobalVariables.blackUserIdSet.add(mid);
     }
 }

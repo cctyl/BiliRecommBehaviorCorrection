@@ -120,4 +120,20 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     public List<Dict> findWhiteIgnoreKeyWord() {
         return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
     }
+
+    /**
+     * 黑名单的缓存
+     * @param param
+     * @param dictType
+     */
+    @Override
+    public void addBlackCache(List<String> param, DictType dictType) {
+
+        this.addDict(param,AccessType.BLACK_CACHE,dictType);
+    }
+
+    @Override
+    public List<Dict> findBlackIgnoreKeyWord() {
+        return  this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
+    }
 }

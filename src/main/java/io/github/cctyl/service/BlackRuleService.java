@@ -9,16 +9,14 @@ import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.DislikeReason;
 import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.pojo.constants.AppConstant.*;
@@ -34,7 +32,8 @@ public class BlackRuleService {
     private BiliApi biliApi;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private DictService dictService;
+
 
 
     @Autowired
@@ -90,35 +89,27 @@ public class BlackRuleService {
 
 
         //拿到需要忽略的黑名单关键词
-        Set<String> ignoreKeyWordSet = getIgnoreKeyWordSet();
+        Set<String> ignoreKeyWordSet = GlobalVariables.getIgnoreBlackKeyWordSet();
 
-        topDescKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topDescKeyWord.removeAll(GlobalVariables.getBlackKeywordSet());
         topDescKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topDescKeyWord))
-            redisUtil.sAdd(BLACK_KEYWORD_CACHE, topDescKeyWord.toArray());
+            dictService.addBlackCache(topDescKeyWord, DictType.DESC);
 
-        topTitleKeyWord.removeAll(GlobalVariables.blackKeywordSet);
+        topTitleKeyWord.removeAll(GlobalVariables.getBlackKeywordSet());
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTitleKeyWord))
-            redisUtil.sAdd(BLACK_KEYWORD_CACHE, topTitleKeyWord.toArray());
+            dictService.addBlackCache(topTitleKeyWord,DictType.KEYWORD);
 
-        topTagName.removeAll(GlobalVariables.blackTagSet);
+        topTagName.removeAll(GlobalVariables.getBlackTagSet());
         topTagName.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTagName))
-            redisUtil.sAdd(BLACK_TAG_NAME_CACHE, topTagName.toArray());
+            dictService.addBlackCache(topTagName,DictType.TAG);
 
 
     }
 
 
-    /**
-     * 获得忽略的黑名单关键词
-     *
-     * @return
-     */
-    public Set<String> getIgnoreKeyWordSet() {
-
-    }
 
 
     /**
@@ -152,7 +143,7 @@ public class BlackRuleService {
      * @return
      */
     public boolean isTitleMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.blackKeywordTree.match(videoDetail.getTitle());
+        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getTitle());
         boolean match = matchWord != null;
         log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
                 videoDetail.getBvid(),
@@ -177,14 +168,14 @@ public class BlackRuleService {
      * @return
      */
     public boolean isDescMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.blackKeywordTree.match(videoDetail.getDesc());
+        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getDesc());
         boolean match = matchWord != null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
             match = match || videoDetail.getDescV2()
                     .stream()
                     .map(DescV2::getRawText)
-                    .anyMatch(GlobalVariables.blackKeywordTree::isMatch);
+                    .anyMatch(GlobalVariables.getBlackKeywordTree()::isMatch);
             desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
         }
         log.debug("视频:{}-{}的 简介：{}，匹配结果：{},匹配到的关键词：{}",
@@ -209,7 +200,7 @@ public class BlackRuleService {
      * @return
      */
     public boolean isTidMatch(VideoDetail videoDetail) {
-        boolean match = GlobalVariables.blackTidSet.contains(String.valueOf(videoDetail.getTid()));
+        boolean match = GlobalVariables.getBlackTidSet().contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -237,7 +228,7 @@ public class BlackRuleService {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
         }
-        boolean match = GlobalVariables.blackUserIdSet
+        boolean match = GlobalVariables.getBlackUserIdSet()
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -265,7 +256,7 @@ public class BlackRuleService {
     public boolean isTagMatch(VideoDetail videoDetail) {
         Tag matchTag = videoDetail.getTags()
                 .stream()
-                .filter(tag -> GlobalVariables.blackTagTree.isMatch(tag.getTagName()))
+                .filter(tag -> GlobalVariables.getBlackTagTree().isMatch(tag.getTagName()))
                 .findAny().orElse(null);
 
         boolean match = matchTag != null;
@@ -278,7 +269,7 @@ public class BlackRuleService {
         );
         if (match) {
             videoDetail.setBlackReason("Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
-                    GlobalVariables.blackTagTree.match(matchTag.getTagName()));
+                    GlobalVariables.getBlackTagTree().match(matchTag.getTagName()));
             videoDetail.setDislikeReason(DislikeReason.channel());
             videoDetail.setDislikeTagId(matchTag.getTagId());
         }

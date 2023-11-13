@@ -13,6 +13,16 @@ public enum  AccessType  {
     WHITE,
 
     OTHER,
+
+    /**
+     * 黑名单未处理缓存
+     */
+    BLACK_CACHE,
+    /**
+     * 白名单未处理缓存
+     */
+    WHITE_CACHE,
+
     ;
 
 }

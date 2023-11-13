@@ -21,8 +21,12 @@ public class InitFromRedis implements ApplicationRunner {
         //0.加载cookie
         GlobalVariables.initCookieMap();
 
+
         //0.1加载mid
         GlobalVariables.initMid();
+
+        //12.忽略关键词加载
+        GlobalVariables.initIgnoreKeyWord();
 
         //1. 加载关键字数据
         GlobalVariables.initKeywordSet();
@@ -56,6 +60,7 @@ public class InitFromRedis implements ApplicationRunner {
 
         //11.加载ApiHeader相关
         GlobalVariables.initApiHeaderMap();
+
 
 
         log.debug("初始化...加载完毕...");

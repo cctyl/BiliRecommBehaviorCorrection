@@ -99,8 +99,7 @@ public class WhiteRuleService {
             return false;
         }
         boolean match = GlobalVariables.getWhiteUserIdSet()
-                .stream().map(Dict::getValue)
-                .anyMatch(s -> s.equals(videoDetail.getOwner().getMid()));
+                .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -126,8 +125,7 @@ public class WhiteRuleService {
 
 
         boolean match = GlobalVariables.getWhiteTidSet()
-                .stream().map(Dict::getValue)
-                .anyMatch(s-> s.equals(String.valueOf(videoDetail.getTid())))
+                .contains(String.valueOf(videoDetail.getTid()))
                 ;
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
@@ -295,15 +293,7 @@ public class WhiteRuleService {
     }
 
 
-    /**
-     * 获得忽略的白名单关键词
-     *
-     * @return
-     */
-    public Set<String> getWhiteIgnoreKeyWord() {
-        List<Dict> dictList = dictService.findWhiteIgnoreKeyWord();
-        return dictList.stream().map(Dict::getValue).collect(Collectors.toSet());
-    }
+
 
     /**
      * 白名单关键词自动修正补全
