@@ -1,17 +1,22 @@
 package io.github.cctyl.config;
 
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.dfa.WordTree;
+import io.github.cctyl.entity.Dict;
 import io.github.cctyl.pojo.ApiHeader;
 import io.github.cctyl.entity.WhiteListRule;
-import io.github.cctyl.service.BiliService;
-import io.github.cctyl.service.BlackRuleService;
-import io.github.cctyl.service.WhiteRuleService;
+import io.github.cctyl.service.*;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.Data;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.github.cctyl.pojo.constants.AppConstant.*;
 
@@ -25,17 +30,17 @@ public class GlobalVariables {
     /**
      * 黑名单up主 id列表
      */
-    public static Set<String> blackUserIdSet;
+    public static Set<Dict> blackUserIdSet;
 
     /**
      * 白名单up主id列表
      */
-    public static Set<String> whiteUserIdSet;
+    public static Set<Dict> whiteUserIdSet;
 
     /**
      * 黑名单关键词列表
      */
-    public static Set<String> blackKeywordSet;
+    public static Set<Dict> blackKeywordSet;
 
     /**
      * 黑名单关键词树
@@ -45,17 +50,17 @@ public class GlobalVariables {
     /**
      * 黑名单分区id列表
      */
-    public static Set<String> blackTidSet;
+    public static Set<Dict> blackTidSet;
 
     /**
      * 白名单分区id列表
      */
-    public static Set<String> whiteTidSet;
+    public static Set<Dict> whiteTidSet;
 
     /**
      * 黑名单标签列表
      */
-    public static Set<String> blackTagSet;
+    public static Set<Dict> blackTagSet;
 
     /**
      * 黑名单标签树
@@ -75,7 +80,7 @@ public class GlobalVariables {
     /**
      * 关键词列表
      */
-    public static Set<String> keywordSet;
+    public static Set<Dict> keywordSet;
 
     /**
      * 白名单关键词列表
@@ -83,29 +88,57 @@ public class GlobalVariables {
     public static List<WhiteListRule> whitelistRules;
 
     /**
-     * ApiHeader 相关
+     * ApiHeader
+     * url 作为键，cookie 和 httpheader 作为值
      */
     public static Map<String, ApiHeader> apiHeaderMap = new HashMap<>();
+    /**
+     * 通用的cookie，当没有找到匹配的url时使用这个cookie
+     */
     public static Map<String, String> commonCookieMap = new HashMap<>();
+    /**
+     * 通用的header，当没有找到匹配的url时使用这个header
+     */
     public static Map<String, String> commonHeaderMap = new HashMap<>();
+
+    /**
+     * 最小播放时间
+     */
+    public static int minPlaySecond = 50;
+
+    /**
+     * 停顿词列表
+     */
+    public static WordTree stopWordTree = new WordTree();
+
 
     private static RedisUtil redisUtil;
     private static RedisTemplate<String, Object> redisTemplate;
     private static BiliService biliService;
     private static BlackRuleService blackRuleService;
     private static WhiteRuleService whiteRuleService;
+    private static DictService dictService;
+    private static WhiteListRuleService whiteListRuleService;
+    private static CookieHeaderDataService cookieHeaderDataService;
 
     public GlobalVariables(RedisUtil redisUtil,
                            RedisTemplate<String, Object> redisTemplate,
                            BiliService biliService,
                            BlackRuleService blackRuleService,
-                           WhiteRuleService whiteRuleService
+                           WhiteRuleService whiteRuleService,
+                           DictService dictService,
+                           WhiteListRuleService whiteListRuleService,
+                           CookieHeaderDataService cookieHeaderDataService
                            ) {
         GlobalVariables.redisUtil = redisUtil;
         GlobalVariables.redisTemplate = redisTemplate;
         GlobalVariables.biliService = biliService;
         GlobalVariables.blackRuleService = blackRuleService;
         GlobalVariables.whiteRuleService = whiteRuleService;
+        GlobalVariables.dictService = dictService;
+        GlobalVariables.whiteListRuleService = whiteListRuleService;
+        GlobalVariables.cookieHeaderDataService = cookieHeaderDataService;
+
     }
 
     public static void addBlackUserId(Collection<String> param) {
@@ -117,74 +150,95 @@ public class GlobalVariables {
     /**
      * 更新blackUserIdSet
      *
-     * @param param
      */
-    public static void setBlackUserIdSet(Set<String> param) {
-        GlobalVariables.blackUserIdSet = param;
-        redisUtil.delete(BLACK_USER_ID_KEY);
-        redisUtil.sAdd(BLACK_USER_ID_KEY, GlobalVariables.blackUserIdSet.toArray());
+    public static void initBlackUserIdSet( ) {
+        GlobalVariables.blackUserIdSet = new HashSet<>( dictService.findBlackUserId());
     }
 
     /**
      * 更新blackKeywordSet
      *
-     * @param param
      */
-    public static void setBlackKeywordSet(Set<String> param) {
+    public static void initBlackKeywordSet() {
+        //1.加载需要忽略的东西
         Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
-        param.removeAll(ignoreKeyWordSet);
 
-        GlobalVariables.blackKeywordSet = param;
-        redisUtil.delete(BLACK_KEY_WORD_KEY);
-        redisUtil.sAdd(BLACK_KEY_WORD_KEY, GlobalVariables.blackKeywordSet.toArray());
 
+        //2. 黑名单关键词列表
+        GlobalVariables.blackKeywordSet = dictService.findBlackKeyWord()
+                .stream()
+                .filter(dict -> !ignoreKeyWordSet.contains(dict.getValue())).collect(Collectors.toSet());
+        Set<String> wordStrSet = GlobalVariables.blackKeywordSet.stream().map(Dict::getValue).collect(Collectors.toSet());
+
+        //3.构建dfa Tree
         GlobalVariables.blackKeywordTree = new WordTree();
-        GlobalVariables.blackKeywordTree.addWords(GlobalVariables.blackKeywordSet);
+        GlobalVariables.blackKeywordTree.addWords(wordStrSet);
     }
 
+    /**
+     * 添加黑名单关键词
+     * 去重
+     * 添加到缓存
+     * 添加到数据库
+     * @param param
+     */
     public static void addBlackKeyword(Collection<String> param) {
+        //1.加载需要忽略的东西
         Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
+
+
+        //2. 黑名单关键词列表
+        Set<String> wordStrSet = GlobalVariables.blackKeywordSet.stream().map(Dict::getValue).collect(Collectors.toSet());
+
+        //3.去重，得到新产生的数据
         param.removeAll(ignoreKeyWordSet);
+        param.removeAll(wordStrSet);
 
-        GlobalVariables.blackKeywordSet.addAll(param);
-        redisUtil.delete(BLACK_KEY_WORD_KEY);
-        redisUtil.sAdd(BLACK_KEY_WORD_KEY, GlobalVariables.blackKeywordSet.toArray());
-
+        //4.添加
+        List<Dict>  newBlackKeyWordSet =  dictService.addBlackKeyword(param);
+        GlobalVariables.blackKeywordSet.addAll(newBlackKeyWordSet);
         GlobalVariables.blackKeywordTree.addWords(param);
     }
 
     /**
      * 更新blackKeywordSet
      *
-     * @param param
      */
-    public static void setBlackTagSet(Set<String> param) {
+    public static void initBlackTagSet() {
+        //1.加载需要忽略的东西
         Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
-        param.removeAll(ignoreKeyWordSet);
+        GlobalVariables.blackTagSet = new HashSet<>(dictService.findBlackTag())
+                .stream()
+                .filter(dict -> !ignoreKeyWordSet.contains(dict.getValue())).collect(Collectors.toSet());
 
-        GlobalVariables.blackTagSet = param;
-        redisUtil.delete(BLACK_TAG_KEY);
-        redisUtil.sAdd(BLACK_TAG_KEY, GlobalVariables.blackTagSet.toArray());
+        Set<String> blackTagStrSet = GlobalVariables.blackTagSet.stream().map(Dict::getValue).collect(Collectors.toSet());
+
 
         GlobalVariables.blackTagTree = new WordTree();
-        GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
+        GlobalVariables.blackTagTree.addWords(blackTagStrSet);
     }
 
     public static void addBlackTagSet(Collection<String> param) {
+
+        //1.加载需要忽略的东西
         Set<String> ignoreKeyWordSet = blackRuleService.getIgnoreKeyWordSet();
+
+        //2. 黑名单关键词列表
+        Set<String> wordStrSet = GlobalVariables.blackTagSet.stream().map(Dict::getValue).collect(Collectors.toSet());
+
+        //3.去重，得到新产生的数据
         param.removeAll(ignoreKeyWordSet);
+        param.removeAll(wordStrSet);
 
-        GlobalVariables.blackTagSet.addAll(param);
-        redisUtil.delete(BLACK_TAG_KEY);
-        redisUtil.sAdd(BLACK_TAG_KEY, GlobalVariables.blackTagSet.toArray());
-
+        //4.添加
+        List<Dict>  newBlackKeyWordSet =  dictService.addBlackTag(param);
+        GlobalVariables.blackTagSet.addAll(newBlackKeyWordSet);
         GlobalVariables.blackTagTree.addWords(param);
+
     }
 
-    public static void setWhiteUserIdSet(Set<String> whiteUserIdSet) {
-        GlobalVariables.whiteUserIdSet = whiteUserIdSet;
-        redisUtil.delete(WHITE_USER_ID_KEY);
-        redisUtil.sAdd(WHITE_USER_ID_KEY, GlobalVariables.whiteUserIdSet.toArray());
+    public static void initWhiteUserIdSet() {
+        GlobalVariables.whiteUserIdSet = new HashSet<>(dictService.findWhiteUserId());
     }
 
     public static void addWhiteUserId(Collection<String> whiteUserIdSet) {
@@ -193,10 +247,8 @@ public class GlobalVariables {
         redisUtil.sAdd(WHITE_USER_ID_KEY, GlobalVariables.whiteUserIdSet.toArray());
     }
 
-    public static void setBlackTidSet(Set<String> blackTidSet) {
-        GlobalVariables.blackTidSet = blackTidSet;
-        redisUtil.delete(BLACK_TID_KEY);
-        redisUtil.sAdd(BLACK_TID_KEY, GlobalVariables.blackTidSet.toArray());
+    public static void initBlackTidSet() {
+        GlobalVariables.blackTidSet = new HashSet<>(dictService.findBlackTid());
     }
 
     public static void addBlackTid(Collection<String> blackTidSet) {
@@ -205,10 +257,9 @@ public class GlobalVariables {
         redisUtil.sAdd(BLACK_TID_KEY, GlobalVariables.blackTidSet.toArray());
     }
 
-    public static void setWhiteTidSet(Set<String> whiteTidSet) {
-        GlobalVariables.whiteTidSet = whiteTidSet;
-        redisUtil.delete(WHITE_TID_KEY);
-        redisUtil.sAdd(WHITE_TID_KEY, GlobalVariables.whiteTidSet.toArray());
+    public static void initWhiteTidSet() {
+        GlobalVariables.whiteTidSet =  new HashSet<>(dictService.findWhiteTid());
+
     }
 
     public static void addWhiteTid(Collection<String> whiteTidSet) {
@@ -234,20 +285,17 @@ public class GlobalVariables {
         GlobalVariables.mid = mid;
     }
 
-    public static void setKeywordSet(Set<String> keywordSet) {
-        GlobalVariables.keywordSet = keywordSet;
-        redisUtil.delete(KEY_WORD_KEY);
-        redisUtil.sAdd(KEY_WORD_KEY, GlobalVariables.keywordSet.toArray());
+    public static void initKeywordSet() {
+        GlobalVariables.keywordSet = new HashSet<>(dictService.findSearchKeyWord());
     }
-
-    public static void addKeywordSet(Collection<String> keywordSet) {
+    public static void addKeywordSet(Collection<Dict> keywordSet) {
         GlobalVariables.keywordSet.addAll(keywordSet);
-        redisUtil.delete(KEY_WORD_KEY);
-        redisUtil.sAdd(KEY_WORD_KEY, GlobalVariables.keywordSet.toArray());
     }
 
 
-    public static void setWhitelistRules(List<WhiteListRule> whitelistRules) {
+    public static void initWhitelistRules() {
+
+        List<WhiteListRule> whitelistRules = whiteListRuleService.findAll();
 
         //需要忽略的词汇不要存入规则中
         Set<String> ignoreKeyWordSet = whiteRuleService.getWhiteIgnoreKeyWord();
@@ -257,8 +305,7 @@ public class GlobalVariables {
             whitelistRule.getTagNameList().removeAll(ignoreKeyWordSet);
         }
         GlobalVariables.whitelistRules = whitelistRules;
-        redisUtil.delete(WHITE_LIST_RULE_KEY);
-        redisUtil.sAdd(WHITE_LIST_RULE_KEY, whitelistRules.toArray());
+
     }
 
     public static void addWhitelistRules(List<WhiteListRule> whitelistRules) {
@@ -311,5 +358,24 @@ public class GlobalVariables {
         GlobalVariables.commonHeaderMap.put(key,value);
         redisUtil.delete(COMMON_HEADER_MAP);
         redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
+    }
+
+    /**
+     * 加载停顿词列表
+     */
+    public static void initStopWords() throws IOException {
+        ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
+        List<String> stopWordList =
+                Files.lines(Paths.get(classPathResource.getFile().getPath()))
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+        GlobalVariables.stopWordTree.addWords(stopWordList);
+    }
+
+    public static void initApiHeaderMap() {
+
+
+        cookieHeaderDataService.findCookieMap();
+
     }
 }

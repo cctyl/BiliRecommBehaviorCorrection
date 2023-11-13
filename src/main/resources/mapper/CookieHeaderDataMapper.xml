@@ -50,5 +50,31 @@
         cookieHeaderData.is_deleted as cookieHeaderData_is_deleted,
         cookieHeaderData.version as cookieHeaderData_version
     </sql>
+    <select id="findByType" resultType="io.github.cctyl.entity.CookieHeaderData">
+        select  * from cookie_header_data where type = #{dataType}
+    </select>
+    <select id="findDataByTypeDistinctByKey" resultType="java.util.Map">
+
+        select
+            t1.ckey ,
+            t1.cvalue
+        from
+            cookie_header_data t1
+        join
+        (
+            SELECT
+                ckey,
+                MAX(last_modified_date) AS last_modified_date
+            FROM
+                cookie_header_data
+            where type = #{dataType}
+            GROUP BY
+                ckey
+        ) t2
+        on
+            t1.ckey = t2.ckey
+            and t1.last_modified_date = t2.last_modified_date;
+    </select>
+
 
 </mapper>

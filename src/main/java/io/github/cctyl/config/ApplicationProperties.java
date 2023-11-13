@@ -21,7 +21,6 @@ public class ApplicationProperties {
      * 是否需要初始化
      */
     private Boolean init;
-    private Integer minPlaySecond;
 
     private Baidu baidu;
 

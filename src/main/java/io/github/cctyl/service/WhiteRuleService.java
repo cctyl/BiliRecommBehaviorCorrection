@@ -299,10 +299,10 @@ public class WhiteRuleService {
      * @return
      */
     public Set<String> getWhiteIgnoreKeyWord() {
-        return redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
-                .stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
+//        return redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
+//                .stream()
+//                .map(Object::toString)
+//                .collect(Collectors.toSet());
     }
 
     /**

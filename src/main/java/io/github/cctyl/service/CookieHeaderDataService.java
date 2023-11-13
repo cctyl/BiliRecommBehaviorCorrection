@@ -3,6 +3,8 @@ package io.github.cctyl.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.CookieHeaderData;
 
+import java.util.Map;
+
 /**
  * <p>
  *  服务类
@@ -13,4 +15,6 @@ import io.github.cctyl.entity.CookieHeaderData;
  */
 public interface CookieHeaderDataService extends IService<CookieHeaderData> {
 
+    Map<String, String> findCookieMap();
+    Map<String, String> findHeaderMap();
 }

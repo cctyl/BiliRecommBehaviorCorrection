@@ -6,6 +6,8 @@ import io.github.cctyl.mapper.WhiteListRuleMapper;
 import io.github.cctyl.service.WhiteListRuleService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务实现类
@@ -17,4 +19,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, WhiteListRule> implements WhiteListRuleService {
 
+    @Override
+    public List<WhiteListRule> findAll() {
+        return this.list();
+    }
 }

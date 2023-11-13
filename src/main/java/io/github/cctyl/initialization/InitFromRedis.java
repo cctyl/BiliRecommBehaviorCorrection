@@ -7,6 +7,9 @@ import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.ApiHeader;
 import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.service.ConfigService;
+import io.github.cctyl.service.CookieHeaderDataService;
+import io.github.cctyl.service.DictService;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -34,7 +39,12 @@ public class InitFromRedis implements ApplicationRunner {
     @Autowired
     private ApplicationProperties applicationProperties;
 
-
+    @Autowired
+    private CookieHeaderDataService cookieHeaderDataService;
+    @Autowired
+    private ConfigService configService;
+    @Autowired
+    private DictService dictService;
 
     public void runback(ApplicationArguments args) throws Exception {
         log.debug("初始化...从redis中加载数据...");
@@ -113,7 +123,72 @@ public class InitFromRedis implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        log.debug("初始化...从sqlite中加载数据...");
 
-        log.error("暂未从redis中加载数据");
+        //0.加载cookie
+        Map<String, String> totalCookieMap =   cookieHeaderDataService.findCookieMap();
+        GlobalVariables.cookieMap.putAll(totalCookieMap);
+
+        //0.1加载mid
+        GlobalVariables.mid = configService.findByName("mid");
+
+
+        //1. 加载关键字数据
+        GlobalVariables.initKeywordSet();
+
+
+        //2. 加载黑名单用户id列表
+        GlobalVariables.initBlackUserIdSet();
+
+
+        //3. 加载黑名单关键词列表
+        GlobalVariables.initBlackKeywordSet();
+
+
+        //4. 加载黑名单分区id列表
+        GlobalVariables.initBlackTidSet();
+
+        //5.黑名单标签列表
+        GlobalVariables.initBlackTagSet();
+
+        //6.白名单用户id
+        GlobalVariables.initWhiteUserIdSet();
+
+        //7.白名单分区id
+        GlobalVariables.initWhiteTidSet();
+
+
+        //8.最小播放时间
+        String minPlaySecond = configService.findByName("minPlaySecond");
+        if (minPlaySecond!=null){
+            try {
+                GlobalVariables.minPlaySecond = Integer.parseInt(minPlaySecond);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        //9.白名单关键词列表
+        GlobalVariables.initWhitelistRules();
+
+        //10.加载停顿词
+        GlobalVariables.initStopWords();
+
+
+        //11.加载ApiHeader相关
+        GlobalVariables.initApiHeaderMap();
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(API_HEADER_MAP).entrySet()) {
+            GlobalVariables.apiHeaderMap.put((String) entry.getKey(), (ApiHeader) entry.getValue());
+        }
+
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
+            GlobalVariables.commonCookieMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
+
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_HEADER_MAP).entrySet()) {
+            GlobalVariables.commonHeaderMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
+
     }
 }

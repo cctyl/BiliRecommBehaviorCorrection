@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Data
 @Accessors(chain = true)
 @AllArgsConstructor
 @NoArgsConstructor
-//@TableName(autoResultMap = true)
 public class Dict extends AuditingEntity {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
@@ -44,6 +44,18 @@ public class Dict extends AuditingEntity {
     private String outerId;
 
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Dict dict = (Dict) o;
+        return Objects.equals(id, dict.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
+    }
 
 }

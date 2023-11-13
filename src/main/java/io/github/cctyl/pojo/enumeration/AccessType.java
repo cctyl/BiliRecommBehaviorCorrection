@@ -11,6 +11,8 @@ public enum  AccessType  {
      * 白名单
      */
     WHITE,
+
+    OTHER,
     ;
 
 }

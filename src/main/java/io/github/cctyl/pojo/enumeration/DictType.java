@@ -34,6 +34,16 @@ public enum DictType {
      * 分区id
      */
     TID,
+
+    /**
+     * 搜索词
+     */
+    SEARCH_KEYWORD,
+
+    /**
+     * 通用的关键词，对于没有细分是标题还是封面还是描述的关键词等使用的类型
+     */
+    KEYWORD,
     ;
 
 

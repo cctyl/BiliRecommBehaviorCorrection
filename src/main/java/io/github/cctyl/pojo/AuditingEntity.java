@@ -30,4 +30,6 @@ public abstract class AuditingEntity implements Serializable {
 
     @TableField(value = "last_modified_date",fill = FieldFill.INSERT_UPDATE)
     private Date lastModifiedDate;
+
+
 }

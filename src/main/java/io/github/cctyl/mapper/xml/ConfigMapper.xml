@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.ConfigMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Config">
+        <id column="id" property="id"/>
+        <result column="url" property="url"/>
+        <result column="name" property="name"/>
+        <result column="value" property="value"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Config">
+        <id column="config_id" property="id"/>
+        <result column="config_url" property="url"/>
+        <result column="config_name" property="name"/>
+        <result column="config_value" property="value"/>
+        <result column="config_created_date" property="createdDate"/>
+        <result column="config_last_modified_date" property="lastModifiedDate"/>
+        <result column="config_is_deleted" property="isDeleted"/>
+        <result column="config_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, url, name, value, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        config.id as config_id,
+        config.url as config_url,
+        config.name as config_name,
+        config.value as config_value,
+        config.created_date as config_created_date,
+        config.last_modified_date as config_last_modified_date,
+        config.is_deleted as config_is_deleted,
+        config.version as config_version
+    </sql>
+
+</mapper>

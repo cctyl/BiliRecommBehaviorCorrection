@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.Dict;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.DislikeReason;
 import io.github.cctyl.pojo.Tag;
@@ -118,10 +119,7 @@ public class BlackRuleService {
      * @return
      */
     public Set<String> getIgnoreKeyWordSet() {
-        return redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
-                .stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
+
     }
 
 
