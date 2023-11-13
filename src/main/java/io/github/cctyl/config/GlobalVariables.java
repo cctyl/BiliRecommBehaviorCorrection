@@ -298,6 +298,76 @@ public class GlobalVariables {
         redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
     }*/
 
+
+    public static Set<Dict> getBlackUserIdSet() {
+        return blackUserIdSet;
+    }
+
+    public static Set<Dict> getWhiteUserIdSet() {
+        return whiteUserIdSet;
+    }
+
+    public static Set<Dict> getBlackKeywordSet() {
+        return blackKeywordSet;
+    }
+
+    public static WordTree getBlackKeywordTree() {
+        return blackKeywordTree;
+    }
+
+    public static Set<Dict> getBlackTidSet() {
+        return blackTidSet;
+    }
+
+    public static Set<Dict> getWhiteTidSet() {
+        return whiteTidSet;
+    }
+
+    public static Set<Dict> getBlackTagSet() {
+        return blackTagSet;
+    }
+
+    public static WordTree getBlackTagTree() {
+        return blackTagTree;
+    }
+
+    public static Map<String, String> getCookieMap() {
+        return cookieMap;
+    }
+
+    public static String getMid() {
+        return mid;
+    }
+
+    public static Set<Dict> getKeywordSet() {
+        return keywordSet;
+    }
+
+    public static List<WhiteListRule> getWhitelistRules() {
+        return whitelistRules;
+    }
+
+    public static Map<String, ApiHeader> getApiHeaderMap() {
+        return apiHeaderMap;
+    }
+
+    public static Map<String, String> getCommonCookieMap() {
+        return commonCookieMap;
+    }
+
+    public static Map<String, String> getCommonHeaderMap() {
+        return commonHeaderMap;
+    }
+
+    public static int getMinPlaySecond() {
+        return minPlaySecond;
+    }
+
+    public static WordTree getStopWordTree() {
+        return stopWordTree;
+    }
+
+
     /**
      * 更新blackUserIdSet
      */
