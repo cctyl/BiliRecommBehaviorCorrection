@@ -53,4 +53,6 @@ public interface DictService extends IService<Dict> {
     void updateAccessTypeByIdIn(AccessType blackCache, Collection<String> keywordIdSet);
 
     void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol);
+
+    void removeAndAddDict(AccessType accessType, DictType dictType,  String outerId,Collection<String> valueCol);
 }

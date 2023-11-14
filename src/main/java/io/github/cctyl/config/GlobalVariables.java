@@ -582,23 +582,43 @@ public class GlobalVariables {
     public static void addBlackTidSet(Set<String> param) {
 
 
-        //先删除之前的
-        dictService.removeByAccessTypeAndDictTypeAndValue(
+        dictService.removeAndAddDict(
                 AccessType.BLACK,
                 DictType.TID,
-                param
-        );
-
-        //新增到数据库
-        List<Dict> dictList = Dict.keyword2Dict(
-                param,
-                DictType.TID,
-                AccessType.BLACK,
-                null
-        );
-        dictService.saveBatch(dictList);
+                null,
+                param);
 
         //新增到缓存
          BLACK_TID_SET.addAll(param);
+    }
+
+    /**
+     * 新增黑名单关键词
+     * @param keywordCol
+     */
+    public static void addBlackKeyword(Collection<String> keywordCol) {
+
+
+        dictService.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.KEYWORD,
+                null,
+                keywordCol);
+
+        //新增到缓存
+        BLACK_KEYWORD_SET.addAll(keywordCol);
+
+    }
+
+    public static void addBlackUserIdSet(Set<String> blackUserIdSet) {
+
+        dictService.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.MID,
+                null,
+                blackUserIdSet);
+
+        //新增到缓存
+        BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
 }

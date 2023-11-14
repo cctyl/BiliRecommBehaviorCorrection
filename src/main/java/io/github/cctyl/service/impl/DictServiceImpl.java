@@ -171,4 +171,39 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         );
 
     }
+
+
+    /**
+     * 删除并新增字典
+     * @param accessType
+     * @param dictType
+     * @param valueCol
+     * @param outerId
+     */
+    @Override
+    public void removeAndAddDict(
+            AccessType accessType,
+                                 DictType dictType,
+
+                                 String outerId,
+
+                                 Collection<String> valueCol) {
+
+        //先删除之前的
+        this.removeByAccessTypeAndDictTypeAndValue(
+                accessType,
+                dictType,
+                valueCol
+        );
+
+        //新增到数据库
+        List<Dict> dictList = Dict.keyword2Dict(
+                valueCol,
+               dictType,
+                accessType,
+                outerId
+        );
+        this.saveBatch(dictList);
+
+    }
 }

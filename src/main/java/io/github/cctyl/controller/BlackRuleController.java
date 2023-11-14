@@ -199,14 +199,15 @@ public class BlackRuleController {
 
     @Operation(summary = "添加黑名单关键词")
     @PostMapping("/keyword")
-    public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList
-    ) {
+    public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList) {
         Set<String> collect = keywordList.stream()
                 .filter(StrUtil::isNotBlank)
                 .map(String::trim)
                 .collect(Collectors.toSet());
 
-            GlobalVariables.addBlackKeyword(collect);
+        //与忽略的关键词进行过滤
+        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET())
+        GlobalVariables.addBlackKeyword(collect);
 
         return R.ok();
     }
@@ -215,14 +216,17 @@ public class BlackRuleController {
     @Operation(summary = "获得黑名单用户id列表")
     @GetMapping("/user-id")
     public R getBlackUserIdSet() {
-        return R.ok().setData(GlobalVariables.blackUserIdSet);
+
+        List<Dict> blackUserId = dictService.findBlackUserId();
+        return R.ok().setData(blackUserId);
     }
 
-    @Operation(summary = "更新黑名单用户id列表")
-    @PutMapping("/user-id")
+    @Operation(summary = "增加黑名单用户id列表")
+    @PostMapping("/user-id")
     public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
-        GlobalVariables.setBlackUserIdSet(blackUserIdSet);
-        return R.ok().setData(GlobalVariables.blackUserIdSet);
+        GlobalVariables.addBlackUserIdSet(blackUserIdSet);
+
+        return R.ok();
     }
 
 
