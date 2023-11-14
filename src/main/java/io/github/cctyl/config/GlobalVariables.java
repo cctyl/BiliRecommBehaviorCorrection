@@ -28,93 +28,93 @@ public class GlobalVariables {
     /**
      * 黑名单up主 id列表
      */
-    private static Set<String> blackUserIdSet;
+    private static Set<String> BLACK_USER_ID_SET;
 
     /**
      * 白名单up主id列表
      */
-    private static Set<String> whiteUserIdSet;
+    private static Set<String> WHITE_USER_ID_SET;
 
     /**
      * 黑名单关键词列表
      */
     //TODO 已经有Tree，这个set是否还有必要？
-    private static Set<String> blackKeywordSet;
+    private static Set<String> BLACK_KEYWORD_SET;
 
     /**
      * 黑名单关键词树
      */
-    private static WordTree blackKeywordTree = new WordTree();
+    private static WordTree BLACK_KEYWORD_TREE = new WordTree();
 
     /**
      * 黑名单分区id列表
      */
-    private static Set<String> blackTidSet;
+    private static Set<String> BLACK_TID_SET;
 
     /**
      * 白名单分区id列表
      */
-    private static Set<String> whiteTidSet;
+    private static Set<String> WHITE_TID_SET;
 
     /**
      * 黑名单标签列表
      */
-    private static Set<String> blackTagSet;
+    private static Set<String> BLACK_TAG_SET;
 
     /**
      * 黑名单标签树
      */
-    private static WordTree blackTagTree = new WordTree();
+    private static WordTree BLACK_TAG_TREE = new WordTree();
 
     /**
      * cookie
      */
-    private static Map<String, String> cookieMap = new HashMap<>(20);
+    private static Map<String, String> COOKIE_MAP = new HashMap<>(20);
 
     /**
      * 播放者用户id
      */
-    private static String mid;
+    private static String MID;
 
     /**
      * 关键词列表
      */
-    private static Set<String> keywordSet;
+    private static Set<String> KEYWORD_SET;
 
     /**
      * 白名单关键词列表
      */
-    private static List<WhiteListRule> whitelistRules;
+    private static List<WhiteListRule> WHITELIST_RULE_LIST;
 
     /**
      * ApiHeader
      * url 作为键，cookie 和 httpheader 作为值
      */
-    private static Map<String, ApiHeader> apiHeaderMap = new HashMap<>();
+    private static Map<String, ApiHeader> API_HEADER_MAP = new HashMap<>();
 
     /**
      * 通用的cookie，当没有找到匹配的url时使用这个cookie
      */
-    private static Map<String, String> commonCookieMap = new HashMap<>();
+    private static Map<String, String> COMMON_COOKIE_MAP = new HashMap<>();
     /**
      * 通用的header，当没有找到匹配的url时使用这个header
      */
-    private static Map<String, String> commonHeaderMap = new HashMap<>();
+    private static Map<String, String> COMMON_HEADER_MAP = new HashMap<>();
 
     /**
      * 最小播放时间
      */
-    private static int minPlaySecond = 50;
+    private static int MIN_PLAY_SECOND = 50;
 
     /**
      * 停顿词列表
      */
-    private static WordTree stopWordTree = new WordTree();
+    private static WordTree STOP_WORD_TREE = new WordTree();
     /**
      * 黑白名单忽略关键词列表
      */
-    private static Set<String> ignoreBlackKeyWordSet;
-    private static Set<String> ignoreWhiteKeyWordSet;
+    private static Set<String> IGNORE_BLACK_KEY_WORD_SET;
+    private static Set<String> IGNORE_WHITE_KEY_WORD_SET;
 
     private static BlackRuleService blackRuleService;
     private static WhiteRuleService whiteRuleService;
@@ -304,80 +304,80 @@ public class GlobalVariables {
     }*/
 
 
-    public static Set<String> getBlackUserIdSet() {
-        return blackUserIdSet;
+    public static Set<String> getBLACK_USER_ID_SET() {
+        return BLACK_USER_ID_SET;
     }
 
-    public static Set<String> getWhiteUserIdSet() {
-        return whiteUserIdSet;
+    public static Set<String> getWHITE_USER_ID_SET() {
+        return WHITE_USER_ID_SET;
     }
 
-    public static Set<String> getBlackKeywordSet() {
-        return blackKeywordSet;
+    public static Set<String> getBLACK_KEYWORD_SET() {
+        return BLACK_KEYWORD_SET;
     }
 
-    public static WordTree getBlackKeywordTree() {
-        return blackKeywordTree;
+    public static WordTree getBLACK_KEYWORD_TREE() {
+        return BLACK_KEYWORD_TREE;
     }
 
-    public static Set<String> getBlackTidSet() {
-        return blackTidSet;
+    public static Set<String> getBLACK_TID_SET() {
+        return BLACK_TID_SET;
     }
 
-    public static Set<String> getWhiteTidSet() {
-        return whiteTidSet;
+    public static Set<String> getWHITE_TID_SET() {
+        return WHITE_TID_SET;
     }
 
-    public static Set<String> getBlackTagSet() {
-        return blackTagSet;
+    public static Set<String> getBLACK_TAG_SET() {
+        return BLACK_TAG_SET;
     }
 
-    public static WordTree getBlackTagTree() {
-        return blackTagTree;
+    public static WordTree getBLACK_TAG_TREE() {
+        return BLACK_TAG_TREE;
     }
 
-    public static Map<String, String> getCookieMap() {
-        return cookieMap;
+    public static Map<String, String> getCOOKIE_MAP() {
+        return COOKIE_MAP;
     }
 
-    public static String getMid() {
-        return mid;
+    public static String getMID() {
+        return MID;
     }
 
-    public static Set<String> getKeywordSet() {
-        return keywordSet;
+    public static Set<String> getKEYWORD_SET() {
+        return KEYWORD_SET;
     }
 
-    public static List<WhiteListRule> getWhitelistRules() {
-        return whitelistRules;
+    public static List<WhiteListRule> getWHITELIST_RULE_LIST() {
+        return WHITELIST_RULE_LIST;
     }
 
-    public static Map<String, ApiHeader> getApiHeaderMap() {
-        return apiHeaderMap;
+    public static Map<String, ApiHeader> getAPI_HEADER_MAP() {
+        return API_HEADER_MAP;
     }
 
-    public static Map<String, String> getCommonCookieMap() {
-        return commonCookieMap;
+    public static Map<String, String> getCOMMON_COOKIE_MAP() {
+        return COMMON_COOKIE_MAP;
     }
 
-    public static Map<String, String> getCommonHeaderMap() {
-        return commonHeaderMap;
+    public static Map<String, String> getCOMMON_HEADER_MAP() {
+        return COMMON_HEADER_MAP;
     }
 
-    public static int getMinPlaySecond() {
-        return minPlaySecond;
+    public static int getMIN_PLAY_SECOND() {
+        return MIN_PLAY_SECOND;
     }
 
-    public static WordTree getStopWordTree() {
-        return stopWordTree;
+    public static WordTree getSTOP_WORD_TREE() {
+        return STOP_WORD_TREE;
     }
 
-    public static Set<String> getIgnoreBlackKeyWordSet() {
-        return ignoreBlackKeyWordSet;
+    public static Set<String> getIGNORE_BLACK_KEY_WORD_SET() {
+        return IGNORE_BLACK_KEY_WORD_SET;
     }
 
-    public static Set<String> getIgnoreWhiteKeyWordSet() {
-        return ignoreWhiteKeyWordSet;
+    public static Set<String> getIGNORE_WHITE_KEY_WORD_SET() {
+        return IGNORE_WHITE_KEY_WORD_SET;
     }
 
     /**
@@ -385,15 +385,15 @@ public class GlobalVariables {
      * 黑白名单忽略关键词列表的加载
      */
     public static void initIgnoreKeyWord() {
-        ignoreBlackKeyWordSet = dictService.findBlackIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
-        ignoreWhiteKeyWordSet = dictService.findWhiteIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+        IGNORE_BLACK_KEY_WORD_SET = dictService.findBlackIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+        IGNORE_WHITE_KEY_WORD_SET = dictService.findWhiteIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 
     /**
      * 更新blackUserIdSet
      */
     public static void initBlackUserIdSet() {
-        GlobalVariables.blackUserIdSet = dictService
+        GlobalVariables.BLACK_USER_ID_SET = dictService
                 .findBlackUserId()
                 .stream()
                 .map(Dict::getValue)
@@ -407,16 +407,16 @@ public class GlobalVariables {
         //1.加载需要忽略的东西
 
         //2. 黑名单关键词列表
-        GlobalVariables.blackKeywordSet = dictService.findBlackKeyWord()
+        GlobalVariables.BLACK_KEYWORD_SET = dictService.findBlackKeyWord()
                 .stream()
                 .map(Dict::getValue)
                 .collect(Collectors.toSet())
         ;
-        GlobalVariables.blackKeywordSet.removeAll(ignoreBlackKeyWordSet);
+        GlobalVariables.BLACK_KEYWORD_SET.removeAll(IGNORE_BLACK_KEY_WORD_SET);
 
         //3.构建dfa Tree
-        GlobalVariables.blackKeywordTree = new WordTree();
-        GlobalVariables.blackKeywordTree.addWords( GlobalVariables.blackKeywordSet);
+        GlobalVariables.BLACK_KEYWORD_TREE = new WordTree();
+        GlobalVariables.BLACK_KEYWORD_TREE.addWords( GlobalVariables.BLACK_KEYWORD_SET);
     }
 
     /**
@@ -425,34 +425,34 @@ public class GlobalVariables {
     public static void initBlackTagSet() {
         //1.加载需要忽略的东西
 
-        GlobalVariables.blackTagSet =
+        GlobalVariables.BLACK_TAG_SET =
                dictService.findBlackTag()
                 .stream()
                        .map(Dict::getValue)
                 .collect(Collectors.toSet());
 
-        GlobalVariables.blackTagSet.removeAll(ignoreBlackKeyWordSet);
+        GlobalVariables.BLACK_TAG_SET.removeAll(IGNORE_BLACK_KEY_WORD_SET);
 
-        GlobalVariables.blackTagTree = new WordTree();
-        GlobalVariables.blackTagTree.addWords(GlobalVariables.blackTagSet);
+        GlobalVariables.BLACK_TAG_TREE = new WordTree();
+        GlobalVariables.BLACK_TAG_TREE.addWords(GlobalVariables.BLACK_TAG_SET);
     }
 
     public static void initWhiteUserIdSet() {
-    GlobalVariables.whiteUserIdSet = dictService
+    GlobalVariables.WHITE_USER_ID_SET = dictService
             .findWhiteUserId()
             .stream().map(Dict::getValue)
             .collect(Collectors.toSet());
 }
 
     public static void initBlackTidSet() {
-        GlobalVariables.blackTidSet = dictService
+        GlobalVariables.BLACK_TID_SET = dictService
                 .findBlackTid()
                 .stream().map(Dict::getValue)
                 .collect(Collectors.toSet());
     }
 
     public static void initWhiteTidSet() {
-        GlobalVariables.whiteTidSet = dictService
+        GlobalVariables.WHITE_TID_SET = dictService
                 .findWhiteTid()
                 .stream()
                 .map(Dict::getValue)
@@ -461,7 +461,7 @@ public class GlobalVariables {
     }
 
     public static void initMid() {
-        GlobalVariables.mid =  configService.findByName("mid");
+        GlobalVariables.MID =  configService.findByName("mid");
 
     }
 
@@ -470,7 +470,7 @@ public class GlobalVariables {
         String minPlaySecond = configService.findByName("minPlaySecond");
         if (minPlaySecond!=null){
             try {
-                GlobalVariables.minPlaySecond = Integer.parseInt(minPlaySecond);
+                GlobalVariables.MIN_PLAY_SECOND = Integer.parseInt(minPlaySecond);
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
@@ -479,7 +479,7 @@ public class GlobalVariables {
     }
 
     public static void initKeywordSet() {
-        GlobalVariables.keywordSet = dictService.findSearchKeyWord()
+        GlobalVariables.KEYWORD_SET = dictService.findSearchKeyWord()
         .stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 
@@ -490,11 +490,11 @@ public class GlobalVariables {
         //需要忽略的词汇不要存入规则中
 
         for (WhiteListRule whitelistRule : whitelistRules) {
-            whitelistRule.getDescKeyWordList().removeAll(ignoreWhiteKeyWordSet);
-            whitelistRule.getTitleKeyWordList().removeAll(ignoreWhiteKeyWordSet);
-            whitelistRule.getTagNameList().removeAll(ignoreWhiteKeyWordSet);
+            whitelistRule.getDescKeyWordList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
+            whitelistRule.getTitleKeyWordList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
+            whitelistRule.getTagNameList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
         }
-        GlobalVariables.whitelistRules = whitelistRules;
+        GlobalVariables.WHITELIST_RULE_LIST = whitelistRules;
 
     }
 
@@ -507,19 +507,19 @@ public class GlobalVariables {
                 Files.lines(Paths.get(classPathResource.getFile().getPath()))
                         .map(String::trim)
                         .collect(Collectors.toList());
-        GlobalVariables.stopWordTree.addWords(stopWordList);
+        GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
     }
 
     public static void initApiHeaderMap() {
 
-        GlobalVariables.commonCookieMap = cookieHeaderDataService.findCookieMap();
-        GlobalVariables.commonHeaderMap = cookieHeaderDataService.findHeaderMap();
-        GlobalVariables.apiHeaderMap =  cookieHeaderDataService.findApiHeaderMap();
+        GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCookieMap();
+        GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findHeaderMap();
+        GlobalVariables.API_HEADER_MAP =  cookieHeaderDataService.findApiHeaderMap();
 
     }
 
     public static void initCookieMap() {
-        GlobalVariables.cookieMap = cookieHeaderDataService.findCookieMap();
+        GlobalVariables.COOKIE_MAP = cookieHeaderDataService.findCookieMap();
     }
 
     /**
@@ -534,7 +534,7 @@ public class GlobalVariables {
                 .setValue(mid);
         dictService.save(dict);
 
-        GlobalVariables.blackUserIdSet.add(mid);
+        GlobalVariables.BLACK_USER_ID_SET.add(mid);
     }
 
     /**
@@ -554,8 +554,8 @@ public class GlobalVariables {
         );
 
         List<String> valueList = Dict.transferToValue( dictService.findByIdIn(keywordIdSet));
-        blackKeywordSet.addAll( valueList);
-        blackKeywordTree.addWords(valueList);
+        BLACK_KEYWORD_SET.addAll( valueList);
+        BLACK_KEYWORD_TREE.addWords(valueList);
     }
 
     /**
@@ -571,27 +571,27 @@ public class GlobalVariables {
         );
 
         List<String> valueList = Dict.transferToValue( dictService.findByIdIn(tagNameIdList));
-        blackTagSet.addAll( valueList);
-        blackTagTree.addWords(valueList);
+        BLACK_TAG_SET.addAll( valueList);
+        BLACK_TAG_TREE.addWords(valueList);
     }
 
     /**
      * 新增tid
-     * @param blackTidSet
+     * @param param
      */
-    public static void addBlackTidSet(Set<String> blackTidSet) {
+    public static void addBlackTidSet(Set<String> param) {
 
 
         //先删除之前的
         dictService.removeByAccessTypeAndDictTypeAndValue(
                 AccessType.BLACK,
                 DictType.TID,
-                blackTidSet
+                param
         );
 
         //新增到数据库
         List<Dict> dictList = Dict.keyword2Dict(
-                blackTidSet,
+                param,
                 DictType.TID,
                 AccessType.BLACK,
                 null
@@ -599,6 +599,6 @@ public class GlobalVariables {
         dictService.saveBatch(dictList);
 
         //新增到缓存
-        blackTidSet.addAll(blackTidSet);
+         BLACK_TID_SET.addAll(param);
     }
 }

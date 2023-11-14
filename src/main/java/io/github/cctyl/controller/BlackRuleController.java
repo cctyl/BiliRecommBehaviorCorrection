@@ -192,26 +192,23 @@ public class BlackRuleController {
     @Operation(summary = "获得黑名单关键词列表")
     @GetMapping("/keyword")
     public R getBlackKeywordSet() {
-
         List<Dict> blackKeyWord = dictService.findBlackKeyWord();
-
         return R.ok().setData(blackKeyWord);
     }
 
 
-    @Operation(summary = "添加/更新黑名单关键词")
+    @Operation(summary = "添加黑名单关键词")
     @PostMapping("/keyword")
-    public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList,
-                                     @RequestParam Boolean add
+    public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList
     ) {
-        Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank)
+        Set<String> collect = keywordList.stream()
+                .filter(StrUtil::isNotBlank)
+                .map(String::trim)
                 .collect(Collectors.toSet());
-        if (Boolean.TRUE.equals(add)) {
+
             GlobalVariables.addBlackKeyword(collect);
-        } else {
-            GlobalVariables.setBlackKeywordSet(collect);
-        }
-        return R.ok().setData(GlobalVariables.blackKeywordSet);
+
+        return R.ok();
     }
 
 

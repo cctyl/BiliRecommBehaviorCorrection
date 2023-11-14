@@ -8,10 +8,8 @@ import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
-import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.utils.IdGenerator;
-import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.SegmenterUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +20,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.github.cctyl.pojo.constants.AppConstant.IGNORE_WHITE_KEYWORD;
 
 /**
  * 白名单相关规则
@@ -98,7 +94,7 @@ public class WhiteRuleService {
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
         }
-        boolean match = GlobalVariables.getWhiteUserIdSet()
+        boolean match = GlobalVariables.getWHITE_USER_ID_SET()
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -124,7 +120,7 @@ public class WhiteRuleService {
     public boolean isTidMatch(VideoDetail videoDetail) {
 
 
-        boolean match = GlobalVariables.getWhiteTidSet()
+        boolean match = GlobalVariables.getWHITE_TID_SET()
                 .contains(String.valueOf(videoDetail.getTid()))
                 ;
 
@@ -149,7 +145,7 @@ public class WhiteRuleService {
      */
     public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
         String[] matchWordArr = new String[8];
-        WhiteListRule whitelistRule = GlobalVariables.getWhitelistRules()
+        WhiteListRule whitelistRule = GlobalVariables.getWHITELIST_RULE_LIST()
                 .stream()
                 .filter(item ->
                         {
