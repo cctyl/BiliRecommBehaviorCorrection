@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author tyl
@@ -29,6 +29,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     /**
      * 根据两大类型查询字典表
+     *
      * @param dictType
      * @param accessType
      * @return
@@ -37,7 +38,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
             DictType dictType,
             AccessType accessType
-    ){
+    ) {
         LambdaQueryWrapper<Dict> eq = new LambdaQueryWrapper<Dict>()
                 .eq(Dict::getAccessType, accessType)
                 .eq(Dict::getDictType, dictType);
@@ -46,32 +47,32 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     /**
      * 获得搜索关键词
+     *
      * @return
      */
     @Override
     public List<Dict> findSearchKeyWord() {
 
         return this.findByDictTypeAndAccessType(
-                DictType.SEARCH_KEYWORD,AccessType.OTHER
+                DictType.SEARCH_KEYWORD, AccessType.OTHER
         );
     }
-
 
 
     @Override
     public List<Dict> findBlackUserId() {
         return this.findByDictTypeAndAccessType(
-                DictType.MID,AccessType.BLACK
+                DictType.MID, AccessType.BLACK
         );
 
     }
 
     @Override
     public List<Dict> addBlackKeyword(Collection<String> param) {
-        return this.addDict(param,AccessType.BLACK,DictType.KEYWORD);
+        return this.addDict(param, AccessType.BLACK, DictType.KEYWORD);
     }
 
-    public List<Dict> addDict(Collection<String> param,AccessType accessType,DictType dictType) {
+    public List<Dict> addDict(Collection<String> param, AccessType accessType, DictType dictType) {
         List<Dict> newDictList = param.stream().map(
                 s -> {
                     return new Dict()
@@ -88,74 +89,85 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     @Override
     public List<Dict> findBlackKeyWord() {
-        return this.findByDictTypeAndAccessType(DictType.KEYWORD,AccessType.BLACK);
+        return this.findByDictTypeAndAccessType(DictType.KEYWORD, AccessType.BLACK);
     }
 
     @Override
     public List<Dict> findBlackTid() {
-        return this.findByDictTypeAndAccessType(DictType.TID,AccessType.BLACK);
+        return this.findByDictTypeAndAccessType(DictType.TID, AccessType.BLACK);
     }
 
     @Override
     public List<Dict> findBlackTag() {
-        return this.findByDictTypeAndAccessType(DictType.TAG,AccessType.BLACK);
+        return this.findByDictTypeAndAccessType(DictType.TAG, AccessType.BLACK);
     }
 
     @Override
     public List<Dict> addBlackTag(Collection<String> param) {
-        return    this.addDict(param,AccessType.BLACK,DictType.TAG);
+        return this.addDict(param, AccessType.BLACK, DictType.TAG);
     }
 
     @Override
     public List<Dict> findWhiteUserId() {
-        return this.findByDictTypeAndAccessType(DictType.MID,AccessType.WHITE);
+        return this.findByDictTypeAndAccessType(DictType.MID, AccessType.WHITE);
     }
 
 
     @Override
     public List<Dict> findWhiteTid() {
-        return this.findByDictTypeAndAccessType(DictType.TID,AccessType.WHITE);
+        return this.findByDictTypeAndAccessType(DictType.TID, AccessType.WHITE);
     }
 
     @Override
     public List<Dict> findWhiteIgnoreKeyWord() {
-        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
+        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.WHITE);
     }
 
     /**
      * 黑名单的缓存
+     *
      * @param param
      * @param dictType
      */
     @Override
     public void addBlackCache(List<String> param, DictType dictType) {
 
-        this.addDict(param,AccessType.BLACK_CACHE,dictType);
+        this.addDict(param, AccessType.BLACK_CACHE, dictType);
     }
 
     @Override
     public List<Dict> findBlackIgnoreKeyWord() {
-        return  this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
+        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.WHITE);
     }
-
 
 
     @Override
     public List<Dict> findByIdIn(Collection<String> idList) {
-       return this.list(new LambdaQueryWrapper<Dict>()
-            .in(Dict::getId,idList)
+        return this.list(new LambdaQueryWrapper<Dict>()
+                .in(Dict::getId, idList)
         );
     }
 
 
     @Override
-    public void updateAccessTypeByIdIn(AccessType accessType, List<String> keywordIdSet) {
-
+    public void updateAccessTypeByIdIn(AccessType accessType, Collection<String> keywordIdSet) {
 
         this.update(
                 new LambdaUpdateWrapper<Dict>()
                         .in(Dict::getId, keywordIdSet)
                         .set(Dict::getAccessType, accessType)
+        );
+
+    }
+
+
+    @Override
+    public void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol) {
+
+        this.remove(new LambdaQueryWrapper<Dict>()
+                .eq(Dict::getAccessType, accessType)
+                .eq(Dict::getDictType, dictType)
+                .in(Dict::getValue, valueCol)
         );
 
     }

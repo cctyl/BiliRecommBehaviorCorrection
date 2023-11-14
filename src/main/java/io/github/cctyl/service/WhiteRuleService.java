@@ -374,13 +374,5 @@ public class WhiteRuleService {
         return whitelistRule;
     }
 
-    public List<Dict> keyword2Dict(Collection<String> valueCollection,DictType dictType,String outerId){
-       return   valueCollection.stream().map(s -> new Dict()
-               .setAccessType(AccessType.WHITE)
-               .setDictType(dictType)
-               .setOuterId(outerId)
-               .setValue(s) )
-               .collect(Collectors.toList());
-    }
 
 }

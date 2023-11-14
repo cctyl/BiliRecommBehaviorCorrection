@@ -49,6 +49,18 @@ public class Dict extends AuditingEntity {
     public static List<String> transferToValue(Collection<Dict> dictCollection) {
         return dictCollection.stream().map(Dict::getValue).collect(Collectors.toList());
     }
+    public static List<Dict> keyword2Dict(Collection<String> valueCollection,
+                                          DictType dictType,
+                                          AccessType accessType,
+                                          String outerId
+    ){
+        return   valueCollection.stream().map(s -> new Dict()
+                .setAccessType(accessType)
+                .setDictType(dictType)
+                .setOuterId(outerId)
+                .setValue(s) )
+                .collect(Collectors.toList());
+    }
 
 
     @Override

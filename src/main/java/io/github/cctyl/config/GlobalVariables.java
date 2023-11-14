@@ -574,4 +574,31 @@ public class GlobalVariables {
         blackTagSet.addAll( valueList);
         blackTagTree.addWords(valueList);
     }
+
+    /**
+     * 新增tid
+     * @param blackTidSet
+     */
+    public static void addBlackTidSet(Set<String> blackTidSet) {
+
+
+        //先删除之前的
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.TID,
+                blackTidSet
+        );
+
+        //新增到数据库
+        List<Dict> dictList = Dict.keyword2Dict(
+                blackTidSet,
+                DictType.TID,
+                AccessType.BLACK,
+                null
+        );
+        dictService.saveBatch(dictList);
+
+        //新增到缓存
+        blackTidSet.addAll(blackTidSet);
+    }
 }

@@ -185,14 +185,17 @@ public class BlackRuleController {
     @PostMapping("/tid")
     public R updateBlackTidSet(@RequestBody Set<String> blackTidSet) {
         GlobalVariables.addBlackTidSet(blackTidSet);
-        return R.ok().setData(GlobalVariables.getBlackTidSet());
+        return R.ok();
     }
 
 
     @Operation(summary = "获得黑名单关键词列表")
     @GetMapping("/keyword")
     public R getBlackKeywordSet() {
-        return R.ok().setData(GlobalVariables.blackKeywordSet);
+
+        List<Dict> blackKeyWord = dictService.findBlackKeyWord();
+
+        return R.ok().setData(blackKeyWord);
     }
 
 
