@@ -38,6 +38,7 @@ public class GlobalVariables {
     /**
      * 黑名单关键词列表
      */
+    //TODO 已经有Tree，这个set是否还有必要？
     private static Set<String> blackKeywordSet;
 
     /**
@@ -534,5 +535,49 @@ public class GlobalVariables {
         dictService.save(dict);
 
         GlobalVariables.blackUserIdSet.add(mid);
+    }
+
+    /**
+     * 从缓存中读入数据，存储
+     *
+     * 将这些标签的类型由CACHE 改为正常类型即可
+     * 黑名单中加入新出现的标签
+     */
+    public static void addBlackKeyWordFromCache(Set<String> keywordSet) {
+
+        //过滤掉忽略的关键词
+        keywordSet.removeAll(ignoreBlackKeyWordSet);
+
+        //将这些标签的类型由CACHE 改为正常类型即可
+        dictService.updateAccessTypeByAccessTypeAndDictTypeAndValueIn(
+                AccessType.BLACK,
+                AccessType.BLACK_CACHE,
+                DictType.KEYWORD,
+                keywordSet
+        );
+
+        blackKeywordSet.addAll(keywordSet);
+        blackKeywordTree.addWords(keywordSet);
+    }
+
+    /**
+     * 将缓存中的Tag 加入正常的Tag列表中
+     * @param tagNameSet
+     */
+    public static void addBlackTagFromCache(Set<String> tagNameSet) {
+
+        //过滤掉忽略的关键词
+        tagNameSet.removeAll(ignoreBlackKeyWordSet);
+
+        //将这些标签的类型由CACHE 改为正常类型即可
+        dictService.updateAccessTypeByAccessTypeAndDictTypeAndValueIn(
+                AccessType.BLACK,
+                AccessType.BLACK_CACHE,
+                DictType.TAG,
+                tagNameSet
+        );
+
+        blackTagSet.addAll(tagNameSet);
+        blackTagTree.addWords(tagNameSet);
     }
 }

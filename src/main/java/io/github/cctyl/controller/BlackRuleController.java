@@ -163,18 +163,15 @@ public class BlackRuleController {
         Set<String> keywordSet = map.getOrDefault("keywordSet", Collections.emptySet());
         Set<String> tagNameSet = map.getOrDefault("tagNameSet", Collections.emptySet());
 
-        GlobalVariables.blackKeywordSet.addAll(keywordSet);
-        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
-        GlobalVariables.blackTagSet.addAll(tagNameSet);
-        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
+        //添加黑名单关键词
+        GlobalVariables.addBlackKeyWordFromCache(keywordSet);
 
-        //清空缓存结果
-        redisUtil.delete(BLACK_KEYWORD_CACHE);
-        redisUtil.delete(BLACK_TAG_NAME_CACHE);
+        //添加黑名单标签
+        GlobalVariables.addBlackTagFromCache(tagNameSet);
 
         return R.data(Map.of(
-                "keywordSet", GlobalVariables.blackKeywordSet,
-                "tagNameSet", GlobalVariables.blackTagSet
+                "keywordSet", GlobalVariables.getBlackKeywordSet(),
+                "tagNameSet", GlobalVariables.getBlackTagSet()
         ));
     }
 

@@ -1,6 +1,7 @@
 package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.cctyl.entity.Dict;
 import io.github.cctyl.mapper.DictMapper;
 import io.github.cctyl.pojo.enumeration.AccessType;
@@ -135,5 +136,28 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Override
     public List<Dict> findBlackIgnoreKeyWord() {
         return  this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
+    }
+
+    /**
+     * 根据条件更新AccessType
+     * @param newAccessType
+     * @param oldAccessType
+     * @param dictType
+     * @param valueSet
+     */
+    @Override
+    public void updateAccessTypeByAccessTypeAndDictTypeAndValueIn(AccessType newAccessType,
+                                                                  AccessType oldAccessType,
+                                                                  DictType dictType,
+                                                                  Set<String> valueSet) {
+
+        LambdaUpdateWrapper<Dict> wrapper = new LambdaUpdateWrapper<Dict>()
+                .eq(Dict::getAccessType, oldAccessType)
+                .eq(Dict::getDictType, dictType)
+                .in(Dict::getValue, valueSet)
+                .set(Dict::getAccessType, newAccessType);
+
+        this.update(wrapper);
+
     }
 }
