@@ -206,7 +206,7 @@ public class BlackRuleController {
                 .collect(Collectors.toSet());
 
         //与忽略的关键词进行过滤
-        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET())
+        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
         GlobalVariables.addBlackKeyword(collect);
 
         return R.ok();
@@ -233,17 +233,23 @@ public class BlackRuleController {
     @Operation(summary = "获得黑名单分区列表")
     @GetMapping("/tag")
     public R getBlackTagSet() {
-        return R.ok().setData(GlobalVariables.blackTagSet);
+        List<Dict> blackTag = dictService.findBlackTag();
+        return R.ok().setData(blackTag);
     }
 
-    @Operation(summary = "更新黑名单分区列表")
-    @PutMapping("/tag")
+    @Operation(summary = "新增黑名单分区名")
+    @PostMapping("/tag")
     public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
 
-        Set<String> collect = blackTagSet.stream().filter(StrUtil::isNotBlank)
+        Set<String> collect = blackTagSet
+                .stream()
+                .filter(StrUtil::isNotBlank)
+                .map(String::trim)
                 .collect(Collectors.toSet());
-        GlobalVariables.setBlackTagSet(collect);
-        return R.ok().setData(GlobalVariables.blackTagSet);
+        //与忽略的关键词进行过滤
+        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
+        GlobalVariables.addBlackTagSet(collect);
+        return R.ok();
     }
 
 

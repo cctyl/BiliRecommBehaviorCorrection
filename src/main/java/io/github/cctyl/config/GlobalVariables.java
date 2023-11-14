@@ -621,4 +621,17 @@ public class GlobalVariables {
         //新增到缓存
         BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
+
+    public static void addBlackTagSet(Set<String> collect) {
+
+        dictService.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.TAG,
+                null,
+                collect);
+
+        //新增到缓存
+        BLACK_TAG_SET.addAll(collect);
+        BLACK_TAG_TREE.addWords(collect)
+    }
 }
