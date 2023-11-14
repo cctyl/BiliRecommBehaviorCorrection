@@ -543,41 +543,35 @@ public class GlobalVariables {
      * 将这些标签的类型由CACHE 改为正常类型即可
      * 黑名单中加入新出现的标签
      */
-    public static void addBlackKeyWordFromCache(Set<String> keywordSet) {
+    public static void addBlackKeyWordFromCache(List<String> keywordIdSet) {
 
-        //过滤掉忽略的关键词
-        keywordSet.removeAll(ignoreBlackKeyWordSet);
+        //过滤掉忽略的关键词(无需，添加关键词时，如果匹配忽略关键词则不允许添加)
 
         //将这些标签的类型由CACHE 改为正常类型即可
-        dictService.updateAccessTypeByAccessTypeAndDictTypeAndValueIn(
-                AccessType.BLACK,
+        dictService.updateAccessTypeByIdIn(
                 AccessType.BLACK_CACHE,
-                DictType.KEYWORD,
-                keywordSet
+                keywordIdSet
         );
 
-        blackKeywordSet.addAll(keywordSet);
-        blackKeywordTree.addWords(keywordSet);
+        List<String> valueList = Dict.transferToValue( dictService.findByIdIn(keywordIdSet));
+        blackKeywordSet.addAll( valueList);
+        blackKeywordTree.addWords(valueList);
     }
 
     /**
      * 将缓存中的Tag 加入正常的Tag列表中
-     * @param tagNameSet
+     * @param tagNameIdList
      */
-    public static void addBlackTagFromCache(Set<String> tagNameSet) {
-
-        //过滤掉忽略的关键词
-        tagNameSet.removeAll(ignoreBlackKeyWordSet);
+    public static void addBlackTagFromCache(List<String> tagNameIdList) {
 
         //将这些标签的类型由CACHE 改为正常类型即可
-        dictService.updateAccessTypeByAccessTypeAndDictTypeAndValueIn(
-                AccessType.BLACK,
+        dictService.updateAccessTypeByIdIn(
                 AccessType.BLACK_CACHE,
-                DictType.TAG,
-                tagNameSet
+                tagNameIdList
         );
 
-        blackTagSet.addAll(tagNameSet);
-        blackTagTree.addWords(tagNameSet);
+        List<String> valueList = Dict.transferToValue( dictService.findByIdIn(tagNameIdList));
+        blackTagSet.addAll( valueList);
+        blackTagTree.addWords(valueList);
     }
 }

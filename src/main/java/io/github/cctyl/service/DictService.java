@@ -43,6 +43,12 @@ public interface DictService extends IService<Dict> {
 
     List<Dict> findBlackIgnoreKeyWord();
 
-    void updateAccessTypeByAccessTypeAndDictTypeAndValueIn(AccessType newAccessType, AccessType oldAccessType,
-                                                           DictType dictType, Set<String> valueSet);
+
+    List<Dict> findBlackCacheKeyWord();
+
+    List<Dict> findBlackCacheTag();
+
+    List<Dict> findByIdIn(Collection<String> idList);
+
+    void updateAccessTypeByIdIn(AccessType blackCache, List<String> keywordIdSet);
 }

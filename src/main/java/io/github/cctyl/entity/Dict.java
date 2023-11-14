@@ -11,7 +11,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Data
 @Accessors(chain = true)
@@ -42,6 +45,10 @@ public class Dict extends AuditingEntity {
      * 外部关联id，例如 白名单对象id
      */
     private String outerId;
+
+    public static List<String> transferToValue(Collection<Dict> dictCollection) {
+        return dictCollection.stream().map(Dict::getValue).collect(Collectors.toList());
+    }
 
 
     @Override

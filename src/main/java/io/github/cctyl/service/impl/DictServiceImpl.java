@@ -138,26 +138,25 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         return  this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD,AccessType.WHITE);
     }
 
-    /**
-     * 根据条件更新AccessType
-     * @param newAccessType
-     * @param oldAccessType
-     * @param dictType
-     * @param valueSet
-     */
+
+
     @Override
-    public void updateAccessTypeByAccessTypeAndDictTypeAndValueIn(AccessType newAccessType,
-                                                                  AccessType oldAccessType,
-                                                                  DictType dictType,
-                                                                  Set<String> valueSet) {
+    public List<Dict> findByIdIn(Collection<String> idList) {
+       return this.list(new LambdaQueryWrapper<Dict>()
+            .in(Dict::getId,idList)
+        );
+    }
 
-        LambdaUpdateWrapper<Dict> wrapper = new LambdaUpdateWrapper<Dict>()
-                .eq(Dict::getAccessType, oldAccessType)
-                .eq(Dict::getDictType, dictType)
-                .in(Dict::getValue, valueSet)
-                .set(Dict::getAccessType, newAccessType);
 
-        this.update(wrapper);
+    @Override
+    public void updateAccessTypeByIdIn(AccessType accessType, List<String> keywordIdSet) {
+
+
+        this.update(
+                new LambdaUpdateWrapper<Dict>()
+                        .in(Dict::getId, keywordIdSet)
+                        .set(Dict::getAccessType, accessType)
+        );
 
     }
 }

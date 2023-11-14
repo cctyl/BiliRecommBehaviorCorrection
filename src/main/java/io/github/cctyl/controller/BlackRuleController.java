@@ -4,10 +4,12 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
+import io.github.cctyl.entity.Dict;
 import io.github.cctyl.pojo.R;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
+import io.github.cctyl.service.DictService;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +38,9 @@ public class BlackRuleController {
 
     @Autowired
     private BlackRuleService blackRuleService;
+
+    @Autowired
+    private DictService dictService;
 
     @Autowired
     private BiliApi biliApi;
@@ -143,14 +148,11 @@ public class BlackRuleController {
     @Operation(summary = "获得缓存的训练结果")
     @GetMapping("/cache-train-result")
     public R getCacheTrainResult() {
-        Set<String> keywordSet = redisUtil.sMembers(BLACK_KEYWORD_CACHE).stream().map(Object::toString)
-                .collect(Collectors.toSet());
-        Set<String> tagNameSet = redisUtil.sMembers(BLACK_TAG_NAME_CACHE).stream().map(Object::toString)
-                .collect(Collectors.toSet());
-
+        List<Dict> keywordList = dictService.findBlackCacheKeyWord();
+        List<Dict> tagNameList = dictService.findBlackCacheTag();
         return R.data(Map.of(
-                "keywordSet", keywordSet,
-                "tagNameSet", tagNameSet
+                "keywordSet", keywordList,
+                "tagNameSet", tagNameList
         ));
     }
 
@@ -158,34 +160,32 @@ public class BlackRuleController {
     @Operation(summary = "将缓存的结果存入")
     @PutMapping("/cache-train-result")
     public R getCacheTrainResult(
-            @RequestBody Map<String, Set<String>> map
+            @RequestBody Map<String, List<String>> map
     ) {
-        Set<String> keywordSet = map.getOrDefault("keywordSet", Collections.emptySet());
-        Set<String> tagNameSet = map.getOrDefault("tagNameSet", Collections.emptySet());
+        List<String> keywordIdList = map.getOrDefault("keywordIdList", Collections.emptyList());
+        List<String> tagNameIdList = map.getOrDefault("tagNameIdList", Collections.emptyList());
 
         //添加黑名单关键词
-        GlobalVariables.addBlackKeyWordFromCache(keywordSet);
+        GlobalVariables.addBlackKeyWordFromCache(keywordIdList);
 
         //添加黑名单标签
-        GlobalVariables.addBlackTagFromCache(tagNameSet);
+        GlobalVariables.addBlackTagFromCache(tagNameIdList);
 
-        return R.data(Map.of(
-                "keywordSet", GlobalVariables.getBlackKeywordSet(),
-                "tagNameSet", GlobalVariables.getBlackTagSet()
-        ));
+        return R.ok();
     }
 
     @Operation(summary = "获得黑名单分区id")
     @GetMapping("/tid")
     public R getBlackTidSet() {
-        return R.ok().setData(GlobalVariables.blackTidSet);
+        List<Dict> blackTid = dictService.findBlackTid();
+        return R.ok().setData(blackTid);
     }
 
-    @Operation(summary = "更新黑名单分区id")
-    @PutMapping("/tid")
+    @Operation(summary = "新增黑名单分区id")
+    @PostMapping("/tid")
     public R updateBlackTidSet(@RequestBody Set<String> blackTidSet) {
-        GlobalVariables.setBlackTidSet(blackTidSet);
-        return R.ok().setData(GlobalVariables.blackTidSet);
+        GlobalVariables.addBlackTidSet(blackTidSet);
+        return R.ok().setData(GlobalVariables.getBlackTidSet());
     }
 
 
