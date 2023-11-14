@@ -1,4 +1,4 @@
-package io.github.cctyl.service.service.impl;
+package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.entity.VideoDetail;

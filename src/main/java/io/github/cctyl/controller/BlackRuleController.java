@@ -30,8 +30,7 @@ import static io.github.cctyl.pojo.constants.AppConstant.*;
 @Slf4j
 public class BlackRuleController {
 
-    @Autowired
-    private RedisUtil redisUtil;
+
 
     @Autowired
     private BiliService biliService;

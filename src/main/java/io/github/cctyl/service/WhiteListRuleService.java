@@ -1,13 +1,14 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
 
 import java.util.List;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author tyl
@@ -16,4 +17,16 @@ import java.util.List;
 public interface WhiteListRuleService extends IService<WhiteListRule> {
 
     List<WhiteListRule> findAll();
+
+    boolean whiteMatch(VideoDetail videoDetail);
+
+    boolean isUserIdMatch(VideoDetail videoDetail);
+
+    boolean isTidMatch(VideoDetail videoDetail);
+
+    boolean isWhitelistRuleMatch(VideoDetail videoDetail);
+
+    WhiteListRule trainWhitelistRule(
+            WhiteListRule whitelistRule,
+            List<Integer> whiteAvidList);
 }

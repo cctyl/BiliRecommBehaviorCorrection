@@ -9,6 +9,7 @@ import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.pojo.*;
 import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.service.WhiteRuleService;
 import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.RedisUtil;
@@ -43,13 +44,11 @@ public class WhiteRuleController {
     private RedisUtil redisUtil;
 
     @Autowired
-    private BiliService biliService;
-
-    @Autowired
     private BiliApi biliApi;
 
     @Autowired
-    private WhiteRuleService whiteRuleService;
+    private WhiteListRuleService whiteRuleService;
+
 
 
     @Operation(summary = "指定视频是否符合白名单")
@@ -94,6 +93,8 @@ public class WhiteRuleController {
     @GetMapping("/list")
     @Operation(summary = "查询所有的白名单规则")
     public R getAllWhiteRule() {
+
+
         return R.data(redisUtil.sMembers(WHITE_LIST_RULE_KEY));
     }
 
