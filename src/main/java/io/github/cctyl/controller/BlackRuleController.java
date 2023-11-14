@@ -256,21 +256,22 @@ public class BlackRuleController {
     @Operation(summary = "获得忽略关键词列表")
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet() {
-        return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
+        List<Dict> blackIgnoreKeyWord = dictService.findBlackIgnoreKeyWord();
+        return R.ok().setData(blackIgnoreKeyWord);
     }
 
     @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
-        redisUtil.sAdd(IGNORE_BLACK_KEYWORD, ignoreKeyWordSet.toArray());
 
+        Set<String> collect = ignoreKeyWordSet
+                .stream()
+                .filter(StrUtil::isNotBlank)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+        GlobalVariables.addBlackIgnoreKeyword(collect);
 
-        //更新黑名单关键词
-        GlobalVariables.setBlackTagSet(GlobalVariables.blackTagSet);
-        GlobalVariables.setBlackKeywordSet(GlobalVariables.blackKeywordSet);
-
-
-        return R.ok().setData(redisUtil.sMembers(IGNORE_BLACK_KEYWORD));
+        return R.ok();
     }
 
 

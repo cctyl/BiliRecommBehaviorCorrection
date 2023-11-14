@@ -140,6 +140,23 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.WHITE);
     }
 
+    @Override
+    public List<Dict> findBlackCacheKeyWord() {
+
+      return   this.findByDictTypeAndAccessType(
+                DictType.KEYWORD,
+                AccessType.BLACK_CACHE
+        );
+    }
+
+    @Override
+    public List<Dict> findBlackCacheTag() {
+        return   this.findByDictTypeAndAccessType(
+                DictType.TAG,
+                AccessType.BLACK_CACHE
+        );
+    }
+
 
     @Override
     public List<Dict> findByIdIn(Collection<String> idList) {

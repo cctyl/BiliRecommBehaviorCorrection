@@ -632,6 +632,55 @@ public class GlobalVariables {
 
         //新增到缓存
         BLACK_TAG_SET.addAll(collect);
-        BLACK_TAG_TREE.addWords(collect)
+        BLACK_TAG_TREE.addWords(collect);
+    }
+
+    /**
+     * 添加忽略的黑名单关键词
+     * 并更新 黑名单关键词和黑名单TAG
+     *
+     * @param collect
+     */
+    public static void addBlackIgnoreKeyword(Set<String> collect) {
+        dictService.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.IGNORE_KEYWORD,
+                null,
+                collect);
+
+        //新增到缓存
+        IGNORE_BLACK_KEY_WORD_SET.addAll(collect);
+
+        //黑名单关键词需要删除
+        removeBlackKeyword(collect);
+
+        //黑名单Tag需要删除
+        removeBlackTag(collect);
+
+    }
+
+    public static void removeBlackTag(Set<String> param) {
+        for (String s : param) {
+            BLACK_TAG_SET.remove(s);
+            BLACK_TAG_TREE.remove(s);
+        }
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.TAG,
+                param
+        );
+    }
+
+    public static void removeBlackKeyword(Set<String> param) {
+
+        for (String s : param) {
+            BLACK_KEYWORD_SET.remove(s);
+            BLACK_KEYWORD_TREE.remove(s);
+        }
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.KEYWORD,
+                param
+        );
     }
 }
