@@ -43,7 +43,6 @@ public interface DictService extends IService<Dict> {
 
     List<Dict> findBlackIgnoreKeyWord();
 
-
     List<Dict> findBlackCacheKeyWord();
 
     List<Dict> findBlackCacheTag();

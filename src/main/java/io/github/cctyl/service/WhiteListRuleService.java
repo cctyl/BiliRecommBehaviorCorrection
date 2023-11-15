@@ -29,4 +29,9 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
     WhiteListRule trainWhitelistRule(
             WhiteListRule whitelistRule,
             List<Integer> whiteAvidList);
+
+    void addTrain(String id,List<Integer> trainedAvidList,String mid);
+
+    List<WhiteListRule> findWithDetail();
+
 }

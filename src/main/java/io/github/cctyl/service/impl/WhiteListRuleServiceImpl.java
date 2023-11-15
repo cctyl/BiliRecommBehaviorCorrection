@@ -1,5 +1,6 @@
 package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -8,7 +9,9 @@ import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.mapper.WhiteListRuleMapper;
 import io.github.cctyl.pojo.DescV2;
+import io.github.cctyl.pojo.PageBean;
 import io.github.cctyl.pojo.Tag;
+import io.github.cctyl.pojo.UserSubmissionVideo;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.DictService;
@@ -24,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static io.github.cctyl.pojo.constants.AppConstant.WHITE_LIST_RULE_KEY;
 
 /**
  * <p>
@@ -314,9 +319,6 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     public WhiteListRule trainWhitelistRule(
             WhiteListRule whitelistRule,
             List<Integer> whiteAvidList) {
-        if (whitelistRule == null) {
-            whitelistRule = new WhiteListRule().setId(String.valueOf(IdGenerator.nextId()));
-        }
 
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
@@ -382,4 +384,78 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         return whitelistRule;
     }
 
+    @Override
+    public void addTrain(String id,List<Integer> trainedAvidList,String mid) {
+        log.info("开始训练");
+        List<WhiteListRule> whitelistRuleList = GlobalVariables.getWHITELIST_RULE_LIST();
+        WhiteListRule whitelistRule;
+        if (id == null) {
+            //创建新规则
+            whitelistRule = new WhiteListRule();
+        } else {
+            //从redis中找
+            whitelistRule =
+                    whitelistRuleList.stream()
+                            .filter(w -> id.equals(w.getId()))
+                            .findFirst()
+                            .orElse(new WhiteListRule());
+        }
+
+        if (CollUtil.isNotEmpty(trainedAvidList)) {
+            log.info("根据视频id进行训练");
+            //从给定的视频列表进行训练
+            whitelistRule = this.trainWhitelistRule(
+                    whitelistRule,
+                    trainedAvidList
+            );
+
+        } else if (StrUtil.isNotBlank(mid)) {
+            //从给定的up主的投稿视频进行训练
+            log.info("根据up主id进行训练");
+            List<UserSubmissionVideo> allVideo = new ArrayList<>();
+            PageBean<UserSubmissionVideo> pageBean = biliApi.searchUserSubmissionVideo(mid, 1, "");
+            allVideo.addAll(pageBean.getData());
+            while (pageBean.hasMore()) {
+                try {
+                    ThreadUtil.s10();
+                    pageBean = biliApi.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, "");
+                    allVideo.addAll(pageBean
+                            .getData());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            whitelistRule = this.trainWhitelistRule(
+                    whitelistRule,
+                    allVideo.stream().map(UserSubmissionVideo::getAid).collect(Collectors.toList())
+            );
+        }
+        log.info("训练完成，训练结果为:" + whitelistRule);
+
+        //更新白名单
+        GlobalVariables.addOrUpdateWhitelitRule(whitelistRule);
+
+    }
+
+    @Override
+    public List<WhiteListRule> findWithDetail() {
+
+        List<WhiteListRule> list = baseMapper.findWithDetail();
+
+        for (WhiteListRule item : list) {
+
+            Map<DictType, List<Dict>> dictTypeListMap = item.getTotalDict()
+                    .stream()
+                    .collect(Collectors.groupingBy(dict -> dict.getDictType()));
+            item
+                    .setTagNameList(dictTypeListMap.get(DictType.TAG))
+                    .setDescKeyWordList(dictTypeListMap.get(DictType.DESC))
+                    .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
+                    .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
+                    ;
+        }
+
+        return list;
+    }
 }

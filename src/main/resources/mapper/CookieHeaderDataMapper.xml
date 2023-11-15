@@ -51,7 +51,7 @@
         cookieHeaderData.version as cookieHeaderData_version
     </sql>
     <select id="findByType" resultType="io.github.cctyl.entity.CookieHeaderData">
-        select  * from cookie_header_data where type = #{dataType}
+        select  * from cookie_header_data where type = #{dataType} and is_deleted = 0
     </select>
     <select id="findDataByTypeDistinctByKey" resultType="java.util.Map">
 
@@ -67,7 +67,7 @@
                 MAX(last_modified_date) AS last_modified_date
             FROM
                 cookie_header_data
-            where type = #{dataType}
+            where type = #{dataType} and is_deleted = 0
             GROUP BY
                 ckey
         ) t2

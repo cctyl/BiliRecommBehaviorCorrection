@@ -117,7 +117,6 @@ public class GlobalVariables {
     private static Set<String> IGNORE_WHITE_KEY_WORD_SET;
 
     private static BlackRuleService blackRuleService;
-    private static WhiteRuleService whiteRuleService;
     private static DictService dictService;
     private static WhiteListRuleService whiteListRuleService;
     private static CookieHeaderDataService cookieHeaderDataService;
@@ -126,14 +125,12 @@ public class GlobalVariables {
     public GlobalVariables(
 
                            BlackRuleService blackRuleService,
-                           WhiteRuleService whiteRuleService,
                            DictService dictService,
                            WhiteListRuleService whiteListRuleService,
                            CookieHeaderDataService cookieHeaderDataService,
                            ConfigService configService
     ) {
         GlobalVariables.blackRuleService = blackRuleService;
-        GlobalVariables.whiteRuleService = whiteRuleService;
         GlobalVariables.dictService = dictService;
         GlobalVariables.whiteListRuleService = whiteListRuleService;
         GlobalVariables.cookieHeaderDataService = cookieHeaderDataService;
@@ -485,15 +482,10 @@ public class GlobalVariables {
 
     public static void initWhitelistRules() {
 
-        List<WhiteListRule> whitelistRules = whiteListRuleService.findAll();
+        //此方法应该查询出关联的相关规则
+        List<WhiteListRule> whitelistRules = whiteListRuleService.findWithDetail();
 
         //需要忽略的词汇不要存入规则中
-
-        for (WhiteListRule whitelistRule : whitelistRules) {
-            whitelistRule.getDescKeyWordList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
-            whitelistRule.getTitleKeyWordList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
-            whitelistRule.getTagNameList().removeAll(IGNORE_WHITE_KEY_WORD_SET);
-        }
         GlobalVariables.WHITELIST_RULE_LIST = whitelistRules;
 
     }
@@ -682,5 +674,145 @@ public class GlobalVariables {
                 DictType.KEYWORD,
                 param
         );
+    }
+
+    /**
+     * 添加或更新白名单
+     * @param whitelistRule
+     */
+    public static void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
+
+        if (whitelistRule.getId()!=null){
+            WHITELIST_RULE_LIST.remove(whitelistRule);
+        }
+        WHITELIST_RULE_LIST.add(whitelistRule);
+        whiteListRuleService.saveOrUpdate(whitelistRule);
+    }
+
+    /**
+     * 根据id删除白名单
+     * @param id
+     * @return
+     */
+    public static boolean removeWhitelistRules(Long id) {
+
+        WHITELIST_RULE_LIST =  WHITELIST_RULE_LIST.stream()
+                .filter(whiteListRule -> !id.equals(whiteListRule.getId()))
+                .collect(Collectors.toList());
+
+        return whiteListRuleService.removeById(id);
+    }
+
+    /**
+     * 添加白名单忽略关键词
+     * @param ignoreKeyWordSet
+     */
+    public static void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
+
+        dictService.removeAndAddDict(
+                AccessType.WHITE,
+                DictType.IGNORE_KEYWORD,
+                null,
+                ignoreKeyWordSet
+        );
+        IGNORE_WHITE_KEY_WORD_SET.addAll(ignoreKeyWordSet);
+
+
+        //删除白名单对应的关键词,不区分具体是哪个白名单对象的
+        //并且需要同时删除缓存内对应的数据
+        removeWhiteTagKeyword(ignoreKeyWordSet);
+        removeWhiteDescKeyword(ignoreKeyWordSet);
+        removeWhiteTitleKeyword(ignoreKeyWordSet);
+        removeWhiteCoverKeyword(ignoreKeyWordSet);
+
+
+    }
+
+    private static void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.COVER,
+                ignoreKeyWordSet
+        );
+
+        //缓存层面的删除
+        for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
+
+            List<Dict> coverKeyword = whiteListRule.getCoverKeyword()
+                    .stream()
+                    .filter(
+                            dict -> !ignoreKeyWordSet.contains(dict.getValue())
+                    ).collect(Collectors.toList());
+
+            whiteListRule.setCoverKeyword(coverKeyword);
+        }
+    }
+
+    private static void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.TITLE,
+                ignoreKeyWordSet
+        );
+
+        //缓存层面的删除
+        for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
+
+            List<Dict> titleKeyWordList = whiteListRule.getTitleKeyWordList()
+                    .stream()
+                    .filter(
+                            dict -> !ignoreKeyWordSet.contains(dict.getValue())
+                    ).collect(Collectors.toList());
+
+            whiteListRule.setTitleKeyWordList(titleKeyWordList);
+        }
+
+    }
+
+    private static void removeWhiteDescKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.DESC,
+                ignoreKeyWordSet
+        );
+
+        //缓存层面的删除
+        for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
+
+            List<Dict> descKeyWordList = whiteListRule.getDescKeyWordList()
+                    .stream()
+                    .filter(
+                            dict -> !ignoreKeyWordSet.contains(dict.getValue())
+                    ).collect(Collectors.toList());
+
+            whiteListRule.setDescKeyWordList(descKeyWordList);
+        }
+    }
+
+    public static void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+       dictService.removeByAccessTypeAndDictTypeAndValue(
+               AccessType.WHITE,
+               DictType.TAG,
+               ignoreKeyWordSet
+       );
+
+       //缓存层面的删除
+        for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
+            List<Dict> tagNameList = whiteListRule.getTagNameList()
+                    .stream()
+                    .filter(
+                            dict -> !ignoreKeyWordSet.contains(dict.getValue())
+                    ).collect(Collectors.toList());
+            whiteListRule.setTagNameList(tagNameList);
+        }
+
     }
 }

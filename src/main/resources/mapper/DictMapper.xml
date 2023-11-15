@@ -38,14 +38,14 @@
         <!--联表查询使用的sql-->
     <sql id="Base_Column_List_Assoc">
 
-        dict.id as dict_id,
-        dict.value as dict_value,
-        dict.access_type as dict_access_type,
-        dict.dict_type as dict_dict_type,
-        dict.created_date as dict_created_date,
-        dict.last_modified_date as dict_last_modified_date,
-        dict.is_deleted as dict_is_deleted,
-        dict.version as dict_version
+        t_dict.id as dict_id,
+        t_dict.value as dict_value,
+        t_dict.access_type as dict_access_type,
+        t_dict.dict_type as dict_dict_type,
+        t_dict.created_date as dict_created_date,
+        t_dict.last_modified_date as dict_last_modified_date,
+        t_dict.is_deleted as dict_is_deleted,
+        t_dict.version as dict_version
     </sql>
 
 </mapper>
