@@ -136,6 +136,11 @@ public class WhiteRuleController {
             return R.error().setMessage("无效数据");
         }
 
+        //添加之前，过滤掉需要忽略的关键词
+        toUpdate.setDescKeyWordList(whiteRuleService.filterIgnore(toUpdate.getDescKeyWordList()));
+        toUpdate.setTagNameList(whiteRuleService.filterIgnore(toUpdate.getTagNameList()));
+        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnore(toUpdate.getTitleKeyWordList()));
+        toUpdate.setCoverKeyword(whiteRuleService.filterIgnore(toUpdate.getCoverKeyword()));
 
         GlobalVariables.addOrUpdateWhitelitRule(toUpdate);
         return R.ok().setMessage("添加成功").setData(toUpdate);

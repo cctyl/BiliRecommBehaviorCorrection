@@ -458,4 +458,14 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         return list;
     }
+
+
+    @Override
+    public List<Dict> filterIgnore(List<Dict> dictList) {
+
+        Set<String> ignoreSet = GlobalVariables.getIGNORE_WHITE_KEY_WORD_SET();
+        return dictList.stream().filter(
+                dict -> !ignoreSet.contains(dict.getValue())
+        ).collect(Collectors.toList());
+    }
 }

@@ -1,6 +1,7 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.github.cctyl.entity.Dict;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
 
@@ -34,4 +35,5 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
 
     List<WhiteListRule> findWithDetail();
 
+    List<Dict> filterIgnore(List<Dict> dictList);
 }
