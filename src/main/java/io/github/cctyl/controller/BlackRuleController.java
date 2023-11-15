@@ -168,7 +168,7 @@ public class BlackRuleController {
         GlobalVariables.addBlackKeyWordFromCache(keywordIdList);
 
         //添加黑名单标签
-        GlobalVariables.addBlackTagFromCache(tagNameIdList);
+        GlobalVariables.INSTANCE.addBlackTagFromCache(tagNameIdList);
 
         return R.ok();
     }
@@ -183,7 +183,7 @@ public class BlackRuleController {
     @Operation(summary = "新增黑名单分区id")
     @PostMapping("/tid")
     public R updateBlackTidSet(@RequestBody Set<String> blackTidSet) {
-        GlobalVariables.addBlackTidSet(blackTidSet);
+        GlobalVariables.INSTANCE.addBlackTidSet(blackTidSet);
         return R.ok();
     }
 
@@ -206,7 +206,7 @@ public class BlackRuleController {
 
         //与忽略的关键词进行过滤
         collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
-        GlobalVariables.addBlackKeyword(collect);
+        GlobalVariables.INSTANCE.addBlackKeyword(collect);
 
         return R.ok();
     }
@@ -223,7 +223,7 @@ public class BlackRuleController {
     @Operation(summary = "增加黑名单用户id列表")
     @PostMapping("/user-id")
     public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
-        GlobalVariables.addBlackUserIdSet(blackUserIdSet);
+        GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
 
         return R.ok();
     }
@@ -247,7 +247,7 @@ public class BlackRuleController {
                 .collect(Collectors.toSet());
         //与忽略的关键词进行过滤
         collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
-        GlobalVariables.addBlackTagSet(collect);
+        GlobalVariables.INSTANCE.addBlackTagSet(collect);
         return R.ok();
     }
 
@@ -268,7 +268,7 @@ public class BlackRuleController {
                 .filter(StrUtil::isNotBlank)
                 .map(String::trim)
                 .collect(Collectors.toSet());
-        GlobalVariables.addBlackIgnoreKeyword(collect);
+        GlobalVariables.INSTANCE.addBlackIgnoreKeyword(collect);
 
         return R.ok();
     }

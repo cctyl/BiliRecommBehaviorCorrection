@@ -35,33 +35,51 @@ public class WhiteListRule extends AuditingEntity implements Serializable {
      * 标签名
      */
     @TableField(exist = false)
-    private List<Dict> tagNameList = new HashSet<>();
+    private List<Dict> tagNameList = new ArrayList<>();
 
     /**
      * 视频描述应当包含的关键词
      */
     @TableField(exist = false)
-    private List<Dict> descKeyWordList = new HashSet<>();
+    private List<Dict> descKeyWordList = new ArrayList<>();
 
 
     /**
      * 视频标题应当包含的关键词
      */
     @TableField(exist = false)
-    private List<Dict> titleKeyWordList= new HashSet<>();
+    private List<Dict> titleKeyWordList= new ArrayList<>();
 
     /**
      * 封面信息应当包含的关键词
      */
     @TableField(exist = false)
-    private List<Dict>  coverKeyword =  new HashSet<>();
+    private List<Dict>  coverKeyword =  new ArrayList<>();
 
 
     private String info;
 
 
     @TableField(exist = false)
-    private List<Dict>  totalDict =  new HashSet<>();
+    private List<Dict>  totalDict =  new ArrayList<>();
+
+
+    public List<Dict> getTotalDict() {
+        ArrayList<Dict> dicts = new ArrayList<>(
+                       tagNameList.size()+
+                       descKeyWordList.size()+
+                       titleKeyWordList.size()+
+                       coverKeyword.size()
+        );
+        dicts.addAll(tagNameList);
+        dicts.addAll(descKeyWordList);
+        dicts.addAll(titleKeyWordList);
+        dicts.addAll(coverKeyword);
+
+        dicts.forEach(dict -> dict.setOuterId(id));
+
+        return dicts;
+    }
 
     @Override
     public boolean equals(Object o) {

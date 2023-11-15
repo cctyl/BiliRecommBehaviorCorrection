@@ -3,13 +3,16 @@ package io.github.cctyl.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.cctyl.entity.Dict;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.mapper.DictMapper;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.DictService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -198,6 +201,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
      * @param outerId
      */
     @Override
+    @Transactional
     public void removeAndAddDict(
             AccessType accessType,
                                  DictType dictType,
@@ -222,5 +226,29 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         );
         this.saveBatch(dictList);
 
+    }
+
+
+    @Override
+    @Transactional
+    public void updateByWhiteListRule(WhiteListRule whitelistRule) {
+
+        if (whitelistRule.getId()==null){
+            throw new RuntimeException("缺少白名单主键id");
+        }
+
+        //1.删除原本的
+        this.removeByOuterId(whitelistRule.getId());
+
+        //2.重新保存
+        List<Dict> totalDict = whitelistRule.getTotalDict();
+
+        this.saveBatch(totalDict);
+    }
+
+    @Override
+    public void removeByOuterId(String outerId) {
+        this.remove(new LambdaQueryWrapper<Dict>()
+                .eq(Dict::getOuterId, outerId));
     }
 }

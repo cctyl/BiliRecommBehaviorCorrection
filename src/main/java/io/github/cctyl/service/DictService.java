@@ -2,6 +2,7 @@ package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.Dict;
+import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 
@@ -54,4 +55,8 @@ public interface DictService extends IService<Dict> {
     void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol);
 
     void removeAndAddDict(AccessType accessType, DictType dictType,  String outerId,Collection<String> valueCol);
+
+    void updateByWhiteListRule(WhiteListRule whitelistRule);
+
+    void removeByOuterId(String id);
 }

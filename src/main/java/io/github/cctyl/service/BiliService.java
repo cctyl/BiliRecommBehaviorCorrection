@@ -347,7 +347,7 @@ public class BiliService {
      */
     public int dislikeByUserId(String userId) {
         //该用户会被加入黑名单
-        GlobalVariables.addBlackUserId(Collections.singleton(userId));
+        GlobalVariables.INSTANCE.addBlackUserId(Collections.singleton(userId));
 
         //视频详情
         List<VideoDetail> videoDetailList = new ArrayList<>();

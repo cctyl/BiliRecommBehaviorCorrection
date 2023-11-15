@@ -142,7 +142,7 @@ public class WhiteRuleController {
         toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnore(toUpdate.getTitleKeyWordList()));
         toUpdate.setCoverKeyword(whiteRuleService.filterIgnore(toUpdate.getCoverKeyword()));
 
-        GlobalVariables.addOrUpdateWhitelitRule(toUpdate);
+        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate);
         return R.ok().setMessage("添加成功").setData(toUpdate);
     }
 
@@ -154,7 +154,7 @@ public class WhiteRuleController {
             @PathVariable("id") Long id
     ) {
 
-        boolean result = GlobalVariables.removeWhitelistRules(id);
+        boolean result = GlobalVariables.INSTANCE.removeWhitelistRules(id);
         return R.ok().setMessage("操作完成").setData("删除结果："+result);
     }
 
@@ -170,7 +170,7 @@ public class WhiteRuleController {
     @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
-        GlobalVariables.addWhiteIgnoreKeyword(ignoreKeyWordSet);
+        GlobalVariables.INSTANCE.addWhiteIgnoreKeyword(ignoreKeyWordSet);
         return R.ok();
     }
 

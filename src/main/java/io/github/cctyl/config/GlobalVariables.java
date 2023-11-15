@@ -10,6 +10,7 @@ import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.*;
 import lombok.Data;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -122,6 +123,8 @@ public class GlobalVariables {
     private static CookieHeaderDataService cookieHeaderDataService;
     private static ConfigService configService;
 
+    public static GlobalVariables INSTANCE;
+
     public GlobalVariables(
 
                            BlackRuleService blackRuleService,
@@ -135,8 +138,10 @@ public class GlobalVariables {
         GlobalVariables.whiteListRuleService = whiteListRuleService;
         GlobalVariables.cookieHeaderDataService = cookieHeaderDataService;
         GlobalVariables.configService = configService;
-
+        GlobalVariables.INSTANCE = this;
     }
+
+
 
 /*
     public static void addBlackUserId(Collection<String> param) {
@@ -518,7 +523,8 @@ public class GlobalVariables {
      * 添加一个黑名单用户id
      * @param mid
      */
-    public static void addBlackUserId(String mid) {
+    @Transactional
+    public  void addBlackUserId(String mid) {
 
         Dict dict = new Dict()
                 .setDictType(DictType.MID)
@@ -535,7 +541,8 @@ public class GlobalVariables {
      * 将这些标签的类型由CACHE 改为正常类型即可
      * 黑名单中加入新出现的标签
      */
-    public static void addBlackKeyWordFromCache(List<String> keywordIdSet) {
+    @Transactional
+    public  void addBlackKeyWordFromCache(List<String> keywordIdSet) {
 
         //过滤掉忽略的关键词(无需，添加关键词时，如果匹配忽略关键词则不允许添加)
 
@@ -554,7 +561,8 @@ public class GlobalVariables {
      * 将缓存中的Tag 加入正常的Tag列表中
      * @param tagNameIdList
      */
-    public static void addBlackTagFromCache(List<String> tagNameIdList) {
+    @Transactional
+    public  void addBlackTagFromCache(List<String> tagNameIdList) {
 
         //将这些标签的类型由CACHE 改为正常类型即可
         dictService.updateAccessTypeByIdIn(
@@ -571,7 +579,8 @@ public class GlobalVariables {
      * 新增tid
      * @param param
      */
-    public static void addBlackTidSet(Set<String> param) {
+    @Transactional
+    public  void addBlackTidSet(Set<String> param) {
 
 
         dictService.removeAndAddDict(
@@ -588,7 +597,8 @@ public class GlobalVariables {
      * 新增黑名单关键词
      * @param keywordCol
      */
-    public static void addBlackKeyword(Collection<String> keywordCol) {
+    @Transactional
+    public  void addBlackKeyword(Collection<String> keywordCol) {
 
 
         dictService.removeAndAddDict(
@@ -602,7 +612,8 @@ public class GlobalVariables {
 
     }
 
-    public static void addBlackUserIdSet(Set<String> blackUserIdSet) {
+    @Transactional
+    public  void addBlackUserIdSet(Set<String> blackUserIdSet) {
 
         dictService.removeAndAddDict(
                 AccessType.BLACK,
@@ -614,7 +625,8 @@ public class GlobalVariables {
         BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
 
-    public static void addBlackTagSet(Set<String> collect) {
+    @Transactional
+    public  void addBlackTagSet(Set<String> collect) {
 
         dictService.removeAndAddDict(
                 AccessType.BLACK,
@@ -633,7 +645,8 @@ public class GlobalVariables {
      *
      * @param collect
      */
-    public static void addBlackIgnoreKeyword(Set<String> collect) {
+    @Transactional
+    public  void addBlackIgnoreKeyword(Set<String> collect) {
         dictService.removeAndAddDict(
                 AccessType.BLACK,
                 DictType.IGNORE_KEYWORD,
@@ -651,7 +664,8 @@ public class GlobalVariables {
 
     }
 
-    public static void removeBlackTag(Set<String> param) {
+    @Transactional
+    public  void removeBlackTag(Set<String> param) {
         for (String s : param) {
             BLACK_TAG_SET.remove(s);
             BLACK_TAG_TREE.remove(s);
@@ -663,7 +677,8 @@ public class GlobalVariables {
         );
     }
 
-    public static void removeBlackKeyword(Set<String> param) {
+    @Transactional
+    public  void removeBlackKeyword(Set<String> param) {
 
         for (String s : param) {
             BLACK_KEYWORD_SET.remove(s);
@@ -680,13 +695,17 @@ public class GlobalVariables {
      * 添加或更新白名单
      * @param whitelistRule
      */
-    public static void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
+    @Transactional
+    public  void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
 
         if (whitelistRule.getId()!=null){
             WHITELIST_RULE_LIST.remove(whitelistRule);
         }
         WHITELIST_RULE_LIST.add(whitelistRule);
+        //修改主对象
         whiteListRuleService.saveOrUpdate(whitelistRule);
+        //修改关联的数据
+        dictService.updateByWhiteListRule(whitelistRule);
     }
 
     /**
@@ -694,7 +713,8 @@ public class GlobalVariables {
      * @param id
      * @return
      */
-    public static boolean removeWhitelistRules(Long id) {
+    @Transactional
+    public  boolean removeWhitelistRules(Long id) {
 
         WHITELIST_RULE_LIST =  WHITELIST_RULE_LIST.stream()
                 .filter(whiteListRule -> !id.equals(whiteListRule.getId()))
@@ -707,7 +727,8 @@ public class GlobalVariables {
      * 添加白名单忽略关键词
      * @param ignoreKeyWordSet
      */
-    public static void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
+    @Transactional
+    public  void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
 
         dictService.removeAndAddDict(
                 AccessType.WHITE,
@@ -728,7 +749,8 @@ public class GlobalVariables {
 
     }
 
-    private static void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
+    @Transactional
+    private  void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
         dictService.removeByAccessTypeAndDictTypeAndValue(
@@ -750,7 +772,8 @@ public class GlobalVariables {
         }
     }
 
-    private static void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
+    @Transactional
+    private  void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
         dictService.removeByAccessTypeAndDictTypeAndValue(
@@ -773,7 +796,8 @@ public class GlobalVariables {
 
     }
 
-    private static void removeWhiteDescKeyword(Set<String> ignoreKeyWordSet) {
+    @Transactional
+    private  void removeWhiteDescKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
         dictService.removeByAccessTypeAndDictTypeAndValue(
@@ -795,7 +819,8 @@ public class GlobalVariables {
         }
     }
 
-    public static void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet) {
+    @Transactional
+    public void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
        dictService.removeByAccessTypeAndDictTypeAndValue(

@@ -50,7 +50,7 @@ public class BlackRuleService {
 
         for (VideoDetail videoDetail : videoList) {
             if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
-                GlobalVariables.addBlackUserId(videoDetail.getOwner().getMid());
+                GlobalVariables.INSTANCE.addBlackUserId(videoDetail.getOwner().getMid());
             }
             //1. 标题处理
             String title = videoDetail.getTitle();

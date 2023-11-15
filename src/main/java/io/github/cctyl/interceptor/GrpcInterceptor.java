@@ -56,7 +56,7 @@ public class GrpcInterceptor implements ClientInterceptor {
                 );
                 headers.put(
                         Metadata.Key.of("x-bili-mid", ASCII_STRING_MARSHALLER),
-                        GlobalVariables.mid
+                        GlobalVariables.getMID()
                 );
                 headers.put(
                         Metadata.Key.of("x-bili-aurora-zone", ASCII_STRING_MARSHALLER),
