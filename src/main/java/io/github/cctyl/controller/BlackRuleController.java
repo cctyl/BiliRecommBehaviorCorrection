@@ -165,7 +165,7 @@ public class BlackRuleController {
         List<String> tagNameIdList = map.getOrDefault("tagNameIdList", Collections.emptyList());
 
         //添加黑名单关键词
-        GlobalVariables.addBlackKeyWordFromCache(keywordIdList);
+        GlobalVariables.INSTANCE.addBlackKeyWordFromCache(keywordIdList);
 
         //添加黑名单标签
         GlobalVariables.INSTANCE.addBlackTagFromCache(tagNameIdList);
