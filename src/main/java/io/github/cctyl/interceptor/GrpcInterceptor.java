@@ -52,7 +52,7 @@ public class GrpcInterceptor implements ClientInterceptor {
 
                 headers.put(
                         Metadata.Key.of("x-bili-aurora-eid", ASCII_STRING_MARSHALLER),
-                        genAuroraEid(GlobalVariables.mid)
+                        genAuroraEid(GlobalVariables.getMID())
                 );
                 headers.put(
                         Metadata.Key.of("x-bili-mid", ASCII_STRING_MARSHALLER),
