@@ -78,7 +78,7 @@ public class GlobalVariables {
     private static String MID;
 
     /**
-     * 关键词列表
+     * 搜索关键词列表
      */
     private static Set<String> KEYWORD_SET;
 
