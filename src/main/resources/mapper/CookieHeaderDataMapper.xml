@@ -30,14 +30,13 @@
     </resultMap>
 
 
-
-        <!-- 通用查询结果列 -->
+    <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, url, ckey, cvalue, type, created_date, last_modified_date, is_deleted, version
     </sql>
 
 
-        <!--联表查询使用的sql-->
+    <!--联表查询使用的sql-->
     <sql id="Base_Column_List_Assoc">
 
         cookieHeaderData.id as cookieHeaderData_id,
@@ -50,30 +49,49 @@
         cookieHeaderData.is_deleted as cookieHeaderData_is_deleted,
         cookieHeaderData.version as cookieHeaderData_version
     </sql>
+    <update id="updateRefresh">
+
+        update
+            cookie_header_data
+        set
+            cvalue =
+        CASE  ckey
+
+        <foreach collection="cookieMap" index="key" item="value" >
+            WHEN #{key}
+            then #{value}
+        </foreach>
+
+        end
+        where
+        classify = 'COOKIE'
+        and mediaType = 'TIMELY_UPDATE';
+
+
+    </update>
     <select id="findByType" resultType="io.github.cctyl.entity.CookieHeaderData">
-        select  * from cookie_header_data where type = #{dataType} and is_deleted = 0
+        select *
+        from cookie_header_data
+        where type = #{dataType}
+          and is_deleted = 0
     </select>
     <select id="findDataByTypeDistinctByKey" resultType="java.util.Map">
 
-        select
-            t1.ckey ,
-            t1.cvalue
-        from
-            cookie_header_data t1
-        join
-        (
-            SELECT
-                ckey,
-                MAX(last_modified_date) AS last_modified_date
-            FROM
-                cookie_header_data
-            where type = #{dataType} and is_deleted = 0
-            GROUP BY
-                ckey
-        ) t2
-        on
-            t1.ckey = t2.ckey
-            and t1.last_modified_date = t2.last_modified_date;
+        select t1.ckey,
+               t1.cvalue
+        from cookie_header_data t1
+                 join
+             (
+                 SELECT ckey,
+                        MAX(last_modified_date) AS last_modified_date
+                 FROM cookie_header_data
+                 where type = #{dataType}
+                   and is_deleted = 0
+                 GROUP BY ckey
+             ) t2
+             on
+                     t1.ckey = t2.ckey
+                     and t1.last_modified_date = t2.last_modified_date;
     </select>
 
 

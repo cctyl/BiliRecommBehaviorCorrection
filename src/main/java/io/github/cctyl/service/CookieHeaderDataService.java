@@ -26,4 +26,6 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     Map<String, String> findRefreshCookie();
 
     Map<String, String> findRefreshHeader();
+
+    void updateRefresh(Map<String, String> cookieMap);
 }

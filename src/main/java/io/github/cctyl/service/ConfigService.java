@@ -3,6 +3,8 @@ package io.github.cctyl.service;
 import io.github.cctyl.entity.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Map;
+
 /**
  * <p>
  *  服务类
@@ -18,4 +20,6 @@ public interface ConfigService extends IService<Config> {
     Config addOrUpdateConfig(String configName,String configValue);
 
     Config addOrUpdateConfig(String configName,String configValue,Integer expireSecond);
+
+
 }

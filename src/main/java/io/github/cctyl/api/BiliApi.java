@@ -275,32 +275,11 @@ public class BiliApi {
      * 更新cookie
      */
     public void updateCookie(HttpResponse response) {
-        //List<HttpCookie> cookies = response.getCookies();
-        //Set<String> newCookieKeySet = cookies
-        //        .stream()
-        //        .map(HttpCookie::getName)
-        //        .collect(Collectors.toSet());
+        List<HttpCookie> cookies = response.getCookies();
+        Map<String,String> cookieMap = new HashMap<>();
+        cookies.forEach(httpCookie -> cookieMap.put(httpCookie.getName(),httpCookie.getValue()));
 
-        //TODO 如果需要判断异常cookie，那么需要一个对比，到底和谁对比呢？
-        //if (defaultCookie == null) {
-        //    defaultCookie = DataUtil.splitCookie(applicationProperties.getDefaultData().getCookie());
-        //}
-        //newCookieKeySet.removeAll(defaultCookie.keySet());
-        //if (newCookieKeySet.size() != 0) {
-        //    log.warn("发现可疑cookie:{}", newCookieKeySet);
-        //    Object[] objects = cookies.stream().filter(httpCookie -> newCookieKeySet.contains(httpCookie.getName()))
-        //            .map(httpCookie -> httpCookie.getName() + "=" + httpCookie.getValue())
-        //            .toArray();
-        //    redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
-        //}
-
-//        for (HttpCookie cookie : cookies) {
-//            String name = cookie.getName();
-//            GlobalVariables.cookieMap.put(name, cookie.getValue());
-//        }
-//
-//        //缓存
-//        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
+        GlobalVariables.updateRefreshCookie(cookieMap);
     }
 
     /**

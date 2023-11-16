@@ -138,4 +138,10 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     public Map<String, String> findRefreshHeader() {
         return getMapByClassifyAndMediaType(Classify.REQUEST_HEADER, MediaType.TIMELY_UPDATE);
     }
+
+
+    @Override
+    public void updateRefresh(Map<String, String> cookieMap) {
+        baseMapper.updateRefresh(cookieMap);
+    }
 }

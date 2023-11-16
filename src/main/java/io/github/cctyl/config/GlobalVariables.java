@@ -544,6 +544,14 @@ public class GlobalVariables {
 
     }
 
+    /**
+     * 更新 及时更新的cookie
+     * @param cookieMap
+     */
+    public static void updateRefreshCookie(Map<String, String> cookieMap) {
+        REFRESH_COOKIE_MAP.putAll(cookieMap);
+        cookieHeaderDataService.updateRefresh(cookieMap);
+    }
 
 
     /**
@@ -604,8 +612,6 @@ public class GlobalVariables {
      * @param param
      */
     public  void addBlackTidSet(Set<String> param) {
-
-
         dictService.removeAndAddDict(
                 AccessType.BLACK,
                 DictType.TID,

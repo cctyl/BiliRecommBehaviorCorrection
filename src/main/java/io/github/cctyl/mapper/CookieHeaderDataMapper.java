@@ -24,4 +24,7 @@ public interface CookieHeaderDataMapper extends BaseMapper<CookieHeaderData> {
 
     @MapKey("ckey")
     Map<String, String> findDataByTypeDistinctByKey(@Param("dataType") Classify dataType);
+
+
+    void updateRefresh( @Param("cookieMap") Map<String, String> cookieMap);
 }
