@@ -28,6 +28,12 @@ public class InitFromRedis implements ApplicationRunner {
         //12.忽略关键词加载
         GlobalVariables.initIgnoreKeyWord();
 
+        //13.accessKey
+        GlobalVariables.initAccessKey();
+
+        //14.wbi
+        GlobalVariables.initWbi();
+
         //1. 加载关键字数据
         GlobalVariables.initKeywordSet();
 
@@ -58,8 +64,7 @@ public class InitFromRedis implements ApplicationRunner {
         //10.加载停顿词
         GlobalVariables.initStopWords();
 
-        //11.加载ApiHeader相关
-        GlobalVariables.initApiHeaderMap();
+
 
 
 

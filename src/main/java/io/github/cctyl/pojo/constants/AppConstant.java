@@ -19,6 +19,8 @@ public class AppConstant {
      * wbi
      */
     public static final String WBI = PREFIX + "wbi";
+    public static final String IMG_KEY = PREFIX + "imgKey";
+    public static final String SUB_KEY = PREFIX + "subKey";
 
     /**
      * 每个api对应需要用到的header

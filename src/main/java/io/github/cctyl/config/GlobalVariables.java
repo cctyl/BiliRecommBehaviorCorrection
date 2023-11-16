@@ -31,6 +31,8 @@ public class GlobalVariables {
      * AccessKey
      */
     private static String ACCESS_KEY;
+   private static String IMG_KEY;
+   private static String SUB_KEY;
 
     /**
      * 黑名单up主 id列表
@@ -558,6 +560,11 @@ public class GlobalVariables {
         cookieHeaderDataService.updateRefresh(cookieMap);
     }
 
+    public static void initWbi() {
+        IMG_KEY = configService.findByName(AppConstant.IMG_KEY);
+        SUB_KEY = configService.findByName(AppConstant.SUB_KEY);
+    }
+
 
     /**
      * 添加一个黑名单用户id
@@ -867,6 +874,23 @@ public class GlobalVariables {
 
     public static void updateAccessKey(String newKey){
         ACCESS_KEY = newKey;
-        configService.addOrUpdateConfig(AppConstant.ACCESS_KEY,newKey);
+        configService.addOrUpdateConfig(AppConstant.ACCESS_KEY,newKey,2_505_600);
+    }
+
+    public static void updateWbi(String imgKey,String subKey){
+
+        IMG_KEY = imgKey;
+        SUB_KEY = subKey;
+
+        configService.addOrUpdateConfig(AppConstant.IMG_KEY, imgKey,72_000);
+        configService.addOrUpdateConfig(AppConstant.SUB_KEY, subKey,72_000);
+    }
+
+    public static String getImgKey() {
+        return IMG_KEY;
+    }
+
+    public static String getSubKey() {
+        return SUB_KEY;
     }
 }

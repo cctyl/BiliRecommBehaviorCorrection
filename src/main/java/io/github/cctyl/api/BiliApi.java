@@ -754,7 +754,8 @@ public class BiliApi {
         HashMap<String, Object> resultMap = new HashMap<>(paramMap);
         String imgKey;
         String subKey;
-        if (refresh || redisUtil.get(WBI) == null) {
+
+        if (refresh || GlobalVariables.getImgKey() == null || GlobalVariables.getSubKey()==null) {
             String url = "https://api.bilibili.com/x/web-interface/nav";
             String body = commonGet(url).body();
             JSONObject jsonObject = JSONObject.parseObject(body);
@@ -767,18 +768,15 @@ public class BiliApi {
             imgKey = imgUrl.substring(imgUrl.lastIndexOf("/") + 1).replace(".png", "");
             subKey = subUrl.substring(subUrl.lastIndexOf("/") + 1).replace(".png", "");
 
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("imgKey", imgKey);
-            map.put("subKey", subKey);
+
             //20小时刷新一次
-            redisUtil.setEx(WBI,
-                    map,
-                    20, TimeUnit.HOURS);
+            GlobalVariables.updateWbi(imgKey,subKey);
+
 
         } else {
-            Map<String, String> map = (Map<String, String>) redisUtil.get(WBI);
-            imgKey = map.get("imgKey");
-            subKey = map.get("subKey");
+
+            imgKey = GlobalVariables.getImgKey();
+            subKey = GlobalVariables.getSubKey();
         }
 
         String mixinKey = getMixinKey(imgKey, subKey);
