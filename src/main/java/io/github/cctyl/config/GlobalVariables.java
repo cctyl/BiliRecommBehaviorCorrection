@@ -550,6 +550,14 @@ public class GlobalVariables {
         GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
     }
 
+
+    public static void addStopWords(Collection<String> stopWordList) {
+        //存入数据库
+        dictService.saveStopWords(stopWordList);
+
+        GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
+    }
+
     public static void initApiHeaderMap() {
         //通用类型的数据
         GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCommonCookieMap();

@@ -32,8 +32,6 @@ import static io.github.cctyl.pojo.constants.AppConstant.STOP_WORDS_KEY;
 @Tag(name = "配置模块")
 public class ConfigController {
 
-    @Autowired
-    private ApplicationProperties applicationProperties;
 
     @Autowired
     private HarAnalysisTool harAnalysisTool;
@@ -77,19 +75,6 @@ public class ConfigController {
         return R.ok().setData(GlobalVariables.getApiHeaderMap());
     }
 
-    @Operation(summary = "更新停顿词列表")
-    @PostMapping("/reload-stopword")
-    public R reloadStopWord() {
-
-        ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
-        redisUtil.delete(STOP_WORDS_KEY);
-        try {
-            redisUtil.sAdd(STOP_WORDS_KEY, Files.lines(Paths.get(classPathResource.getFile().getPath())).toArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return R.ok().setMessage("停顿词列表长度为:" + redisUtil.sSize(STOP_WORDS_KEY));
-    }
 
 
 }

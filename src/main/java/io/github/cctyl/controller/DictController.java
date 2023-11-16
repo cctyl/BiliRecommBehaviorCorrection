@@ -1,5 +1,6 @@
 package io.github.cctyl.controller;
 
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,9 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.entity.Dict;
 import javax.servlet.http.HttpServletRequest;
+
+import static io.github.cctyl.pojo.constants.AppConstant.STOP_WORDS_KEY;
 
 /**
 * <p>
@@ -104,4 +109,13 @@ public class DictController {
         boolean result =  dictService.updateById(dict);
         return result ? R.ok() : R.error();
     }
+
+
+    @Operation(summary = "添加停顿词")
+    @PostMapping("/add-stopword")
+    public R addStopWord(List<String> stopWordList) {
+        GlobalVariables.addStopWords(stopWordList);
+        return R.ok().setMessage("停顿词列表长度为:" + GlobalVariables.getStopWordTree().size());
+    }
+
 }
