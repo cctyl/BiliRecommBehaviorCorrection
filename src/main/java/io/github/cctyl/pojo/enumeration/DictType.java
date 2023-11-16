@@ -1,6 +1,5 @@
 package io.github.cctyl.pojo.enumeration;
 
-import com.baomidou.mybatisplus.annotation.IEnum;
 
 public enum DictType {
 
@@ -48,7 +47,12 @@ public enum DictType {
     /**
      * 需要忽略的关键词
      */
-    IGNORE_KEYWORD
+    IGNORE_KEYWORD,
+
+    /**
+     * 停顿词
+     */
+    STOP_WORDS,
 
 
 }

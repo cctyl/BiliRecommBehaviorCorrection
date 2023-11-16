@@ -46,19 +46,33 @@ public class Dict extends AuditingEntity {
      */
     private String outerId;
 
+    /**
+     * 对象转数据
+     * @param dictCollection
+     * @return
+     */
     public static List<String> transferToValue(Collection<Dict> dictCollection) {
         return dictCollection.stream().map(Dict::getValue).collect(Collectors.toList());
     }
+
+    /**
+     * 数据转对象
+     * @param valueCollection
+     * @param dictType
+     * @param accessType
+     * @param outerId
+     * @return
+     */
     public static List<Dict> keyword2Dict(Collection<String> valueCollection,
                                           DictType dictType,
                                           AccessType accessType,
                                           String outerId
-    ){
-        return   valueCollection.stream().map(s -> new Dict()
+    ) {
+        return valueCollection.stream().map(s -> new Dict()
                 .setAccessType(accessType)
                 .setDictType(dictType)
                 .setOuterId(outerId)
-                .setValue(s) )
+                .setValue(s))
                 .collect(Collectors.toList());
     }
 

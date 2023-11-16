@@ -49,6 +49,25 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     }
 
     /**
+     * 根据两大类型查询已经在数据库中的字典
+     * @param dictType
+     * @param accessType
+     * @param valueCol
+     * @return
+     */
+    public List<Dict> findByDictTypeAndAccessTypeAndValueIn(
+            DictType dictType,
+            AccessType accessType,
+            Collection<String> valueCol
+    ) {
+        LambdaQueryWrapper<Dict> eq = new LambdaQueryWrapper<Dict>()
+                .eq(Dict::getAccessType, accessType)
+                .eq(Dict::getDictType, dictType)
+                .in(Dict::getValue,valueCol);
+        return this.list(eq);
+    }
+
+    /**
      * 获得搜索关键词
      *
      * @return
@@ -250,5 +269,45 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     public void removeByOuterId(String outerId) {
         this.remove(new LambdaQueryWrapper<Dict>()
                 .eq(Dict::getOuterId, outerId));
+    }
+
+    /**
+     * 保存停顿词列表
+     * @param stopWordList
+     */
+    @Override
+    public void saveStopWords(Collection<String> stopWordList) {
+
+        //1.查询已经在数据库中的数据
+        List<String> existsWord = this.findByDictTypeAndAccessTypeAndValueIn(
+                DictType.STOP_WORDS,
+                AccessType.OTHER,
+                stopWordList
+        ).stream().map(Dict::getValue).collect(Collectors.toList());
+
+        //2.去重
+        stopWordList.removeAll(existsWord);
+
+        //3.保存
+        List<Dict> dictList = Dict.keyword2Dict(stopWordList,
+                DictType.STOP_WORDS,
+                AccessType.OTHER,
+                null
+        );
+        this.saveBatch(dictList);
+
+
+    }
+
+    /**
+     * 获得关键词列表
+     * @return
+     */
+    @Override
+    public List<String> findStopWords() {
+       return this.findByDictTypeAndAccessType(
+                DictType.STOP_WORDS,
+                AccessType.OTHER
+        ).stream().map(Dict::getValue).collect(Collectors.toList());
     }
 }

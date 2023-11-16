@@ -59,4 +59,9 @@ public interface DictService extends IService<Dict> {
     void updateByWhiteListRule(WhiteListRule whitelistRule);
 
     void removeByOuterId(String id);
+
+    void saveStopWords(Collection<String> stopWordList);
+
+    List<String> findStopWords();
+
 }

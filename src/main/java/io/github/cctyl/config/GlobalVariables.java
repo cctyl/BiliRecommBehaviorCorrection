@@ -534,11 +534,19 @@ public class GlobalVariables {
      * 加载停顿词列表
      */
     public static void initStopWords() throws IOException {
-        ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
-        List<String> stopWordList =
-                Files.lines(Paths.get(classPathResource.getFile().getPath()))
-                        .map(String::trim)
-                        .collect(Collectors.toList());
+        List<String> stopWordList;
+        if (FIRST_USE) {
+            //初次使用时，从文件中加载停顿词
+            ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
+            stopWordList = Files.lines(Paths.get(classPathResource.getFile().getPath()))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+            //存入数据库
+            dictService.saveStopWords(stopWordList);
+        } else {
+            //从数据库中加载停顿词
+            stopWordList = dictService.findStopWords();
+        }
         GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
     }
 
