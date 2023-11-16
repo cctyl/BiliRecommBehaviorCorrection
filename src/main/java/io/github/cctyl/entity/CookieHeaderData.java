@@ -3,13 +3,11 @@ package io.github.cctyl.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.github.cctyl.pojo.AuditingEntity;
-import io.github.cctyl.pojo.enumeration.CookieHeaderType;
+import io.github.cctyl.pojo.enumeration.Classify;
+import io.github.cctyl.pojo.enumeration.MediaType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-
-import java.io.Serializable;
-import java.time.LocalDate;
 
 /**
  * <p>
@@ -33,6 +31,13 @@ public class CookieHeaderData  extends AuditingEntity {
 
     private String cvalue;
 
-    private CookieHeaderType type;
+    /**
+     * 分类
+     */
+    private Classify classify;
 
+    /**
+     * 用途
+     */
+    private MediaType mediaType;
 }

@@ -67,10 +67,7 @@ public class GlobalVariables {
      */
     private static WordTree BLACK_TAG_TREE = new WordTree();
 
-    /**
-     * cookie
-     */
-    private static Map<String, String> COOKIE_MAP = new HashMap<>(20);
+
 
     /**
      * 播放者用户id
@@ -101,6 +98,14 @@ public class GlobalVariables {
      * 通用的header，当没有找到匹配的url时使用这个header
      */
     private static Map<String, String> COMMON_HEADER_MAP = new HashMap<>();
+
+
+    /**
+     * 及时刷新类型的cookie 和 header
+     */
+    private static Map<String, String> REFRESH_COOKIE_MAP = new HashMap<>(20);
+    private static Map<String, String> REFRESH_HEADER_MAP = new HashMap<>(20);
+
 
     /**
      * 最小播放时间
@@ -338,9 +343,7 @@ public class GlobalVariables {
         return BLACK_TAG_TREE;
     }
 
-    public static Map<String, String> getCOOKIE_MAP() {
-        return COOKIE_MAP;
-    }
+
 
     public static String getMID() {
         return MID;
@@ -508,16 +511,21 @@ public class GlobalVariables {
     }
 
     public static void initApiHeaderMap() {
+sajjkfkasf
+        //通用类型的数据
+        GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCommonCookieMap();
+        GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findCommonHeaderMap();
 
-        GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCookieMap();
-        GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findHeaderMap();
+        //匹配类型的数据
         GlobalVariables.API_HEADER_MAP =  cookieHeaderDataService.findApiHeaderMap();
 
+        //及时更新类型的数据
+        GlobalVariables.REFRESH_COOKIE_MAP = cookieHeaderDataService.findRefreshCookie();
+        GlobalVariables.REFRESH_HEADER_MAP = cookieHeaderDataService.findRefreshHeader();
+
     }
 
-    public static void initCookieMap() {
-        GlobalVariables.COOKIE_MAP = cookieHeaderDataService.findCookieMap();
-    }
+
 
     /**
      * 添加一个黑名单用户id

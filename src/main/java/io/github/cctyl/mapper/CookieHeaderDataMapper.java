@@ -2,7 +2,7 @@ package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import io.github.cctyl.entity.CookieHeaderData;
-import io.github.cctyl.pojo.enumeration.CookieHeaderType;
+import io.github.cctyl.pojo.enumeration.Classify;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,8 +20,8 @@ import java.util.Map;
 public interface CookieHeaderDataMapper extends BaseMapper<CookieHeaderData> {
 
 
-    List<CookieHeaderData> findByType(@Param("dataType") CookieHeaderType dataType);
+    List<CookieHeaderData> findByType(@Param("dataType") Classify dataType);
 
     @MapKey("ckey")
-    Map<String, String> findDataByTypeDistinctByKey(@Param("dataType") CookieHeaderType dataType);
+    Map<String, String> findDataByTypeDistinctByKey(@Param("dataType") Classify dataType);
 }

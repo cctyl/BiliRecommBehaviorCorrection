@@ -2,11 +2,12 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.protobuf.Api;
 import io.github.cctyl.entity.CookieHeaderData;
 import io.github.cctyl.mapper.CookieHeaderDataMapper;
 import io.github.cctyl.pojo.ApiHeader;
-import io.github.cctyl.pojo.enumeration.CookieHeaderType;
+import io.github.cctyl.pojo.AuditingEntity;
+import io.github.cctyl.pojo.enumeration.Classify;
+import io.github.cctyl.pojo.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
 import org.springframework.stereotype.Service;
 
@@ -26,15 +27,27 @@ import java.util.stream.Collectors;
 @Service
 public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMapper, CookieHeaderData> implements CookieHeaderDataService {
 
-    @Override
-    public Map<String, String> findCookieMap() {
-        return baseMapper.findDataByTypeDistinctByKey(CookieHeaderType.COOKIE);
+
+    /**
+     * 根据分类和用途查询数据
+     * @param classify
+     * @param mediaType
+     * @return
+     */
+    public List<CookieHeaderData> findByClassifyAndMediaType(Classify classify,
+                                                             MediaType mediaType
+    ) {
+
+        return this.list(
+                new LambdaQueryWrapper<CookieHeaderData>()
+                        .eq(CookieHeaderData::getClassify, classify)
+                        .eq(CookieHeaderData::getMediaType, mediaType)
+                .orderBy(true,false, AuditingEntity::getLastModifiedDate)
+        );
+
     }
 
-    @Override
-    public Map<String, String> findHeaderMap() {
-        return baseMapper.findDataByTypeDistinctByKey(CookieHeaderType.REQUEST_HEADER);
-    }
+
 
     @Override
     public Map<String, ApiHeader> findApiHeaderMap() {
@@ -45,7 +58,8 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
                 this.list(
                         new LambdaQueryWrapper<CookieHeaderData>()
                                 .isNotNull(CookieHeaderData::getUrl)
-                                .in(CookieHeaderData::getType, CookieHeaderType.COOKIE, CookieHeaderType.REQUEST_HEADER)
+                                .in(CookieHeaderData::getClassify, Classify.COOKIE, Classify.REQUEST_HEADER)
+                                .eq(CookieHeaderData::getMediaType,MediaType.URL_MATCHING)
                 );
 
         // url 区分
@@ -63,7 +77,7 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
             HashMap<String, String> headerMap = new HashMap<>();
             List<CookieHeaderData> value = entry.getValue();
             for (CookieHeaderData headerData : value) {
-                if (headerData.getType() == CookieHeaderType.COOKIE) {
+                if (headerData.getClassify() == Classify.COOKIE) {
                     cookieMap.put(headerData.getCkey(), headerData.getCvalue());
                 } else {
                     headerMap.put(headerData.getCkey(), headerData.getCvalue());
@@ -82,5 +96,46 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
 
         return result;
 
+    }
+
+    @Override
+    public Map<String, String> findCommonCookieMap() {
+        return getMapByClassifyAndMediaType(Classify.COOKIE, MediaType.GENERAL);
+    }
+
+    /**
+     *
+     * @param classify
+     * @param mediaType
+     * @return
+     */
+    public Map<String, String> getMapByClassifyAndMediaType(
+            Classify classify, MediaType mediaType
+    ) {
+        List<CookieHeaderData> dataList = this.findByClassifyAndMediaType(
+                classify, mediaType);
+
+        return dataList.stream().collect(Collectors.toMap(
+                CookieHeaderData::getCkey,
+                CookieHeaderData::getCvalue,
+                (c1, c2) -> c1
+        ));
+    }
+
+
+    @Override
+    public Map<String, String> findCommonHeaderMap() {
+        return getMapByClassifyAndMediaType(Classify.REQUEST_HEADER, MediaType.GENERAL);
+    }
+
+    @Override
+    public Map<String, String> findRefreshCookie() {
+        return getMapByClassifyAndMediaType(Classify.COOKIE, MediaType.TIMELY_UPDATE);
+    }
+
+
+    @Override
+    public Map<String, String> findRefreshHeader() {
+        return getMapByClassifyAndMediaType(Classify.REQUEST_HEADER, MediaType.TIMELY_UPDATE);
     }
 }

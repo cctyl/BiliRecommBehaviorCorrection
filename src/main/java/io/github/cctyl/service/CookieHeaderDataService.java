@@ -17,9 +17,13 @@ import java.util.Map;
  */
 public interface CookieHeaderDataService extends IService<CookieHeaderData> {
 
-    Map<String, String> findCookieMap();
-    Map<String, String> findHeaderMap();
-
     Map<String, ApiHeader> findApiHeaderMap();
 
+    Map<String, String> findCommonCookieMap();
+
+    Map<String, String> findCommonHeaderMap();
+
+    Map<String, String> findRefreshCookie();
+
+    Map<String, String> findRefreshHeader();
 }

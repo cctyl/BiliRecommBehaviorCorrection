@@ -33,9 +33,6 @@ public class ConfigController {
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private HarAnalysisTool harAnalysisTool;
 
     @PutMapping("/cookie")

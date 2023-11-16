@@ -1,7 +1,7 @@
 package io.github.cctyl.pojo.enumeration;
 
-public enum CookieHeaderType {
+public enum Classify {
     COOKIE,
     REQUEST_HEADER,
-    RESPONSE_HEADER
+    RESPONSE_HEADER,
 }
