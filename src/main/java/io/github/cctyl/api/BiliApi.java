@@ -46,12 +46,7 @@ public class BiliApi {
     @Autowired
     private RedisUtil redisUtil;
 
-    @Autowired
-    private ApplicationProperties applicationProperties;
-    /**
-     * 默认情况下web页面的cookie，用于鉴别异常cookie时的对比
-     */
-    private Map<String, String> defaultCookie;
+
 
     /**
      * 用于获取wbi签名
@@ -71,24 +66,20 @@ public class BiliApi {
      */
     public Map<String, List<String>> getHeader(String url) {
         HashMap<String, List<String>> result = new HashMap<>();
-        String matchApi = GlobalVariables.apiHeaderMap
-                .keySet()
-                .stream()
-                .filter(url::contains)
-                .findFirst()
-                .orElse(null);
-        if (
-                matchApi != null
-                        && GlobalVariables.apiHeaderMap.get(matchApi) != null
-        ) {
-            GlobalVariables.apiHeaderMap.get(matchApi).getHeaders().forEach((k, v) -> result.put(k, Collections.singletonList(v)));
-            return result;
-        }
-        //没有匹配的，就返回默认的header
-        GlobalVariables.commonHeaderMap.forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+        ApiHeader apiHeader = GlobalVariables.getApiHeaderMap().get(url);
+        if ( apiHeader != null) {
+            apiHeader.getHeaders()
+                    .forEach((k, v) -> result.put(k, Collections.singletonList(v)));
 
-        //公共header时，需要修改host
-        result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
+        }else {
+            //没有匹配的，就返回默认的header
+            GlobalVariables.getCommonHeaderMap()
+                    .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+            //公共header时，需要修改host
+            result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
+        }
+
+
 
         return result;
     }
@@ -260,29 +251,18 @@ public class BiliApi {
      */
     public String getCookieStr(String url) {
 
-        String matchApi = GlobalVariables.apiHeaderMap
-                .keySet()
-                .stream()
-                .filter(url::contains)
-                .findFirst()
-                .orElse(null);
 
-        Map<String, String> cookies = null;
-
-        //找到了特定的，就使用特定的
-        if (matchApi != null
-                && GlobalVariables.apiHeaderMap.get(matchApi) != null) {
-            cookies = GlobalVariables.apiHeaderMap.get(matchApi).getCookies();
+        Map<String,String> cookies  = new HashMap<>();
+        ApiHeader apiHeader = GlobalVariables.getApiHeaderMap().get(url);
+        if (apiHeader==null){
+            //使用 通用的 cookie
+            cookies.putAll(GlobalVariables.getCommonCookieMap());
+        }else {
+            cookies.putAll(apiHeader.getCookies());
         }
 
-        //没找到就使用通用的
-        if (cookies==null){
-            cookies = GlobalVariables.commonCookieMap;
-        }
-        //不应该改变默认的map
-        cookies = new HashMap<>(cookies);
-        //通用的基础上，更新一些会过期的cookie
-        cookies.putAll(GlobalVariables.cookieMap);
+        //及时更新的cookie覆盖掉同名key
+        cookies.putAll(GlobalVariables.getRefreshCookieMap());
 
         return cookies.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
@@ -300,7 +280,7 @@ public class BiliApi {
      * 更新cookie
      */
     public void updateCookie(HttpResponse response) {
-        List<HttpCookie> cookies = response.getCookies();
+        //List<HttpCookie> cookies = response.getCookies();
         //Set<String> newCookieKeySet = cookies
         //        .stream()
         //        .map(HttpCookie::getName)
@@ -319,13 +299,13 @@ public class BiliApi {
         //    redisUtil.sAdd(SUSPICIOUS_COOKIE_KEY, objects);
         //}
 
-        for (HttpCookie cookie : cookies) {
-            String name = cookie.getName();
-            GlobalVariables.cookieMap.put(name, cookie.getValue());
-        }
-
-        //缓存
-        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
+//        for (HttpCookie cookie : cookies) {
+//            String name = cookie.getName();
+//            GlobalVariables.cookieMap.put(name, cookie.getValue());
+//        }
+//
+//        //缓存
+//        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
     }
 
     /**
@@ -654,7 +634,7 @@ public class BiliApi {
 
         paramMap.put("start_ts", start_ts);
         //播放视频的用户id
-        paramMap.put("mid", GlobalVariables.mid);
+        paramMap.put("mid", GlobalVariables.getMID());
         paramMap.put("aid", aid);
         paramMap.put("cid", cid);
         paramMap.put("type", type);
@@ -694,7 +674,7 @@ public class BiliApi {
      * @return
      */
     public String getCsrf() {
-        return GlobalVariables.cookieMap.getOrDefault("bili_jct", "");
+        return GlobalVariables.getRefreshCookieMap().getOrDefault("bili_jct", "");
     }
 
 
@@ -704,21 +684,9 @@ public class BiliApi {
      * @return
      */
     public String getSessData() {
-        return GlobalVariables.cookieMap.getOrDefault("SESSDATA", "");
+        return GlobalVariables.getRefreshCookieMap().getOrDefault("SESSDATA", "");
     }
 
-    /**
-     * 完全替换cookie
-     *
-     * @param cookieStr
-     */
-    public void replaceCookie(String cookieStr) {
-        redisUtil.delete(COOKIES_KEY);
-        Map<String, String> map = DataUtil.splitCookie(cookieStr);
-        GlobalVariables.cookieMap = map;
-        //缓存
-        redisUtil.hPutAll(COOKIES_KEY, map);
-    }
 
 
     /**

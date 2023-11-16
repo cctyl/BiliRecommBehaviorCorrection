@@ -158,7 +158,81 @@ public class GlobalVariables {
 
 
 
-/*    *//**
+/*    */
+
+    public static Set<String> getBlackUserIdSet() {
+        return BLACK_USER_ID_SET;
+    }
+
+    public static Set<String> getWhiteUserIdSet() {
+        return WHITE_USER_ID_SET;
+    }
+
+    public static Set<String> getBlackKeywordSet() {
+        return BLACK_KEYWORD_SET;
+    }
+
+    public static WordTree getBlackKeywordTree() {
+        return BLACK_KEYWORD_TREE;
+    }
+
+    public static Set<String> getBlackTidSet() {
+        return BLACK_TID_SET;
+    }
+
+    public static Set<String> getWhiteTidSet() {
+        return WHITE_TID_SET;
+    }
+
+    public static Set<String> getBlackTagSet() {
+        return BLACK_TAG_SET;
+    }
+
+    public static WordTree getBlackTagTree() {
+        return BLACK_TAG_TREE;
+    }
+
+    public static String getMID() {
+        return MID;
+    }
+
+    public static Set<String> getKeywordSet() {
+        return KEYWORD_SET;
+    }
+
+    public static List<WhiteListRule> getWhitelistRuleList() {
+        return WHITELIST_RULE_LIST;
+    }
+
+    public static Map<String, ApiHeader> getApiHeaderMap() {
+        return API_HEADER_MAP;
+    }
+
+    public static Map<String, String> getCommonCookieMap() {
+        return COMMON_COOKIE_MAP;
+    }
+
+    public static Map<String, String> getCommonHeaderMap() {
+        return COMMON_HEADER_MAP;
+    }
+
+    public static int getMinPlaySecond() {
+        return MIN_PLAY_SECOND;
+    }
+
+    public static WordTree getStopWordTree() {
+        return STOP_WORD_TREE;
+    }
+
+    public static Set<String> getIgnoreBlackKeyWordSet() {
+        return IGNORE_BLACK_KEY_WORD_SET;
+    }
+
+    public static Set<String> getIgnoreWhiteKeyWordSet() {
+        return IGNORE_WHITE_KEY_WORD_SET;
+    }
+
+    /**
      * 添加黑名单关键词
      * 去重
      * 添加到缓存
@@ -311,78 +385,14 @@ public class GlobalVariables {
     }*/
 
 
-    public static Set<String> getBLACK_USER_ID_SET() {
-        return BLACK_USER_ID_SET;
+
+
+    public static Map<String, String> getRefreshCookieMap() {
+        return REFRESH_COOKIE_MAP;
     }
 
-    public static Set<String> getWHITE_USER_ID_SET() {
-        return WHITE_USER_ID_SET;
-    }
-
-    public static Set<String> getBLACK_KEYWORD_SET() {
-        return BLACK_KEYWORD_SET;
-    }
-
-    public static WordTree getBLACK_KEYWORD_TREE() {
-        return BLACK_KEYWORD_TREE;
-    }
-
-    public static Set<String> getBLACK_TID_SET() {
-        return BLACK_TID_SET;
-    }
-
-    public static Set<String> getWHITE_TID_SET() {
-        return WHITE_TID_SET;
-    }
-
-    public static Set<String> getBLACK_TAG_SET() {
-        return BLACK_TAG_SET;
-    }
-
-    public static WordTree getBLACK_TAG_TREE() {
-        return BLACK_TAG_TREE;
-    }
-
-
-
-    public static String getMID() {
-        return MID;
-    }
-
-    public static Set<String> getKEYWORD_SET() {
-        return KEYWORD_SET;
-    }
-
-    public static List<WhiteListRule> getWHITELIST_RULE_LIST() {
-        return WHITELIST_RULE_LIST;
-    }
-
-    public static Map<String, ApiHeader> getAPI_HEADER_MAP() {
-        return API_HEADER_MAP;
-    }
-
-    public static Map<String, String> getCOMMON_COOKIE_MAP() {
-        return COMMON_COOKIE_MAP;
-    }
-
-    public static Map<String, String> getCOMMON_HEADER_MAP() {
-        return COMMON_HEADER_MAP;
-    }
-
-    public static int getMIN_PLAY_SECOND() {
-        return MIN_PLAY_SECOND;
-    }
-
-    public static WordTree getSTOP_WORD_TREE() {
-        return STOP_WORD_TREE;
-    }
-
-    public static Set<String> getIGNORE_BLACK_KEY_WORD_SET() {
-        return IGNORE_BLACK_KEY_WORD_SET;
-    }
-
-    public static Set<String> getIGNORE_WHITE_KEY_WORD_SET() {
-        return IGNORE_WHITE_KEY_WORD_SET;
+    public static Map<String, String> getRefreshHeaderMap() {
+        return REFRESH_HEADER_MAP;
     }
 
     /**
@@ -511,7 +521,6 @@ public class GlobalVariables {
     }
 
     public static void initApiHeaderMap() {
-sajjkfkasf
         //通用类型的数据
         GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCommonCookieMap();
         GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findCommonHeaderMap();
