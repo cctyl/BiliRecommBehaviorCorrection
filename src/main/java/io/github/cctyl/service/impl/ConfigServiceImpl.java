@@ -67,6 +67,25 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         return config;
     }
 
+    /**
+     * 是否第一次使用
+     * 如果数据库中不存在该记录，则返回true，并且创建一个记录，设置为false
+     *
+     * @return
+     */
+    @Override
+    public boolean isFirstUse() {
+        Config configByName = findConfigByName(AppConstant.FIRST_USE);
+        if (configByName==null){
+            configByName = new Config()
+                    .setName(AppConstant.FIRST_USE)
+                    .setValue("false");
+            this.save(configByName);
+            return true;
+        }
+
+        return Boolean.parseBoolean(configByName.getValue());
+    }
 
 
     public Config findConfigByName(String name) {

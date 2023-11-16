@@ -14,9 +14,14 @@ import org.springframework.stereotype.Component;
 public class InitFromRedis implements ApplicationRunner {
 
 
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.debug("初始化...从sqlite中加载数据...");
+
+
+        //初始化标记
+        GlobalVariables.setInfo();
 
         //0.加载cookie
         GlobalVariables.initApiHeaderMap();

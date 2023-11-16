@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,8 +33,17 @@ public class GlobalVariables {
      * AccessKey
      */
     private static String ACCESS_KEY;
-   private static String IMG_KEY;
-   private static String SUB_KEY;
+    /**
+     * wbi
+     */
+    private static String IMG_KEY;
+    private static String SUB_KEY;
+
+
+    /**
+     * 第一次启动
+     */
+    private static boolean FIRST_USE;
 
     /**
      * 黑名单up主 id列表
@@ -74,7 +85,6 @@ public class GlobalVariables {
      * 黑名单标签树
      */
     private static WordTree BLACK_TAG_TREE = new WordTree();
-
 
 
     /**
@@ -140,11 +150,11 @@ public class GlobalVariables {
 
     public GlobalVariables(
 
-                           BlackRuleService blackRuleService,
-                           DictService dictService,
-                           WhiteListRuleService whiteListRuleService,
-                           CookieHeaderDataService cookieHeaderDataService,
-                           ConfigService configService
+            BlackRuleService blackRuleService,
+            DictService dictService,
+            WhiteListRuleService whiteListRuleService,
+            CookieHeaderDataService cookieHeaderDataService,
+            ConfigService configService
     ) {
         GlobalVariables.blackRuleService = blackRuleService;
         GlobalVariables.dictService = dictService;
@@ -166,7 +176,7 @@ public class GlobalVariables {
 
 
 
-/*    */
+    /*    */
 
     public static Set<String> getBlackUserIdSet() {
         return BLACK_USER_ID_SET;
@@ -249,7 +259,6 @@ public class GlobalVariables {
      * 去重
      * 添加到缓存
      * 添加到数据库
-     *
      *//*
     public static void addBlackKeyword(Collection<String> param) {
         //1.加载需要忽略的东西
@@ -395,10 +404,6 @@ public class GlobalVariables {
         redisUtil.delete(COMMON_HEADER_MAP);
         redisUtil.hPutAll(COMMON_HEADER_MAP, GlobalVariables.commonHeaderMap);
     }*/
-
-
-
-
     public static Map<String, String> getRefreshCookieMap() {
         return REFRESH_COOKIE_MAP;
     }
@@ -408,7 +413,6 @@ public class GlobalVariables {
     }
 
     /**
-     *
      * 黑白名单忽略关键词列表的加载
      */
     public static void initIgnoreKeyWord() {
@@ -443,7 +447,7 @@ public class GlobalVariables {
 
         //3.构建dfa Tree
         GlobalVariables.BLACK_KEYWORD_TREE = new WordTree();
-        GlobalVariables.BLACK_KEYWORD_TREE.addWords( GlobalVariables.BLACK_KEYWORD_SET);
+        GlobalVariables.BLACK_KEYWORD_TREE.addWords(GlobalVariables.BLACK_KEYWORD_SET);
     }
 
     /**
@@ -453,10 +457,10 @@ public class GlobalVariables {
         //1.加载需要忽略的东西
 
         GlobalVariables.BLACK_TAG_SET =
-               dictService.findBlackTag()
-                .stream()
-                       .map(Dict::getValue)
-                .collect(Collectors.toSet());
+                dictService.findBlackTag()
+                        .stream()
+                        .map(Dict::getValue)
+                        .collect(Collectors.toSet());
 
         GlobalVariables.BLACK_TAG_SET.removeAll(IGNORE_BLACK_KEY_WORD_SET);
 
@@ -465,11 +469,11 @@ public class GlobalVariables {
     }
 
     public static void initWhiteUserIdSet() {
-    GlobalVariables.WHITE_USER_ID_SET = dictService
-            .findWhiteUserId()
-            .stream().map(Dict::getValue)
-            .collect(Collectors.toSet());
-}
+        GlobalVariables.WHITE_USER_ID_SET = dictService
+                .findWhiteUserId()
+                .stream().map(Dict::getValue)
+                .collect(Collectors.toSet());
+    }
 
     public static void initBlackTidSet() {
         GlobalVariables.BLACK_TID_SET = dictService
@@ -488,11 +492,12 @@ public class GlobalVariables {
     }
 
     public static void initMid() {
-        GlobalVariables.MID =  configService.findByName(AppConstant.MID_KEY);
+        GlobalVariables.MID = configService.findByName(AppConstant.MID_KEY);
 
     }
+
     public static void initAccessKey() {
-        GlobalVariables.MID =  configService.findByName(AppConstant.ACCESS_KEY);
+        GlobalVariables.MID = configService.findByName(AppConstant.ACCESS_KEY);
 
     }
 
@@ -500,7 +505,7 @@ public class GlobalVariables {
     public static void initMinPlaySecond() {
 
         String minPlaySecond = configService.findByName("minPlaySecond");
-        if (minPlaySecond!=null){
+        if (minPlaySecond != null) {
             try {
                 GlobalVariables.MIN_PLAY_SECOND = Integer.parseInt(minPlaySecond);
             } catch (NumberFormatException e) {
@@ -512,7 +517,7 @@ public class GlobalVariables {
 
     public static void initKeywordSet() {
         GlobalVariables.SEARCH_KEYWORD_SET = dictService.findSearchKeyWord()
-        .stream().map(Dict::getValue).collect(Collectors.toSet());
+                .stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 
     public static void initWhitelistRules() {
@@ -543,7 +548,7 @@ public class GlobalVariables {
         GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findCommonHeaderMap();
 
         //匹配类型的数据
-        GlobalVariables.API_HEADER_MAP =  cookieHeaderDataService.findApiHeaderMap();
+        GlobalVariables.API_HEADER_MAP = cookieHeaderDataService.findApiHeaderMap();
 
         //及时更新类型的数据
         GlobalVariables.REFRESH_COOKIE_MAP = cookieHeaderDataService.findRefreshCookie();
@@ -553,6 +558,7 @@ public class GlobalVariables {
 
     /**
      * 更新 及时更新的cookie
+     *
      * @param cookieMap
      */
     public static void updateRefreshCookie(Map<String, String> cookieMap) {
@@ -565,12 +571,28 @@ public class GlobalVariables {
         SUB_KEY = configService.findByName(AppConstant.SUB_KEY);
     }
 
+    /**
+     * 加载一些标记信息
+     */
+    public static void setInfo() {
+        //1.是否第一次使用本系统
+        FIRST_USE = configService.isFirstUse();
+
+        //2.第一次使用系统时间
+        if (FIRST_USE){
+            configService.addOrUpdateConfig(AppConstant.FIRST_START_TIME,
+                    String.valueOf(Instant.now().toEpochMilli())
+                );
+        }
+    }
+
 
     /**
      * 添加一个黑名单用户id
+     *
      * @param mid
      */
-    public  void addBlackUserId(String mid) {
+    public void addBlackUserId(String mid) {
 
         Dict dict = new Dict()
                 .setDictType(DictType.MID)
@@ -583,11 +605,11 @@ public class GlobalVariables {
 
     /**
      * 从缓存中读入数据，存储
-     *
+     * <p>
      * 将这些标签的类型由CACHE 改为正常类型即可
      * 黑名单中加入新出现的标签
      */
-    public  void addBlackKeyWordFromCache(List<String> keywordIdSet) {
+    public void addBlackKeyWordFromCache(List<String> keywordIdSet) {
 
         //过滤掉忽略的关键词(无需，添加关键词时，如果匹配忽略关键词则不允许添加)
 
@@ -597,16 +619,17 @@ public class GlobalVariables {
                 keywordIdSet
         );
 
-        List<String> valueList = Dict.transferToValue( dictService.findByIdIn(keywordIdSet));
-        BLACK_KEYWORD_SET.addAll( valueList);
+        List<String> valueList = Dict.transferToValue(dictService.findByIdIn(keywordIdSet));
+        BLACK_KEYWORD_SET.addAll(valueList);
         BLACK_KEYWORD_TREE.addWords(valueList);
     }
 
     /**
      * 将缓存中的Tag 加入正常的Tag列表中
+     *
      * @param tagNameIdList
      */
-    public  void addBlackTagFromCache(List<String> tagNameIdList) {
+    public void addBlackTagFromCache(List<String> tagNameIdList) {
 
         //将这些标签的类型由CACHE 改为正常类型即可
         dictService.updateAccessTypeByIdIn(
@@ -614,16 +637,17 @@ public class GlobalVariables {
                 tagNameIdList
         );
 
-        List<String> valueList = Dict.transferToValue( dictService.findByIdIn(tagNameIdList));
-        BLACK_TAG_SET.addAll( valueList);
+        List<String> valueList = Dict.transferToValue(dictService.findByIdIn(tagNameIdList));
+        BLACK_TAG_SET.addAll(valueList);
         BLACK_TAG_TREE.addWords(valueList);
     }
 
     /**
      * 新增tid
+     *
      * @param param
      */
-    public  void addBlackTidSet(Set<String> param) {
+    public void addBlackTidSet(Set<String> param) {
         dictService.removeAndAddDict(
                 AccessType.BLACK,
                 DictType.TID,
@@ -631,14 +655,15 @@ public class GlobalVariables {
                 param);
 
         //新增到缓存
-         BLACK_TID_SET.addAll(param);
+        BLACK_TID_SET.addAll(param);
     }
 
     /**
      * 新增黑名单关键词
+     *
      * @param keywordCol
      */
-    public  void addBlackKeyword(Collection<String> keywordCol) {
+    public void addBlackKeyword(Collection<String> keywordCol) {
 
 
         dictService.removeAndAddDict(
@@ -652,7 +677,7 @@ public class GlobalVariables {
 
     }
 
-    public  void addBlackUserIdSet(Set<String> blackUserIdSet) {
+    public void addBlackUserIdSet(Set<String> blackUserIdSet) {
 
         dictService.removeAndAddDict(
                 AccessType.BLACK,
@@ -664,7 +689,7 @@ public class GlobalVariables {
         BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
 
-    public  void addBlackTagSet(Set<String> collect) {
+    public void addBlackTagSet(Set<String> collect) {
 
         dictService.removeAndAddDict(
                 AccessType.BLACK,
@@ -684,7 +709,7 @@ public class GlobalVariables {
      * @param collect
      */
     @Transactional
-    public  void addBlackIgnoreKeyword(Set<String> collect) {
+    public void addBlackIgnoreKeyword(Set<String> collect) {
         dictService.removeAndAddDict(
                 AccessType.BLACK,
                 DictType.IGNORE_KEYWORD,
@@ -702,7 +727,7 @@ public class GlobalVariables {
 
     }
 
-    public  void removeBlackTag(Set<String> param) {
+    public void removeBlackTag(Set<String> param) {
         for (String s : param) {
             BLACK_TAG_SET.remove(s);
             BLACK_TAG_TREE.remove(s);
@@ -714,7 +739,7 @@ public class GlobalVariables {
         );
     }
 
-    public  void removeBlackKeyword(Set<String> param) {
+    public void removeBlackKeyword(Set<String> param) {
 
         for (String s : param) {
             BLACK_KEYWORD_SET.remove(s);
@@ -729,12 +754,13 @@ public class GlobalVariables {
 
     /**
      * 添加或更新白名单
+     *
      * @param whitelistRule
      */
     @Transactional
-    public  void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
+    public void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
 
-        if (whitelistRule.getId()!=null){
+        if (whitelistRule.getId() != null) {
             WHITELIST_RULE_LIST.remove(whitelistRule);
         }
         WHITELIST_RULE_LIST.add(whitelistRule);
@@ -746,12 +772,13 @@ public class GlobalVariables {
 
     /**
      * 根据id删除白名单
+     *
      * @param id
      * @return
      */
-    public  boolean removeWhitelistRules(Long id) {
+    public boolean removeWhitelistRules(Long id) {
 
-        WHITELIST_RULE_LIST =  WHITELIST_RULE_LIST.stream()
+        WHITELIST_RULE_LIST = WHITELIST_RULE_LIST.stream()
                 .filter(whiteListRule -> !id.equals(whiteListRule.getId()))
                 .collect(Collectors.toList());
 
@@ -760,10 +787,11 @@ public class GlobalVariables {
 
     /**
      * 添加白名单忽略关键词
+     *
      * @param ignoreKeyWordSet
      */
     @Transactional
-    public  void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
+    public void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
 
         dictService.removeAndAddDict(
                 AccessType.WHITE,
@@ -784,7 +812,7 @@ public class GlobalVariables {
 
     }
 
-    private  void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
+    private void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
         dictService.removeByAccessTypeAndDictTypeAndValue(
@@ -806,7 +834,7 @@ public class GlobalVariables {
         }
     }
 
-    private  void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
+    private void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
         dictService.removeByAccessTypeAndDictTypeAndValue(
@@ -854,13 +882,13 @@ public class GlobalVariables {
     public void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet) {
 
         //数据库层面的删除
-       dictService.removeByAccessTypeAndDictTypeAndValue(
-               AccessType.WHITE,
-               DictType.TAG,
-               ignoreKeyWordSet
-       );
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.TAG,
+                ignoreKeyWordSet
+        );
 
-       //缓存层面的删除
+        //缓存层面的删除
         for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
             List<Dict> tagNameList = whiteListRule.getTagNameList()
                     .stream()
@@ -872,18 +900,18 @@ public class GlobalVariables {
 
     }
 
-    public static void updateAccessKey(String newKey){
+    public static void updateAccessKey(String newKey) {
         ACCESS_KEY = newKey;
-        configService.addOrUpdateConfig(AppConstant.ACCESS_KEY,newKey,2_505_600);
+        configService.addOrUpdateConfig(AppConstant.ACCESS_KEY, newKey, 2_505_600);
     }
 
-    public static void updateWbi(String imgKey,String subKey){
+    public static void updateWbi(String imgKey, String subKey) {
 
         IMG_KEY = imgKey;
         SUB_KEY = subKey;
 
-        configService.addOrUpdateConfig(AppConstant.IMG_KEY, imgKey,72_000);
-        configService.addOrUpdateConfig(AppConstant.SUB_KEY, subKey,72_000);
+        configService.addOrUpdateConfig(AppConstant.IMG_KEY, imgKey, 72_000);
+        configService.addOrUpdateConfig(AppConstant.SUB_KEY, subKey, 72_000);
     }
 
     public static String getImgKey() {

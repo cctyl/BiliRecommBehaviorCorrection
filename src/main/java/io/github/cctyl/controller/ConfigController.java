@@ -6,9 +6,12 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.R;
+import io.github.cctyl.service.ConfigService;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +38,12 @@ public class ConfigController {
     @Autowired
     private HarAnalysisTool harAnalysisTool;
 
+    @Autowired
+    private ConfigService configService;
+
+    @Autowired
+    private CookieHeaderDataService cookieHeaderDataService;
+
     @PutMapping("/cookie")
     @Operation(summary = "更新cookie")
     public R updateCookie(
@@ -43,14 +52,8 @@ public class ConfigController {
         if (StrUtil.isBlank(cookieStr)) {
             return R.error().setMessage("错误的数据");
         }
-        applicationProperties.getDefaultData().setCookie(cookieStr);
-
-        Map<String, String> cookieMap = DataUtil.splitCookie(applicationProperties.getDefaultData().getCookie());
-        for (Map.Entry<String, String> entry : cookieMap.entrySet()) {
-            GlobalVariables.cookieMap.put(entry.getKey(), entry.getValue());
-        }
-        //缓存
-        GlobalVariables.setCookieMap(GlobalVariables.cookieMap);
+        Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
+        GlobalVariables.updateRefreshCookie(cookieMap);
         return R.ok().setData(cookieMap);
     }
 
@@ -71,9 +74,7 @@ public class ConfigController {
         multipartFile.transferTo(harFile);
         harAnalysisTool.load(harFile, refresh);
 
-        return R.ok().setData(Map.of("cookieMap", GlobalVariables.cookieMap,
-                "headerMap", GlobalVariables.commonHeaderMap
-        ));
+        return R.ok().setData(GlobalVariables.getApiHeaderMap());
     }
 
     @Operation(summary = "更新停顿词列表")

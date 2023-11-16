@@ -22,4 +22,5 @@ public interface ConfigService extends IService<Config> {
     Config addOrUpdateConfig(String configName,String configValue,Integer expireSecond);
 
 
+    boolean isFirstUse();
 }

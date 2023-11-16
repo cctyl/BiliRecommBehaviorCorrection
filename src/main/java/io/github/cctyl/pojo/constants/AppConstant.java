@@ -157,6 +157,14 @@ public class AppConstant {
     public static final String BROWSER_UA_STR = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0";
 
 
+    /**
+     * 初次启动时间
+     */
+    public static final String FIRST_START_TIME = "firstStartTime";
 
+    /**
+     * 是否初次启动
+     */
+    public static final String FIRST_USE = "firstUse";
 
 }
