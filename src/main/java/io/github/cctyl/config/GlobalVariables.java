@@ -83,7 +83,7 @@ public class GlobalVariables {
     /**
      * 搜索关键词列表
      */
-    private static Set<String> KEYWORD_SET;
+    private static Set<String> SEARCH_KEYWORD_SET;
 
     /**
      * 白名单关键词列表
@@ -202,8 +202,8 @@ public class GlobalVariables {
         return MID;
     }
 
-    public static Set<String> getKeywordSet() {
-        return KEYWORD_SET;
+    public static Set<String> getSearchKeywordSet() {
+        return SEARCH_KEYWORD_SET;
     }
 
     public static List<WhiteListRule> getWhitelistRuleList() {
@@ -504,7 +504,7 @@ public class GlobalVariables {
     }
 
     public static void initKeywordSet() {
-        GlobalVariables.KEYWORD_SET = dictService.findSearchKeyWord()
+        GlobalVariables.SEARCH_KEYWORD_SET = dictService.findSearchKeyWord()
         .stream().map(Dict::getValue).collect(Collectors.toSet());
     }
 

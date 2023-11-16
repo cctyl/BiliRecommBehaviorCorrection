@@ -86,7 +86,7 @@ public class BiliTask {
             一个关键词，从两页抽20条
          */
         log.info("==============开始处理关键词==================");
-        for (String keyword : GlobalVariables.getKEYWORD_SET()) {
+        for (String keyword : GlobalVariables.getSearchKeywordSet()) {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
                 //执行搜索

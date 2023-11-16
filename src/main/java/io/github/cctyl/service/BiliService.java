@@ -40,7 +40,7 @@ public class BiliService {
     private BlackRuleService blackRuleService;
 
     @Autowired
-    private WhiteRuleService whiteRuleService;
+    private WhiteListRuleService whiteRuleService;
 
     /**
      * 检查cookie状态
@@ -247,8 +247,8 @@ public class BiliService {
         int playTime = DataUtil.getRandom(0, videoDuration);
 
         //playTime 不能太长,最大值50
-        if (playTime >= applicationProperties.getMinPlaySecond()) {
-            playTime = applicationProperties.getMinPlaySecond() + DataUtil.getRandom(1, 10);
+        if (playTime >= GlobalVariables.getMinPlaySecond()) {
+            playTime = GlobalVariables.getMinPlaySecond() + DataUtil.getRandom(1, 10);
         }
         //不能太短,最小值 15
         if (playTime <= 15) {
@@ -347,7 +347,7 @@ public class BiliService {
      */
     public int dislikeByUserId(String userId) {
         //该用户会被加入黑名单
-        GlobalVariables.INSTANCE.addBlackUserId(Collections.singleton(userId));
+        GlobalVariables.INSTANCE.addBlackUserId(userId);
 
         //视频详情
         List<VideoDetail> videoDetailList = new ArrayList<>();
