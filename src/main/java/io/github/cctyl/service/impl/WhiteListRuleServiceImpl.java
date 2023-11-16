@@ -60,6 +60,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @param videoDetail
      * @return
      */
+    @Override
     public boolean whiteMatch(VideoDetail videoDetail) {
 
         /**
@@ -114,7 +115,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
             log.error("视频:{}缺少up主信息", videoDetail.toString());
             return false;
         }
-        boolean match = GlobalVariables.getWHITE_USER_ID_SET()
+        boolean match = GlobalVariables.getWhiteUserIdSet()
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -137,10 +138,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @param videoDetail
      * @return
      */
+    @Override
     public boolean isTidMatch(VideoDetail videoDetail) {
 
 
-        boolean match = GlobalVariables.getWHITE_TID_SET()
+        boolean match = GlobalVariables.getWhiteTidSet()
                 .contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
@@ -162,9 +164,10 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @param videoDetail
      * @return
      */
+    @Override
     public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
         String[] matchWordArr = new String[8];
-        WhiteListRule whitelistRule = GlobalVariables.getWHITELIST_RULE_LIST()
+        WhiteListRule whitelistRule = GlobalVariables.getWhitelistRuleList()
                 .stream()
                 .filter(item ->
                         {
@@ -316,6 +319,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @param whitelistRule 需要训练的白名单规则
      * @param whiteAvidList 应当符号白名单规则的视频id集合
      */
+    @Override
     public WhiteListRule trainWhitelistRule(
             WhiteListRule whitelistRule,
             List<Integer> whiteAvidList) {
@@ -365,7 +369,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 topTagName,
                 topDescKeyWord
         );
-        Set<String> ignoreKeyWordSet = GlobalVariables.getIGNORE_WHITE_KEY_WORD_SET();
+        Set<String> ignoreKeyWordSet = GlobalVariables.getIgnoreWhiteKeyWordSet() ;
         topTagName.removeAll(ignoreKeyWordSet);
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
@@ -387,7 +391,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     @Override
     public void addTrain(String id,List<Integer> trainedAvidList,String mid) {
         log.info("开始训练");
-        List<WhiteListRule> whitelistRuleList = GlobalVariables.getWHITELIST_RULE_LIST();
+        List<WhiteListRule> whitelistRuleList = GlobalVariables.getWhitelistRuleList() ;
         WhiteListRule whitelistRule;
         if (id == null) {
             //创建新规则
@@ -434,7 +438,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         log.info("训练完成，训练结果为:" + whitelistRule);
 
         //更新白名单
-        GlobalVariables.addOrUpdateWhitelitRule(whitelistRule);
+        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
 
     }
 
@@ -463,7 +467,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     @Override
     public List<Dict> filterIgnore(List<Dict> dictList) {
 
-        Set<String> ignoreSet = GlobalVariables.getIGNORE_WHITE_KEY_WORD_SET();
+        Set<String> ignoreSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
         return dictList.stream().filter(
                 dict -> !ignoreSet.contains(dict.getValue())
         ).collect(Collectors.toList());
