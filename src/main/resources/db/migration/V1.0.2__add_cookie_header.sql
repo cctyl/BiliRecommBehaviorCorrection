@@ -17,9 +17,9 @@ CREATE TABLE cookie_header_data
 CREATE TABLE config
 (
     id                 char(30)     NOT NULL,
-    url                VARCHAR(350) NOT NULL,
     name               varchar(50)  null,
     value              varchar(200) null,
+    expire_second      int        default -1,
     created_date       DATE         null,
     last_modified_date DATE         null,
     is_deleted         tinyint(1) default 0,

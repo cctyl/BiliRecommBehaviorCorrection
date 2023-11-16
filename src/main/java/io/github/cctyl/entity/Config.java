@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import java.time.LocalDate;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+
+import io.github.cctyl.pojo.AuditingEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -19,26 +21,17 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class Config implements Serializable {
+public class Config  extends AuditingEntity {
 
     private static final long serialVersionUID = 1L;
 
-                @TableId(value = "id", type = IdType.ASSIGN_UUID)
+    @TableId(value = "id", type = IdType.ASSIGN_UUID)
     private String id;
-
-    private String url;
 
     private String name;
 
     private String value;
 
-    private LocalDate createdDate;
-
-    private LocalDate lastModifiedDate;
-
-    private Boolean isDeleted;
-
-    private Integer version;
-
+    private Integer expireSecond;
 
 }

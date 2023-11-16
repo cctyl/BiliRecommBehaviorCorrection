@@ -196,4 +196,13 @@ public class DataUtil {
         Integer count = frequencyMap.getOrDefault(key,0);
         frequencyMap.put(key,++count);
     }
+
+
+    public static Integer calculateSecondsDifference(Date date1, Date date2) {
+        long time1 = date1.getTime();
+        long time2 = date2.getTime();
+        long diff = Math.abs(time2 - time1);
+        return Math.toIntExact(diff / 1000);
+    }
+
 }

@@ -43,11 +43,6 @@ import static io.github.cctyl.pojo.constants.AppConstant.*;
 public class BiliApi {
 
 
-    @Autowired
-    private RedisUtil redisUtil;
-
-
-
     /**
      * 用于获取wbi签名
      */
@@ -568,28 +563,33 @@ public class BiliApi {
      * @return
      */
     public String getAccessKeyByCookie(boolean refresh) {
-        //如果缓存中存在，则直接返回
-        if (!refresh && !StrUtil.isBlankIfStr(redisUtil.get(ACCESS_KEY))) {
-            log.debug("缓存中得到了accessKey={}", redisUtil.get(ACCESS_KEY));
-            return (String) redisUtil.get(ACCESS_KEY);
+
+        //如果需要刷新，或者缓存中不存在，则更新一次
+        //否则从缓存中取出
+        if( refresh || StrUtil.isEmpty(GlobalVariables.getAccessKey())){
+            String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
+            String body = commonGet(url).body();
+            JSONObject first = JSONObject.parseObject(body);
+            if (first.getJSONObject("data").getIntValue("has_login") != 1) {
+                log.error("未登陆bilibili，无法获取accessKey. body={}", body);
+                throw new RuntimeException("未登陆，无法获取accessKey");
+            }
+            String confirmUri = first.getJSONObject("data").getString("confirm_uri");
+            HttpResponse redirect = HttpRequest.head(confirmUri)
+                    .header(getHeader(url))
+                    .cookie(getCookieStr(url))
+                    .execute();
+            String location = redirect.header(Header.LOCATION);
+            String accessKey = DataUtil.getUrlQueryParam(location, "access_key");
+            log.debug("请求获得的accessKey为：{}", accessKey);
+
+            GlobalVariables.updateAccessKey(accessKey);
+            return accessKey;
+        }else {
+            log.debug("缓存中得到了accessKey={}", GlobalVariables.getAccessKey());
+            return GlobalVariables.getAccessKey();
         }
-        String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
-        String body = commonGet(url).body();
-        JSONObject first = JSONObject.parseObject(body);
-        if (first.getJSONObject("data").getIntValue("has_login") != 1) {
-            log.error("未登陆bilibili，无法获取accessKey. body={}", body);
-            throw new RuntimeException("未登陆，无法获取accessKey");
-        }
-        String confirmUri = first.getJSONObject("data").getString("confirm_uri");
-        HttpResponse redirect = HttpRequest.head(confirmUri)
-                .header(getHeader(url))
-                .cookie(getCookieStr(url))
-                .execute();
-        String location = redirect.header(Header.LOCATION);
-        String accessKey = DataUtil.getUrlQueryParam(location, "access_key");
-        log.debug("请求获得的accessKey为：{}", accessKey);
-        redisUtil.setEx(ACCESS_KEY, accessKey, 29, TimeUnit.DAYS);
-        return accessKey;
+
     }
 
 

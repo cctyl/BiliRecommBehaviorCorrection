@@ -14,4 +14,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface ConfigService extends IService<Config> {
 
     String findByName(String mid);
+
+    Config addOrUpdateConfig(String configName,String configValue);
+
+    Config addOrUpdateConfig(String configName,String configValue,Integer expireSecond);
 }
