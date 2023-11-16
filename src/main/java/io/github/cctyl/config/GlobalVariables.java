@@ -486,9 +486,14 @@ public class GlobalVariables {
     }
 
     public static void initMid() {
-        GlobalVariables.MID =  configService.findByName("mid");
+        GlobalVariables.MID =  configService.findByName(AppConstant.MID_KEY);
 
     }
+    public static void initAccessKey() {
+        GlobalVariables.MID =  configService.findByName(AppConstant.ACCESS_KEY);
+
+    }
+
 
     public static void initMinPlaySecond() {
 

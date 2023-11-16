@@ -33,8 +33,6 @@ public class BiliService {
     @Autowired
     private RedisUtil redisUtil;
 
-    @Autowired
-    private ApplicationProperties applicationProperties;
 
     @Autowired
     private BlackRuleService blackRuleService;

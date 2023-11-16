@@ -19,7 +19,7 @@ public class InitFromRedis implements ApplicationRunner {
         log.debug("初始化...从sqlite中加载数据...");
 
         //0.加载cookie
-        GlobalVariables.initCookieMap();
+        GlobalVariables.initApiHeaderMap();
 
 
         //0.1加载mid
