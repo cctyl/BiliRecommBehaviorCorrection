@@ -144,4 +144,44 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     public void updateRefresh(Map<String, String> cookieMap) {
         baseMapper.updateRefresh(cookieMap);
     }
+
+
+    @Override
+    public void removeAllCommonCookie() {
+        this.removeByClassifyAndMediaType(Classify.COOKIE,MediaType.GENERAL);
+    }
+
+
+    /**
+     * 根据两个类型删除数据
+     * @param classify
+     * @param mediaType
+     */
+    public void removeByClassifyAndMediaType(
+            Classify classify,
+            MediaType mediaType
+    ){
+        this.remove(
+                new LambdaQueryWrapper<CookieHeaderData>()
+                        .eq(CookieHeaderData::getClassify,classify)
+                        .eq(CookieHeaderData::getMediaType,mediaType)
+        );
+
+    }
+
+
+    @Override
+    public void saveCommonCookieMap(Map<String, String> commonCookieMap) {
+
+        List<CookieHeaderData> dataList = commonCookieMap.entrySet().stream().map(entry -> {
+            return new CookieHeaderData()
+                    .setCkey(entry.getKey())
+                    .setCvalue(entry.getValue())
+                    .setClassify(Classify.COOKIE)
+                    .setMediaType(MediaType.GENERAL);
+        }).collect(Collectors.toList());
+
+        this.saveBatch(dataList);
+
+    }
 }

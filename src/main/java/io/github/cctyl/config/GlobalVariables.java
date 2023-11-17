@@ -9,6 +9,7 @@ import io.github.cctyl.pojo.constants.AppConstant;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.*;
+import io.github.cctyl.utils.ServerException;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -600,6 +600,32 @@ public class GlobalVariables {
                     String.valueOf(Instant.now().toEpochMilli())
                 );
         }
+    }
+
+    /**
+     * 删除原本的header 重新存储
+     * @param commonHeaderMap
+     */
+    @Transactional(rollbackFor = ServerException.class)
+    public  void replaceCommonHeaderMap(Map<String, String> commonHeaderMap) {
+
+
+        akjjkasa
+    }
+
+    /**
+     * 删除原本的数据，重新存储
+     * @param commonCookieMap
+     */
+    @Transactional(rollbackFor = ServerException.class)
+    public  void replaceCommonCookieMap(Map<String, String> commonCookieMap) {
+
+        //删除原有的
+        COMMON_COOKIE_MAP = commonCookieMap;
+        cookieHeaderDataService.removeAllCommonCookie();
+
+        //重新保存新的数据
+        cookieHeaderDataService.saveCommonCookieMap(commonCookieMap);
     }
 
 

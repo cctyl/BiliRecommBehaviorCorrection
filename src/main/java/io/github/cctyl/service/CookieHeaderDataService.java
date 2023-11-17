@@ -28,4 +28,8 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     Map<String, String> findRefreshHeader();
 
     void updateRefresh(Map<String, String> cookieMap);
+
+    void removeAllCommonCookie();
+
+    void saveCommonCookieMap(Map<String, String> commonCookieMap);
 }

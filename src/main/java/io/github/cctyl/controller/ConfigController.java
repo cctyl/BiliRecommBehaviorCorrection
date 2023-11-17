@@ -33,14 +33,11 @@ import static io.github.cctyl.pojo.constants.AppConstant.STOP_WORDS_KEY;
 public class ConfigController {
 
 
-    @Autowired
-    private HarAnalysisTool harAnalysisTool;
 
     @Autowired
     private ConfigService configService;
 
-    @Autowired
-    private CookieHeaderDataService cookieHeaderDataService;
+
 
     @PutMapping("/cookie")
     @Operation(summary = "更新cookie")
@@ -56,24 +53,6 @@ public class ConfigController {
     }
 
 
-    @PostMapping("/load-har")
-    @Operation(summary = "上传har，更新cookie 和 header")
-    public R loadHar(MultipartFile multipartFile, @RequestParam Boolean refresh) throws IOException {
-
-        //保存到临时文件夹
-        File tempDir = new File(new ApplicationHome().getDir().getParentFile().getPath(), "upload");
-        if (!tempDir.exists()) {
-            tempDir.mkdir();
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        String fileName = IdGenerator.nextId() + "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth() + ".har";
-        File harFile = new File(tempDir, fileName);
-        multipartFile.transferTo(harFile);
-        harAnalysisTool.load(harFile, refresh);
-
-        return R.ok().setData(GlobalVariables.getApiHeaderMap());
-    }
 
 
 

@@ -1,5 +1,6 @@
 package io.github.cctyl.utils;
 
+import com.google.protobuf.Api;
 import de.sstoehr.harreader.HarReader;
 import de.sstoehr.harreader.HarReaderException;
 import de.sstoehr.harreader.HarReaderMode;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * har 分析工具
@@ -71,16 +73,13 @@ public class HarAnalysisTool {
 
         Map<String, String> commonCookieMap = new HashMap<>();
         Map<String, String> commonHeaderMap = new HashMap<>();
-        HashMap<String, Integer> frequencyMap = new HashMap<>();
+        Map<String, Integer> frequencyMap = new HashMap<>();
+        List<ApiHeader> apiHeaderList = new ArrayList<>(har.getLog().getEntries().size());
 
         try {
             har = harReader.readFromFile(harFile, HarReaderMode.LAX);
 
-            if (refresh) {
-                GlobalVariables.commonHeaderMap = new HashMap<>();
-                GlobalVariables.commonCookieMap = new HashMap<>();
-                GlobalVariables.apiHeaderMap = new HashMap<>();
-            }
+
             har.getLog().getEntries().forEach(harEntry -> {
                 HarRequest request = harEntry.getRequest();
 
@@ -121,26 +120,36 @@ public class HarAnalysisTool {
                         .setUrl(extractedUrl)
                         .setCookies(curCookieMap)
                         .setHeaders(curHeaderMap);
-                GlobalVariables.apiHeaderMap.put(extractedUrl, apiHeader);
+                apiHeaderList.add(apiHeader);
 
             });
 
-            //只保留出现次数大于3的header和cookie
-            for (Map.Entry<String, String> entry : commonCookieMap.entrySet()) {
-                if (frequencyMap.getOrDefault( entry.getKey(),0)>2){
-                    GlobalVariables.commonCookieMap.put(entry.getKey(),entry.getValue());
-                }
-            }
-            for (Map.Entry<String, String> entry : commonHeaderMap.entrySet()) {
-                if (frequencyMap.getOrDefault( entry.getKey(),0)>2){
-                    GlobalVariables.commonHeaderMap.put(entry.getKey(),entry.getValue());
-                }
-            }
+            //只保留出现次数大于合格数的header和cookie
+            //保留 在80% 以上请求都出现过的cookie 和 header。最低不能少于2
+            double qualifiedNum  = Math.max(har.getLog().getEntries().size() * 0.8,2.0);
+            frequencyMap.entrySet()
+                    .stream()
+                    .filter(e -> e.getValue() <= qualifiedNum)
+                    .map(Map.Entry::getKey)
+                    .forEach(s -> {
+                        commonCookieMap.remove(s);
+                        commonHeaderMap.remove(s);
+                    });
+            //此时 commonCookieMap 和 commonHeaderMap 保留的都是合格的数据
+
+            if (refresh) {
+                //重置情况，首先删除原本的数据，然后完整的添加一次 包括  commonCookieMap commonHeaderMap apiHeaderMap 三者
+                GlobalVariables.INSTANCE.replaceCommonCookieMap(commonCookieMap);
+                GlobalVariables.INSTANCE.replaceCommonHeaderMap(commonHeaderMap);
+                GlobalVariables.INSTANCE.replaceApiHeaderMap(apiHeaderList);
 
 
-            GlobalVariables.setApiHeaderMap(GlobalVariables.apiHeaderMap);
-            GlobalVariables.setCommonCookieMap(GlobalVariables.commonCookieMap);
-            GlobalVariables.setCommonHeaderMap(GlobalVariables.commonHeaderMap);
+            }else {
+                //考虑更新情况，需要更新的有 commonCookieMap commonHeaderMap apiHeaderMap 三者
+                GlobalVariables.INSTANCE.updateCommonCookieMap(commonCookieMap);
+                GlobalVariables.INSTANCE.updateCommonHeaderMap(commonHeaderMap);
+                GlobalVariables.INSTANCE.updateApiHeaderMap(apiHeaderList);
+            }
 
 
             log.info("har加载完毕！");
