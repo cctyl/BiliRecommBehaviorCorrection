@@ -12,6 +12,7 @@ import io.github.cctyl.service.CookieHeaderDataService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -173,15 +174,79 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     @Override
     public void saveCommonCookieMap(Map<String, String> commonCookieMap) {
 
-        List<CookieHeaderData> dataList = commonCookieMap.entrySet().stream().map(entry -> {
-            return new CookieHeaderData()
-                    .setCkey(entry.getKey())
-                    .setCvalue(entry.getValue())
-                    .setClassify(Classify.COOKIE)
-                    .setMediaType(MediaType.GENERAL);
-        }).collect(Collectors.toList());
+        List<CookieHeaderData> dataList =
+                map2List(commonCookieMap, Classify.COOKIE,MediaType.GENERAL);
 
         this.saveBatch(dataList);
 
+    }
+
+
+    @Override
+    public void saveCommonHeaderMap(Map<String, String> commonHeaderMap) {
+
+        List<CookieHeaderData> dataList =
+                map2List(commonHeaderMap, Classify.REQUEST_HEADER,MediaType.GENERAL);
+
+
+        this.saveBatch(dataList);
+
+    }
+
+    /**
+     * 移除所有API头部信息
+     */
+    @Override
+    public void removeAllApiHeader() {
+
+        this.remove(
+            new LambdaQueryWrapper<CookieHeaderData>()
+                .in(CookieHeaderData::getClassify,
+                    Classify.REQUEST_HEADER, Classify.RESPONSE_HEADER, Classify.COOKIE
+                )
+                .eq(CookieHeaderData::getMediaType, MediaType.URL_MATCHING)
+        );
+    }
+
+
+    @Override
+    public void saveApiHeader(List<ApiHeader> apiHeaderList) {
+        List<CookieHeaderData> data = new LinkedList<>();
+        for (ApiHeader apiHeader : apiHeaderList) {
+            List<CookieHeaderData> cookieDataList =
+                    map2List(apiHeader.getHeaders(),
+                            Classify.COOKIE,
+                            MediaType.URL_MATCHING);
+
+
+            List<CookieHeaderData> headerDataList =
+                    map2List(apiHeader.getHeaders(),
+                    Classify.REQUEST_HEADER,
+                    MediaType.URL_MATCHING);
+
+
+            data.addAll(cookieDataList);
+            data.addAll(headerDataList);
+        }
+
+        this.saveBatch(data);
+
+    }
+
+    private List<CookieHeaderData> map2List(Map<String, String> map, Classify classify, MediaType mediaType) {
+
+        return map.entrySet().stream().map(entry -> {
+            return new CookieHeaderData()
+                   .setCkey(entry.getKey())
+                   .setCvalue(entry.getValue())
+                   .setClassify(classify)
+                   .setMediaType(mediaType);
+        }).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public void removeAllCommonHeader() {
+        this.removeByClassifyAndMediaType(Classify.REQUEST_HEADER,MediaType.GENERAL);
     }
 }

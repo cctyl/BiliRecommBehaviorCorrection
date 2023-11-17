@@ -32,4 +32,11 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     void removeAllCommonCookie();
 
     void saveCommonCookieMap(Map<String, String> commonCookieMap);
+
+    void removeAllCommonHeader();
+    void saveCommonHeaderMap(Map<String, String> commonHeaderMap);
+
+    void removeAllApiHeader();
+
+    void saveApiHeader(List<ApiHeader> apiHeaderList);
 }

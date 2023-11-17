@@ -609,8 +609,11 @@ public class GlobalVariables {
     @Transactional(rollbackFor = ServerException.class)
     public  void replaceCommonHeaderMap(Map<String, String> commonHeaderMap) {
 
+        COMMON_HEADER_MAP = commonHeaderMap;
+        cookieHeaderDataService.removeAllCommonHeader();
 
-        akjjkasa
+        //重新保存新的数据
+        cookieHeaderDataService.saveCommonHeaderMap(commonHeaderMap);
     }
 
     /**
@@ -962,5 +965,19 @@ public class GlobalVariables {
 
     public static String getSubKey() {
         return SUB_KEY;
+    }
+
+    public void replaceApiHeaderMap(List<ApiHeader> apiHeaderList) {
+        //删除原有的,将apiHeaderList 加入到 API_HEADER_MAP
+        API_HEADER_MAP.clear();
+        for (ApiHeader apiHeader : apiHeaderList) {
+            API_HEADER_MAP.put(apiHeader.getUrl(), apiHeader);
+        }
+
+        cookieHeaderDataService.removeAllApiHeader();
+
+        //重新保存新的数据
+        cookieHeaderDataService.saveApiHeader(apiHeaderList);
+
     }
 }
