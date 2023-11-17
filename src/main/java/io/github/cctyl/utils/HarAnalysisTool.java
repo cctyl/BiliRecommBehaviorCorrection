@@ -61,7 +61,7 @@ public class HarAnalysisTool {
      */
     public void load(File harFile, boolean refresh) {
         HarReader harReader = new HarReader();
-        Har har = null;
+        Har har;
 
         Map<String, String> commonCookieMap = new HashMap<>();
         Map<String, String> commonHeaderMap = new HashMap<>();

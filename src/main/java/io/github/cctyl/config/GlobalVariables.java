@@ -823,7 +823,7 @@ public class GlobalVariables {
      * @param id
      * @return
      */
-    public boolean removeWhitelistRules(Long id) {
+    public boolean removeWhitelistRules(String id) {
 
         WHITELIST_RULE_LIST = WHITELIST_RULE_LIST.stream()
                 .filter(whiteListRule -> !id.equals(whiteListRule.getId()))

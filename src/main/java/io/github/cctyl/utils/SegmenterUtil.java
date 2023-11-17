@@ -25,7 +25,7 @@ public class SegmenterUtil {
     /**
      * 匹配标点符号的正则
      */
-    private static final Pattern punctuationPattern = Pattern.compile("[=,.?!@#$%^&*()_+:\"<>/\\[\\]\\\\`~——，。、～《》？；’：“【】、{}|·！￥…（）-]");
+    private static final Pattern PUNCTUATION_PATTERN = Pattern.compile("[=,.?!@#$%^&*()_+:\"<>/\\[\\]\\\\`~——，。、～《》？；’：“【】、{}|·！￥…（）-]");
 
     /**
      * 分词
@@ -100,7 +100,7 @@ public class SegmenterUtil {
                     ||
                     Boolean.TRUE.equals(redisUtil.sIsMember(STOP_WORDS_KEY, s))
                     ||
-                    punctuationPattern.matcher(s).matches()
+                    PUNCTUATION_PATTERN.matcher(s).matches()
             ) {
                 //停用词，不算在内
                 continue;

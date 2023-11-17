@@ -48,7 +48,7 @@ public class DataUtil {
     public static int bvidToAid(String bvid) {
         long r = 0;
         for (int i = 0; i < 6; i++) {
-            r += TABLE_MAP.get(bvid.charAt(S[i])) * Math.pow(58, i);
+            r += (long) (TABLE_MAP.get(bvid.charAt(S[i])) * Math.pow(58, i));
         }
         return (int) ((r - ADD) ^ XOR);
     }

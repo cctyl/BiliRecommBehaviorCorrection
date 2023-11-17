@@ -5,12 +5,11 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.Dict;
-import io.github.cctyl.pojo.R;
 import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.pojo.R;
 import io.github.cctyl.service.BiliService;
 import io.github.cctyl.service.BlackRuleService;
 import io.github.cctyl.service.DictService;
-import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 @RestController
 @RequestMapping("/black-rule")
@@ -205,7 +202,7 @@ public class BlackRuleController {
                 .collect(Collectors.toSet());
 
         //与忽略的关键词进行过滤
-        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
+        collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
         GlobalVariables.INSTANCE.addBlackKeyword(collect);
 
         return R.ok();
@@ -246,7 +243,7 @@ public class BlackRuleController {
                 .map(String::trim)
                 .collect(Collectors.toSet());
         //与忽略的关键词进行过滤
-        collect.removeAll(GlobalVariables.getIGNORE_BLACK_KEY_WORD_SET());
+        collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
         GlobalVariables.INSTANCE.addBlackTagSet(collect);
         return R.ok();
     }

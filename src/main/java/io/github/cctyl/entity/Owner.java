@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.cctyl.pojo.AuditingEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
 public class Owner extends AuditingEntity implements Serializable {

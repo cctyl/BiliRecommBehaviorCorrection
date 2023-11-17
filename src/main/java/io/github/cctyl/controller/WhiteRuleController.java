@@ -9,11 +9,8 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.entity.WhiteListRule;
-import io.github.cctyl.pojo.*;
+import io.github.cctyl.pojo.R;
 import io.github.cctyl.service.WhiteListRuleService;
-import io.github.cctyl.utils.IdGenerator;
-import io.github.cctyl.utils.RedisUtil;
-import io.github.cctyl.utils.ThreadUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,15 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 
 /**
@@ -94,10 +86,12 @@ public class WhiteRuleController {
 
 
     /**
-     * @param id
-     * @param trainedAvidList
-     * @param mid
-     * @return
+     * 输入指定的视频训练白名单规则
+     *
+     * @param id             白名单条件id，为空表示创建新的规则
+     * @param trainedAvidList 用于训练的视频avid列表，与mid二选一
+     * @param mid            up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一
+     * @return 返回结果
      */
     @Operation(summary = "输入指定的视频训练白名单规则")
     @PostMapping("/train")
@@ -151,7 +145,7 @@ public class WhiteRuleController {
     @DeleteMapping("/{id}")
     public R delWhiteRule(
             @Parameter(name = "id", description = "需要删除的白名单的id")
-            @PathVariable("id") Long id
+            @PathVariable("id") String id
     ) {
 
         boolean result = GlobalVariables.INSTANCE.removeWhitelistRules(id);
@@ -163,7 +157,7 @@ public class WhiteRuleController {
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet() {
 
-        Set<String> keyWordSet = GlobalVariables.getIGNORE_WHITE_KEY_WORD_SET();
+        Set<String> keyWordSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
         return R.ok().setData(keyWordSet);
     }
 

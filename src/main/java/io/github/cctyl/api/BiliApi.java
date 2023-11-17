@@ -190,7 +190,7 @@ public class BiliApi {
         try (inputStream; fastByteArrayOutputStream) {
             byte[] buff = new byte[1024];
             int totalLength = 0;
-            int len = 0;
+            int len;
             while ((len = inputStream.read(buff)) != -1) {
                 fastByteArrayOutputStream.write(buff, 0, len);
                 totalLength += len;
@@ -200,8 +200,6 @@ public class BiliApi {
                 }
             }
             return fastByteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            throw e;
         }
     }
 
@@ -364,7 +362,7 @@ public class BiliApi {
                 break;
 
             default:
-                log.error("body={}", jsonObject.toString());
+                log.error("body={}", jsonObject);
                 throw new RuntimeException("响应异常");
         }
     }
@@ -737,7 +735,7 @@ public class BiliApi {
                     .append('=')
                     .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
         }
-        String sign = DataUtil.generateMD5(queryBuilder.toString() + THIRD_PART_APPSEC);
+        String sign = DataUtil.generateMD5(queryBuilder + THIRD_PART_APPSEC);
         map.put("sign", sign);
         return map;
     }

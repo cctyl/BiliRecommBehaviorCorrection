@@ -216,12 +216,12 @@ public class GrpcInterceptor implements ClientInterceptor {
     }
 
     public String genTraceId() {
-        String randomId = "";
+        StringBuilder randomId = new StringBuilder();
         String characters = "0123456789abcdefghijklmnopqrstuvwxyz";
         Random random = new Random();
         for (int i = 0; i < 32; i++) {
             int index = random.nextInt(characters.length());
-            randomId += characters.charAt(index);
+            randomId.append(characters.charAt(index));
         }
         String randomTraceId = randomId.substring(0, 24);
         byte[] bArr = new byte[3];
@@ -239,7 +239,7 @@ public class GrpcInterceptor implements ClientInterceptor {
             traceIdBuilder.append(String.format("%02x", b & 0xFF));
         }
         traceIdBuilder.append(randomId.substring(randomId.length() - 2));
-        return traceIdBuilder.toString() + ":" + traceIdBuilder.substring(16) + ":0:0";
+        return traceIdBuilder + ":" + traceIdBuilder.substring(16) + ":0:0";
     }
 
 

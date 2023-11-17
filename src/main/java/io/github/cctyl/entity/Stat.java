@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.github.cctyl.pojo.AuditingEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.io.Serializable;
  * 视频的相关数据
  * 弹幕数、硬币数、点赞数
  */
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
 public class Stat extends AuditingEntity implements Serializable {

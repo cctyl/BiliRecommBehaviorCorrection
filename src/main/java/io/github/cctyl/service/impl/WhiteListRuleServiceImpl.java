@@ -112,7 +112,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      */
     public boolean isUserIdMatch(VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
-            log.error("视频:{}缺少up主信息", videoDetail.toString());
+            log.error("视频:{}缺少up主信息", videoDetail);
             return false;
         }
         boolean match = GlobalVariables.getWhiteUserIdSet()
@@ -294,7 +294,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                             " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
                             " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n";
 
-            videoDetail.setThumbUpReason("匹配到了白名单：" + whitelistRule.toString()
+            videoDetail.setThumbUpReason("匹配到了白名单：" + whitelistRule
                     + "， 具体如下：\n" + matchDetail
             );
         }
@@ -416,9 +416,8 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         } else if (StrUtil.isNotBlank(mid)) {
             //从给定的up主的投稿视频进行训练
             log.info("根据up主id进行训练");
-            List<UserSubmissionVideo> allVideo = new ArrayList<>();
             PageBean<UserSubmissionVideo> pageBean = biliApi.searchUserSubmissionVideo(mid, 1, "");
-            allVideo.addAll(pageBean.getData());
+            List<UserSubmissionVideo> allVideo = new ArrayList<>(pageBean.getData());
             while (pageBean.hasMore()) {
                 try {
                     ThreadUtil.s10();

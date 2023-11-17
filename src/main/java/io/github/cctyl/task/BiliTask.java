@@ -90,7 +90,7 @@ public class BiliTask {
             //不能一次获取完再执行操作，要最大限度模拟用户的行为
             for (int i = 0; i < 2; i++) {
                 //执行搜索
-                List<SearchResult> searchRaw = null;
+                List<SearchResult> searchRaw;
                 try {
                     searchRaw = biliApi.search(keyword, i);
                 } catch (Exception e) {
@@ -130,7 +130,7 @@ public class BiliTask {
         //2. 对排行榜数据进行处理，处理100条，即5页数据
         log.info("==============开始处理热门排行榜==================");
         for (int i = 1; i <= 10; i++) {
-            List<VideoDetail> hotRankVideo = null;
+            List<VideoDetail> hotRankVideo;
             try {
                 hotRankVideo = biliApi.getHotRankVideo(i, 20);
             } catch (Exception e) {

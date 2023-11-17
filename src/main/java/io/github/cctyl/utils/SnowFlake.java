@@ -25,7 +25,7 @@ public class SnowFlake {
     /**
      * 机器ID最大值: 1023
      */
-    private final long maxWorkerId = -1L ^ -1L << this.workerIdBits;
+    private final long maxWorkerId = ~(-1L << this.workerIdBits);
     /**
      * 毫秒内自增位
      */
@@ -42,7 +42,7 @@ public class SnowFlake {
     /**
      * 4095,111111111111,12位
      */
-    private final long sequenceMask = -1L ^ -1L << this.sequenceBits;
+    private final long sequenceMask = ~(-1L << this.sequenceBits);
     /**
      * 0，并发控制
      */
