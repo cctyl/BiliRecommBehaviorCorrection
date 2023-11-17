@@ -11,10 +11,7 @@ import io.github.cctyl.pojo.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -248,5 +245,26 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     @Override
     public void removeAllCommonHeader() {
         this.removeByClassifyAndMediaType(Classify.REQUEST_HEADER,MediaType.GENERAL);
+    }
+
+    @Override
+    public void removeByKeyInAndClassifyAndMediaType(Collection<String> keyCol, Classify classify, MediaType mediaType) {
+
+        this.remove(
+                new LambdaQueryWrapper<CookieHeaderData>()
+                       .in(CookieHeaderData::getCkey,keyCol)
+                       .eq(CookieHeaderData::getClassify,classify)
+                       .eq(CookieHeaderData::getMediaType,mediaType)
+        );
+
+    }
+
+    @Override
+    public void removeByUrlAndMediaType(List<String> collect, MediaType mediaType) {
+        this.remove(
+                new LambdaQueryWrapper<CookieHeaderData>()
+                       .in(CookieHeaderData::getUrl,collect)
+                       .eq(CookieHeaderData::getMediaType,mediaType)
+        );
     }
 }

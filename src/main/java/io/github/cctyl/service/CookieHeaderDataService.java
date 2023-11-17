@@ -3,9 +3,14 @@ package io.github.cctyl.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.CookieHeaderData;
 import io.github.cctyl.pojo.ApiHeader;
+import io.github.cctyl.pojo.enumeration.Classify;
+import io.github.cctyl.pojo.enumeration.MediaType;
 
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -39,4 +44,10 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     void removeAllApiHeader();
 
     void saveApiHeader(List<ApiHeader> apiHeaderList);
+
+    void removeByKeyInAndClassifyAndMediaType(Collection<String> keyCol,
+                                              Classify classify,
+                                              MediaType mediaType);
+
+    void removeByUrlAndMediaType(List<String> collect, MediaType mediaType);
 }

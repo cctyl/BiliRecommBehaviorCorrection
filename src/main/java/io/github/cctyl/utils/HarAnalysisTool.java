@@ -1,39 +1,34 @@
 package io.github.cctyl.utils;
 
-import com.google.protobuf.Api;
 import de.sstoehr.harreader.HarReader;
 import de.sstoehr.harreader.HarReaderException;
 import de.sstoehr.harreader.HarReaderMode;
-import de.sstoehr.harreader.model.*;
+import de.sstoehr.harreader.model.Har;
+import de.sstoehr.harreader.model.HarCookie;
+import de.sstoehr.harreader.model.HarHeader;
+import de.sstoehr.harreader.model.HarRequest;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.ApiHeader;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * har 分析工具
+ * @author tyl
  */
 @Component
 @Slf4j
 public class HarAnalysisTool {
 
-    @Autowired
-    private RedisUtil redisUtil;
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
 
 
     /**
      * 需要忽略的cookie 或者header
      */
-    private static List<String> ignoreString = Arrays.asList(
+    private static final List<String> ignoreString = Arrays.asList(
             "bili_ticket_expires",
             "bili_ticket",
             "b_nut",
@@ -52,7 +47,6 @@ public class HarAnalysisTool {
     /**
      * 从指定路径加载har
      *
-     * @param path
      */
     public void load(String path, boolean refresh) {
         if (path == null) {
@@ -64,8 +58,6 @@ public class HarAnalysisTool {
     /**
      * 从指定har文件中重新加载header
      *
-     * @param harFile
-     * @param refresh
      */
     public void load(File harFile, boolean refresh) {
         HarReader harReader = new HarReader();
@@ -74,10 +66,10 @@ public class HarAnalysisTool {
         Map<String, String> commonCookieMap = new HashMap<>();
         Map<String, String> commonHeaderMap = new HashMap<>();
         Map<String, Integer> frequencyMap = new HashMap<>();
-        List<ApiHeader> apiHeaderList = new ArrayList<>(har.getLog().getEntries().size());
 
         try {
             har = harReader.readFromFile(harFile, HarReaderMode.LAX);
+            List<ApiHeader> apiHeaderList = new ArrayList<>(har.getLog().getEntries().size());
 
 
             har.getLog().getEntries().forEach(harEntry -> {

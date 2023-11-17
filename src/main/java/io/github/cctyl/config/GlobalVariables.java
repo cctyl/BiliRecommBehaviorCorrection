@@ -7,7 +7,9 @@ import io.github.cctyl.pojo.ApiHeader;
 import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.pojo.constants.AppConstant;
 import io.github.cctyl.pojo.enumeration.AccessType;
+import io.github.cctyl.pojo.enumeration.Classify;
 import io.github.cctyl.pojo.enumeration.DictType;
+import io.github.cctyl.pojo.enumeration.MediaType;
 import io.github.cctyl.service.*;
 import io.github.cctyl.utils.ServerException;
 import lombok.Data;
@@ -977,6 +979,37 @@ public class GlobalVariables {
         cookieHeaderDataService.removeAllApiHeader();
 
         //重新保存新的数据
+        cookieHeaderDataService.saveApiHeader(apiHeaderList);
+
+    }
+
+    public void updateCommonCookieMap(Map<String, String> commonCookieMap) {
+        COMMON_COOKIE_MAP.putAll(commonCookieMap);
+        //删除同名的
+        Set<String> keySet = commonCookieMap.keySet();
+        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet,Classify.COOKIE, MediaType.GENERAL);
+        //重新保存
+        cookieHeaderDataService.saveCommonCookieMap(commonCookieMap);
+    }
+
+    public void updateCommonHeaderMap(Map<String, String> commonHeaderMap) {
+        COMMON_HEADER_MAP.putAll(commonHeaderMap);
+        //删除同名的
+        Set<String> keySet = commonHeaderMap.keySet();
+        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet,Classify.REQUEST_HEADER, MediaType.GENERAL);
+        //重新保存
+        cookieHeaderDataService.saveCommonHeaderMap(commonHeaderMap);
+    }
+
+    public void updateApiHeaderMap(List<ApiHeader> apiHeaderList) {
+        for (ApiHeader apiHeader : apiHeaderList) {
+            API_HEADER_MAP.put(apiHeader.getUrl(), apiHeader);
+        }
+
+        cookieHeaderDataService.removeByUrlAndMediaType(
+                apiHeaderList.stream().map(ApiHeader::getUrl).collect(Collectors.toList()),
+                MediaType.URL_MATCHING);
+
         cookieHeaderDataService.saveApiHeader(apiHeaderList);
 
     }
