@@ -6,13 +6,9 @@ import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.anno.NoLog;
-import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.BaiduImageClassify;
-import io.github.cctyl.service.ConfigService;
-import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +17,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
 
 /**
  * 百度相关api
@@ -34,11 +27,6 @@ import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
 @Slf4j
 public class BaiduApi {
 
-
-
-
-    @Autowired
-    private ApplicationProperties applicationProperties;
 
 
 

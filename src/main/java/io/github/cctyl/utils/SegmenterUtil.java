@@ -2,7 +2,7 @@ package io.github.cctyl.utils;
 
 import cn.hutool.core.util.StrUtil;
 import com.huaban.analysis.jieba.JiebaSegmenter;
-import io.github.cctyl.config.BeanProvider;
+import io.github.cctyl.config.GlobalVariables;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,17 +10,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.pojo.constants.AppConstant.STOP_WORDS_KEY;
-
 /**
  * 结巴分词工具
  */
 public class SegmenterUtil {
 
-    private static final JiebaSegmenter jiebaSegmenter = new JiebaSegmenter();
+    private static final JiebaSegmenter JIEBA_SEGMENTER = new JiebaSegmenter();
 
-
-    private static RedisUtil redisUtil;
 
     /**
      * 匹配标点符号的正则
@@ -34,7 +30,7 @@ public class SegmenterUtil {
      * @return
      */
     public static List<String> process(String str) {
-        return jiebaSegmenter.process(str, JiebaSegmenter.SegMode.SEARCH)
+        return JIEBA_SEGMENTER.process(str, JiebaSegmenter.SegMode.SEARCH)
                 .stream().map(segToken -> segToken.word).collect(Collectors.toList());
     }
 
@@ -87,9 +83,7 @@ public class SegmenterUtil {
      */
     public static Map<String, Integer> generateFrequencyMap(List<String> strProcess) {
 
-        if (redisUtil == null) {
-            redisUtil = BeanProvider.getApplicationContext().getBean(RedisUtil.class);
-        }
+
 
         HashMap<String, Integer> map = new HashMap<>();
         for (String s : strProcess) {
@@ -98,7 +92,7 @@ public class SegmenterUtil {
                     ||
                     s.length() < 2
                     ||
-                    Boolean.TRUE.equals(redisUtil.sIsMember(STOP_WORDS_KEY, s))
+                    GlobalVariables.getStopWordTree().isMatch(s)
                     ||
                     PUNCTUATION_PATTERN.matcher(s).matches()
             ) {
