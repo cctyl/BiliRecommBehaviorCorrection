@@ -39,6 +39,9 @@ public class InitFromRedis implements ApplicationRunner {
         //14.wbi
         GlobalVariables.initWbi();
 
+        //15.百度相关
+        GlobalVariables.initBaiduConfig();
+
         //1. 加载关键字数据
         GlobalVariables.initKeywordSet();
 

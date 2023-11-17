@@ -7,7 +7,9 @@ import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.config.ApplicationProperties;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.BaiduImageClassify;
+import io.github.cctyl.service.ConfigService;
 import io.github.cctyl.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +35,12 @@ import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
 public class BaiduApi {
 
 
-    @Autowired
-    private RedisUtil redisUtil;
+
 
     @Autowired
     private ApplicationProperties applicationProperties;
+
+
 
     /**
      * 人体检测和属性识别
@@ -126,9 +129,10 @@ public class BaiduApi {
      */
     public String getAccessToken(boolean refresh) {
 
-        Object o = redisUtil.get(BAIDU_ASK_KEY);
-        if (!(StrUtil.isBlankIfStr(o) || refresh)) {
-            return (String) o;
+        String baiduAskKey = GlobalVariables.getBaiduAskKey();
+
+        if (!(StrUtil.isBlankIfStr(baiduAskKey) || refresh)) {
+            return baiduAskKey;
         }
 
         String body = HttpRequest.post("https://aip.baidubce.com/oauth/2.0/token")
@@ -137,14 +141,17 @@ public class BaiduApi {
                 .header("Accept", "application/json")
                 .form(Map.of(
                         "grant_type", "client_credentials",
-                        "client_id", applicationProperties.getBaidu().getClientId(),
-                        "client_secret", applicationProperties.getBaidu().getClientSecret()
+                        "client_id", GlobalVariables.getBaiduClientId(),
+                        "client_secret", GlobalVariables.getBaiduClientSecret()
                 ))
                 .execute()
                 .body();
         log.debug("body={}", body);
         String accessToken = JSONObject.parseObject(body).getString("access_token");
-        redisUtil.setEx(BAIDU_ASK_KEY, accessToken, 30, TimeUnit.DAYS);
+
+
+        GlobalVariables.updateBaiduAskKey(accessToken);
+
         return accessToken;
     }
 

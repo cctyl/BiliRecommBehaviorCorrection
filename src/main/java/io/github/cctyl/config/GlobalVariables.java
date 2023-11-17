@@ -23,6 +23,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
+
 
 /**
  * 全局变量的存储
@@ -41,6 +43,9 @@ public class GlobalVariables {
     private static String IMG_KEY;
     private static String SUB_KEY;
 
+    private static String BAIDU_ASK_KEY;
+    private static String BAIDU_CLIENT_ID;
+    private static String BAIDU_CLIENT_SECRET;
 
     /**
      * 第一次启动
@@ -254,6 +259,14 @@ public class GlobalVariables {
 
     public static String getAccessKey() {
         return ACCESS_KEY;
+    }
+
+    public static String getBaiduClientId() {
+        return BAIDU_CLIENT_ID;
+    }
+
+    public static String getBaiduClientSecret() {
+        return BAIDU_CLIENT_SECRET;
     }
 
     /**
@@ -589,6 +602,21 @@ public class GlobalVariables {
         SUB_KEY = configService.findByName(AppConstant.SUB_KEY);
     }
 
+
+    public static void initBaiduConfig() {
+
+        BAIDU_ASK_KEY = configService.findByName(AppConstant.BAIDU_ASK_KEY);
+        BAIDU_CLIENT_ID = configService.findByName(AppConstant.BAIDU_CLIENT_ID);
+        BAIDU_CLIENT_SECRET = configService.findByName(AppConstant.BAIDU_CLIENT_SECRET);
+
+    }
+
+
+
+    public static String getBaiduAskKey() {
+        return BAIDU_ASK_KEY;
+    }
+
     /**
      * 加载一些标记信息
      */
@@ -603,6 +631,18 @@ public class GlobalVariables {
                 );
         }
     }
+
+    public static void updateBaiduAskKey(String accessToken) {
+        BAIDU_ASK_KEY = accessToken;
+        configService.addOrUpdateConfig(AppConstant.BAIDU_ASK_KEY, accessToken, 2592000);
+    }
+    public static void updateBaiduClientInfo(String clientId,String clientSecret) {
+        BAIDU_CLIENT_ID = clientId;
+        BAIDU_CLIENT_SECRET = clientSecret;
+        configService.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_ID, clientId);
+        configService.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_SECRET, clientSecret);
+    }
+
 
     /**
      * 删除原本的header 重新存储
@@ -1013,4 +1053,6 @@ public class GlobalVariables {
         cookieHeaderDataService.saveApiHeader(apiHeaderList);
 
     }
+
+
 }

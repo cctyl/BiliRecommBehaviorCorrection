@@ -78,13 +78,8 @@ knife4j:
 common:
   #是否需要执行初始化
   init: false
-  # 最大模拟播放秒数
-  minPlaySecond: 50
   #图像识别服务
   imgService: baidu,
-  baidu:
-    clientId: xxx
-    clientSecret: xxxxx
 
   ws:
     # 是否开启ws
