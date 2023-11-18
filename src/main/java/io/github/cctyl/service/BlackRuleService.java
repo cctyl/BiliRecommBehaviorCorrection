@@ -6,7 +6,7 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.DislikeReason;
-import io.github.cctyl.pojo.Tag;
+import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.utils.SegmenterUtil;
@@ -224,7 +224,7 @@ public class BlackRuleService {
      */
     public boolean isMidMatch(VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
-            log.error("视频:{}缺少up主信息", videoDetail.toString());
+            log.error("视频:{}缺少up主信息", videoDetail);
             return false;
         }
         boolean match = GlobalVariables.getBlackUserIdSet()

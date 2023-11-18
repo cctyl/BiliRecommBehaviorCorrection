@@ -117,6 +117,9 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     @JSONField(name = "is_ogv")
     private Boolean isOgv;
 
+    private boolean handle;
+
+
     @JSONField(name = "ogv_info")
     @TableField(exist = false)
     private Object ogvInfo;
@@ -137,7 +140,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     @TableField(exist = false)
     private Stat stat;
 
-    private String statId;
+
 
     /**
      * 标签列表

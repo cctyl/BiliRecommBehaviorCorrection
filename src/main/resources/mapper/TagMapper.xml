@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.TagMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Tag">
+        <id column="id" property="id"/>
+        <result column="tag_id" property="tagId"/>
+        <result column="tag_name" property="tagName"/>
+        <result column="cover" property="cover"/>
+        <result column="head_cover" property="headCover"/>
+        <result column="content" property="content"/>
+        <result column="short_content" property="shortContent"/>
+        <result column="type" property="type"/>
+        <result column="state" property="state"/>
+        <result column="ctime" property="ctime"/>
+        <result column="is_atten" property="isAtten"/>
+        <result column="likes" property="likes"/>
+        <result column="hates" property="hates"/>
+        <result column="attribute" property="attribute"/>
+        <result column="liked" property="liked"/>
+        <result column="hated" property="hated"/>
+        <result column="extra_attr" property="extraAttr"/>
+        <result column="music_id" property="musicId"/>
+        <result column="tag_type" property="tagType"/>
+        <result column="is_activity" property="isActivity"/>
+        <result column="color" property="color"/>
+        <result column="alpha" property="alpha"/>
+        <result column="is_season" property="isSeason"/>
+        <result column="subscribed_count" property="subscribedCount"/>
+        <result column="archive_count" property="archiveCount"/>
+        <result column="featured_count" property="featuredCount"/>
+        <result column="jump_url" property="jumpUrl"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Tag">
+        <id column="tag_id" property="id"/>
+        <result column="tag_tag_id" property="tagId"/>
+        <result column="tag_tag_name" property="tagName"/>
+        <result column="tag_cover" property="cover"/>
+        <result column="tag_head_cover" property="headCover"/>
+        <result column="tag_content" property="content"/>
+        <result column="tag_short_content" property="shortContent"/>
+        <result column="tag_type" property="type"/>
+        <result column="tag_state" property="state"/>
+        <result column="tag_ctime" property="ctime"/>
+        <result column="tag_is_atten" property="isAtten"/>
+        <result column="tag_likes" property="likes"/>
+        <result column="tag_hates" property="hates"/>
+        <result column="tag_attribute" property="attribute"/>
+        <result column="tag_liked" property="liked"/>
+        <result column="tag_hated" property="hated"/>
+        <result column="tag_extra_attr" property="extraAttr"/>
+        <result column="tag_music_id" property="musicId"/>
+        <result column="tag_tag_type" property="tagType"/>
+        <result column="tag_is_activity" property="isActivity"/>
+        <result column="tag_color" property="color"/>
+        <result column="tag_alpha" property="alpha"/>
+        <result column="tag_is_season" property="isSeason"/>
+        <result column="tag_subscribed_count" property="subscribedCount"/>
+        <result column="tag_archive_count" property="archiveCount"/>
+        <result column="tag_featured_count" property="featuredCount"/>
+        <result column="tag_jump_url" property="jumpUrl"/>
+        <result column="tag_created_date" property="createdDate"/>
+        <result column="tag_last_modified_date" property="lastModifiedDate"/>
+        <result column="tag_is_deleted" property="isDeleted"/>
+        <result column="tag_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, tag_id, tag_name, cover, head_cover, content, short_content, type, state, ctime, is_atten, likes, hates, attribute, liked, hated, extra_attr, music_id, tag_type, is_activity, color, alpha, is_season, subscribed_count, archive_count, featured_count, jump_url, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        tag.id as tag_id,
+        tag.tag_id as tag_tag_id,
+        tag.tag_name as tag_tag_name,
+        tag.cover as tag_cover,
+        tag.head_cover as tag_head_cover,
+        tag.content as tag_content,
+        tag.short_content as tag_short_content,
+        tag.type as tag_type,
+        tag.state as tag_state,
+        tag.ctime as tag_ctime,
+        tag.is_atten as tag_is_atten,
+        tag.likes as tag_likes,
+        tag.hates as tag_hates,
+        tag.attribute as tag_attribute,
+        tag.liked as tag_liked,
+        tag.hated as tag_hated,
+        tag.extra_attr as tag_extra_attr,
+        tag.music_id as tag_music_id,
+        tag.tag_type as tag_tag_type,
+        tag.is_activity as tag_is_activity,
+        tag.color as tag_color,
+        tag.alpha as tag_alpha,
+        tag.is_season as tag_is_season,
+        tag.subscribed_count as tag_subscribed_count,
+        tag.archive_count as tag_archive_count,
+        tag.featured_count as tag_featured_count,
+        tag.jump_url as tag_jump_url,
+        tag.created_date as tag_created_date,
+        tag.last_modified_date as tag_last_modified_date,
+        tag.is_deleted as tag_is_deleted,
+        tag.version as tag_version
+    </sql>
+
+</mapper>

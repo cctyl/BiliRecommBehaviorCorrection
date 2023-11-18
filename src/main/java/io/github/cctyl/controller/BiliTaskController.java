@@ -37,8 +37,6 @@ public class BiliTaskController {
     @Autowired
     private BiliService biliService;
 
-
-
     @Autowired
     private BlackRuleService blackRuleService;
 

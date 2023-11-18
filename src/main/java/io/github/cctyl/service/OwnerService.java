@@ -13,4 +13,5 @@ import io.github.cctyl.entity.Owner;
  */
 public interface OwnerService extends IService<Owner> {
 
+    Owner findOrCreateByMid(Owner owner);
 }

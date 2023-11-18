@@ -1,6 +1,11 @@
-package io.github.cctyl.pojo;
+package io.github.cctyl.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.cctyl.pojo.AuditingEntity;
+import io.github.cctyl.pojo.Count;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,7 +13,10 @@ import java.io.Serializable;
 
 @NoArgsConstructor
 @Data
-public class Tag implements Serializable {
+public class Tag extends AuditingEntity {
+
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    private String id;
 
     @JSONField(name = "tag_id")
     private Integer tagId;
@@ -38,6 +46,7 @@ public class Tag implements Serializable {
     private Integer ctime;
 
     @JSONField(name = "count")
+    @TableField(exist = false)
     private Count count;
 
     @JSONField(name = "is_atten")
@@ -90,8 +99,6 @@ public class Tag implements Serializable {
 
     @JSONField(name = "jump_url")
     private String jumpUrl;
-
-
 
 
     @Override

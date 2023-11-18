@@ -7,16 +7,14 @@ import cn.hutool.core.util.URLUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.*;
 import com.alibaba.fastjson2.JSONObject;
-import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.entity.Tag;
 import io.github.cctyl.pojo.constants.ErrorCode;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.*;
 import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +24,6 @@ import java.net.HttpCookie;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 

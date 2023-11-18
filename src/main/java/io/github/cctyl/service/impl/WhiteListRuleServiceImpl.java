@@ -10,13 +10,12 @@ import io.github.cctyl.entity.WhiteListRule;
 import io.github.cctyl.mapper.WhiteListRuleMapper;
 import io.github.cctyl.pojo.DescV2;
 import io.github.cctyl.pojo.PageBean;
-import io.github.cctyl.pojo.Tag;
+import io.github.cctyl.entity.Tag;
 import io.github.cctyl.pojo.UserSubmissionVideo;
 import io.github.cctyl.pojo.enumeration.AccessType;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.WhiteListRuleService;
-import io.github.cctyl.utils.IdGenerator;
 import io.github.cctyl.utils.SegmenterUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.github.cctyl.pojo.constants.AppConstant.WHITE_LIST_RULE_KEY;
 
 /**
  * <p>

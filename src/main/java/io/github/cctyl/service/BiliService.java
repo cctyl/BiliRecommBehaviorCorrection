@@ -31,14 +31,13 @@ public class BiliService {
     private BiliApi biliApi;
 
     @Autowired
-    private RedisUtil redisUtil;
-
-
-    @Autowired
     private BlackRuleService blackRuleService;
 
     @Autowired
     private WhiteListRuleService whiteRuleService;
+
+    @Autowired
+    private VideoDetailService videoDetailService;
 
     /**
      * 检查cookie状态
@@ -69,6 +68,9 @@ public class BiliService {
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
         videoDetail.setHandleType(handleType);
+
+        videoDetailService.saveVideoDetail(videoDetail);
+
         redisUtil.sAdd(HANDLE_VIDEO_ID_KEY, videoDetail.getAid());
         redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY, videoDetail);
     }

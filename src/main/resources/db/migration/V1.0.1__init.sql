@@ -88,7 +88,6 @@ CREATE TABLE video_detail
     is_ogv               TINYINT(1)   NULL,
     owner_id             CHAR(30)     NULL,
 
-    stat_id              CHAR(30)     NULL,
     rights_id            CHAR(30)     NULL,
     dimension_id         CHAR(30)     NULL,
 
@@ -127,3 +126,84 @@ CREATE TABLE white_list_rule
     version            int        default 1,
     CONSTRAINT pk_white_list_rule PRIMARY KEY (id)
 );
+
+-- tag
+CREATE TABLE tag
+(
+    id                 char(30)     NOT NULL,
+    tag_id             int          not null,
+    tag_name           varchar(255) not null,
+    cover              VARCHAR(350),
+    head_cover         VARCHAR(350),
+    content            VARCHAR(150),
+    short_content      VARCHAR(100),
+    type               INTEGER,
+    state              INTEGER,
+    ctime              INTEGER,
+    is_atten           INTEGER,
+    likes              INTEGER,
+    hates              INTEGER,
+    attribute          INTEGER,
+    liked              INTEGER,
+    hated              INTEGER,
+    extra_attr         INTEGER,
+    music_id           VARCHAR(255),
+    tag_type           VARCHAR(255),
+    is_activity        BOOLEAN,
+    color              VARCHAR(255),
+    alpha              INTEGER,
+    is_season          BOOLEAN,
+    subscribed_count   INTEGER,
+    archive_count      VARCHAR(50),
+    featured_count     INTEGER,
+    jump_url           VARCHAR(350),
+    created_date       DATE         null,
+    last_modified_date DATE         null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
+    CONSTRAINT pk_tag PRIMARY KEY (id)
+);
+
+-- video与tag 关联表
+CREATE TABLE video_tag
+(
+
+    id                 char(30) NOT NULL,
+    tag_id             char(30) not null,
+    video_id           char(30) not null,
+    created_date       DATE     null,
+    last_modified_date DATE     null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
+    CONSTRAINT pk_video_tag PRIMARY KEY (id)
+);
+
+CREATE TABLE cookie_header_data
+(
+    id                 char(30)     NOT NULL,
+    url                VARCHAR(350) NOT NULL,
+    ckey               varchar(50)  null,
+    cvalue             varchar(200) null,
+    classify           varchar(50)  null,
+    mediaType          varchar(50)  null,
+    created_date       DATE         null,
+    last_modified_date DATE         null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
+    CONSTRAINT pk_cookie_header_data PRIMARY KEY (id)
+);
+
+
+CREATE TABLE config
+(
+    id                 char(30)     NOT NULL,
+    name               varchar(50)  null,
+    value              varchar(200) null,
+    expire_second      int        default -1,
+    created_date       DATE         null,
+    last_modified_date DATE         null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
+    CONSTRAINT pk_config PRIMARY KEY (id)
+);
+

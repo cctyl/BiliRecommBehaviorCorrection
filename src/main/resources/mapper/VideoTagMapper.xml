@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.VideoTagMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.VideoTag">
+        <id column="id" property="id"/>
+        <result column="tag_id" property="tagId"/>
+        <result column="video_id" property="videoId"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.VideoTag">
+        <id column="videoTag_id" property="id"/>
+        <result column="videoTag_tag_id" property="tagId"/>
+        <result column="videoTag_video_id" property="videoId"/>
+        <result column="videoTag_created_date" property="createdDate"/>
+        <result column="videoTag_last_modified_date" property="lastModifiedDate"/>
+        <result column="videoTag_is_deleted" property="isDeleted"/>
+        <result column="videoTag_version" property="version"/>
+    </resultMap>
+
+
+
+        <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, tag_id, video_id, created_date, last_modified_date, is_deleted, version
+    </sql>
+
+
+        <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        videoTag.id as videoTag_id,
+        videoTag.tag_id as videoTag_tag_id,
+        videoTag.video_id as videoTag_video_id,
+        videoTag.created_date as videoTag_created_date,
+        videoTag.last_modified_date as videoTag_last_modified_date,
+        videoTag.is_deleted as videoTag_is_deleted,
+        videoTag.version as videoTag_version
+    </sql>
+
+</mapper>

@@ -13,4 +13,9 @@ import io.github.cctyl.entity.VideoDetail;
  */
 public interface VideoDetailService extends IService<VideoDetail> {
 
+    /**
+     * 保存视频详情，包括关联数据
+     * @param videoDetail
+     */
+    void saveVideoDetail(VideoDetail videoDetail);
 }
