@@ -2,6 +2,9 @@ package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import io.github.cctyl.entity.Tag;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import io.github.cctyl.entity.Tag;
  */
 public interface TagMapper extends BaseMapper<Tag> {
 
+    List<Tag> findByVideoId(@Param("id") String id);
 }

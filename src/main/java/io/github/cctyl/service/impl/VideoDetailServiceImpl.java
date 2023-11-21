@@ -3,6 +3,7 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.entity.*;
 import io.github.cctyl.mapper.VideoDetailMapper;
@@ -47,6 +48,11 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     @Transactional(rollbackFor= ServerException.class)
     public void saveVideoDetail(VideoDetail videoDetail) {
 
+        boolean exists = baseMapper.exists(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, videoDetail.getAid()));
+        if (exists){
+            this.updateById(videoDetail);
+            return;
+        }
 
         //1.保存本体，如果aid重复则会创建失败
         this.save(videoDetail);
@@ -83,7 +89,7 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
             videoRelateService.saveRelate(relatedVideoList,videoDetail);
         }
 
-        //2.5 点赞点踩原因 TODO
+        this.save(videoDetail);
     }
 
     @Override
@@ -111,5 +117,50 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         newVideoList.addAll(existVideoList);
 
         return newVideoList;
+    }
+
+
+    @Override
+    public VideoDetail findByAid(int avid) {
+        return this.getOne(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid,avid));
+    }
+
+    /**
+     * @param avid
+     * @return
+     */
+    @Override
+    public VideoDetail findWithDetailByAid(int avid) {
+
+        return   this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
+                .eq(VideoDetail::getAid,avid));
+    }
+
+
+    public VideoDetail findWithOwnerAndTag(LambdaQueryWrapper<VideoDetail> wrapper) {
+
+        //1.查询本体
+        VideoDetail videoDetail = this.getOne(wrapper);
+
+        if (videoDetail==null){
+            return null;
+        }
+        //2.查询up主信息
+        Owner owner = Opt.ofNullable(videoDetail.getOwnerId())
+                .map(ownerService::getById)
+                .get();
+        videoDetail.setOwner(owner);
+
+
+        //3.播放数据 TODO 感觉在处理任务时用不到此数据
+
+        //4.标签数据
+        List<Tag> tagList = tagService.findByVideoId(videoDetail.getId());
+        videoDetail.setTags(tagList);
+
+        //5.关联视频数据 TODO 感觉在处理任务时用不到此数据
+
+
+        return  videoDetail;
     }
 }

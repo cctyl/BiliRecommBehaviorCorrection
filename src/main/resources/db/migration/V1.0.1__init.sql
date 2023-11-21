@@ -88,7 +88,8 @@ CREATE TABLE video_detail
     is_ogv               TINYINT(1)   NULL,
     owner_id             CHAR(30)     NULL,
     handle               TINYINT(1) default 0,
-
+    black_reason         text         null,
+    thumb_up_reason      text         null,
     teenage_mode         INT          NULL,
     is_chargeable_season TINYINT(1)   NULL,
     is_story             TINYINT(1)   NULL,
@@ -108,6 +109,7 @@ CREATE TABLE video_detail
     last_modified_date   DATE         null,
     is_deleted           tinyint(1) default 0,
     version              int        default 1,
+
     CONSTRAINT pk_video_detail PRIMARY KEY (id)
 );
 
@@ -209,12 +211,12 @@ CREATE TABLE config
 create table video_relate
 (
 
-    id char(30) not null,
-    master_video_id char(30) not null,
-    related_video_id char(30) not null,
-    created_date DATE null,
-    last_modified_date DATE null,
-    is_deleted tinyint(1) default 0,
-    version int default 1,
+    id                 char(30) not null,
+    master_video_id    char(30) not null,
+    related_video_id   char(30) not null,
+    created_date       DATE     null,
+    last_modified_date DATE     null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
     constraint pk_video_tag primary key (id)
 );

@@ -16,4 +16,6 @@ import java.util.List;
 public interface TagService extends IService<Tag> {
 
     List<Tag> saveIfNotExists(List<Tag> tags);
+
+    List<Tag> findByVideoId(String id);
 }

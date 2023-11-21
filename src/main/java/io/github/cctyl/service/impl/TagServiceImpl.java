@@ -49,4 +49,13 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
         return newTagList;
     }
+
+    /**
+     * @param id
+     * @return
+     */
+    @Override
+    public List<Tag> findByVideoId(String id) {
+        return baseMapper.findByVideoId(id);
+    }
 }

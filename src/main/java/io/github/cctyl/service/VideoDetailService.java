@@ -22,4 +22,8 @@ public interface VideoDetailService extends IService<VideoDetail> {
     void saveVideoDetail(VideoDetail videoDetail);
 
     List<VideoDetail> saveIfNotExists(List<VideoDetail> relatedVideoList);
+
+    VideoDetail findByAid(int avid);
+
+    VideoDetail findWithDetailByAid(int avid);
 }

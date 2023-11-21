@@ -258,7 +258,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     /**
      * 点踩原因id
      */
-    @TableField(exist = false)
     private DislikeReason dislikeReason;
     /**
      * 点踩的up id
@@ -281,7 +280,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     /**
      * 点赞原因
      */
-    @TableField(exist = false)
     private String thumbUpReason;
 
 

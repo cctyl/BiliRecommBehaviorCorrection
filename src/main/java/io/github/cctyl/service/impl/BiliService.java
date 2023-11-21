@@ -1,6 +1,7 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Opt;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -38,7 +39,6 @@ public class BiliService {
     private final VideoDetailService videoDetailService;
 
 
-
     /**
      * 检查cookie状态
      * 调用历史记录接口来实现
@@ -70,9 +70,6 @@ public class BiliService {
         videoDetail.setHandleType(handleType);
         videoDetail.setHandle(true);
         videoDetailService.saveVideoDetail(videoDetail);
-
-        redisUtil.sAdd(HANDLE_VIDEO_ID_KEY, videoDetail.getAid());
-        redisUtil.sAdd(HANDLE_VIDEO_DETAIL_KEY, videoDetail);
     }
 
 
@@ -82,8 +79,8 @@ public class BiliService {
      * @param videoDetail
      */
     public void addReadyToHandleVideo(VideoDetail videoDetail) {
-        redisUtil.sAdd(READY_HANDLE_VIDEO, videoDetail);
-        redisUtil.sAdd(READY_HANDLE_VIDEO_ID, videoDetail.getAid());
+        videoDetail.setHandle(false);
+        videoDetailService.saveVideoDetail(videoDetail);
     }
 
     /**
@@ -103,17 +100,19 @@ public class BiliService {
     ) {
 
         log.debug("处理视频avid={}", avid);
-        if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, avid)
-        ||
-                redisUtil.sIsMember(READY_HANDLE_VIDEO_ID,avid)
+        VideoDetail videoDetail =  videoDetailService.findWithDetailByAid(avid);
+        if (
+            videoDetail!=null && videoDetail.isHandle()
         ) {
             log.info("视频：{} 之前已处理过", avid);
             return;
         }
-        VideoDetail videoDetail = null;
+
         try {
             //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
-            videoDetail = biliApi.getVideoDetail(avid);
+            if (videoDetail==null){
+                videoDetail =  biliApi.getVideoDetail(avid);
+            }
 
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackRuleService.blackMatch(videoDetail)) {
@@ -133,10 +132,10 @@ public class BiliService {
             }
 
         } catch (Exception e) {
-            if (videoDetail != null) {
-                //出现任何异常，都进行跳过
-                log.error("处理视频：{} 时出现异常，信息如下：", videoDetail.getTitle());
-            }
+
+            //出现任何异常，都进行跳过
+            log.error("处理视频：{} 时出现异常，信息如下：", Opt.ofNullable(videoDetail)
+                    .map(VideoDetail::getTitle).get());
             e.printStackTrace();
         }
     }
@@ -158,8 +157,9 @@ public class BiliService {
      */
     public void dislike(List<VideoDetail> videoDetailList) {
         for (VideoDetail videoDetail : videoDetailList) {
+            VideoDetail byAid = videoDetailService.findByAid(videoDetail.getAid());
             try {
-                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, videoDetail.getAid())) {
+                if (byAid!=null && byAid.isHandle()) {
                     log.info("视频：{} 之前已处理过", videoDetail.getAid());
                     continue;
                 }
