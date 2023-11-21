@@ -7,9 +7,8 @@ import io.github.cctyl.pojo.RecommendCard;
 import io.github.cctyl.pojo.SearchResult;
 
 import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.service.BiliService;
+import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

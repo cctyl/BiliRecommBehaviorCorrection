@@ -1,18 +1,19 @@
-package io.github.cctyl.service;
+package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
-import io.github.cctyl.config.ApplicationProperties;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.pojo.DislikeReason;
 import io.github.cctyl.pojo.PageBean;
 import io.github.cctyl.pojo.UserSubmissionVideo;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.enumeration.HandleType;
+import io.github.cctyl.service.VideoDetailService;
+import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,20 +25,19 @@ import static io.github.cctyl.pojo.constants.AppConstant.*;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class BiliService {
 
 
-    @Autowired
-    private BiliApi biliApi;
+    private final BiliApi biliApi;
 
-    @Autowired
-    private BlackRuleService blackRuleService;
+    private final BlackRuleService blackRuleService;
 
-    @Autowired
-    private WhiteListRuleService whiteRuleService;
+    private final WhiteListRuleService whiteRuleService;
 
-    @Autowired
-    private VideoDetailService videoDetailService;
+    private final VideoDetailService videoDetailService;
+
+
 
     /**
      * 检查cookie状态
@@ -68,7 +68,7 @@ public class BiliService {
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
         videoDetail.setHandleType(handleType);
-
+        videoDetail.setHandle(true);
         videoDetailService.saveVideoDetail(videoDetail);
 
         redisUtil.sAdd(HANDLE_VIDEO_ID_KEY, videoDetail.getAid());

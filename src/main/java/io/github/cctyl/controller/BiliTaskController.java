@@ -5,10 +5,9 @@ import io.github.cctyl.pojo.R;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.enumeration.HandleType;
 import io.github.cctyl.pojo.vo.VideoVo;
-import io.github.cctyl.service.BiliService;
-import io.github.cctyl.service.BlackRuleService;
+import io.github.cctyl.service.impl.BiliService;
+import io.github.cctyl.service.impl.BlackRuleService;
 import io.github.cctyl.task.BiliTask;
-import io.github.cctyl.utils.RedisUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

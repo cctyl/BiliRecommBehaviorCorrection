@@ -87,9 +87,7 @@ CREATE TABLE video_detail
     season_type          INT          NULL,
     is_ogv               TINYINT(1)   NULL,
     owner_id             CHAR(30)     NULL,
-
-    rights_id            CHAR(30)     NULL,
-    dimension_id         CHAR(30)     NULL,
+    handle               TINYINT(1) default 0,
 
     teenage_mode         INT          NULL,
     is_chargeable_season TINYINT(1)   NULL,
@@ -131,7 +129,7 @@ CREATE TABLE white_list_rule
 CREATE TABLE tag
 (
     id                 char(30)     NOT NULL,
-    tag_id             int          not null,
+    tag_id             int unique   not null,
     tag_name           varchar(255) not null,
     cover              VARCHAR(350),
     head_cover         VARCHAR(350),
@@ -207,3 +205,16 @@ CREATE TABLE config
     CONSTRAINT pk_config PRIMARY KEY (id)
 );
 
+-- 视频 与 相关视频 的关联表
+create table video_relate
+(
+
+    id char(30) not null,
+    master_video_id char(30) not null,
+    related_video_id char(30) not null,
+    created_date DATE null,
+    last_modified_date DATE null,
+    is_deleted tinyint(1) default 0,
+    version int default 1,
+    constraint pk_video_tag primary key (id)
+);

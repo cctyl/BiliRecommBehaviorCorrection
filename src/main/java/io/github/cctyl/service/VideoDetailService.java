@@ -3,6 +3,8 @@ package io.github.cctyl.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.VideoDetail;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -18,4 +20,6 @@ public interface VideoDetailService extends IService<VideoDetail> {
      * @param videoDetail
      */
     void saveVideoDetail(VideoDetail videoDetail);
+
+    List<VideoDetail> saveIfNotExists(List<VideoDetail> relatedVideoList);
 }

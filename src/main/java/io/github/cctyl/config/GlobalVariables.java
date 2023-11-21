@@ -11,6 +11,7 @@ import io.github.cctyl.pojo.enumeration.Classify;
 import io.github.cctyl.pojo.enumeration.DictType;
 import io.github.cctyl.pojo.enumeration.MediaType;
 import io.github.cctyl.service.*;
+import io.github.cctyl.service.impl.BlackRuleService;
 import io.github.cctyl.utils.ServerException;
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -22,8 +23,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static io.github.cctyl.pojo.constants.AppConstant.BAIDU_ASK_KEY;
 
 
 /**

@@ -117,6 +117,9 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     @JSONField(name = "is_ogv")
     private Boolean isOgv;
 
+    /**
+     * 视频是否处理过
+     */
     private boolean handle;
 
 
@@ -152,13 +155,12 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     @TableField(exist = false)
     private Rights rights;
 
-    private String rightsId;
+
 
     @JSONField(name = "dimension")
     @TableField(exist = false)
     private Dimension dimension;
 
-    private String dimensionId;
 
     @JSONField(name = "premiere")
     @TableField(exist = false)
@@ -187,6 +189,9 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     @TableField(exist = false)
     private List<Pages> pages;
 
+    /**
+     * 字幕相关
+     */
     @JSONField(name = "subtitle")
     @TableField(exist = false)
     private Subtitle subtitle;

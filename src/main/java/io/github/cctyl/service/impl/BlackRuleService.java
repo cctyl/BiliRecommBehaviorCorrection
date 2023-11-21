@@ -1,4 +1,4 @@
-package io.github.cctyl.service;
+package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
@@ -9,6 +9,8 @@ import io.github.cctyl.pojo.DislikeReason;
 import io.github.cctyl.entity.Tag;
 import io.github.cctyl.entity.VideoDetail;
 import io.github.cctyl.pojo.enumeration.DictType;
+import io.github.cctyl.service.DictService;
+import io.github.cctyl.service.ImageGenderDetectService;
 import io.github.cctyl.utils.SegmenterUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

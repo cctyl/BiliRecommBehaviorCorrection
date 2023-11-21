@@ -3,6 +3,8 @@ package io.github.cctyl.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.entity.Tag;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -13,4 +15,5 @@ import io.github.cctyl.entity.Tag;
  */
 public interface TagService extends IService<Tag> {
 
+    List<Tag> saveIfNotExists(List<Tag> tags);
 }
