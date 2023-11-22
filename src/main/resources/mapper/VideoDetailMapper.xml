@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.VideoDetailMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.VideoDetail">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.VideoDetail">
         <id column="id" property="id"/>
         <result column="aid" property="aid"/>
         <result column="videos" property="videos"/>
@@ -54,7 +54,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.VideoDetail">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.VideoDetail">
         <id column="videoDetail_id" property="id"/>
         <result column="videoDetail_aid" property="aid"/>
         <result column="videoDetail_videos" property="videos"/>
@@ -105,13 +105,13 @@
 
 
 
-        <!-- 通用查询结果列 -->
+    <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_linkv2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id, stat_id, rights_id, dimension_id, teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_fromv2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version
     </sql>
 
 
-        <!--联表查询使用的sql-->
+    <!--联表查询使用的sql-->
     <sql id="Base_Column_List_Assoc">
 
         videoDetail.id as videoDetail_id,
@@ -161,5 +161,24 @@
         videoDetail.is_deleted as videoDetail_is_deleted,
         videoDetail.version as videoDetail_version
     </sql>
+
+
+    <resultMap id="withOwnerMap" type="io.github.cctyl.domain.po.VideoDetail" extends="BaseResultMapAssoc">
+        <association property="owner" resultMap="io.github.cctyl.mapper.OwnerMapper.BaseResultMapAssoc"/>
+    </resultMap>
+
+    <select id="findWithOwnerAndHandle" resultMap="withOwnerMap">
+
+        select
+            <include refid="Base_Column_List_Assoc"/>,
+            <include refid="io.github.cctyl.mapper.OwnerMapper.Base_Column_List_Assoc"/>
+        from
+            video_detail videoDetail
+        join owner t_owner on
+                t_owner.id = videoDetail.owner_id
+        where videoDetail.handle is #{isHandle};
+
+
+    </select>
 
 </mapper>

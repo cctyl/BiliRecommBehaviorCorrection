@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.TagMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Tag">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.Tag">
         <id column="id" property="id"/>
         <result column="tag_id" property="tagId"/>
         <result column="tag_name" property="tagName"/>
@@ -39,7 +39,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Tag">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.Tag">
         <id column="tag_id" property="id"/>
         <result column="tag_tag_id" property="tagId"/>
         <result column="tag_tag_name" property="tagName"/>
@@ -116,7 +116,7 @@
         tag.is_deleted as tag_is_deleted,
         tag.version as tag_version
     </sql>
-    <select id="findByVideoId" resultType="io.github.cctyl.entity.Tag">
+    <select id="findByVideoId" resultType="io.github.cctyl.domain.po.Tag">
 
         select
             <include refid="Base_Column_List_Assoc"/>

@@ -1,7 +1,7 @@
 package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.github.cctyl.entity.VideoRelate;
+import io.github.cctyl.domain.po.VideoRelate;
 
 /**
  * <p>

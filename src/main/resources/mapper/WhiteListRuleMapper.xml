@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.WhiteListRuleMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.WhiteListRule">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.WhiteListRule">
         <id column="id" property="id"/>
         <result column="info" property="info"/>
         <result column="created_date" property="createdDate"/>
@@ -14,7 +14,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.WhiteListRule">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.WhiteListRule">
         <id column="whiteListRule_id" property="id"/>
         <result column="whiteListRule_info" property="info"/>
         <result column="whiteListRule_created_date" property="createdDate"/>
@@ -49,7 +49,7 @@
     </sql>
 
 
-    <resultMap id="whiteListRuleDictMap" type="io.github.cctyl.entity.WhiteListRule" extends="BaseResultMapAssoc">
+    <resultMap id="whiteListRuleDictMap" type="io.github.cctyl.domain.po.WhiteListRule" extends="BaseResultMapAssoc">
 
         <collection property="totalDict" ofType="Dict"
                     resultMap="io.github.cctyl.mapper.DictMapper.BaseResultMapAssoc"></collection>

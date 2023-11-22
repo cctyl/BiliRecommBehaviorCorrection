@@ -1,7 +1,7 @@
 package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.github.cctyl.entity.Tag;
+import io.github.cctyl.domain.po.Tag;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

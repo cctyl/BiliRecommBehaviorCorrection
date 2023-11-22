@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.CookieHeaderDataMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.CookieHeaderData">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.CookieHeaderData">
         <id column="id" property="id"/>
         <result column="url" property="url"/>
         <result column="ckey" property="ckey"/>
@@ -17,7 +17,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.CookieHeaderData">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.CookieHeaderData">
         <id column="cookieHeaderData_id" property="id"/>
         <result column="cookieHeaderData_url" property="url"/>
         <result column="cookieHeaderData_ckey" property="ckey"/>
@@ -69,7 +69,7 @@
 
 
     </update>
-    <select id="findByType" resultType="io.github.cctyl.entity.CookieHeaderData">
+    <select id="findByType" resultType="io.github.cctyl.domain.po.CookieHeaderData">
         select *
         from cookie_header_data
         where type = #{dataType}

@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.ConfigMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Config">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.Config">
         <id column="id" property="id"/>
         <result column="url" property="url"/>
         <result column="name" property="name"/>
@@ -16,7 +16,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Config">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.Config">
         <id column="config_id" property="id"/>
         <result column="config_url" property="url"/>
         <result column="config_name" property="name"/>

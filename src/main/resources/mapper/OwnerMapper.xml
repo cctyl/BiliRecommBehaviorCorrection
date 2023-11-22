@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.OwnerMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Owner">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.Owner">
         <id column="id" property="id"/>
         <result column="mid" property="mid"/>
         <result column="name" property="name"/>
@@ -16,8 +16,8 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Owner">
-        <id column="owner_id" property="id"/>
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.Owner">
+        <id     column="owner_id" property="id"/>
         <result column="owner_mid" property="mid"/>
         <result column="owner_name" property="name"/>
         <result column="owner_face" property="face"/>
@@ -38,14 +38,14 @@
         <!--联表查询使用的sql-->
     <sql id="Base_Column_List_Assoc">
 
-        owner.id as owner_id,
-        owner.mid as owner_mid,
-        owner.name as owner_name,
-        owner.face as owner_face,
-        owner.created_date as owner_created_date,
-        owner.last_modified_date as owner_last_modified_date,
-        owner.is_deleted as owner_is_deleted,
-        owner.version as owner_version
+        t_owner.id as owner_id,
+        t_owner.mid as owner_mid,
+        t_owner.name as owner_name,
+        t_owner.face as owner_face,
+        t_owner.created_date as owner_created_date,
+        t_owner.last_modified_date as owner_last_modified_date,
+        t_owner.is_deleted as owner_is_deleted,
+        t_owner.version as owner_version
     </sql>
 
 </mapper>

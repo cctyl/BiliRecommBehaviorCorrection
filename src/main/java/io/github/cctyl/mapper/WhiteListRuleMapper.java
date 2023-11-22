@@ -1,7 +1,7 @@
 package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.domain.po.WhiteListRule;
 
 import java.util.List;
 

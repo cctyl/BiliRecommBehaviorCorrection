@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.StatMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Stat">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.Stat">
         <id column="id" property="id"/>
         <result column="aid" property="aid"/>
         <result column="view" property="view"/>
@@ -27,7 +27,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Stat">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.Stat">
         <id column="stat_id" property="id"/>
         <result column="stat_aid" property="aid"/>
         <result column="stat_view" property="view"/>

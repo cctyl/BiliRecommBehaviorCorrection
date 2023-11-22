@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.DictMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.Dict">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.Dict">
         <id column="id" property="id"/>
         <result column="value" property="value"/>
         <result column="access_type" property="accessType"/>
@@ -16,7 +16,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.Dict">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.Dict">
         <id column="dict_id" property="id"/>
         <result column="dict_value" property="value"/>
         <result column="dict_access_type" property="accessType"/>

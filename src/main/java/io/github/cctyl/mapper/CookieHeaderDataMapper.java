@@ -1,8 +1,8 @@
 package io.github.cctyl.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import io.github.cctyl.entity.CookieHeaderData;
-import io.github.cctyl.pojo.enumeration.Classify;
+import io.github.cctyl.domain.po.CookieHeaderData;
+import io.github.cctyl.domain.enumeration.Classify;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 

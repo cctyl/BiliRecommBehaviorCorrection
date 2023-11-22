@@ -1,6 +1,6 @@
 package io.github.cctyl.mapper;
 
-import io.github.cctyl.entity.Config;
+import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

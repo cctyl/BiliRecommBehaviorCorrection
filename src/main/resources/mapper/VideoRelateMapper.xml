@@ -3,7 +3,7 @@
 <mapper namespace="io.github.cctyl.mapper.VideoRelateMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.github.cctyl.entity.VideoRelate">
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.VideoRelate">
         <id column="id" property="id"/>
         <result column="master_video_id" property="masterVideoId"/>
         <result column="related_video_id" property="relatedVideoId"/>
@@ -15,7 +15,7 @@
 
 
     <!--用于联表查询的，id做了别名处理-->
-    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.entity.VideoRelate">
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.VideoRelate">
         <id column="videoRelate_id" property="id"/>
         <result column="videoRelate_master_video_id" property="masterVideoId"/>
         <result column="videoRelate_related_video_id" property="relatedVideoId"/>
