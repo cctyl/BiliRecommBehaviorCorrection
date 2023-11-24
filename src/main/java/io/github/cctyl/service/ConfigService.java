@@ -1,7 +1,9 @@
 package io.github.cctyl.service;
 
+import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.github.cctyl.domain.vo.ConfigVo;
 
 import java.util.Map;
 
@@ -25,4 +27,6 @@ public interface ConfigService extends IService<Config> {
     boolean isFirstUse();
 
     Map<String,String> updateRefreshCookie(String cookieStr);
+
+    ConfigVo updateStandardConfigInfo(ConfigDTO configDTO);
 }

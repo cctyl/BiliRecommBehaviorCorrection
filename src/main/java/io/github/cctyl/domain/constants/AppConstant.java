@@ -13,7 +13,7 @@ public class AppConstant {
     /**
      * accessKey
      */
-    public static final String ACCESS_KEY = PREFIX + "access_key";
+    public static final String BILI_ACCESS_KEY = PREFIX + "access_key";
 
     /**
      * wbi
@@ -169,4 +169,5 @@ public class AppConstant {
 
     public static final String BAIDU_CLIENT_ID = "baidu_client_id";
     public static final String BAIDU_CLIENT_SECRET = "baidu_client_secret";
+    public static final String MIN_PLAY_SECOND = "minPlaySecond";
 }

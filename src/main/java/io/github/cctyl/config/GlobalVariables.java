@@ -33,17 +33,26 @@ import java.util.stream.Collectors;
 public class GlobalVariables {
 
     /**
-     * AccessKey
+     * bilibili的AccessKey
      */
-    private static String ACCESS_KEY;
+    private static String BILI_ACCESS_KEY;
     /**
      * wbi
      */
     private static String IMG_KEY;
     private static String SUB_KEY;
 
+    /**
+     * 百度accessKey
+     */
     private static String BAIDU_ASK_KEY;
+    /**
+     * 百度客户端id
+     */
     private static String BAIDU_CLIENT_ID;
+    /**
+     * 百度客户端密钥
+     */
     private static String BAIDU_CLIENT_SECRET;
 
     /**
@@ -256,8 +265,8 @@ public class GlobalVariables {
         return IGNORE_WHITE_KEY_WORD_SET;
     }
 
-    public static String getAccessKey() {
-        return ACCESS_KEY;
+    public static String getBiliAccessKey() {
+        return BILI_ACCESS_KEY;
     }
 
     public static String getBaiduClientId() {
@@ -511,14 +520,14 @@ public class GlobalVariables {
     }
 
     public static void initAccessKey() {
-        GlobalVariables.MID = configService.findByName(AppConstant.ACCESS_KEY);
+        GlobalVariables.BILI_ACCESS_KEY = configService.findByName(AppConstant.BILI_ACCESS_KEY);
 
     }
 
 
     public static void initMinPlaySecond() {
 
-        String minPlaySecond = configService.findByName("minPlaySecond");
+        String minPlaySecond = configService.findByName(AppConstant.MIN_PLAY_SECOND);
         if (minPlaySecond != null) {
             try {
                 GlobalVariables.MIN_PLAY_SECOND = Integer.parseInt(minPlaySecond);
@@ -640,6 +649,17 @@ public class GlobalVariables {
         BAIDU_CLIENT_SECRET = clientSecret;
         configService.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_ID, clientId);
         configService.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_SECRET, clientSecret);
+    }
+
+    public static void updateMinPlaySecond(Integer minPlaySecond) {
+        MIN_PLAY_SECOND=minPlaySecond;
+        configService.addOrUpdateConfig(AppConstant.MIN_PLAY_SECOND, String.valueOf(minPlaySecond));
+    }
+
+    public static void updateMid(String mid) {
+        MID = mid;
+        configService.addOrUpdateConfig(AppConstant.MID_KEY, mid);
+
     }
 
 
@@ -987,8 +1007,8 @@ public class GlobalVariables {
     }
 
     public static void updateAccessKey(String newKey) {
-        ACCESS_KEY = newKey;
-        configService.addOrUpdateConfig(AppConstant.ACCESS_KEY, newKey, 2_505_600);
+        BILI_ACCESS_KEY = newKey;
+        configService.addOrUpdateConfig(AppConstant.BILI_ACCESS_KEY, newKey, 2_505_600);
     }
 
     public static void updateWbi(String imgKey, String subKey) {

@@ -540,7 +540,7 @@ public class BiliApi {
 
         //如果需要刷新，或者缓存中不存在，则更新一次
         //否则从缓存中取出
-        if( refresh || StrUtil.isEmpty(GlobalVariables.getAccessKey())){
+        if( refresh || StrUtil.isEmpty(GlobalVariables.getBiliAccessKey())){
             String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
             String body = commonGet(url).body();
             JSONObject first = JSONObject.parseObject(body);
@@ -560,8 +560,8 @@ public class BiliApi {
             GlobalVariables.updateAccessKey(accessKey);
             return accessKey;
         }else {
-            log.debug("缓存中得到了accessKey={}", GlobalVariables.getAccessKey());
-            return GlobalVariables.getAccessKey();
+            log.debug("缓存中得到了accessKey={}", GlobalVariables.getBiliAccessKey());
+            return GlobalVariables.getBiliAccessKey();
         }
 
     }

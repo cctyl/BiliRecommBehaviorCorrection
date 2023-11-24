@@ -3,7 +3,9 @@ package io.github.cctyl.controller;
 
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.domain.vo.ConfigVo;
 import io.github.cctyl.service.ConfigService;
 import io.github.cctyl.utils.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,9 +39,10 @@ public class ConfigController {
 
 
     @PutMapping("/standard")
-    @Operation(summary = "更新cookie")
-    public R updateStandardConfig(){
-
+    @Operation(summary = "更新基本配置信息")
+    public R updateStandardConfigInfo(@RequestBody ConfigDTO configDTO){
+        ConfigVo configVo = configService.updateStandardConfigInfo(configDTO);
+        return R.data(configVo);
     }
 
 
