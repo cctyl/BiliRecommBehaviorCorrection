@@ -2,6 +2,7 @@ package io.github.cctyl.service.impl;
 
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Config;
 import io.github.cctyl.mapper.ConfigMapper;
 import io.github.cctyl.domain.constants.AppConstant;
@@ -11,6 +12,7 @@ import io.github.cctyl.utils.DataUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * <p>
@@ -82,6 +84,17 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         }
 
         return Boolean.parseBoolean(configByName.getValue());
+    }
+
+    /**
+     * @param cookieStr
+     * @return
+     */
+    @Override
+    public Map<String, String> updateRefreshCookie(String cookieStr) {
+        Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
+        GlobalVariables.updateRefreshCookie(cookieMap);
+        return GlobalVariables.getRefreshCookieMap();
     }
 
 

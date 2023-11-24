@@ -24,23 +24,23 @@ public class ConfigController {
     @Autowired
     private ConfigService configService;
 
-
-
-    @PutMapping("/cookie")
-    @Operation(summary = "更新cookie")
+    @PutMapping("/refresh-cookie")
+    @Operation(summary = "更新 及时更新的cookie")
     public R updateCookie(
             @RequestParam String cookieStr
     ) {
         if (StrUtil.isBlank(cookieStr)) {
             return R.error().setMessage("错误的数据");
         }
-        Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
-        GlobalVariables.updateRefreshCookie(cookieMap);
-        return R.ok().setData(cookieMap);
+        return R.ok().setData(configService.updateRefreshCookie(cookieStr));
     }
 
 
+    @PutMapping("/standard")
+    @Operation(summary = "更新cookie")
+    public R updateStandardConfig(){
 
+    }
 
 
 }

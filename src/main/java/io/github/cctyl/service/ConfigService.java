@@ -3,6 +3,8 @@ package io.github.cctyl.service;
 import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Map;
+
 /**
  * <p>
  *  服务类
@@ -21,4 +23,6 @@ public interface ConfigService extends IService<Config> {
 
 
     boolean isFirstUse();
+
+    Map<String,String> updateRefreshCookie(String cookieStr);
 }
