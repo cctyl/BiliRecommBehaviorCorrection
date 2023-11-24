@@ -29,4 +29,6 @@ public interface ConfigService extends IService<Config> {
     Map<String,String> updateRefreshCookie(String cookieStr);
 
     ConfigVo updateStandardConfigInfo(ConfigDTO configDTO);
+
+    ConfigVo getStandardConfigInfo();
 }

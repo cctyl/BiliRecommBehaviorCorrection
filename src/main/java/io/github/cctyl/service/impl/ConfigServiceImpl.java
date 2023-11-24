@@ -129,15 +129,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
         //其他配置暂不允许更新
 
-        return new ConfigVo()
-                .setMid(GlobalVariables.getMID())
-                .setImgKey(GlobalVariables.getImgKey())
-                .setSubKey(GlobalVariables.getSubKey())
-                .setBaiduClientId(GlobalVariables.getBaiduClientId())
-                .setBaiduAskKey(GlobalVariables.getBaiduAskKey())
-                .setBaiduClientSecret(GlobalVariables.getBaiduClientSecret())
-                .setBiliAccessKey(GlobalVariables.getBiliAccessKey())
-                .setMinPlaySecond(GlobalVariables.getMinPlaySecond());
+        return getStandardConfigInfo();
 
     }
 
@@ -167,5 +159,16 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
     }
 
-
+    @Override
+    public ConfigVo getStandardConfigInfo() {
+        return new ConfigVo()
+                .setMid(GlobalVariables.getMID())
+                .setImgKey(GlobalVariables.getImgKey())
+                .setSubKey(GlobalVariables.getSubKey())
+                .setBaiduClientId(GlobalVariables.getBaiduClientId())
+                .setBaiduAskKey(GlobalVariables.getBaiduAskKey())
+                .setBaiduClientSecret(GlobalVariables.getBaiduClientSecret())
+                .setBiliAccessKey(GlobalVariables.getBiliAccessKey())
+                .setMinPlaySecond(GlobalVariables.getMinPlaySecond());
+    }
 }
