@@ -185,7 +185,7 @@ CREATE TABLE cookie_header_data
     ckey               varchar(50)  null,
     cvalue             varchar(200) null,
     classify           varchar(50)  null,
-    mediaType          varchar(50)  null,
+    media_type          varchar(50)  null,
     created_date       DATE         null,
     last_modified_date DATE         null,
     is_deleted         tinyint(1) default 0,
