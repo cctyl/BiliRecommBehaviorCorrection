@@ -137,7 +137,7 @@ public class BiliTaskController {
         }
 
         TaskPool.putTask(() -> {
-            videoDetailService.processReady2HandleVideo(map);
+            biliService.processReady2HandleVideo(map);
         });
         return R.ok();
     }

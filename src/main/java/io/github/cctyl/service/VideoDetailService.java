@@ -35,7 +35,6 @@ public interface VideoDetailService extends IService<VideoDetail> {
      */
     List<VideoDetail> findWithOwnerAndHandle(boolean isHandle);
 
-    void processReady2HandleVideo(Map<String, List<String>> map);
 
     void updateHandleInfoById(VideoDetail videoDetail);
 }

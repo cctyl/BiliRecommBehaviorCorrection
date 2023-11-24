@@ -43,9 +43,7 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
     private final VideoRelateService videoRelateService;
 
-    private final BiliService biliService;
 
-    private final BlackRuleService blackRuleService;
 
 
     /**
@@ -156,65 +154,7 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         return baseMapper.findWithOwnerAndHandle(isHandle);
     }
 
-    /**
-     * 处理等待处理的数据
-     * 这些数据已存储到数据库中
-     */
-    @Override
-    public void processReady2HandleVideo(Map<String, List<String>> map) {
-        List<VideoDetail> videoDetailList =  this.findWithOwnerAndHandle(false);
 
-        Map<String, VideoDetail> handleVideoMap = videoDetailList
-                .stream()
-                .map(VideoDetail.class::cast)
-                .collect(Collectors.toMap(VideoDetail::getId, v -> v, (o1, o2) -> o1));
-
-        List<String> dislikeIdList = map.get("dislikeList");
-        List<String> thumbUpIdList = map.get("thumbUpList");
-        List<String> other = map.get("other");
-
-        List<VideoDetail> blackTrainVideoList = new ArrayList<>();
-        //执行点踩
-        for (String id : dislikeIdList) {
-            VideoDetail videoDetail = handleVideoMap.get(id);
-
-            if (videoDetail != null) {
-                blackTrainVideoList.add(videoDetail);
-                if (videoDetail.getDislikeReason()!=null){
-                    biliService.dislikeByReason(videoDetail.getDislikeReason(),
-                            String.valueOf(videoDetail.getDislikeMid()),
-                            videoDetail.getDislikeTid(),
-                            videoDetail.getDislikeTagId(),
-                            videoDetail.getAid()
-                    );
-                }
-                biliService.dislike(videoDetail.getAid());
-                biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
-            } else {
-                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
-            }
-        }
-        //进行黑名单训练
-        blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
-
-        //执行点赞
-        for (String id  : thumbUpIdList) {
-            VideoDetail videoDetail = handleVideoMap.get(id);
-            if (videoDetail != null) {
-                biliService.playAndThumbUp(videoDetail);
-                biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
-            } else {
-                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
-            }
-        }
-
-        //不处理的
-        for (String id  : other){
-            VideoDetail videoDetail = handleVideoMap.get(id);
-            biliService.recordHandleVideo(videoDetail, HandleType.OTHER);
-        }
-
-    }
 
     /**
      * 修改部分信息
