@@ -170,13 +170,15 @@
     <select id="findWithOwnerAndHandle" resultMap="withOwnerMap">
 
         select
-            <include refid="Base_Column_List_Assoc"/>,
-            <include refid="io.github.cctyl.mapper.OwnerMapper.Base_Column_List_Assoc"/>
+        <include refid="Base_Column_List_Assoc"/>,
+        <include refid="io.github.cctyl.mapper.OwnerMapper.Base_Column_List_Assoc"/>
         from
-            video_detail videoDetail
-        join owner t_owner on
-                t_owner.id = videoDetail.owner_id
-        where videoDetail.handle is #{isHandle};
+        video_detail videoDetail
+        left join owner t_owner on
+        t_owner.id = videoDetail.owner_id
+        where videoDetail.handle is #{isHandle}
+
+        and videoDetail.is_deleted = 0;
 
 
     </select>

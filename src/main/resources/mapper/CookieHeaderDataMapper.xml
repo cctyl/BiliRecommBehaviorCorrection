@@ -65,7 +65,9 @@
         end
         where
         classify = 'COOKIE'
-        and mediaType = 'TIMELY_UPDATE';
+        and mediaType = 'TIMELY_UPDATE'
+        and is_deleted = 0
+        ;
 
 
     </update>
@@ -81,17 +83,17 @@
                t1.cvalue
         from cookie_header_data t1
                  join
-             (
-                 SELECT ckey,
-                        MAX(last_modified_date) AS last_modified_date
-                 FROM cookie_header_data
-                 where type = #{dataType}
-                   and is_deleted = 0
-                 GROUP BY ckey
-             ) t2
+             (SELECT ckey,
+                     MAX(last_modified_date) AS last_modified_date
+              FROM cookie_header_data
+              where type = #{dataType}
+                and is_deleted = 0
+              GROUP BY ckey) t2
              on
-                     t1.ckey = t2.ckey
-                     and t1.last_modified_date = t2.last_modified_date;
+                         t1.ckey = t2.ckey
+                     and t1.last_modified_date = t2.last_modified_date
+        where t1.is_deleted = 0
+        ;
     </select>
 
 
