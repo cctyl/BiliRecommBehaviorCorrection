@@ -1,14 +1,13 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.entity.Dict;
-import io.github.cctyl.entity.WhiteListRule;
-import io.github.cctyl.pojo.enumeration.AccessType;
-import io.github.cctyl.pojo.enumeration.DictType;
+import io.github.cctyl.domain.po.Dict;
+import io.github.cctyl.domain.po.WhiteListRule;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>

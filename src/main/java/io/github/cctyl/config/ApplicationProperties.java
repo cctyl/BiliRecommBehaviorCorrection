@@ -1,13 +1,10 @@
 package io.github.cctyl.config;
 
-import io.github.cctyl.entity.WhiteListRule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 
 @ConfigurationProperties(prefix = "common")

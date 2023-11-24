@@ -2,7 +2,7 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.cctyl.entity.Tag;
+import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.mapper.TagMapper;
 import io.github.cctyl.service.TagService;
 import org.springframework.stereotype.Service;

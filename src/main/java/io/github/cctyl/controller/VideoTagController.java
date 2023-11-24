@@ -2,8 +2,8 @@ package io.github.cctyl.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.github.cctyl.entity.VideoTag;
-import io.github.cctyl.pojo.R;
+import io.github.cctyl.domain.po.VideoTag;
+import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.service.VideoTagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

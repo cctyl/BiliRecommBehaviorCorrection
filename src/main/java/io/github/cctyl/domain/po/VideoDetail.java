@@ -8,6 +8,7 @@ import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Objects;
 
 @NoArgsConstructor
 @Data
+@Accessors(chain = true)
 public class VideoDetail extends AuditingEntity implements Serializable {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)

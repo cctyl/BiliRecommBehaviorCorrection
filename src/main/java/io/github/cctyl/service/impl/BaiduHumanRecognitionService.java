@@ -3,7 +3,7 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.api.BaiduApi;
-import io.github.cctyl.pojo.BaiduImageClassify;
+import io.github.cctyl.domain.dto.BaiduImageClassify;
 import io.github.cctyl.service.ImageGenderDetectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

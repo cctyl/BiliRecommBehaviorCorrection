@@ -3,10 +3,10 @@ package io.github.cctyl.task;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.pojo.RecommendCard;
-import io.github.cctyl.pojo.SearchResult;
+import io.github.cctyl.domain.dto.RecommendCard;
+import io.github.cctyl.domain.dto.SearchResult;
 
-import io.github.cctyl.entity.VideoDetail;
+import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;

@@ -8,10 +8,10 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.*;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.entity.Tag;
-import io.github.cctyl.pojo.constants.ErrorCode;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.pojo.*;
+import io.github.cctyl.domain.dto.*;
+import io.github.cctyl.domain.po.Tag;
+import io.github.cctyl.domain.constants.ErrorCode;
+import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static io.github.cctyl.pojo.constants.AppConstant.*;
+import static io.github.cctyl.domain.constants.AppConstant.*;
 
 /**
  * bilibili相关api都在这里

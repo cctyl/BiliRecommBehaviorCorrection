@@ -1,24 +1,22 @@
 package io.github.cctyl.controller;
 
 import io.github.cctyl.config.TaskPool;
-import io.github.cctyl.pojo.R;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.pojo.enumeration.HandleType;
-import io.github.cctyl.pojo.vo.VideoVo;
+import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.domain.vo.VideoVo;
+import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.service.impl.BlackRuleService;
 import io.github.cctyl.task.BiliTask;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 
 /**
@@ -28,16 +26,13 @@ import static io.github.cctyl.pojo.constants.AppConstant.*;
 @RequestMapping("/bili-task")
 @Tag(name = "bili任务模块")
 @Slf4j
+@RequiredArgsConstructor
 public class BiliTaskController {
 
-    @Autowired
-    private BiliTask biliTask;
-
-    @Autowired
-    private BiliService biliService;
-
-    @Autowired
-    private BlackRuleService blackRuleService;
+    private final BiliTask biliTask;
+    private final BiliService biliService;
+    private final BlackRuleService blackRuleService;
+    private final VideoDetailService videoDetailService;
 
     @PostMapping("/search-task")
     @Operation(summary = "触发关键词任务")
@@ -94,8 +89,9 @@ public class BiliTaskController {
     public R getReady2HandleVideo() {
         List<VideoVo> thumbUpList = new ArrayList<>();
         List<VideoVo> dislikeList = new ArrayList<>();
-        redisUtil
-                .sMembers(READY_HANDLE_VIDEO)
+
+        List<VideoDetail> videoDetailList =  videoDetailService.findWithOwnerAndHandle(false);
+        videoDetailList
                 .stream()
                 .map(VideoDetail.class::cast)
                 .map(v -> new VideoVo(
@@ -131,7 +127,7 @@ public class BiliTaskController {
     @Operation(summary = "处理等待处理的数据")
     @PostMapping("/ready2handle")
     public R processReady2HandleVideo(
-            @RequestBody Map<String, List<VideoVo>> map
+            @RequestBody Map<String, List<String>> map
     ) {
 
         if (map.get("dislikeList") == null &&
@@ -141,93 +137,7 @@ public class BiliTaskController {
         }
 
         TaskPool.putTask(() -> {
-
-            Set<Integer> removeIdSet = new HashSet<>();
-
-            Map<Integer, VideoDetail> handleVideoMap = redisUtil
-                    .sMembers(READY_HANDLE_VIDEO)
-                    .stream()
-                    .map(VideoDetail.class::cast)
-                    .collect(Collectors.toMap(VideoDetail::getAid, v -> v, (o1, o2) -> o1));
-
-            List<VideoVo> dislikeVoList = map.get("dislikeList");
-            List<VideoVo> thumbUpVoList = map.get("thumbUpList");
-            List<VideoVo> other = map.get("other");
-
-            List<VideoDetail> blackTrainVideoList = new ArrayList<>();
-            //执行点踩
-            for (VideoVo vo : dislikeVoList) {
-                removeIdSet.add(vo.getAid());
-                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
-                    log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
-
-                    continue;
-                }
-
-                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
-                if (videoDetail != null) {
-                    blackTrainVideoList.add(videoDetail);
-                    if (videoDetail.getDislikeReason()!=null){
-                        biliService.dislikeByReason(videoDetail.getDislikeReason(),
-                                String.valueOf(videoDetail.getDislikeMid()),
-                                videoDetail.getDislikeTid(),
-                                videoDetail.getDislikeTagId(),
-                                videoDetail.getAid()
-                                );
-                    }
-                    biliService.dislike(videoDetail.getAid());
-                    biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
-                } else {
-                    log.debug("{} - {} 未找到匹配的视频", vo.getBvid(), vo.getTitle());
-                }
-            }
-            //进行黑名单训练
-            blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
-
-            //执行点赞
-            for (VideoVo vo : thumbUpVoList) {
-                removeIdSet.add(vo.getAid());
-                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
-                    log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
-                    continue;
-                }
-
-                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
-                if (videoDetail != null) {
-                    biliService.playAndThumbUp(videoDetail);
-                    biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
-                } else {
-                    log.debug("{} - {} 未找到匹配的视频", vo.getBvid(), vo.getTitle());
-                }
-            }
-
-            //不处理的
-            for (VideoVo vo : other) {
-                removeIdSet.add(vo.getAid());
-                if (redisUtil.sIsMember(HANDLE_VIDEO_ID_KEY, vo.getAid())) {
-                    log.debug("{}-{}已处理过", vo.getAid(), vo.getTitle());
-                    continue;
-                }
-
-                VideoDetail videoDetail = handleVideoMap.get(vo.getAid());
-                biliService.recordHandleVideo(videoDetail, HandleType.OTHER);
-            }
-
-
-
-            List<VideoDetail> videoDetailList = redisUtil
-                    .sMembers(READY_HANDLE_VIDEO)
-                    .stream()
-                    .map(VideoDetail.class::cast)
-                    .filter(videoDetail -> !removeIdSet.contains(videoDetail.getAid()) )
-                    .collect(Collectors.toList());
-
-
-            //清空待处理数据
-            redisUtil.delete(READY_HANDLE_VIDEO);
-            redisUtil.sAdd(READY_HANDLE_VIDEO,videoDetailList.toArray());
-            redisUtil.delete(READY_HANDLE_VIDEO_ID);
-            redisUtil.sAdd(READY_HANDLE_VIDEO_ID,videoDetailList.stream().map(VideoDetail::getAid).toArray());
+            videoDetailService.processReady2HandleVideo(map);
         });
         return R.ok();
     }
@@ -240,6 +150,7 @@ public class BiliTaskController {
             @RequestParam HandleType handleType
     ) {
 
+        //TODO
         throw new RuntimeException("暂未实现");
 
     }

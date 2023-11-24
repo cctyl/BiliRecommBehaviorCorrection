@@ -1,6 +1,6 @@
 package io.github.cctyl.controller;
 
-import io.github.cctyl.pojo.R;
+import io.github.cctyl.domain.dto.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import io.github.cctyl.service.StatService;
-import io.github.cctyl.entity.Stat;
+import io.github.cctyl.domain.po.Stat;
 import javax.servlet.http.HttpServletRequest;
 
 /**

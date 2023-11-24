@@ -1,9 +1,9 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.entity.Dict;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.domain.po.Dict;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.po.WhiteListRule;
 
 import java.util.List;
 

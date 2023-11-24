@@ -2,20 +2,18 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import io.github.cctyl.entity.Dict;
-import io.github.cctyl.entity.WhiteListRule;
+import io.github.cctyl.domain.po.Dict;
+import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.mapper.DictMapper;
-import io.github.cctyl.pojo.enumeration.AccessType;
-import io.github.cctyl.pojo.enumeration.DictType;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.service.DictService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

@@ -2,12 +2,12 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.cctyl.entity.CookieHeaderData;
+import io.github.cctyl.domain.po.CookieHeaderData;
 import io.github.cctyl.mapper.CookieHeaderDataMapper;
-import io.github.cctyl.pojo.ApiHeader;
-import io.github.cctyl.pojo.AuditingEntity;
-import io.github.cctyl.pojo.enumeration.Classify;
-import io.github.cctyl.pojo.enumeration.MediaType;
+import io.github.cctyl.domain.dto.ApiHeader;
+import io.github.cctyl.domain.po.AuditingEntity;
+import io.github.cctyl.domain.enumeration.Classify;
+import io.github.cctyl.domain.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
 import org.springframework.stereotype.Service;
 

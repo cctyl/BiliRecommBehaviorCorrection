@@ -2,8 +2,8 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.VideoRelate;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.po.VideoRelate;
 import io.github.cctyl.mapper.VideoRelateMapper;
 import io.github.cctyl.service.VideoRelateService;
 import org.springframework.stereotype.Service;

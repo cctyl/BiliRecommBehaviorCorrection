@@ -3,19 +3,22 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.cctyl.entity.*;
 import io.github.cctyl.mapper.VideoDetailMapper;
+import io.github.cctyl.domain.po.Owner;
+import io.github.cctyl.domain.po.Tag;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.service.*;
 import io.github.cctyl.utils.ServerException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 /**
  * <p>
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, VideoDetail> implements VideoDetailService {
 
     private final OwnerService ownerService;
@@ -39,6 +43,11 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
     private final VideoRelateService videoRelateService;
 
+    private final BiliService biliService;
+
+    private final BlackRuleService blackRuleService;
+
+
     /**
      * 保存视频详情，包括关联数据
      *
@@ -47,7 +56,6 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     @Override
     @Transactional(rollbackFor= ServerException.class)
     public void saveVideoDetail(VideoDetail videoDetail) {
-
         boolean exists = baseMapper.exists(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, videoDetail.getAid()));
         if (exists){
             this.updateById(videoDetail);
@@ -134,6 +142,95 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
         return   this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
                 .eq(VideoDetail::getAid,avid));
+    }
+
+    /**
+     * 根据 处理状态查询 视频列表
+     *
+     * @param isHandle
+     * @return
+     */
+    @Override
+    public List<VideoDetail> findWithOwnerAndHandle(boolean isHandle) {
+
+        return baseMapper.findWithOwnerAndHandle(isHandle);
+    }
+
+    /**
+     * 处理等待处理的数据
+     * 这些数据已存储到数据库中
+     */
+    @Override
+    public void processReady2HandleVideo(Map<String, List<String>> map) {
+        List<VideoDetail> videoDetailList =  this.findWithOwnerAndHandle(false);
+
+        Map<String, VideoDetail> handleVideoMap = videoDetailList
+                .stream()
+                .map(VideoDetail.class::cast)
+                .collect(Collectors.toMap(VideoDetail::getId, v -> v, (o1, o2) -> o1));
+
+        List<String> dislikeIdList = map.get("dislikeList");
+        List<String> thumbUpIdList = map.get("thumbUpList");
+        List<String> other = map.get("other");
+
+        List<VideoDetail> blackTrainVideoList = new ArrayList<>();
+        //执行点踩
+        for (String id : dislikeIdList) {
+            VideoDetail videoDetail = handleVideoMap.get(id);
+
+            if (videoDetail != null) {
+                blackTrainVideoList.add(videoDetail);
+                if (videoDetail.getDislikeReason()!=null){
+                    biliService.dislikeByReason(videoDetail.getDislikeReason(),
+                            String.valueOf(videoDetail.getDislikeMid()),
+                            videoDetail.getDislikeTid(),
+                            videoDetail.getDislikeTagId(),
+                            videoDetail.getAid()
+                    );
+                }
+                biliService.dislike(videoDetail.getAid());
+                biliService.recordHandleVideo(videoDetail, HandleType.DISLIKE);
+            } else {
+                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
+            }
+        }
+        //进行黑名单训练
+        blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
+
+        //执行点赞
+        for (String id  : thumbUpIdList) {
+            VideoDetail videoDetail = handleVideoMap.get(id);
+            if (videoDetail != null) {
+                biliService.playAndThumbUp(videoDetail);
+                biliService.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
+            } else {
+                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
+            }
+        }
+
+        //不处理的
+        for (String id  : other){
+            VideoDetail videoDetail = handleVideoMap.get(id);
+            biliService.recordHandleVideo(videoDetail, HandleType.OTHER);
+        }
+
+    }
+
+    /**
+     * 修改部分信息
+     * @param videoDetail
+     */
+    @Override
+    public void updateHandleInfoById(VideoDetail videoDetail) {
+
+        VideoDetail temp =   new VideoDetail()
+                .setId(videoDetail.getId())
+                .setBlackReason(videoDetail.getBlackReason())
+                .setThumbUpReason(videoDetail.getThumbUpReason())
+        ;
+
+       this.updateById(temp);
+
     }
 
 

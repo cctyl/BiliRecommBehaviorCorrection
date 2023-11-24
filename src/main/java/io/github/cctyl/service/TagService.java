@@ -1,7 +1,7 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.entity.Tag;
+import io.github.cctyl.domain.po.Tag;
 
 import java.util.List;
 

@@ -2,7 +2,7 @@ package io.github.cctyl.config;
 
 
 
-import io.github.cctyl.pojo.R;
+import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.utils.ExceptionUtil;
 import io.github.cctyl.utils.ServerException;
 import lombok.extern.slf4j.Slf4j;

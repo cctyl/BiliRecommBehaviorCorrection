@@ -1,9 +1,7 @@
 package io.github.cctyl.service;
 
-import io.github.cctyl.entity.Config;
+import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.Map;
 
 /**
  * <p>

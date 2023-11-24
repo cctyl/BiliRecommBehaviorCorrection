@@ -7,7 +7,7 @@ import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.pojo.BaiduImageClassify;
+import io.github.cctyl.domain.dto.BaiduImageClassify;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;

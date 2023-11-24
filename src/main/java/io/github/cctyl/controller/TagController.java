@@ -2,8 +2,8 @@ package io.github.cctyl.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.github.cctyl.pojo.R;
-import io.github.cctyl.entity.Tag;
+import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;

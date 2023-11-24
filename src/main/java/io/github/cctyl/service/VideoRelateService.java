@@ -1,8 +1,8 @@
 package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.entity.VideoRelate;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.po.VideoRelate;
 
 import java.util.List;
 

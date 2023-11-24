@@ -8,7 +8,7 @@ import de.sstoehr.harreader.model.HarCookie;
 import de.sstoehr.harreader.model.HarHeader;
 import de.sstoehr.harreader.model.HarRequest;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.pojo.ApiHeader;
+import io.github.cctyl.domain.dto.ApiHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

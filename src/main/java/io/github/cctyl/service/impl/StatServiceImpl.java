@@ -1,6 +1,6 @@
 package io.github.cctyl.service.impl;
 
-import io.github.cctyl.entity.Stat;
+import io.github.cctyl.domain.po.Stat;
 import io.github.cctyl.mapper.StatMapper;
 import io.github.cctyl.service.StatService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

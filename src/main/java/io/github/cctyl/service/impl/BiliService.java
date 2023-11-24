@@ -5,11 +5,11 @@ import cn.hutool.core.lang.Opt;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.pojo.DislikeReason;
-import io.github.cctyl.pojo.PageBean;
-import io.github.cctyl.pojo.UserSubmissionVideo;
-import io.github.cctyl.entity.VideoDetail;
-import io.github.cctyl.pojo.enumeration.HandleType;
+import io.github.cctyl.domain.dto.DislikeReason;
+import io.github.cctyl.domain.dto.PageBean;
+import io.github.cctyl.domain.dto.UserSubmissionVideo;
+import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.*;
@@ -18,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-
-import static io.github.cctyl.pojo.constants.AppConstant.*;
 
 /**
  * 相关任务处理
@@ -61,20 +59,23 @@ public class BiliService {
     }
 
     /**
-     * 记录已处理过的视频
+     * 记录已处理过的视频,要求这个视频必须已经存储到了数据库
      *
      * @param videoDetail 被处理的视频
      * @param handleType  处理类型
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
+        if (videoDetail.getId()==null){
+            throw new RuntimeException("videoDetail.getId()==null");
+        }
         videoDetail.setHandleType(handleType);
         videoDetail.setHandle(true);
-        videoDetailService.saveVideoDetail(videoDetail);
+        videoDetailService.updateHandleInfoById(videoDetail);
     }
 
 
     /**
-     * 添加一个需要处理的视频到缓存中
+     * 添加一个需要处理的视频到数据库
      *
      * @param videoDetail
      */
