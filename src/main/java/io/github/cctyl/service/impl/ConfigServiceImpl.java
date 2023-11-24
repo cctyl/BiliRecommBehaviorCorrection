@@ -1,5 +1,6 @@
 package io.github.cctyl.service.impl;
 
+import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.github.cctyl.domain.po.Config;
 import io.github.cctyl.mapper.ConfigMapper;
@@ -93,7 +94,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         Config config = this.getOne(wrapper);
 
 
-        if (config != null && config.getExpireSecond()>0) {
+        if (Opt.ofNullable(config).map(Config::getExpireSecond).orElse(-1) >0) {
 
             Integer differenceSecond =
                     DataUtil.calculateSecondsDifference(
