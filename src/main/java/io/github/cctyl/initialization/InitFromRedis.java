@@ -19,16 +19,17 @@ public class InitFromRedis implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         log.debug("初始化...从sqlite中加载数据...");
 
-
         //初始化标记
         GlobalVariables.setInfo();
 
         //0.加载cookie
         GlobalVariables.initApiHeaderMap();
 
-
         //0.1加载mid
         GlobalVariables.initMid();
+
+        //10.加载停顿词
+        GlobalVariables.initStopWords();
 
         //12.忽略关键词加载
         GlobalVariables.initIgnoreKeyWord();
@@ -68,13 +69,6 @@ public class InitFromRedis implements ApplicationRunner {
 
         //9.白名单关键词列表
         GlobalVariables.initWhitelistRules();
-
-        //10.加载停顿词
-        GlobalVariables.initStopWords();
-
-
-
-
 
         log.debug("初始化...加载完毕...");
     }
