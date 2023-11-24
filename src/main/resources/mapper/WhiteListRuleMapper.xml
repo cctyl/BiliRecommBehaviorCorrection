@@ -66,7 +66,9 @@
         from white_list_rule as whiteListRule
         join dict t_dict
 
-        on whiteListRule.id = t_dict.outer_id ;
+        on whiteListRule.id = t_dict.outer_id
+        where whiteListRule.is_deleted = 0
+        ;
 
     </select>
 
