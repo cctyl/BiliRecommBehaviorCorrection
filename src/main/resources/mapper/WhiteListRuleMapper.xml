@@ -51,7 +51,7 @@
 
     <resultMap id="whiteListRuleDictMap" type="io.github.cctyl.domain.po.WhiteListRule" extends="BaseResultMapAssoc">
 
-        <collection property="totalDict" ofType="Dict"
+        <collection property="totalDict" ofType="io.github.cctyl.domain.po.Dict"
                     resultMap="io.github.cctyl.mapper.DictMapper.BaseResultMapAssoc"></collection>
 
 

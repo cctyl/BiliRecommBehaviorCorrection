@@ -45,7 +45,7 @@ spring:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  type-aliases-package: io.github.cctyl.entity
+  type-aliases-package: io.github.cctyl.domain.po
   global-config:
     db-config:
       logic-delete-field: isDeleted # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
