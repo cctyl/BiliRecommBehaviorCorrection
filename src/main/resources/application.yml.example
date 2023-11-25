@@ -22,11 +22,10 @@ spring:
     url: jdbc:sqlite:./db/bili-recomm.db
     hikari:
       connection-test-query: SELECT 1
-      connection-timeout: 60000
+      connection-timeout: 120000
       idle-timeout: 500000
       max-lifetime: 540000
-      maximum-pool-size: 1
-      pool-name: HikariPool
+      maximum-pool-size: 5
   jackson:
     time-zone: GMT+8
     date-format:  yyyy-MM-dd HH:mm:ss

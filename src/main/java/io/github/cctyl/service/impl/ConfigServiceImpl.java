@@ -17,6 +17,7 @@ import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ServerException;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import static io.github.cctyl.domain.constants.AppConstant.*;
  * @since 2023-11-10
  */
 @Service
+@Slf4j
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService {
 
     @Autowired
@@ -160,7 +162,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
     public Config findConfigByName(String name) {
         LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<Config>()
-                .select(Config::getValue)
+                .select(Config::getId,Config::getValue)
                 .eq(Config::getName, name);
 
 
@@ -227,6 +229,8 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
 
      */
+        long startTime = System.currentTimeMillis();
+
         runTask(integer -> {
             Map<String, String> commonCookieMap = new HashMap<>();
             for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
@@ -381,7 +385,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         GlobalVariables.updateMid((String) redisUtil.get(MID_KEY));
 
 
-        log.debug("转换结束");
+        log.debug("转换结束,共花费{}秒",(System.currentTimeMillis()-startTime )/1000);
     }
 
     @NotNull
