@@ -24,6 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.domain.constants.AppConstant.*;
@@ -224,122 +227,158 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
 
      */
-        Map<String, String> commonCookieMap = new HashMap<>();
-        Map<String, String> commonHeaderMap = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
-            commonCookieMap.put((String) entry.getKey(), (String) entry.getValue());
-        }
-        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_HEADER_MAP).entrySet()) {
-            commonHeaderMap.put((String) entry.getKey(), (String) entry.getValue());
-        }
+        runTask(integer -> {
+            Map<String, String> commonCookieMap = new HashMap<>();
+            for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
+                commonCookieMap.put((String) entry.getKey(), (String) entry.getValue());
+            }
+            GlobalVariables.INSTANCE.replaceCommonCookieMap(commonCookieMap);
+        });
 
-        Map<String, String> cookiesFromRedis = new HashMap<>();
+        runTask(integer -> {
+            Map<String, String> commonHeaderMap = new HashMap<>();
+            for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_HEADER_MAP).entrySet()) {
+                commonHeaderMap.put((String) entry.getKey(), (String) entry.getValue());
+            }
+            GlobalVariables.INSTANCE.replaceCommonHeaderMap(commonHeaderMap);
+        });
 
-        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COOKIES_KEY).entrySet()) {
-            cookiesFromRedis.put((String) entry.getKey(), (String) entry.getValue());
-        }
+        runTask(integer -> {
+            Map<String, String> cookiesFromRedis = new HashMap<>();
+            for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COOKIES_KEY).entrySet()) {
+                cookiesFromRedis.put((String) entry.getKey(), (String) entry.getValue());
+            }
+            GlobalVariables.updateRefreshCookie(cookiesFromRedis);
 
-        List<io.github.cctyl.entity.ApiHeader> apiHeaderList = redisUtil.hGetAll(API_HEADER_MAP).values().stream().map(o -> (io.github.cctyl.entity.ApiHeader) o).collect(Collectors.toList());
+        });
+        runTask(integer -> {
+            List<io.github.cctyl.entity.ApiHeader> apiHeaderList = redisUtil.hGetAll(API_HEADER_MAP).values().stream().map(o -> (io.github.cctyl.entity.ApiHeader) o).collect(Collectors.toList());
+            GlobalVariables.INSTANCE.replaceApiHeaderMap(apiHeaderList.stream().map(v -> {
+                ApiHeader apiHeader = new ApiHeader()
+                        .setUrl(v.getUrl())
+                        .setHeaders(v.getHeaders())
+                        .setCookies(v.getCookies());
 
-
-        Set<String> ignoreWhiteKeyword = redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
-                .stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
-        Set<String> ignoreBlackKeyword = redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
-                .stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
-        Set<String> whiteUserId = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        Set<String> blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-        List<io.github.cctyl.entity.WhitelistRule> whiteListRule = redisUtil.sMembers(WHITE_LIST_RULE_KEY)
-                .stream().map(
-                        o -> (io.github.cctyl.entity.WhitelistRule) o
-                )
-                .map(whitelistRule -> {
-                    whitelistRule.setId(null);
-                    return whitelistRule;
-                })
-                .collect(Collectors.toList());
-        Set<String> blackKeyWordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        Set<io.github.cctyl.entity.VideoDetail> handleVideoDetailSet = redisUtil.sMembers(HANDLE_VIDEO_DETAIL_KEY)
-                .stream()
-                .map(o -> (io.github.cctyl.entity.VideoDetail) o)
-                .collect(Collectors.toSet());
-
-        Set<String> blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        Set<String> blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        Set<String> whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        Set<String> searchKeywords = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
-
-        List<io.github.cctyl.entity.VideoDetail> readyHandleVideoList = redisUtil
-                .sMembers(READY_HANDLE_VIDEO)
-                .stream()
-                .map(io.github.cctyl.entity.VideoDetail.class::cast).collect(Collectors.toList());
+                return apiHeader;
+            }).collect(Collectors.toList()));
+        });
 
 
-        GlobalVariables.INSTANCE.replaceCommonCookieMap(commonCookieMap);
-        GlobalVariables.INSTANCE.replaceCommonHeaderMap(commonHeaderMap);
-        GlobalVariables.INSTANCE.replaceApiHeaderMap(apiHeaderList.stream().map(v -> {
+        runTask(integer -> {
+            Set<String> ignoreWhiteKeyword = redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
+                    .stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addWhiteIgnoreKeyword(ignoreWhiteKeyword);
 
-            ApiHeader apiHeader = new ApiHeader()
-                    .setUrl(v.getUrl())
-                    .setHeaders(v.getHeaders())
-                    .setCookies(v.getCookies());
+        });
+        runTask(integer -> {
+            Set<String> ignoreBlackKeyword = redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
+                    .stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addBlackIgnoreKeyword(ignoreBlackKeyword);
 
-            return apiHeader;
-        }).collect(Collectors.toList()));
+        });
+        runTask(integer -> {
 
-        GlobalVariables.INSTANCE.setWhiteUserIdSet(whiteUserId);
-        GlobalVariables.INSTANCE.addWhiteIgnoreKeyword(ignoreWhiteKeyword);
-        GlobalVariables.INSTANCE.addBlackIgnoreKeyword(ignoreBlackKeyword);
+            Set<String> whiteUserId = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.setWhiteUserIdSet(whiteUserId);
 
-        for (io.github.cctyl.entity.WhitelistRule w : whiteListRule) {
+        });
+        runTask(integer -> {
 
-            WhiteListRule whitelistRule = new WhiteListRule()
-                    .setCoverKeyword(Dict.keyword2Dict(Collections.singletonList(w.getCoverKeyword()), DictType.COVER, AccessType.WHITE, null))
-                    .setTagNameList(Dict.keyword2Dict(w.getTagNameList(), DictType.COVER, AccessType.WHITE, null))
-                    .setDescKeyWordList(Dict.keyword2Dict(w.getDescKeyWordList(), DictType.COVER, AccessType.WHITE, null))
-                    .setTitleKeyWordList(Dict.keyword2Dict(w.getTitleKeyWordList(), DictType.COVER, AccessType.WHITE, null));
-            GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
-        }
+            Set<String> blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addBlackTagSet(blackTagSet);
+        });
 
-        GlobalVariables.INSTANCE.addBlackTagSet(blackTagSet);
+        runTask(integer -> {
+            List<io.github.cctyl.entity.WhitelistRule> whiteListRule = redisUtil.sMembers(WHITE_LIST_RULE_KEY)
+                    .stream().map(
+                            o -> (io.github.cctyl.entity.WhitelistRule) o
+                    )
+                    .map(whitelistRule -> {
+                        whitelistRule.setId(null);
+                        return whitelistRule;
+                    })
+                    .collect(Collectors.toList());
+
+            for (io.github.cctyl.entity.WhitelistRule w : whiteListRule) {
+
+                WhiteListRule whitelistRule = new WhiteListRule()
+                        .setCoverKeyword(Dict.keyword2Dict(Collections.singletonList(w.getCoverKeyword()), DictType.COVER, AccessType.WHITE, null))
+                        .setTagNameList(Dict.keyword2Dict(w.getTagNameList(), DictType.COVER, AccessType.WHITE, null))
+                        .setDescKeyWordList(Dict.keyword2Dict(w.getDescKeyWordList(), DictType.COVER, AccessType.WHITE, null))
+                        .setTitleKeyWordList(Dict.keyword2Dict(w.getTitleKeyWordList(), DictType.COVER, AccessType.WHITE, null));
+                GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
+            }
+
+        });
+
+        runTask(integer -> {
+            Set<String> blackKeyWordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addBlackKeyword(blackKeyWordSet);
+        });
+
+        runTask(integer -> {
+            Set<io.github.cctyl.entity.VideoDetail> handleVideoDetailSet = redisUtil.sMembers(HANDLE_VIDEO_DETAIL_KEY)
+                    .stream()
+                    .map(o -> (io.github.cctyl.entity.VideoDetail) o)
+                    .collect(Collectors.toSet());
+
+            for (io.github.cctyl.entity.VideoDetail v : handleVideoDetailSet) {
+
+                VideoDetail videoDetail = getVideoDetail(v);
+
+                try {
+                    videoDetailService.saveVideoDetail(videoDetail);
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        runTask(integer -> {
+
+            Set<String> blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
+
+        });
+
+        runTask(integer -> {
+            Set<String> blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addBlackTidSet(blackTidSet);
+        });
+        runTask(integer -> {
+            Set<String> whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+            GlobalVariables.INSTANCE.addWhiteTidSet(whiteTidSet);
+        });
+
+        runTask(integer -> {
+            Set<String> searchKeywords = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+            GlobalVariables.INSTANCE.addSearchKeyword(searchKeywords);
+        });
+        runTask(integer -> {
+            List<io.github.cctyl.entity.VideoDetail> readyHandleVideoList = redisUtil
+                    .sMembers(READY_HANDLE_VIDEO)
+                    .stream()
+                    .map(io.github.cctyl.entity.VideoDetail.class::cast).collect(Collectors.toList());
+            for (io.github.cctyl.entity.VideoDetail v : readyHandleVideoList) {
+                VideoDetail videoDetail = getVideoDetail(v);
+
+                try {
+                    videoDetailService.saveVideoDetail(videoDetail);
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                }
+            }
+
+        });
         GlobalVariables.updateMid((String) redisUtil.get(MID_KEY));
-        GlobalVariables.INSTANCE.addBlackKeyword(blackKeyWordSet);
-        GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
-
-        for (io.github.cctyl.entity.VideoDetail v : handleVideoDetailSet) {
-
-            VideoDetail videoDetail = getVideoDetail(v);
-
-            try {
-                videoDetailService.saveVideoDetail(videoDetail);
-            } catch (Exception e) {
-
-                e.printStackTrace();
-            }
-        }
-        GlobalVariables.updateRefreshCookie(cookiesFromRedis);
-        GlobalVariables.INSTANCE.addBlackTidSet(blackTidSet);
-        GlobalVariables.INSTANCE.addWhiteTidSet(whiteTidSet);
-        for (io.github.cctyl.entity.VideoDetail v : readyHandleVideoList) {
-            VideoDetail videoDetail = getVideoDetail(v);
-
-            try {
-                videoDetailService.saveVideoDetail(videoDetail);
-            } catch (Exception e) {
-
-                e.printStackTrace();
-            }
-        }
-
-        GlobalVariables.INSTANCE.addSearchKeyword(searchKeywords);
 
 
         log.debug("转换结束");
@@ -388,6 +427,14 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
             videoDetail.setRelatedVideoList(collect);
             assert videoDetail.getRelatedVideoList() != null;
         }
+
+
         return videoDetail;
     }
+
+
+    public void runTask(Consumer<Integer> consumer) {
+        consumer.accept(-1);
+    }
 }
+

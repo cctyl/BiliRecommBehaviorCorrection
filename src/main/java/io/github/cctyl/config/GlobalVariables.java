@@ -1,5 +1,6 @@
 package io.github.cctyl.config;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.dfa.WordTree;
@@ -18,7 +19,8 @@ import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -403,10 +405,20 @@ public class GlobalVariables {
         List<String> stopWordList;
         if (FIRST_USE) {
             //初次使用时，从文件中加载停顿词
-            ClassPathResource classPathResource = new ClassPathResource("cn_stopwords.txt");
-            stopWordList = Files.lines(Paths.get(classPathResource.getFile().getPath()))
-                    .map(String::trim)
-                    .collect(Collectors.toList());
+
+            try (
+                    InputStream inputStream =  GlobalVariables.class.getResourceAsStream("/cn_stopwords.txt");
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
+            ){
+
+                stopWordList = bufferedReader.lines()
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
             //存入数据库
             dictService.saveStopWords(stopWordList);
         } else {
