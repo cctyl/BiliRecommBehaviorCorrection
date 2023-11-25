@@ -64,7 +64,13 @@ bilibili就会减少搞笑分区的投稿。
 6. 训练模式
 
     输入一个白名单规则，再输入一串你认为应当符合该规则的视频，会自动补充该规则，直到匹配大部分输入的数据
-    
+7. 逻辑上扩充bilibili黑名单（开发中）
+   
+   人为的增加bilibili黑名单，黑名单用户回复我的消息，全部自动删除。
+
+8. android客户端（开发中）
+9. web客户端（开发中）
+10. docker支持（开发中）
     
 # 食用
 ## 环境要求
@@ -80,18 +86,18 @@ bilibili就会减少搞笑分区的投稿。
 6. 挂机
 
 # 后续开发计划
-功能    |  功能描述 |  开发进度 
--------- | --------- | -----
-增加web调试接口 | 提供http的方式，用于本地调试时添加关键词黑白名单 | 完成
-整合protobuf | 添加基于grpc的api 调用 | 完成
-关键词同义词分析 | 对标题进行分词，生成同义词，再与关键词匹配，从而减少匹配误差 | 尚未开始
- 与[vchat](https://github.com/cctyl/v_chat)联动 | 基于vchat进行消息推送、日志记录、指令发送 | 取消了，创建单独的客户端
-编写[Greasyfork](https://greasyfork.org/zh-CN/users/416601-cctyl  ) 配套脚本| 基于脚本，实现在web端指定视频：关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 尚未开始
-tensorflow 进行图像识别  | 使用tensorflow 模型代替百度api 进行本地图像识别调用 | 尚未开始
+功能    | 功能描述                                             |  开发进度 
+-------- |--------------------------------------------------| -----
+增加web调试接口 | 提供http的方式，用于本地调试时添加关键词黑白名单                       | 完成
+整合protobuf | 添加基于grpc的api 调用                                  | 完成
+关键词同义词分析 | 对标题进行分词，生成同义词，再与关键词匹配，从而减少匹配误差                   | 尚未开始
+ 与[vchat](https://github.com/cctyl/v_chat)联动 | 基于vchat进行消息推送、日志记录、指令发送                          | 取消了，创建单独的客户端
+编写[Greasyfork](https://greasyfork.org/zh-CN/users/416601-cctyl  ) 配套脚本| 基于脚本，实现在web端指定视频：关键词添加、up主id添加、点踩与点赞、分区添加、标签添加   | 尚未开始
+tensorflow 进行图像识别  | 使用tensorflow 模型代替百度api 进行本地图像识别调用                | 尚未开始
 与[FakeBili](https://github.com/cctyl/FakeBiliBili)联动 | 在FakeBilibili客户端增加 关键词添加、up主id添加、点踩与点赞、分区添加、标签添加 | 尚未开始，等待FakeBili项目启动
-android 客户端 | 提供总览、任务操作、日志查看、视频处理等功能 | 进行中
-web 客户端 | 提供总览、任务操作、日志查看、视频处理等功能 | 尚未开始
-sqlite替换redis | 尽可能减轻过多的依赖，使用嵌入式的sqlite代替 | 进行中
-
+android 客户端 | 提供总览、任务操作、日志查看、视频处理等功能                           | 进行中
+web 客户端 | 提供总览、任务操作、日志查看、视频处理等功能                           | 尚未开始
+sqlite替换redis | 尽可能减轻过多的依赖，使用嵌入式的sqlite代替                        | 进行中
+黑名单用户回复我消息自动删除 | 逻辑上扩充bilibili黑名单                                 | 准备开始
 # API 集合
 部分API来自 [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect/)，感谢作者。
