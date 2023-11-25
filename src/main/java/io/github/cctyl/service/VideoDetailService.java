@@ -37,4 +37,6 @@ public interface VideoDetailService extends IService<VideoDetail> {
 
 
     void updateHandleInfoById(VideoDetail videoDetail);
+
+    boolean exists(Integer aid);
 }

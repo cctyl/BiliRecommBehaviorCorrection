@@ -32,5 +32,5 @@ public interface ConfigService extends IService<Config> {
 
     ConfigVo getStandardConfigInfo();
 
-    ConfigVo migrationFromRedis();
+    void migrationFromRedis();
 }

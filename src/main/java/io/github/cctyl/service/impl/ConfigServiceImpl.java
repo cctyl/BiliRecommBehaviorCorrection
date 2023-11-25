@@ -3,18 +3,30 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.domain.dto.ApiHeader;
 import io.github.cctyl.domain.dto.ConfigDTO;
-import io.github.cctyl.domain.po.Config;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
+import io.github.cctyl.domain.po.*;
 import io.github.cctyl.domain.vo.ConfigVo;
 import io.github.cctyl.mapper.ConfigMapper;
 import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.service.ConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.RedisUtil;
+import io.github.cctyl.utils.ServerException;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.github.cctyl.domain.constants.AppConstant.*;
 
 /**
  * <p>
@@ -26,6 +38,12 @@ import java.util.Map;
  */
 @Service
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService {
+
+    @Autowired
+    private RedisUtil redisUtil;
+
+    @Autowired
+    private VideoDetailService videoDetailService;
 
     @Override
     public String findByName(String name) {
@@ -77,7 +95,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     @Override
     public boolean isFirstUse() {
         Config configByName = findConfigByName(AppConstant.FIRST_USE);
-        if (configByName==null){
+        if (configByName == null) {
             configByName = new Config()
                     .setName(AppConstant.FIRST_USE)
                     .setValue("false");
@@ -106,33 +124,33 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     @Override
     public ConfigVo updateStandardConfigInfo(ConfigDTO configDTO) {
 
-        if (configDTO.getBiliAccessKey()!=null){
+        if (configDTO.getBiliAccessKey() != null) {
             GlobalVariables.updateAccessKey(configDTO.getBiliAccessKey());
         }
-        if (configDTO.getBaiduClientId()!=null &&
-            configDTO.getBaiduClientSecret()!=null
-        ){
-            GlobalVariables.updateBaiduClientInfo(configDTO.getBaiduClientId(),configDTO.getBaiduClientSecret());
+        if (configDTO.getBaiduClientId() != null &&
+                configDTO.getBaiduClientSecret() != null
+        ) {
+            GlobalVariables.updateBaiduClientInfo(configDTO.getBaiduClientId(), configDTO.getBaiduClientSecret());
         }
 
-        if (configDTO.getBaiduAskKey()!=null){
+        if (configDTO.getBaiduAskKey() != null) {
             GlobalVariables.updateBaiduAskKey(configDTO.getBaiduAskKey());
         }
 
-        if (configDTO.getMinPlaySecond()!=null){
+        if (configDTO.getMinPlaySecond() != null) {
             GlobalVariables.updateMinPlaySecond(configDTO.getMinPlaySecond());
         }
 
-        if (configDTO.getMid()!=null){
+        if (configDTO.getMid() != null) {
             GlobalVariables.updateMid(configDTO.getMid());
         }
-        if (configDTO.getCron()!=null){
+        if (configDTO.getCron() != null) {
             GlobalVariables.setCron(configDTO.getCron());
         }
 
         //其他配置暂不允许更新
 
-        return getStandardConfigInfo()
+        return getStandardConfigInfo();
 
     }
 
@@ -146,7 +164,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         Config config = this.getOne(wrapper);
 
 
-        if (Opt.ofNullable(config).map(Config::getExpireSecond).orElse(-1) >0) {
+        if (Opt.ofNullable(config).map(Config::getExpireSecond).orElse(-1) > 0) {
 
             Integer differenceSecond =
                     DataUtil.calculateSecondsDifference(
@@ -179,36 +197,197 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
     /**
      * 从redis迁移数据
+     *
      * @return
      */
     @Override
-    public ConfigVo migrationFromRedis() {
+    @Transactional(rollbackFor = ServerException.class)
+    public void migrationFromRedis() {
         /*
-         1) "bili:suspicious_cookie"
-         2) "bili:handle_video_id_list"
-         3) "bili:ready_handle_dislike_video"
+        12) "bili:api_header"
+        13) "bili:common_header"
          4) "bili:common_cookie"
          5) "bili:white_user_ids"
-         6) "stop_words"
-         7) "bili:ready_handle_video_id"
          8) "bili:ignore_white_keyword"
+         16) "bili:ignore_black_keyword"
          9) "bili:white_list_rule"
         10) "bili:black_tags"
         11) "bili:mid"
-        12) "bili:api_header"
-        13) "bili:common_header"
         14) "bili:black_keywords"
         15) "bili:handle_video_detail_list"
-        16) "bili:ignore_black_keyword"
-        17) "bili:ready_handle_thumb_up_video"
         18) "bili:black_user_ids"
         19) "bili:cookies"
         20) "bili:black_tids"
-        21) "baidu_accesskey"
         22) "bili:white_tids"
         23) "bili:ready_handle_video"
         24) "bili:keywords"
 
-         */
+
+     */
+        Map<String, String> commonCookieMap = new HashMap<>();
+        Map<String, String> commonHeaderMap = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_COOKIE_MAP).entrySet()) {
+            commonCookieMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COMMON_HEADER_MAP).entrySet()) {
+            commonHeaderMap.put((String) entry.getKey(), (String) entry.getValue());
+        }
+
+        Map<String, String> cookiesFromRedis = new HashMap<>();
+
+        for (Map.Entry<Object, Object> entry : redisUtil.hGetAll(COOKIES_KEY).entrySet()) {
+            cookiesFromRedis.put((String) entry.getKey(), (String) entry.getValue());
+        }
+
+        List<io.github.cctyl.entity.ApiHeader> apiHeaderList = redisUtil.hGetAll(API_HEADER_MAP).values().stream().map(o -> (io.github.cctyl.entity.ApiHeader) o).collect(Collectors.toList());
+
+
+        Set<String> ignoreWhiteKeyword = redisUtil.sMembers(IGNORE_WHITE_KEYWORD)
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
+        Set<String> ignoreBlackKeyword = redisUtil.sMembers(IGNORE_BLACK_KEYWORD)
+                .stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
+        Set<String> whiteUserId = redisUtil.sMembers(WHITE_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        Set<String> blackTagSet = redisUtil.sMembers(BLACK_TAG_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+        List<io.github.cctyl.entity.WhitelistRule> whiteListRule = redisUtil.sMembers(WHITE_LIST_RULE_KEY)
+                .stream().map(
+                        o -> (io.github.cctyl.entity.WhitelistRule) o
+                )
+                .map(whitelistRule -> {
+                    whitelistRule.setId(null);
+                    return whitelistRule;
+                })
+                .collect(Collectors.toList());
+        Set<String> blackKeyWordSet = redisUtil.sMembers(BLACK_KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        Set<io.github.cctyl.entity.VideoDetail> handleVideoDetailSet = redisUtil.sMembers(HANDLE_VIDEO_DETAIL_KEY)
+                .stream()
+                .map(o -> (io.github.cctyl.entity.VideoDetail) o)
+                .collect(Collectors.toSet());
+
+        Set<String> blackUserIdSet = redisUtil.sMembers(BLACK_USER_ID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        Set<String> blackTidSet = redisUtil.sMembers(BLACK_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        Set<String> whiteTidSet = redisUtil.sMembers(WHITE_TID_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        Set<String> searchKeywords = redisUtil.sMembers(KEY_WORD_KEY).stream().map(String::valueOf).collect(Collectors.toSet());
+
+        List<io.github.cctyl.entity.VideoDetail> readyHandleVideoList = redisUtil
+                .sMembers(READY_HANDLE_VIDEO)
+                .stream()
+                .map(io.github.cctyl.entity.VideoDetail.class::cast).collect(Collectors.toList());
+
+
+        GlobalVariables.INSTANCE.replaceCommonCookieMap(commonCookieMap);
+        GlobalVariables.INSTANCE.replaceCommonHeaderMap(commonHeaderMap);
+        GlobalVariables.INSTANCE.replaceApiHeaderMap(apiHeaderList.stream().map(v -> {
+
+            ApiHeader apiHeader = new ApiHeader()
+                    .setUrl(v.getUrl())
+                    .setHeaders(v.getHeaders())
+                    .setCookies(v.getCookies());
+
+            return apiHeader;
+        }).collect(Collectors.toList()));
+
+        GlobalVariables.INSTANCE.setWhiteUserIdSet(whiteUserId);
+        GlobalVariables.INSTANCE.addWhiteIgnoreKeyword(ignoreWhiteKeyword);
+        GlobalVariables.INSTANCE.addBlackIgnoreKeyword(ignoreBlackKeyword);
+
+        for (io.github.cctyl.entity.WhitelistRule w : whiteListRule) {
+
+            WhiteListRule whitelistRule = new WhiteListRule()
+                    .setCoverKeyword(Dict.keyword2Dict(Collections.singletonList(w.getCoverKeyword()), DictType.COVER, AccessType.WHITE, null))
+                    .setTagNameList(Dict.keyword2Dict(w.getTagNameList(), DictType.COVER, AccessType.WHITE, null))
+                    .setDescKeyWordList(Dict.keyword2Dict(w.getDescKeyWordList(), DictType.COVER, AccessType.WHITE, null))
+                    .setTitleKeyWordList(Dict.keyword2Dict(w.getTitleKeyWordList(), DictType.COVER, AccessType.WHITE, null));
+            GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
+        }
+
+        GlobalVariables.INSTANCE.addBlackTagSet(blackTagSet);
+        GlobalVariables.updateMid((String) redisUtil.get(MID_KEY));
+        GlobalVariables.INSTANCE.addBlackKeyword(blackKeyWordSet);
+        GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
+
+        for (io.github.cctyl.entity.VideoDetail v : handleVideoDetailSet) {
+
+            VideoDetail videoDetail = getVideoDetail(v);
+
+            try {
+                videoDetailService.saveVideoDetail(videoDetail);
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+        }
+        GlobalVariables.updateRefreshCookie(cookiesFromRedis);
+        GlobalVariables.INSTANCE.addBlackTidSet(blackTidSet);
+        GlobalVariables.INSTANCE.addWhiteTidSet(whiteTidSet);
+        for (io.github.cctyl.entity.VideoDetail v : readyHandleVideoList) {
+            VideoDetail videoDetail = getVideoDetail(v);
+
+            try {
+                videoDetailService.saveVideoDetail(videoDetail);
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+        }
+
+        GlobalVariables.INSTANCE.addSearchKeyword(searchKeywords);
+
+
+        log.debug("转换结束");
+    }
+
+    @NotNull
+    private static VideoDetail getVideoDetail(io.github.cctyl.entity.VideoDetail v) {
+        VideoDetail videoDetail = new VideoDetail();
+        BeanUtils.copyProperties(v, videoDetail);
+
+
+        if (v.getOwner() != null) {
+            Owner owner = new Owner();
+            BeanUtils.copyProperties(v.getOwner(), owner);
+            videoDetail.setOwner(owner);
+            assert videoDetail.getOwner() != null;
+        }
+        if (v.getStat() != null) {
+            Stat stat = new Stat();
+            BeanUtils.copyProperties(v.getStat(), stat);
+            videoDetail.setStat(stat);
+            assert videoDetail.getStat() != null;
+        }
+        if (v.getTags() != null) {
+
+            List<Tag> collect = v.getTags().stream().map(t -> {
+
+                Tag tag = new Tag();
+                BeanUtils.copyProperties(t, tag);
+
+                return tag;
+            }).collect(Collectors.toList());
+            videoDetail.setTags(collect);
+            assert videoDetail.getTags() != null;
+        }
+
+        if (v.getRelatedVideoList() != null) {
+
+            List<VideoDetail> collect = v.getRelatedVideoList().stream().map(t -> {
+
+                VideoDetail tag = new VideoDetail();
+                BeanUtils.copyProperties(t, tag);
+
+                return tag;
+            }).collect(Collectors.toList());
+            videoDetail.setRelatedVideoList(collect);
+            assert videoDetail.getRelatedVideoList() != null;
+        }
+        return videoDetail;
     }
 }

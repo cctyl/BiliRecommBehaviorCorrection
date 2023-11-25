@@ -63,4 +63,7 @@ public interface DictService extends IService<Dict> {
 
     List<String> findStopWords();
 
+    void removeAllWhiteUserId();
+
+    void addWhiteUserId(Collection<String> whiteUserIdSet);
 }

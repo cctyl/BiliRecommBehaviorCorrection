@@ -1,14 +1,9 @@
-package io.github.cctyl.domain.po;
+package io.github.cctyl.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import io.github.cctyl.domain.dto.*;
-import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.entity.enumeration.HandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -17,19 +12,14 @@ import java.util.Objects;
 
 @NoArgsConstructor
 @Data
-@Accessors(chain = true)
-public class VideoDetail extends AuditingEntity implements Serializable {
+public class VideoDetail implements Serializable {
 
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
-    private String id;
 
     /**
      * aid
      */
     @JSONField(name = "aid")
     private Integer aid;
-
-
     @JSONField(name = "videos")
     private Integer videos;
     /**
@@ -64,7 +54,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "pubdate")
     private Integer pubdate;
-
     @JSONField(name = "ctime")
     private Integer ctime;
 
@@ -73,7 +62,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "desc")
     private String desc;
-
     @JSONField(name = "state")
     private Integer state;
     /**
@@ -81,7 +69,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "duration")
     private Integer duration;
-
     @JSONField(name = "mission_id")
     private Integer missionId;
 
@@ -90,16 +77,12 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "dynamic")
     private String dynamic;
-
     @JSONField(name = "cid")
     private Integer cid;
-
     @JSONField(name = "season_id")
     private Integer seasonId;
-
     @JSONField(name = "short_link_v2")
     private String shortLinkV2;
-
     @JSONField(name = "first_frame")
     private String firstFrame;
     /**
@@ -112,116 +95,67 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     @JSONField(name = "bvid")
     private String bvid;
-
     @JSONField(name = "season_type")
     private Integer seasonType;
-
     @JSONField(name = "is_ogv")
     private Boolean isOgv;
-
-    /**
-     * 视频是否处理过
-     */
-    private boolean handle;
-
-
     @JSONField(name = "ogv_info")
-    @TableField(exist = false)
     private Object ogvInfo;
 
     /**
      * 视频所有者信息
      */
     @JSONField(name = "owner")
-    @TableField(exist = false)
     private Owner owner;
-
-    private String ownerId;
-
     /**
      * 视频的数据
      */
     @JSONField(name = "stat")
-    @TableField(exist = false)
     private Stat stat;
-
-
 
     /**
      * 标签列表
      */
-    @TableField(exist = false)
     List<Tag> tags;
 
     @JSONField(name = "rights")
-    @TableField(exist = false)
     private Rights rights;
 
 
-
     @JSONField(name = "dimension")
-    @TableField(exist = false)
     private Dimension dimension;
-
-
     @JSONField(name = "premiere")
-    @TableField(exist = false)
     private Object premiere;
-
-
     @JSONField(name = "teenage_mode")
     private Integer teenageMode;
-
     @JSONField(name = "is_chargeable_season")
     private Boolean isChargeableSeason;
-
     @JSONField(name = "is_story")
     private Boolean isStory;
-
     @JSONField(name = "is_upower_exclusive")
     private Boolean isUpowerExclusive;
-
     @JSONField(name = "is_upower_play")
     private Boolean isUpowerPlay;
-
     @JSONField(name = "no_cache")
     private Boolean noCache;
-
     @JSONField(name = "pages")
-    @TableField(exist = false)
     private List<Pages> pages;
-
-    /**
-     * 字幕相关
-     */
     @JSONField(name = "subtitle")
-    @TableField(exist = false)
     private Subtitle subtitle;
-
-
     @JSONField(name = "is_season_display")
     private Boolean isSeasonDisplay;
-
     @JSONField(name = "user_garb")
-    @TableField(exist = false)
     private UserGarb userGarb;
-
-
     @JSONField(name = "honor_reply")
-    @TableField(exist = false)
     private HonorReply honorReply;
-
-
     @JSONField(name = "like_icon")
     private String likeIcon;
-
     @JSONField(name = "need_jump_bv")
     private Boolean needJumpBv;
 
     private HandleType handleType;
 
     @JSONField(name = "desc_v2")
-    @TableField(exist = false)
     private List<DescV2> descV2 = new ArrayList<>();
 
 
@@ -231,7 +165,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
 
     @JSONField(name = "disable_show_up_info")
     private Boolean disableShowUpInfo;
-
     @JSONField(name = "up_from_v2")
     private Integer upFromV2;
 
@@ -241,42 +174,35 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     /**
      * 相关推荐视频列表
      */
-    @TableField(exist = false)
     private List<VideoDetail> relatedVideoList = new ArrayList<>();
 
     @JSONField(name = "score")
     private Integer score;
 
     @JSONField(name = "others")
-    @TableField(exist = false)
     private List<VideoDetail> others;
 
 
     /**
      * 点踩原因
      */
-    @TableField(exist = false)
     private String blackReason;
     /**
      * 点踩原因id
      */
-    @TableField(exist = false)
     private DislikeReason dislikeReason;
     /**
      * 点踩的up id
      */
-    @TableField(exist = false)
     private Integer dislikeMid;
     /**
      * 点踩的对象板块id
      */
-    @TableField(exist = false)
     private Integer dislikeTid;
 
     /**
      * 点踩的tag id
      */
-    @TableField(exist = false)
     private Integer dislikeTagId;
 
 
@@ -287,6 +213,17 @@ public class VideoDetail extends AuditingEntity implements Serializable {
 
 
 
+    @NoArgsConstructor
+    @Data
+    public static class UserGarb  implements Serializable{
+        private String id;
+    }
+
+    @NoArgsConstructor
+    @Data
+    public static class HonorReply  implements Serializable{
+        private String id;
+    }
 
 
 
@@ -328,12 +265,11 @@ public class VideoDetail extends AuditingEntity implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VideoDetail that = (VideoDetail) o;
-        return Objects.equals(aid, that.aid) &&
-                Objects.equals(bvid, that.bvid);
+        return Objects.equals(aid, that.aid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(aid, bvid);
+        return Objects.hash(aid);
     }
 }

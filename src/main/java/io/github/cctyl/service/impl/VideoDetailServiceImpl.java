@@ -95,7 +95,8 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
             videoRelateService.saveRelate(relatedVideoList,videoDetail);
         }
 
-        this.save(videoDetail);
+        this.updateById(videoDetail);
+
     }
 
     @Override
@@ -125,6 +126,10 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         return newVideoList;
     }
 
+    @Override
+    public boolean exists(Integer aid) {
+        return  baseMapper.exists(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, aid));
+    }
 
     @Override
     public VideoDetail findByAid(int avid) {

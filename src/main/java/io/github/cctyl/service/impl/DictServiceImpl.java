@@ -209,6 +209,14 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     }
 
+    public void removeByAccessTypeAndDictType(AccessType accessType, DictType dictType) {
+
+        this.remove(new LambdaQueryWrapper<Dict>()
+                .eq(Dict::getAccessType, accessType)
+                .eq(Dict::getDictType, dictType)
+        );
+
+    }
 
     /**
      * 删除并新增字典
@@ -307,5 +315,18 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
                 DictType.STOP_WORDS,
                 AccessType.OTHER
         ).stream().map(Dict::getValue).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public void removeAllWhiteUserId() {
+        this.removeByAccessTypeAndDictType(
+                 AccessType.WHITE,DictType.MID
+        );
+    }
+
+    @Override
+    public void addWhiteUserId(Collection<String> whiteUserIdSet) {
+        this.addDict(whiteUserIdSet, AccessType.WHITE,DictType.MID);
     }
 }
