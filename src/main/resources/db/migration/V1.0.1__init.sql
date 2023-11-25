@@ -181,7 +181,7 @@ CREATE TABLE video_tag
 CREATE TABLE cookie_header_data
 (
     id                 char(30)     NOT NULL,
-    url                VARCHAR(350) NOT NULL,
+    url                VARCHAR(350) NULL,
     ckey               varchar(50)  null,
     cvalue             varchar(200) null,
     classify           varchar(50)  null,
