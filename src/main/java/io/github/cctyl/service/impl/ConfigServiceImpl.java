@@ -126,10 +126,13 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         if (configDTO.getMid()!=null){
             GlobalVariables.updateMid(configDTO.getMid());
         }
+        if (configDTO.getCron()!=null){
+            GlobalVariables.setCron(configDTO.getCron());
+        }
 
         //其他配置暂不允许更新
 
-        return getStandardConfigInfo();
+        return getStandardConfigInfo()
 
     }
 
@@ -169,6 +172,43 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
                 .setBaiduAskKey(GlobalVariables.getBaiduAskKey())
                 .setBaiduClientSecret(GlobalVariables.getBaiduClientSecret())
                 .setBiliAccessKey(GlobalVariables.getBiliAccessKey())
-                .setMinPlaySecond(GlobalVariables.getMinPlaySecond());
+                .setMinPlaySecond(GlobalVariables.getMinPlaySecond())
+                .setCron(GlobalVariables.isCron())
+                ;
+    }
+
+    /**
+     * 从redis迁移数据
+     * @return
+     */
+    @Override
+    public ConfigVo migrationFromRedis() {
+        /*
+         1) "bili:suspicious_cookie"
+         2) "bili:handle_video_id_list"
+         3) "bili:ready_handle_dislike_video"
+         4) "bili:common_cookie"
+         5) "bili:white_user_ids"
+         6) "stop_words"
+         7) "bili:ready_handle_video_id"
+         8) "bili:ignore_white_keyword"
+         9) "bili:white_list_rule"
+        10) "bili:black_tags"
+        11) "bili:mid"
+        12) "bili:api_header"
+        13) "bili:common_header"
+        14) "bili:black_keywords"
+        15) "bili:handle_video_detail_list"
+        16) "bili:ignore_black_keyword"
+        17) "bili:ready_handle_thumb_up_video"
+        18) "bili:black_user_ids"
+        19) "bili:cookies"
+        20) "bili:black_tids"
+        21) "baidu_accesskey"
+        22) "bili:white_tids"
+        23) "bili:ready_handle_video"
+        24) "bili:keywords"
+
+         */
     }
 }

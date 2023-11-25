@@ -28,6 +28,9 @@ public class InitFromRedis implements ApplicationRunner {
         //0.1加载mid
         GlobalVariables.initMid();
 
+        //0.2加载基本开关
+        GlobalVariables.initSettings();
+
         //10.加载停顿词
         GlobalVariables.initStopWords();
 

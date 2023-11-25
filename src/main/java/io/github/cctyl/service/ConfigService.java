@@ -31,4 +31,6 @@ public interface ConfigService extends IService<Config> {
     ConfigVo updateStandardConfigInfo(ConfigDTO configDTO);
 
     ConfigVo getStandardConfigInfo();
+
+    ConfigVo migrationFromRedis();
 }

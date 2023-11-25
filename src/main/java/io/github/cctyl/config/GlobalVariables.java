@@ -1,6 +1,7 @@
 package io.github.cctyl.config;
 
 import cn.hutool.core.io.resource.ClassPathResource;
+import cn.hutool.core.lang.Opt;
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.dto.ApiHeader;
@@ -59,6 +60,11 @@ public class GlobalVariables {
      * 第一次启动
      */
     private static boolean FIRST_USE;
+
+    /**
+     * 定时任务开关
+     */
+    private static boolean CRON;
 
     /**
      * 黑名单up主 id列表
@@ -632,12 +638,17 @@ public class GlobalVariables {
         //1.是否第一次使用本系统
         FIRST_USE = configService.isFirstUse();
 
-        //2.第一次使用系统时间
+
         if (FIRST_USE){
+            //2.第一次使用系统时间
             configService.addOrUpdateConfig(AppConstant.FIRST_START_TIME,
                     String.valueOf(Instant.now().toEpochMilli())
                 );
+            //3.定时任务开关
+            setCron(true);
         }
+
+
     }
 
     public static void updateBaiduAskKey(String accessToken) {
@@ -662,6 +673,24 @@ public class GlobalVariables {
 
     }
 
+    /**
+     * 功能的开关
+     */
+    public static void initSettings() {
+        //定时任务开关
+        CRON = Boolean.parseBoolean(Opt.ofNullable( configService.findByName(AppConstant.CRON)).orElse("true"));
+    }
+
+    public static boolean isCron() {
+        return CRON;
+    }
+
+    public static void setCron(boolean cron) {
+        GlobalVariables.CRON = cron;
+        configService.addOrUpdateConfig(AppConstant.CRON,
+                String.valueOf(cron)
+        );
+    }
 
     /**
      * 删除原本的header 重新存储

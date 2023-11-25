@@ -65,7 +65,7 @@
         end
         where
         classify = 'COOKIE'
-        and mediaType = 'TIMELY_UPDATE'
+        and media_type = 'TIMELY_UPDATE'
         and is_deleted = 0
         ;
 

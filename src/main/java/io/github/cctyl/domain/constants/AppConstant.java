@@ -170,4 +170,5 @@ public class AppConstant {
     public static final String BAIDU_CLIENT_ID = "baidu_client_id";
     public static final String BAIDU_CLIENT_SECRET = "baidu_client_secret";
     public static final String MIN_PLAY_SECOND = "minPlaySecond";
+    public static final String CRON = "cron";
 }

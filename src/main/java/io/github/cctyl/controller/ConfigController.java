@@ -47,4 +47,10 @@ public class ConfigController {
         return R.data(configVo);
     }
 
+    @PostMapping("/migration-from-redis")
+    @Operation(summary = "从redis迁移数据")
+    public R migrationFromRedis(){
+        ConfigVo configVo = configService.migrationFromRedis();
+        return R.data(configVo);
+    }
 }

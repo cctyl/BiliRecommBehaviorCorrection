@@ -30,4 +30,7 @@ public class ConfigDTO {
     @Schema(description = "最小播放时长")
     private Integer minPlaySecond;
 
+
+    @Schema(description = "定时任务开关")
+    private Boolean cron;
 }

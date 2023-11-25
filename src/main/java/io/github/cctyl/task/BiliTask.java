@@ -69,6 +69,9 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 0 12 * * *")
     public void searchTask() {
+        if (GlobalVariables.isCron()){
+            return;
+        }
         before();
         //0.初始化部分
         //本次点赞视频列表
@@ -118,6 +121,9 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 3 18 * * *")
     public void hotRankTask() {
+        if (GlobalVariables.isCron()){
+            return;
+        }
         before();
         //0.初始化部分
         //本次点赞视频列表
@@ -161,6 +167,9 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 1 19 * * *")
     public void homeRecommendTask() {
+        if (GlobalVariables.isCron()){
+            return;
+        }
         before();
         //0.初始化部分
         //本次点赞视频列表

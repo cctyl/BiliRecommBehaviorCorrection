@@ -30,4 +30,8 @@ public class ConfigVo {
 
     @Schema(description = "最小播放时长")
     private int minPlaySecond;
+
+
+    @Schema(description = "定时任务开关")
+    private Boolean cron;
 }
