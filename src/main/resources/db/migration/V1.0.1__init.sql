@@ -131,7 +131,7 @@ CREATE TABLE white_list_rule
 CREATE TABLE tag
 (
     id                 char(30)     NOT NULL,
-    tag_id             int unique   not null,
+    tag_id             int          not null,
     tag_name           varchar(255) not null,
     cover              VARCHAR(350),
     head_cover         VARCHAR(350),
@@ -161,7 +161,9 @@ CREATE TABLE tag
     last_modified_date DATE         null,
     is_deleted         tinyint(1) default 0,
     version            int        default 1,
-    CONSTRAINT pk_tag PRIMARY KEY (id)
+    CONSTRAINT pk_tag PRIMARY KEY (id),
+    UNIQUE (tag_id,
+            tag_name)
 );
 
 -- video与tag 关联表
@@ -185,7 +187,7 @@ CREATE TABLE cookie_header_data
     ckey               varchar(50)  null,
     cvalue             varchar(200) null,
     classify           varchar(50)  null,
-    media_type          varchar(50)  null,
+    media_type         varchar(50)  null,
     created_date       DATE         null,
     last_modified_date DATE         null,
     is_deleted         tinyint(1) default 0,
