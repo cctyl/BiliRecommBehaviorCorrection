@@ -9,7 +9,9 @@ import io.github.cctyl.domain.po.AuditingEntity;
 import io.github.cctyl.domain.enumeration.Classify;
 import io.github.cctyl.domain.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
+import io.github.cctyl.utils.ServerException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -190,6 +192,17 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
 
     }
 
+    @Override
+    public void saveRefreshCookieMap(Map<String, String> refreshCookieMap) {
+
+        List<CookieHeaderData> dataList =
+                map2List(refreshCookieMap, Classify.COOKIE,MediaType.TIMELY_UPDATE);
+
+
+        this.saveBatch(dataList);
+
+    }
+
     /**
      * 移除所有API头部信息
      */
@@ -246,6 +259,11 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     public void removeAllCommonHeader() {
         this.removeByClassifyAndMediaType(Classify.REQUEST_HEADER,MediaType.GENERAL);
     }
+    @Override
+    public void removeAllRefreshCookie() {
+        this.removeByClassifyAndMediaType(Classify.COOKIE,MediaType.TIMELY_UPDATE);
+    }
+
 
     @Override
     public void removeByKeyInAndClassifyAndMediaType(Collection<String> keyCol, Classify classify, MediaType mediaType) {
@@ -266,5 +284,15 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
                        .in(CookieHeaderData::getUrl,collect)
                        .eq(CookieHeaderData::getMediaType,mediaType)
         );
+    }
+
+    /**
+     * @param cookieMap
+     */
+    @Override
+    @Transactional(rollbackFor = ServerException.class)
+    public void replaceRefreshCookie(Map<String, String> cookieMap) {
+        removeAllRefreshCookie();
+        saveRefreshCookieMap(cookieMap);
     }
 }

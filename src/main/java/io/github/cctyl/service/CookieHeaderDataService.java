@@ -36,10 +36,10 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     void removeAllCommonCookie();
 
     void saveCommonCookieMap(Map<String, String> commonCookieMap);
-
+     void removeAllRefreshCookie();
     void removeAllCommonHeader();
     void saveCommonHeaderMap(Map<String, String> commonHeaderMap);
-
+    void saveRefreshCookieMap(Map<String, String> refreshCookieMap);
     void removeAllApiHeader();
 
     void saveApiHeader(List<ApiHeader> apiHeaderList);
@@ -49,4 +49,6 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
                                               MediaType mediaType);
 
     void removeByUrlAndMediaType(List<String> collect, MediaType mediaType);
+
+    void replaceRefreshCookie(Map<String, String> cookieMap);
 }

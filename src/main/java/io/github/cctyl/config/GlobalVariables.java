@@ -457,7 +457,7 @@ public class GlobalVariables {
      */
     public static void updateRefreshCookie(Map<String, String> cookieMap) {
         REFRESH_COOKIE_MAP.putAll(cookieMap);
-        cookieHeaderDataService.updateRefresh(cookieMap);
+        cookieHeaderDataService.replaceRefreshCookie(cookieMap);
     }
 
     public static void initWbi() {
