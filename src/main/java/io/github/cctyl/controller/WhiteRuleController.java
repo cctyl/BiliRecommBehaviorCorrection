@@ -200,10 +200,8 @@ public class WhiteRuleController {
             @PathVariable("page") Long page,
             @PathVariable("limit") Long limit) {
 
-        Page<WhiteListRule> pageBean = new Page<>(page, limit);
-        IPage<WhiteListRule> iPage = whiteRuleService.page(pageBean, null);
-        List<WhiteListRule> records = iPage.getRecords();
-        return R.data("list", records);
+        IPage<WhiteListRule> iPage = whiteRuleService.pageSearch(new Page<>(page, limit));
+        return R.data("list", iPage.getRecords());
     }
 
 

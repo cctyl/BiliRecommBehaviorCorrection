@@ -329,4 +329,10 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     public void addWhiteUserId(Collection<String> whiteUserIdSet) {
         this.addDict(whiteUserIdSet, AccessType.WHITE,DictType.MID);
     }
+
+    @Override
+    public List<Dict> findByOuterIdIn(Collection<String> idList) {
+
+        return this.list(new LambdaQueryWrapper<Dict>().in(Dict::getOuterId,idList));
+    }
 }

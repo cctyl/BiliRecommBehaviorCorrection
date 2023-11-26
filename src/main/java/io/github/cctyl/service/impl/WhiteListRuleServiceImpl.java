@@ -1,6 +1,8 @@
 package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -468,5 +470,30 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         return dictList.stream().filter(
                 dict -> !ignoreSet.contains(dict.getValue())
         ).collect(Collectors.toList());
+    }
+
+    @Override
+    public IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page) {
+
+        List<WhiteListRule> records = this.page(page).getRecords();
+        List<String> idList = records.stream().map(WhiteListRule::getId).collect(Collectors.toList());
+        List<Dict> dictList =  dictService.findByOuterIdIn(idList);
+        Map<String, List<Dict>> outerIdDictListMap = dictList.stream().collect(Collectors.groupingBy(Dict::getOuterId));
+
+        for (WhiteListRule item : records) {
+
+            Map<DictType, List<Dict>> dictTypeListMap = outerIdDictListMap.getOrDefault(item.getId(),Collections.emptyList())
+                    .stream()
+                    .collect(Collectors.groupingBy(Dict::getDictType));
+            item
+                    .setTagNameList(dictTypeListMap.get(DictType.TAG))
+                    .setDescKeyWordList(dictTypeListMap.get(DictType.DESC))
+                    .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
+                    .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
+            ;
+        }
+
+        return page;
+
     }
 }

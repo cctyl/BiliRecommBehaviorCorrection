@@ -1,5 +1,7 @@
 package io.github.cctyl.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
@@ -36,4 +38,6 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
     List<WhiteListRule> findWithDetail();
 
     List<Dict> filterIgnore(List<Dict> dictList);
+
+    IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page);
 }

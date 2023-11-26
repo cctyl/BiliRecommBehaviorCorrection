@@ -1,8 +1,10 @@
 package io.github.cctyl.domain.po;
 
+import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -60,10 +62,15 @@ public class WhiteListRule extends AuditingEntity implements Serializable {
 
 
     @TableField(exist = false)
+    @JsonIgnore
     private List<Dict>  totalDict =  new ArrayList<>();
 
 
     public List<Dict> getTotalDict() {
+        tagNameList = Opt.ofNullable(tagNameList).orElse(new LinkedList<>());
+        descKeyWordList = Opt.ofNullable(descKeyWordList).orElse(new LinkedList<>());
+        titleKeyWordList = Opt.ofNullable(titleKeyWordList).orElse(new LinkedList<>());
+        coverKeyword = Opt.ofNullable(coverKeyword).orElse(new LinkedList<>());
         ArrayList<Dict> dicts = new ArrayList<>(
                        tagNameList.size()+
                        descKeyWordList.size()+
