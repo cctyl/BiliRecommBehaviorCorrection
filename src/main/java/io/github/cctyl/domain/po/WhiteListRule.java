@@ -65,7 +65,7 @@ public class WhiteListRule extends AuditingEntity implements Serializable {
     @JsonIgnore
     private List<Dict>  totalDict =  new ArrayList<>();
 
-
+    @JsonIgnore
     public List<Dict> getAggregationDict() {
         tagNameList = Opt.ofNullable(tagNameList).orElse(new LinkedList<>());
         descKeyWordList = Opt.ofNullable(descKeyWordList).orElse(new LinkedList<>());
