@@ -604,7 +604,7 @@ public class GlobalVariables {
 
         //将这些标签的类型由CACHE 改为正常类型即可
         dictService.updateAccessTypeByIdIn(
-                AccessType.BLACK_CACHE,
+                AccessType.BLACK,
                 keywordIdSet
         );
 
@@ -622,7 +622,7 @@ public class GlobalVariables {
 
         //将这些标签的类型由CACHE 改为正常类型即可
         dictService.updateAccessTypeByIdIn(
-                AccessType.BLACK_CACHE,
+                AccessType.BLACK,
                 tagNameIdList
         );
 
