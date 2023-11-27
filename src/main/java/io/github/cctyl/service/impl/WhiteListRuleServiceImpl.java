@@ -503,7 +503,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     public WhiteListRule findWithDetailById(String id) {
         WhiteListRule whiteListRule = baseMapper.findWithDetailById(id);
 
-        groupDict(whiteListRule,whiteListRule.getTotalDict());
-        return whiteListRule;
+        if(whiteListRule!=null){
+
+            groupDict(whiteListRule,whiteListRule.getTotalDict());
+            return whiteListRule;
+        }else {
+            return null;
+        }
+
     }
 }

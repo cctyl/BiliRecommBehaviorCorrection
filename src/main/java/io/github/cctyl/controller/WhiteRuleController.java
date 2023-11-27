@@ -183,7 +183,7 @@ public class WhiteRuleController {
     public R getById(@PathVariable("id") String id) {
 
         WhiteListRule whiteListRule = whiteRuleService.findWithDetailById(id);
-        return R.data("data",whiteListRule);
+        return R.data(whiteListRule);
     }
 
     /**
