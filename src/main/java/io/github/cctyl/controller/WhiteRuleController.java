@@ -181,7 +181,7 @@ public class WhiteRuleController {
     @GetMapping("/{id}")
     public R getById(@PathVariable("id") String id) {
 
-        WhiteListRule whiteListRule = whiteRuleService.getById(id);
+        WhiteListRule whiteListRule = whiteRuleService.findWithDetailById(id);
         return R.data("data",whiteListRule);
     }
 

@@ -446,16 +446,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         List<WhiteListRule> list = baseMapper.findWithDetail();
 
         for (WhiteListRule item : list) {
-
-            Map<DictType, List<Dict>> dictTypeListMap = item.getAggregationDict()
-                    .stream()
-                    .collect(Collectors.groupingBy(dict -> dict.getDictType()));
-            item
-                    .setTagNameList(dictTypeListMap.get(DictType.TAG))
-                    .setDescKeyWordList(dictTypeListMap.get(DictType.DESC))
-                    .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
-                    .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
-                    ;
+            groupDict(item, item.getTotalDict());
         }
 
         return list;
@@ -480,19 +471,31 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         Map<String, List<Dict>> outerIdDictListMap = dictList.stream().collect(Collectors.groupingBy(Dict::getOuterId));
 
         for (WhiteListRule item : records) {
-
-            Map<DictType, List<Dict>> dictTypeListMap = outerIdDictListMap.getOrDefault(item.getId(),Collections.emptyList())
-                    .stream()
-                    .collect(Collectors.groupingBy(Dict::getDictType));
-            item
-                    .setTagNameList(dictTypeListMap.get(DictType.TAG))
-                    .setDescKeyWordList(dictTypeListMap.get(DictType.DESC))
-                    .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
-                    .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
-            ;
+            groupDict(item,outerIdDictListMap.getOrDefault(item.getId(),Collections.emptyList()));
         }
 
         return page;
 
+    }
+
+    public void groupDict(WhiteListRule whiteListRule, Collection<Dict> dictCollection) {
+
+        Map<DictType, List<Dict>> dictTypeListMap = dictCollection
+                .stream()
+                .collect(Collectors.groupingBy(Dict::getDictType));
+        whiteListRule
+                .setTagNameList(dictTypeListMap.get(DictType.TAG))
+                .setDescKeyWordList(dictTypeListMap.get(DictType.DESC))
+                .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
+                .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
+        ;
+    }
+
+    @Override
+    public WhiteListRule findWithDetailById(String id) {
+        WhiteListRule whiteListRule = baseMapper.findWithDetailById(id);
+
+        groupDict(whiteListRule,whiteListRule.getTotalDict());
+        return whiteListRule;
     }
 }

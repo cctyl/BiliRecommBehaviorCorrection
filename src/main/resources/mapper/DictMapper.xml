@@ -48,7 +48,7 @@
         t_dict.last_modified_date as t_dict_last_modified_date,
         t_dict.is_deleted as t_dict_is_deleted,
         t_dict.version as t_dict_version,
-      t_dict.outer_id  as dict_outer_id
+      t_dict.outer_id  as t_dict_outer_id
     </sql>
 
 </mapper>

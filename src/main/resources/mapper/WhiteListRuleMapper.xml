@@ -52,7 +52,7 @@
     <resultMap id="whiteListRuleDictMap" type="io.github.cctyl.domain.po.WhiteListRule" extends="BaseResultMapAssoc">
 
         <collection property="totalDict" ofType="io.github.cctyl.domain.po.Dict"
-                    resultMap="io.github.cctyl.mapper.DictMapper.BaseResultMapAssoc"></collection>
+                    resultMap="io.github.cctyl.mapper.DictMapper.BaseResultMapAssoc"/>
 
 
     </resultMap>
@@ -64,10 +64,25 @@
         <include refid="io.github.cctyl.mapper.DictMapper.Base_Column_List_Assoc"></include>
 
         from white_list_rule as whiteListRule
-        join dict t_dict
+        left join dict t_dict
 
         on whiteListRule.id = t_dict.outer_id
         where whiteListRule.is_deleted = 0
+
+    </select>
+    <select id="findWithDetailById" resultMap="whiteListRuleDictMap">
+
+        select
+        <include refid="Base_Column_List_Assoc"></include>,
+        <include refid="io.github.cctyl.mapper.DictMapper.Base_Column_List_Assoc"></include>
+
+        from white_list_rule as whiteListRule
+        left join dict t_dict
+
+        on whiteListRule.id = t_dict.outer_id
+        where whiteListRule.is_deleted = 0
+        and t_dict.is_deleted = 0
+        and whiteListRule.id = #{id}
 
     </select>
 
