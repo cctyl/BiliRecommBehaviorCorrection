@@ -1,5 +1,6 @@
 package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -109,6 +110,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @param videoDetail
      * @return
      */
+    @Override
     public boolean isUserIdMatch(VideoDetail videoDetail) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail);
@@ -124,7 +126,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 videoDetail.getOwner().getName(),
                 match);
         if (match) {
-            videoDetail.setThumbUpReason("up主:" + videoDetail.getOwner().getName() +
+            videoDetail.setThumbUpReason(    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+"\nup主:" + videoDetail.getOwner().getName() +
                     " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
         }
 
@@ -152,7 +154,8 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 match);
 
         if (match) {
-            videoDetail.setThumbUpReason("分区id:" + videoDetail.getTid() + "匹配成功");
+            videoDetail.setThumbUpReason(    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
+                    "\n分区id:" + videoDetail.getTid() + "匹配成功");
         }
         return match;
     }
@@ -293,8 +296,12 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                             " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
                             " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n";
 
-            videoDetail.setThumbUpReason("匹配到了白名单：" + whitelistRule
-                    + "， 具体如下：\n" + matchDetail
+            videoDetail.setThumbUpReason(
+
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
+                    String.format("\n匹配到了白名单：%s，具体如下：\n%s",
+                            whitelistRule.getId(),
+                            matchDetail)
             );
         }
 
