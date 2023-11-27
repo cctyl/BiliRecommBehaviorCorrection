@@ -94,18 +94,7 @@ public class BiliTaskController {
         videoDetailList
                 .stream()
                 .map(VideoDetail.class::cast)
-                .map(v -> new VideoVo(
-                        v.getAid(),
-                        v.getBvid(),
-                        v.getTitle(),
-                        v.getBlackReason(),
-                        v.getThumbUpReason(),
-                        v.getDislikeReason(),
-                        v.getOwner().getName(),
-                        v.getDesc(),
-                        v.getHandleType(),
-                        v.getPic()
-                ))
+                .map(VideoVo::from)
                 .forEach(videoVo -> {
                     if (videoVo.getBlackReason() != null) {
                         dislikeList.add(videoVo);
