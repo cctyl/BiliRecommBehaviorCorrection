@@ -67,7 +67,7 @@
         left join dict t_dict
 
         on whiteListRule.id = t_dict.outer_id
-        where whiteListRule.is_deleted = 0
+        where whiteListRule.is_deleted = 0 and t_dict.is_deleted = 0
 
     </select>
     <select id="findWithDetailById" resultMap="whiteListRuleDictMap">
