@@ -335,4 +335,13 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
         return this.list(new LambdaQueryWrapper<Dict>().in(Dict::getOuterId,idList));
     }
+
+    @Override
+    public List<Dict> findBlackCacheDesc() {
+
+        return   this.findByDictTypeAndAccessType(
+                DictType.DESC,
+                AccessType.BLACK_CACHE
+        );
+    }
 }

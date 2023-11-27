@@ -68,4 +68,6 @@ public interface DictService extends IService<Dict> {
     void addWhiteUserId(Collection<String> whiteUserIdSet);
 
     List<Dict> findByOuterIdIn(Collection<String> idList);
+
+    List<Dict> findBlackCacheDesc();
 }
