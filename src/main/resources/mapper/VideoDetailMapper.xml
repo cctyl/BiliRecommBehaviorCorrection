@@ -21,16 +21,13 @@
         <result column="dynamic" property="dynamic"/>
         <result column="cid" property="cid"/>
         <result column="season_id" property="seasonId"/>
-        <result column="short_linkv2" property="shortLinkv2"/>
+        <result column="short_link_v2" property="shortLinkV2"/>
         <result column="first_frame" property="firstFrame"/>
         <result column="pub_location" property="pubLocation"/>
         <result column="bvid" property="bvid"/>
         <result column="season_type" property="seasonType"/>
         <result column="is_ogv" property="isOgv"/>
         <result column="owner_id" property="ownerId"/>
-        <result column="stat_id" property="statId"/>
-        <result column="rights_id" property="rightsId"/>
-        <result column="dimension_id" property="dimensionId"/>
         <result column="teenage_mode" property="teenageMode"/>
         <result column="is_chargeable_season" property="isChargeableSeason"/>
         <result column="is_story" property="isStory"/>
@@ -42,7 +39,7 @@
         <result column="need_jump_bv" property="needJumpBv"/>
         <result column="enable_vt" property="enableVt"/>
         <result column="disable_show_up_info" property="disableShowUpInfo"/>
-        <result column="up_fromv2" property="upFromv2"/>
+        <result column="up_from_v2" property="upFromV2"/>
         <result column="rcmd_reason" property="rcmdReason"/>
         <result column="score" property="score"/>
         <result column="handle_type" property="handleType"/>
@@ -72,16 +69,13 @@
         <result column="videoDetail_dynamic" property="dynamic"/>
         <result column="videoDetail_cid" property="cid"/>
         <result column="videoDetail_season_id" property="seasonId"/>
-        <result column="videoDetail_short_linkv2" property="shortLinkv2"/>
+        <result column="videoDetail_short_link_v2" property="shortLinkV2"/>
         <result column="videoDetail_first_frame" property="firstFrame"/>
         <result column="videoDetail_pub_location" property="pubLocation"/>
         <result column="videoDetail_bvid" property="bvid"/>
         <result column="videoDetail_season_type" property="seasonType"/>
         <result column="videoDetail_is_ogv" property="isOgv"/>
         <result column="videoDetail_owner_id" property="ownerId"/>
-        <result column="videoDetail_stat_id" property="statId"/>
-        <result column="videoDetail_rights_id" property="rightsId"/>
-        <result column="videoDetail_dimension_id" property="dimensionId"/>
         <result column="videoDetail_teenage_mode" property="teenageMode"/>
         <result column="videoDetail_is_chargeable_season" property="isChargeableSeason"/>
         <result column="videoDetail_is_story" property="isStory"/>
@@ -93,7 +87,7 @@
         <result column="videoDetail_need_jump_bv" property="needJumpBv"/>
         <result column="videoDetail_enable_vt" property="enableVt"/>
         <result column="videoDetail_disable_show_up_info" property="disableShowUpInfo"/>
-        <result column="videoDetail_up_fromv2" property="upFromv2"/>
+        <result column="videoDetail_up_from_v2" property="upFromV2"/>
         <result column="videoDetail_rcmd_reason" property="rcmdReason"/>
         <result column="videoDetail_score" property="score"/>
         <result column="videoDetail_handle_type" property="handleType"/>
@@ -107,7 +101,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_linkv2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id, stat_id, rights_id, dimension_id, teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_fromv2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version
+        id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_link_v2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id,  teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_from_v2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version
     </sql>
 
 
@@ -131,16 +125,13 @@
         videoDetail.dynamic as videoDetail_dynamic,
         videoDetail.cid as videoDetail_cid,
         videoDetail.season_id as videoDetail_season_id,
-        videoDetail.short_linkv2 as videoDetail_short_linkv2,
+        videoDetail.short_link_v2 as videoDetail_short_link_v2,
         videoDetail.first_frame as videoDetail_first_frame,
         videoDetail.pub_location as videoDetail_pub_location,
         videoDetail.bvid as videoDetail_bvid,
         videoDetail.season_type as videoDetail_season_type,
         videoDetail.is_ogv as videoDetail_is_ogv,
         videoDetail.owner_id as videoDetail_owner_id,
-        videoDetail.stat_id as videoDetail_stat_id,
-        videoDetail.rights_id as videoDetail_rights_id,
-        videoDetail.dimension_id as videoDetail_dimension_id,
         videoDetail.teenage_mode as videoDetail_teenage_mode,
         videoDetail.is_chargeable_season as videoDetail_is_chargeable_season,
         videoDetail.is_story as videoDetail_is_story,
@@ -152,7 +143,7 @@
         videoDetail.need_jump_bv as videoDetail_need_jump_bv,
         videoDetail.enable_vt as videoDetail_enable_vt,
         videoDetail.disable_show_up_info as videoDetail_disable_show_up_info,
-        videoDetail.up_fromv2 as videoDetail_up_fromv2,
+        videoDetail.up_from_v2 as videoDetail_up_from_v2,
         videoDetail.rcmd_reason as videoDetail_rcmd_reason,
         videoDetail.score as videoDetail_score,
         videoDetail.handle_type as videoDetail_handle_type,
@@ -178,7 +169,7 @@
         t_owner.id = videoDetail.owner_id
         where videoDetail.handle is #{isHandle}
 
-        and videoDetail.is_deleted = 0;
+        and videoDetail.is_deleted = 0  and t_owner.is_deleted = 0;
 
 
     </select>
