@@ -266,7 +266,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         this.removeByOuterId(whitelistRule.getId());
 
         //2.重新保存
-        List<Dict> totalDict = whitelistRule.getTotalDict();
+        List<Dict> totalDict = whitelistRule.getAggregationDict();
 
         this.saveBatch(totalDict);
     }

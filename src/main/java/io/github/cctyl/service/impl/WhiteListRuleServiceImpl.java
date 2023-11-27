@@ -2,7 +2,6 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -448,7 +447,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         for (WhiteListRule item : list) {
 
-            Map<DictType, List<Dict>> dictTypeListMap = item.getTotalDict()
+            Map<DictType, List<Dict>> dictTypeListMap = item.getAggregationDict()
                     .stream()
                     .collect(Collectors.groupingBy(dict -> dict.getDictType()));
             item
