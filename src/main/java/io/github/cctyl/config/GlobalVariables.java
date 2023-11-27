@@ -496,7 +496,7 @@ public class GlobalVariables {
                     String.valueOf(Instant.now().toEpochMilli())
                 );
             //3.定时任务开关
-            setCron(true);
+            setCron(false);
         }
 
 
@@ -529,7 +529,7 @@ public class GlobalVariables {
      */
     public static void initSettings() {
         //定时任务开关
-        CRON = Boolean.parseBoolean(Opt.ofNullable( configService.findByName(AppConstant.CRON)).orElse("true"));
+        CRON = Boolean.parseBoolean(Opt.ofNullable( configService.findByName(AppConstant.CRON)).orElse("false"));
     }
 
     public static boolean isCron() {
