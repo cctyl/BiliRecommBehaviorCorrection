@@ -69,7 +69,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 0 12 * * *")
     public void searchTask() {
-        if (GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()){
             return;
         }
         before();
@@ -121,7 +121,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 3 18 * * *")
     public void hotRankTask() {
-        if (GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()){
             return;
         }
         before();
@@ -167,7 +167,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 1 19 * * *")
     public void homeRecommendTask() {
-        if (GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()){
             return;
         }
         before();

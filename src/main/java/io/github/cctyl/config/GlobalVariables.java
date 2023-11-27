@@ -78,13 +78,13 @@ public class GlobalVariables {
     /**
      * 白名单up主id列表
      */
-    private static Set<String> WHITE_USER_ID_SET=  new HashSet<>();
+    private static Set<String> WHITE_USER_ID_SET = new HashSet<>();
 
     /**
      * 黑名单关键词列表
      */
     //TODO 已经有Tree，这个set是否还有必要？
-    private static Set<String> BLACK_KEYWORD_SET=  new HashSet<>();
+    private static Set<String> BLACK_KEYWORD_SET = new HashSet<>();
 
     /**
      * 黑名单关键词树
@@ -94,17 +94,17 @@ public class GlobalVariables {
     /**
      * 黑名单分区id列表
      */
-    private static Set<String> BLACK_TID_SET=  new HashSet<>();
+    private static Set<String> BLACK_TID_SET = new HashSet<>();
 
     /**
      * 白名单分区id列表
      */
-    private static Set<String> WHITE_TID_SET=  new HashSet<>();
+    private static Set<String> WHITE_TID_SET = new HashSet<>();
 
     /**
      * 黑名单标签列表
      */
-    private static Set<String> BLACK_TAG_SET=  new HashSet<>();
+    private static Set<String> BLACK_TAG_SET = new HashSet<>();
 
     /**
      * 黑名单标签树
@@ -120,12 +120,12 @@ public class GlobalVariables {
     /**
      * 搜索关键词列表
      */
-    private static Set<String> SEARCH_KEYWORD_SET=  new HashSet<>();
+    private static Set<String> SEARCH_KEYWORD_SET = new HashSet<>();
 
     /**
      * 白名单关键词列表
      */
-    private static List<WhiteListRule> WHITELIST_RULE_LIST= new ArrayList<>();
+    private static List<WhiteListRule> WHITELIST_RULE_LIST = new ArrayList<>();
 
     /**
      * ApiHeader
@@ -162,8 +162,8 @@ public class GlobalVariables {
     /**
      * 黑白名单忽略关键词列表
      */
-    private static Set<String> IGNORE_BLACK_KEY_WORD_SET=  new HashSet<>();
-    private static Set<String> IGNORE_WHITE_KEY_WORD_SET=  new HashSet<>();
+    private static Set<String> IGNORE_BLACK_KEY_WORD_SET = new HashSet<>();
+    private static Set<String> IGNORE_WHITE_KEY_WORD_SET = new HashSet<>();
 
     private static BlackRuleService blackRuleService;
     private static DictService dictService;
@@ -174,7 +174,6 @@ public class GlobalVariables {
     public static GlobalVariables INSTANCE;
 
     public GlobalVariables(
-
             BlackRuleService blackRuleService,
             DictService dictService,
             WhiteListRuleService whiteListRuleService,
@@ -409,10 +408,10 @@ public class GlobalVariables {
             //初次使用时，从文件中加载停顿词
 
             try (
-                    InputStream inputStream =  GlobalVariables.class.getResourceAsStream("/cn_stopwords.txt");
+                    InputStream inputStream = GlobalVariables.class.getResourceAsStream("/cn_stopwords.txt");
                     InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
                     BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
-            ){
+            ) {
 
                 stopWordList = bufferedReader.lines()
                         .map(String::trim)
@@ -477,7 +476,6 @@ public class GlobalVariables {
     }
 
 
-
     public static String getBaiduAskKey() {
         return BAIDU_ASK_KEY;
     }
@@ -490,11 +488,11 @@ public class GlobalVariables {
         FIRST_USE = configService.isFirstUse();
 
 
-        if (FIRST_USE){
+        if (FIRST_USE) {
             //2.第一次使用系统时间
             configService.addOrUpdateConfig(AppConstant.FIRST_START_TIME,
                     String.valueOf(Instant.now().toEpochMilli())
-                );
+            );
             //3.定时任务开关
             setCron(false);
         }
@@ -506,7 +504,8 @@ public class GlobalVariables {
         BAIDU_ASK_KEY = accessToken;
         configService.addOrUpdateConfig(AppConstant.BAIDU_ASK_KEY, accessToken, 2592000);
     }
-    public static void updateBaiduClientInfo(String clientId,String clientSecret) {
+
+    public static void updateBaiduClientInfo(String clientId, String clientSecret) {
         BAIDU_CLIENT_ID = clientId;
         BAIDU_CLIENT_SECRET = clientSecret;
         configService.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_ID, clientId);
@@ -514,7 +513,7 @@ public class GlobalVariables {
     }
 
     public static void updateMinPlaySecond(Integer minPlaySecond) {
-        MIN_PLAY_SECOND=minPlaySecond;
+        MIN_PLAY_SECOND = minPlaySecond;
         configService.addOrUpdateConfig(AppConstant.MIN_PLAY_SECOND, String.valueOf(minPlaySecond));
     }
 
@@ -529,7 +528,7 @@ public class GlobalVariables {
      */
     public static void initSettings() {
         //定时任务开关
-        CRON = Boolean.parseBoolean(Opt.ofNullable( configService.findByName(AppConstant.CRON)).orElse("false"));
+        CRON = Boolean.parseBoolean(Opt.ofNullable(configService.findByName(AppConstant.CRON)).orElse("false"));
     }
 
     public static boolean isCron() {
@@ -545,10 +544,11 @@ public class GlobalVariables {
 
     /**
      * 删除原本的header 重新存储
+     *
      * @param commonHeaderMap
      */
     @Transactional(rollbackFor = ServerException.class)
-    public  void replaceCommonHeaderMap(Map<String, String> commonHeaderMap) {
+    public void replaceCommonHeaderMap(Map<String, String> commonHeaderMap) {
 
         COMMON_HEADER_MAP = commonHeaderMap;
         cookieHeaderDataService.removeAllCommonHeader();
@@ -559,10 +559,11 @@ public class GlobalVariables {
 
     /**
      * 删除原本的数据，重新存储
+     *
      * @param commonCookieMap
      */
     @Transactional(rollbackFor = ServerException.class)
-    public  void replaceCommonCookieMap(Map<String, String> commonCookieMap) {
+    public void replaceCommonCookieMap(Map<String, String> commonCookieMap) {
 
         //删除原有的
         COMMON_COOKIE_MAP = commonCookieMap;
@@ -580,7 +581,7 @@ public class GlobalVariables {
      */
     public void addBlackUserId(String mid) {
 
-        if (GlobalVariables.BLACK_USER_ID_SET.contains(mid)){
+        if (GlobalVariables.BLACK_USER_ID_SET.contains(mid)) {
             return;
         }
         Dict dict = new Dict()
@@ -749,7 +750,7 @@ public class GlobalVariables {
     @Transactional(rollbackFor = ServerException.class)
     public void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
 
-        if (StrUtil.isNotBlank(whitelistRule.getId()) ) {
+        if (StrUtil.isNotBlank(whitelistRule.getId())) {
             WHITELIST_RULE_LIST.remove(whitelistRule);
         }
         //修改主对象
@@ -760,7 +761,6 @@ public class GlobalVariables {
         WHITELIST_RULE_LIST.add(whitelistRule);
 
     }
-
 
 
     /**
@@ -792,7 +792,7 @@ public class GlobalVariables {
     @Transactional
     public void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
 
-        if (ignoreKeyWordSet==null){
+        if (ignoreKeyWordSet == null) {
             return;
         }
         dictService.removeAndAddDict(
@@ -942,7 +942,7 @@ public class GlobalVariables {
         COMMON_COOKIE_MAP.putAll(commonCookieMap);
         //删除同名的
         Set<String> keySet = commonCookieMap.keySet();
-        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet,Classify.COOKIE, MediaType.GENERAL);
+        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet, Classify.COOKIE, MediaType.GENERAL);
         //重新保存
         cookieHeaderDataService.saveCommonCookieMap(commonCookieMap);
     }
@@ -951,7 +951,7 @@ public class GlobalVariables {
         COMMON_HEADER_MAP.putAll(commonHeaderMap);
         //删除同名的
         Set<String> keySet = commonHeaderMap.keySet();
-        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet,Classify.REQUEST_HEADER, MediaType.GENERAL);
+        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet, Classify.REQUEST_HEADER, MediaType.GENERAL);
         //重新保存
         cookieHeaderDataService.saveCommonHeaderMap(commonHeaderMap);
     }
@@ -985,21 +985,23 @@ public class GlobalVariables {
 
     /**
      * 白名单分区
+     *
      * @param whiteTidSet
      */
     public void addWhiteTidSet(Set<String> whiteTidSet) {
-            dictService.removeAndAddDict(
-                    AccessType.WHITE,
-                    DictType.TID,
-                    null,
-                    whiteTidSet);
+        dictService.removeAndAddDict(
+                AccessType.WHITE,
+                DictType.TID,
+                null,
+                whiteTidSet);
 
-            //新增到缓存
-            WHITE_TID_SET.addAll(whiteTidSet);
+        //新增到缓存
+        WHITE_TID_SET.addAll(whiteTidSet);
     }
 
     /**
      * 添加搜索关键词
+     *
      * @param searchKeywords
      */
     public void addSearchKeyword(Set<String> searchKeywords) {
