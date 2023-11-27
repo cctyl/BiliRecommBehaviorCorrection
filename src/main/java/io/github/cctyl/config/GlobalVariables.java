@@ -769,13 +769,19 @@ public class GlobalVariables {
      * @param id
      * @return
      */
+    @Transactional(rollbackFor = ServerException.class)
     public boolean removeWhitelistRules(String id) {
 
         WHITELIST_RULE_LIST = WHITELIST_RULE_LIST.stream()
                 .filter(whiteListRule -> !id.equals(whiteListRule.getId()))
                 .collect(Collectors.toList());
 
-        return whiteListRuleService.removeById(id);
+        boolean result = whiteListRuleService.removeById(id);
+
+        //删除关联的数据
+        dictService.removeByOuterId(id);
+
+        return result;
     }
 
     /**
