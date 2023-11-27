@@ -146,11 +146,9 @@ public class BlackRuleController {
     public R getCacheTrainResult() {
         List<Dict> keywordList = dictService.findBlackCacheKeyWord();
         List<Dict> tagNameList = dictService.findBlackCacheTag();
-        List<Dict> descList = dictService.findBlackCacheDesc();
         return R.data(Map.of(
                 "keywordSet", keywordList,
-                "tagNameSet", tagNameList,
-                "descList",descList
+                "tagNameSet", tagNameList
         ));
     }
 
@@ -168,6 +166,8 @@ public class BlackRuleController {
 
         //添加黑名单标签
         GlobalVariables.INSTANCE.addBlackTagFromCache(tagNameIdList);
+
+
 
         return R.ok();
     }

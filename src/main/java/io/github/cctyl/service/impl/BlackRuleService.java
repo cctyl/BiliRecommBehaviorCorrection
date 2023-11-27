@@ -92,7 +92,7 @@ public class BlackRuleService {
         topDescKeyWord.removeAll(GlobalVariables. getBlackKeywordSet());
         topDescKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topDescKeyWord)) {
-            dictService.addBlackCache(topDescKeyWord, DictType.DESC);
+            dictService.addBlackCache(topDescKeyWord, DictType.KEYWORD);
         }
 
         topTitleKeyWord.removeAll(GlobalVariables.getBlackKeywordSet()  );

@@ -69,5 +69,4 @@ public interface DictService extends IService<Dict> {
 
     List<Dict> findByOuterIdIn(Collection<String> idList);
 
-    List<Dict> findBlackCacheDesc();
 }
