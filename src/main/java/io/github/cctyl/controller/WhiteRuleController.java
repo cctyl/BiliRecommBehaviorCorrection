@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
+import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.dto.R;
@@ -116,7 +117,7 @@ public class WhiteRuleController {
     @PostMapping("/")
     public R addOrUpdateWhiteRule(
             @Parameter(name = "toUpdate", description = "将要修改的白名单对象")
-            @RequestBody WhiteListRule toUpdate
+            @RequestBody WhiteListRuleAddUpdateDto toUpdate
     ) {
         if (
                 CollUtil.isEmpty(toUpdate.getDescKeyWordList())
@@ -131,12 +132,12 @@ public class WhiteRuleController {
         }
 
         //添加之前，过滤掉需要忽略的关键词
-        toUpdate.setDescKeyWordList(whiteRuleService.filterIgnore(toUpdate.getDescKeyWordList()));
-        toUpdate.setTagNameList(whiteRuleService.filterIgnore(toUpdate.getTagNameList()));
-        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnore(toUpdate.getTitleKeyWordList()));
-        toUpdate.setCoverKeyword(whiteRuleService.filterIgnore(toUpdate.getCoverKeyword()));
+        toUpdate.setDescKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getDescKeyWordList()));
+        toUpdate.setTagNameList(whiteRuleService.filterIgnoreValue(toUpdate.getTagNameList()));
+        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getTitleKeyWordList()));
+        toUpdate.setCoverKeyword(whiteRuleService.filterIgnoreValue(toUpdate.getCoverKeyword()));
 
-        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate);
+        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate.transform());
         return R.ok().setMessage("添加成功").setData(toUpdate);
     }
 

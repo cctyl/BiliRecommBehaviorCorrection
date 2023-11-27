@@ -39,6 +39,8 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
 
     List<Dict> filterIgnore(List<Dict> dictList);
 
+    List<String> filterIgnoreValue(List<String> dictList);
+
     IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page);
 
     WhiteListRule findWithDetailById(String id);

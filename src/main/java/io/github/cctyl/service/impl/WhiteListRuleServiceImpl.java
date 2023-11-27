@@ -463,6 +463,14 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     }
 
     @Override
+    public List<String> filterIgnoreValue(List<String> dictList) {
+        Set<String> ignoreSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
+        return dictList.stream().filter(
+                dict -> !ignoreSet.contains(dict)
+        ).collect(Collectors.toList());
+    }
+
+    @Override
     public IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page) {
 
         List<WhiteListRule> records = this.page(page).getRecords();

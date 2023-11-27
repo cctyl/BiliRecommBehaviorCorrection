@@ -3,7 +3,9 @@ package io.github.cctyl.config;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
+import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.dto.ApiHeader;
 import io.github.cctyl.domain.po.WhiteListRule;
@@ -744,18 +746,22 @@ public class GlobalVariables {
      *
      * @param whitelistRule
      */
-    @Transactional
+    @Transactional(rollbackFor = ServerException.class)
     public void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
 
-        if (whitelistRule.getId() != null) {
+        if (StrUtil.isNotBlank(whitelistRule.getId()) ) {
             WHITELIST_RULE_LIST.remove(whitelistRule);
         }
-        WHITELIST_RULE_LIST.add(whitelistRule);
         //修改主对象
         whiteListRuleService.saveOrUpdate(whitelistRule);
         //修改关联的数据
         dictService.updateByWhiteListRule(whitelistRule);
+
+        WHITELIST_RULE_LIST.add(whitelistRule);
+
     }
+
+
 
     /**
      * 根据id删除白名单
