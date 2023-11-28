@@ -82,7 +82,7 @@ public class InitFromRedis implements ApplicationRunner {
 
 
         //16.获取一下wbi
-        //CompletableFuture.runAsync(biliApi::getHome);
+        CompletableFuture.runAsync(biliApi::getHome);
 
         log.debug("初始化...加载完毕...");
     }
