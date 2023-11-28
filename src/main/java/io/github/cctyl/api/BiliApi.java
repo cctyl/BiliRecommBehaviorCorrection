@@ -65,8 +65,8 @@ public class BiliApi {
 
         }else {
             //没有匹配的，就返回默认的header
-            GlobalVariables.getCommonHeaderMap()
-                    .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+            //GlobalVariables.getCommonHeaderMap()
+            //        .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
             //公共header时，需要修改host
             result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
         }
@@ -158,7 +158,7 @@ public class BiliApi {
         HttpRequest request =
                 HttpRequest.post(url)
                         .clearHeaders()
-//                        .header(getHeader(url),true)
+                        .header(getHeader(url),true)
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .form(paramMap)
                         .timeout(10000)
