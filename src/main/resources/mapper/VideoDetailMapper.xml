@@ -98,7 +98,6 @@
     </resultMap>
 
 
-
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_link_v2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id,  teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_from_v2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version
@@ -169,7 +168,36 @@
         t_owner.id = videoDetail.owner_id
         where videoDetail.handle is #{isHandle}
 
-        and videoDetail.is_deleted = 0  and t_owner.is_deleted = 0;
+        and videoDetail.is_deleted = 0 and t_owner.is_deleted = 0
+
+
+    </select>
+    <select id="findWithOwnerByIdIn" resultMap="withOwnerMap">
+        select
+        <include refid="Base_Column_List_Assoc"/>,
+        <include refid="io.github.cctyl.mapper.OwnerMapper.Base_Column_List_Assoc"/>
+        from
+        video_detail videoDetail
+        left join owner t_owner on
+        t_owner.id = videoDetail.owner_id
+        where
+
+        videoDetail.is_deleted = 0 and t_owner.is_deleted = 0
+        and
+        <choose>
+
+            <when test="idCol !=null and idCol.size>0">
+                videoDetail.id in
+                <foreach collection="idCol" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            </when>
+
+            <!-- 可选 上述所有情况都不满足时，走到该标签-->
+            <otherwise>
+                false
+            </otherwise>
+        </choose>
 
 
     </select>

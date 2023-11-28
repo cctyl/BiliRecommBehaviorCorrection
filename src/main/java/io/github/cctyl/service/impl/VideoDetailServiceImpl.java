@@ -3,12 +3,13 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.domain.query.PageQuery;
 import io.github.cctyl.mapper.VideoDetailMapper;
 import io.github.cctyl.domain.po.Owner;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.po.VideoDetail;
-import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.service.*;
 import io.github.cctyl.utils.ServerException;
 import lombok.RequiredArgsConstructor;
@@ -147,16 +148,31 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
                 .eq(VideoDetail::getAid,avid));
     }
 
+    @Override
+    public VideoDetail findWithDetailById(String id) {
+        return   this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
+                .eq(VideoDetail::getId,id));
+    }
+
     /**
      * 根据 处理状态查询 视频列表
      *
      * @param isHandle
+     * @param pageQuery
      * @return
      */
     @Override
-    public List<VideoDetail> findWithOwnerAndHandle(boolean isHandle) {
+    public List<VideoDetail> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery) {
 
-        return baseMapper.findWithOwnerAndHandle(isHandle);
+
+        Page<VideoDetail> page = this.page(Page.of(pageQuery.getPage(), pageQuery.getSize()),
+                new LambdaQueryWrapper<VideoDetail>()
+                .eq(VideoDetail::isHandle,isHandle)
+        );
+        List<String> idCol = page.getRecords().stream().map(VideoDetail::getId).collect(Collectors.toList());
+
+
+        return baseMapper.findWithOwnerByIdIn(idCol);
     }
 
 

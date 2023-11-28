@@ -418,12 +418,7 @@ public class BiliService {
      */
 
     public void processReady2HandleVideo(Map<String, List<String>> map) {
-        List<VideoDetail> videoDetailList =  videoDetailService.findWithOwnerAndHandle(false);
 
-        Map<String, VideoDetail> handleVideoMap = videoDetailList
-                .stream()
-                .map(VideoDetail.class::cast)
-                .collect(Collectors.toMap(VideoDetail::getId, v -> v, (o1, o2) -> o1));
 
         List<String> dislikeIdList = map.get("dislikeList");
         List<String> thumbUpIdList = map.get("thumbUpList");
@@ -432,7 +427,7 @@ public class BiliService {
         List<VideoDetail> blackTrainVideoList = new ArrayList<>();
         //执行点踩
         for (String id : dislikeIdList) {
-            VideoDetail videoDetail = handleVideoMap.get(id);
+            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
 
             if (videoDetail != null) {
                 blackTrainVideoList.add(videoDetail);
@@ -455,7 +450,7 @@ public class BiliService {
 
         //执行点赞
         for (String id  : thumbUpIdList) {
-            VideoDetail videoDetail = handleVideoMap.get(id);
+            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
             if (videoDetail != null) {
                 this.playAndThumbUp(videoDetail);
                 this.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
@@ -466,7 +461,7 @@ public class BiliService {
 
         //不处理的
         for (String id  : other){
-            VideoDetail videoDetail = handleVideoMap.get(id);
+            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
             this.recordHandleVideo(videoDetail, HandleType.OTHER);
         }
 

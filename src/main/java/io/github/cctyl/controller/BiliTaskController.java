@@ -4,6 +4,7 @@ import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.domain.query.PageQuery;
 import io.github.cctyl.domain.vo.VideoVo;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.impl.BiliService;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -86,11 +88,11 @@ public class BiliTaskController {
 
     @Operation(summary = "获取等待处理的数据")
     @GetMapping("/ready2handle")
-    public R getReady2HandleVideo() {
+    public R getReady2HandleVideo(@ParameterObject PageQuery pageQuery) {
         List<VideoVo> thumbUpList = new ArrayList<>();
         List<VideoVo> dislikeList = new ArrayList<>();
 
-        List<VideoDetail> videoDetailList =  videoDetailService.findWithOwnerAndHandle(false);
+        List<VideoDetail> videoDetailList =  videoDetailService.findWithOwnerAndHandle(false,pageQuery);
         videoDetailList
                 .stream()
                 .map(VideoDetail.class::cast)

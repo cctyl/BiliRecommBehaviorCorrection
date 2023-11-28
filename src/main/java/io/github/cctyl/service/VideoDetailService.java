@@ -2,9 +2,9 @@ package io.github.cctyl.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.query.PageQuery;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -28,12 +28,15 @@ public interface VideoDetailService extends IService<VideoDetail> {
 
     VideoDetail findWithDetailByAid(int avid);
 
+    VideoDetail findWithDetailById(String id);
+
     /**
      * 根据 处理状态查询 视频列表
      * @param isHandle
+     * @param pageQuery
      * @return
      */
-    List<VideoDetail> findWithOwnerAndHandle(boolean isHandle);
+    List<VideoDetail> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery);
 
 
     void updateHandleInfoById(VideoDetail videoDetail);
