@@ -2,6 +2,7 @@ package io.github.cctyl.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.vo.ConfigVo;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 
 
 @RestController
@@ -32,6 +34,14 @@ public class ConfigController {
         return R.ok().setData(configService.updateRefreshCookie(cookieStr));
     }
 
+    @GetMapping("/refresh-cookie")
+    @Operation(summary = "获取 及时更新的cookie")
+    public R getRefreshCookie(
+    ) {
+
+        Map<String, String> refreshCookieMap = GlobalVariables.getRefreshCookieMap();
+        return R.data(refreshCookieMap);
+    }
 
     @PutMapping("/standard")
     @Operation(summary = "更新基本配置信息")
