@@ -10,10 +10,12 @@ import io.github.cctyl.mapper.ConfigMapper;
 import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.service.ConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ServerException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,13 +34,14 @@ import java.util.function.Consumer;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService {
 
-    @Autowired
-    private RedisUtil redisUtil;
+    private final RedisUtil redisUtil;
 
-    @Autowired
-    private VideoDetailService videoDetailService;
+    private final VideoDetailService videoDetailService;
+
+    private final CookieHeaderDataService cookieHeaderDataService;
 
     @Override
     public String findByName(String name) {
@@ -109,6 +112,8 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     public Map<String, String> updateRefreshCookie(String cookieStr) {
         Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
         GlobalVariables.updateRefreshCookie(cookieMap);
+        //立即持久化
+        cookieHeaderDataService.replaceRefreshCookie(cookieMap);
         return GlobalVariables.getRefreshCookieMap();
     }
 

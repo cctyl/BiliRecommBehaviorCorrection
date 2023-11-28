@@ -7,9 +7,11 @@ import io.github.cctyl.domain.dto.RecommendCard;
 import io.github.cctyl.domain.dto.SearchResult;
 
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,16 +26,16 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class BiliTask {
 
 
-    @Autowired
-    private BiliService biliService;
+    private final BiliService biliService;
 
 
-    @Autowired
-    private BiliApi biliApi;
+    private final BiliApi biliApi;
 
+    private final CookieHeaderDataService cookieHeaderDataService;
 
     //@Autowired
     //@Qualifier("vchat")
@@ -210,4 +212,19 @@ public class BiliTask {
         log.info("本次点赞的视频：{}", thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
         log.info("本次点踩的视频：{}", dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
     }
+
+
+    /**
+     * 20分钟持久化一次 cookie
+     */
+    @Scheduled(cron = "0 */20 * * * *")
+    public void saveRefreshCookie(){
+        log.info("开始持久化 refreshCookie，本次持久化的数量为：{}",GlobalVariables.getRefreshCookieMap().size());
+        if (GlobalVariables.getRefreshCookieMap().size()==0){
+            log.info("cookie 数量为0，不予持久化");
+            return;
+        }
+        cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
+    }
+
 }

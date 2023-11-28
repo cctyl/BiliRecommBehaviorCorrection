@@ -1,19 +1,26 @@
 package io.github.cctyl.initialization;
 
+import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.CompletableFuture;
+
 
 @Slf4j
 @Component
 @Order(1)
+@RequiredArgsConstructor
 public class InitFromRedis implements ApplicationRunner {
 
-
+    private final BiliApi biliApi;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -72,6 +79,10 @@ public class InitFromRedis implements ApplicationRunner {
 
         //9.白名单关键词列表
         GlobalVariables.initWhitelistRules();
+
+
+        //16.获取一下wbi
+        //CompletableFuture.runAsync(biliApi::getHome);
 
         log.debug("初始化...加载完毕...");
     }

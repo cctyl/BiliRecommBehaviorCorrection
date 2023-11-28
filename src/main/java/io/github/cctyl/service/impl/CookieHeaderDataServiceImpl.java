@@ -10,6 +10,7 @@ import io.github.cctyl.domain.enumeration.Classify;
 import io.github.cctyl.domain.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.ServerException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * @since 2023-11-10
  */
 @Service
+@Slf4j
 public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMapper, CookieHeaderData> implements CookieHeaderDataService {
 
 
@@ -201,6 +203,7 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
 
         this.saveBatch(dataList);
 
+        log.debug("保存{}个数据",dataList.size());
     }
 
     /**

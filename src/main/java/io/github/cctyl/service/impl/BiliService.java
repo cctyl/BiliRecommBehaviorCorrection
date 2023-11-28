@@ -66,7 +66,7 @@ public class BiliService {
      * @param handleType  处理类型
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
-        if (videoDetail.getId()==null){
+        if (videoDetail.getId() == null) {
             throw new RuntimeException("videoDetail.getId()==null");
         }
         videoDetail.setHandleType(handleType);
@@ -102,9 +102,9 @@ public class BiliService {
     ) {
 
         log.debug("处理视频avid={}", avid);
-        VideoDetail videoDetail =  videoDetailService.findWithDetailByAid(avid);
+        VideoDetail videoDetail = videoDetailService.findWithDetailByAid(avid);
         if (
-            videoDetail!=null && videoDetail.isHandle()
+                videoDetail != null && videoDetail.isHandle()
         ) {
             log.info("视频：{} 之前已处理过", avid);
             return;
@@ -112,8 +112,8 @@ public class BiliService {
 
         try {
             //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
-            if (videoDetail==null){
-                videoDetail =  biliApi.getVideoDetail(avid);
+            if (videoDetail == null) {
+                videoDetail = biliApi.getVideoDetail(avid);
             }
 
             //1. 如果是黑名单内的，直接执行点踩操作
@@ -161,7 +161,7 @@ public class BiliService {
         for (VideoDetail videoDetail : videoDetailList) {
             VideoDetail byAid = videoDetailService.findByAid(videoDetail.getAid());
             try {
-                if (byAid!=null && byAid.isHandle()) {
+                if (byAid != null && byAid.isHandle()) {
                     log.info("视频：{} 之前已处理过", videoDetail.getAid());
                     continue;
                 }
@@ -336,7 +336,7 @@ public class BiliService {
         ArrayList<VideoDetail> allVideo = new ArrayList<>();
         allVideo.addAll(rankVideoList);
         allVideo.addAll(regionLatestVideo);
-        blackRuleService. trainBlacklistByVideoList(allVideo);
+        blackRuleService.trainBlacklistByVideoList(allVideo);
 
         return allVideo.size();
     }
@@ -384,13 +384,14 @@ public class BiliService {
         );
 
         //开始训练黑名单
-       blackRuleService. trainBlacklistByVideoList(videoDetailList);
+        blackRuleService.trainBlacklistByVideoList(videoDetailList);
 
         return videoDetailList.size();
     }
 
     /**
      * 带理由的不喜欢
+     *
      * @param dislikeReason
      * @param dislikeMid
      * @param dislikeTid
@@ -401,14 +402,14 @@ public class BiliService {
                                 Integer dislikeTid,
                                 Integer dislikeTagId,
                                 Integer aid
-                                ) {
+    ) {
 
         biliApi.dislikeByReason(dislikeReason,
                 dislikeMid,
                 dislikeTid,
                 dislikeTagId,
                 aid
-                );
+        );
     }
 
 
@@ -420,50 +421,59 @@ public class BiliService {
     public void processReady2HandleVideo(Map<String, List<String>> map) {
 
 
-        List<String> dislikeIdList = map.get("dislikeList");
-        List<String> thumbUpIdList = map.get("thumbUpList");
-        List<String> other = map.get("other");
+        List<String> dislikeIdList = map.getOrDefault("dislikeList", Collections.emptyList());
+        List<String> thumbUpIdList = map.getOrDefault("thumbUpList", Collections.emptyList());
+        List<String> other = map.getOrDefault("other", Collections.emptyList());
 
-        List<VideoDetail> blackTrainVideoList = new ArrayList<>();
-        //执行点踩
-        for (String id : dislikeIdList) {
-            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
+        if (dislikeIdList.size() > 0) {
+            List<VideoDetail> blackTrainVideoList = new ArrayList<>();
+            //执行点踩
+            for (String id : dislikeIdList) {
+                VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
 
-            if (videoDetail != null) {
-                blackTrainVideoList.add(videoDetail);
-                if (videoDetail.getDislikeReason()!=null){
-                    this.dislikeByReason(videoDetail.getDislikeReason(),
-                            String.valueOf(videoDetail.getDislikeMid()),
-                            videoDetail.getDislikeTid(),
-                            videoDetail.getDislikeTagId(),
-                            videoDetail.getAid()
-                    );
+                if (videoDetail != null) {
+                    blackTrainVideoList.add(videoDetail);
+                    if (videoDetail.getDislikeReason() != null) {
+                        this.dislikeByReason(videoDetail.getDislikeReason(),
+                                String.valueOf(videoDetail.getDislikeMid()),
+                                videoDetail.getDislikeTid(),
+                                videoDetail.getDislikeTagId(),
+                                videoDetail.getAid()
+                        );
+                    }
+                    this.dislike(videoDetail.getAid());
+                    this.recordHandleVideo(videoDetail, HandleType.DISLIKE);
+                } else {
+                    log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
                 }
-                this.dislike(videoDetail.getAid());
-                this.recordHandleVideo(videoDetail, HandleType.DISLIKE);
-            } else {
-                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
             }
-        }
-        //进行黑名单训练
-        blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
-
-        //执行点赞
-        for (String id  : thumbUpIdList) {
-            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
-            if (videoDetail != null) {
-                this.playAndThumbUp(videoDetail);
-                this.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
-            } else {
-                log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
-            }
+            //进行黑名单训练
+            blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
         }
 
-        //不处理的
-        for (String id  : other){
-            VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
-            this.recordHandleVideo(videoDetail, HandleType.OTHER);
+
+        if (thumbUpIdList.size() > 0) {
+            //执行点赞
+            for (String id : thumbUpIdList) {
+                VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
+                if (videoDetail != null) {
+                    this.playAndThumbUp(videoDetail);
+                    this.recordHandleVideo(videoDetail, HandleType.THUMB_UP);
+                } else {
+                    log.debug("{} - {} 未找到匹配的视频", videoDetail.getBvid(), videoDetail.getTitle());
+                }
+            }
         }
+
+
+        if (other.size() > 0) {
+            //不处理的
+            for (String id : other) {
+                VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
+                this.recordHandleVideo(videoDetail, HandleType.OTHER);
+            }
+        }
+
 
     }
 }
