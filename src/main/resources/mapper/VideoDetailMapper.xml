@@ -165,10 +165,10 @@
         from
         video_detail videoDetail
         left join owner t_owner on
-        t_owner.id = videoDetail.owner_id
+        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
         where videoDetail.handle is #{isHandle}
 
-        and videoDetail.is_deleted = 0 and t_owner.is_deleted = 0
+        and videoDetail.is_deleted = 0
 
 
     </select>
@@ -179,10 +179,10 @@
         from
         video_detail videoDetail
         left join owner t_owner on
-        t_owner.id = videoDetail.owner_id
+        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
         where
 
-        videoDetail.is_deleted = 0 and t_owner.is_deleted = 0
+        videoDetail.is_deleted = 0
         and
         <choose>
 
