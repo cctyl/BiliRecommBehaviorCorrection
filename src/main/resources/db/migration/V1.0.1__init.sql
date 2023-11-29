@@ -3,7 +3,7 @@
 CREATE TABLE dict
 (
     id                 char(30)     NOT NULL,
-    value              VARCHAR(255) NULL,
+    value              VARCHAR(255) NOT NULL,
     access_type        varchar(50)  null,
     dict_type          varchar(50)  null,
     outer_id           varchar(60)  NULL,
@@ -37,7 +37,7 @@ CREATE TABLE owner
 CREATE TABLE stat
 (
     id                 char(30) NOT NULL,
-    aid                INT      NULL,
+    aid                INT      NOT NULL,
     view               INT      NULL,
     danmaku            INT      NULL,
     reply              INT      NULL,
@@ -184,8 +184,8 @@ CREATE TABLE cookie_header_data
 (
     id                 char(30)     NOT NULL,
     url                VARCHAR(350) NULL,
-    ckey               varchar(50)  null,
-    cvalue             varchar(200) null,
+    ckey               varchar(50)  NOT null,
+    cvalue             varchar(200) NOT null,
     classify           varchar(50)  null,
     media_type         varchar(50)  null,
     created_date       DATE         null,
@@ -199,7 +199,7 @@ CREATE TABLE cookie_header_data
 CREATE TABLE config
 (
     id                 char(30)     NOT NULL,
-    name               varchar(50)  null,
+    name               varchar(50)  NOT null,
     value              varchar(200) null,
     expire_second      int        default -1,
     created_date       DATE         null,
