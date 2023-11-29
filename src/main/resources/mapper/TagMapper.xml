@@ -116,7 +116,7 @@
         tag.is_deleted as tag_is_deleted,
         tag.version as tag_version
     </sql>
-    <select id="findByVideoId" resultType="io.github.cctyl.domain.po.Tag">
+    <select id="findByVideoId" resultMap="BaseResultMapAssoc">
 
         select
             <include refid="Base_Column_List_Assoc"/>

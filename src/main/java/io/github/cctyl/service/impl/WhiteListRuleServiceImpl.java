@@ -249,15 +249,19 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
                                     for (Dict keyword : item.getTagNameList()) {
 
-                                        String tagNameFound = tagNameList.stream()
-                                                .filter(s -> keyword.getValue()!=null&&keyword.getValue().contains(s))
-                                                .findFirst().orElse(null);
+                                        try {
+                                            String tagNameFound = tagNameList.stream()
+                                                    .filter(s -> keyword.getValue()!=null&&keyword.getValue().contains(s))
+                                                    .findFirst().orElse(null);
 
-                                        if (tagNameFound != null) {
-                                            tagMatch.set(true);
-                                            matchWordArr[6] = keyword.getValue();
-                                            matchWordArr[7] = tagNameFound;
-                                            break;
+                                            if (tagNameFound != null) {
+                                                tagMatch.set(true);
+                                                matchWordArr[6] = keyword.getValue();
+                                                matchWordArr[7] = tagNameFound;
+                                                break;
+                                            }
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
                                         }
                                     }
 
