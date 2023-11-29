@@ -32,38 +32,12 @@ public class BiliTask {
 
     private final BiliService biliService;
 
-    private final BiliApi biliApi;
-
     private final CookieHeaderDataService cookieHeaderDataService;
 
     //@Autowired
     //@Qualifier("vchat")
     //private WebSocketClient vchatCliet;
 
-
-    /**
-     * 执行任务前的准备
-     */
-    public void before() {
-        //0.1 检查cookie
-        boolean cookieStatus = biliService.checkCookie();
-        if (!cookieStatus) {
-            //todo 发送提醒
-            throw new RuntimeException("cookie过期，请更新cookie");
-        }
-
-        //0.2 检查accessKey
-        try {
-            JSONObject jsonObject = biliApi.getUserInfo();
-            log.info("accessKey验证通过,body={}", jsonObject.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("accessKey验证不通过，请检查");
-        }
-
-        //0.3 更新一下必要的cookie
-        biliService.updateCookie();
-    }
 
     /**
      * 关键词搜索任务 中午12点
@@ -73,50 +47,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        before();
-        //0.初始化部分
-        //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
-
-        //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
-
-        //1.主动搜索，针对搜索视频进行处理
-        /*
-            一个关键字获取几条？肯定是每个关键字都需要搜索遍历的
-            根据关键词搜索后，不能按顺序点击，这是为了模拟用户真实操作
-            不能全部分页获取后，再进行点击，这样容易风控
-            一个关键词，从两页抽20条
-         */
-        log.info("==============开始处理关键词==================");
-        for (String keyword : GlobalVariables.getSearchKeywordSet()) {
-            //不能一次获取完再执行操作，要最大限度模拟用户的行为
-            for (int i = 0; i < 2; i++) {
-                //执行搜索
-                List<SearchResult> searchRaw;
-                try {
-                    searchRaw = biliApi.search(keyword, i);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                ThreadUtil.sleep(3);
-                //随机挑选10个
-                DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
-                    //处理挑选结果
-                    try {
-                        biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
-                        ThreadUtil.sleep(5);
-                    } catch (LogOutException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
-            ThreadUtil.sleep(3);
-        }
-        videoLogOutput(thumbUpVideoList, dislikeVideoList);
+        biliService.searchTask();
     }
 
     /**
@@ -127,43 +58,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        before();
-        //0.初始化部分
-        //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
-
-        //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
-
-        //2. 对排行榜数据进行处理，处理100条，即5页数据
-        log.info("==============开始处理热门排行榜==================");
-        for (int i = 1; i <= 10; i++) {
-            List<VideoDetail> hotRankVideo;
-            try {
-                hotRankVideo = biliApi.getHotRankVideo(i, 20);
-            } catch (Exception e) {
-                e.printStackTrace();
-                continue;
-            }
-            //20条中随机抽10条
-            DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
-                try {
-                    //处理挑选结果
-                    biliService.handleVideo(
-                            thumbUpVideoList,
-                            dislikeVideoList,
-                            videoDetail.getAid()
-                    );
-                    ThreadUtil.sleep(5);
-                } catch (LogOutException e) {
-                    throw e;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            ThreadUtil.sleep(7);
-        }
-        videoLogOutput(thumbUpVideoList, dislikeVideoList);
+        biliService.hotRankTask();
     }
 
 
@@ -175,47 +70,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        before();
-        //0.初始化部分
-        //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
-
-        //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
-
-        //3. 对推荐视频进行处理
-        log.info("==============开始处理首页推荐==================");
-        for (int i = 0; i < 10; i++) {
-            List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
-            DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
-
-                try {
-                    if ("av".equals(recommendCard.getCardGoto())) {
-                        //处理挑选结果
-                        biliService.handleVideo(
-                                thumbUpVideoList,
-                                dislikeVideoList,
-                                recommendCard.getArgs().getAid()
-                        );
-                        ThreadUtil.sleep(5);
-                    }
-                } catch (LogOutException e) {
-                    throw e;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            ThreadUtil.sleep(7);
-        }
-        videoLogOutput(thumbUpVideoList, dislikeVideoList);
-    }
-
-    /**
-     * 执行完毕后输出日志
-     */
-    public void videoLogOutput(List<VideoDetail> thumbUpVideoList, List<VideoDetail> dislikeVideoList) {
-        log.info("本次点赞的视频：{}", thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
-        log.info("本次点踩的视频：{}", dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+        biliService.homeRecommendTask();
     }
 
 

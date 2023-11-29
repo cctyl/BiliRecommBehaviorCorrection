@@ -31,7 +31,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BiliTaskController {
 
-    private final BiliTask biliTask;
+
     private final BiliService biliService;
     private final BlackRuleService blackRuleService;
     private final VideoDetailService videoDetailService;
@@ -45,7 +45,7 @@ public class BiliTaskController {
         }
         TaskPool.putTask(() -> {
             try {
-                biliTask.searchTask();
+                biliService.searchTask();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -61,7 +61,7 @@ public class BiliTaskController {
         }
         TaskPool.putTask(() -> {
             try {
-                biliTask.hotRankTask();
+                biliService.hotRankTask();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -77,7 +77,7 @@ public class BiliTaskController {
         }
         TaskPool.putTask(() -> {
             try {
-                biliTask.homeRecommendTask();
+                biliService.homeRecommendTask();
             } catch (Exception e) {
                 e.printStackTrace();
             }

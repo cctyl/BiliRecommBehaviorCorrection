@@ -5,16 +5,16 @@ import cn.hutool.core.lang.Opt;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.domain.dto.DislikeReason;
-import io.github.cctyl.domain.dto.PageBean;
-import io.github.cctyl.domain.dto.UserSubmissionVideo;
+import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -479,4 +479,180 @@ public class BiliService {
 
 
     }
+
+
+    /**
+     * 执行任务前的准备
+     */
+    public void before() {
+        //0.1 检查cookie
+        boolean cookieStatus = this.checkCookie();
+        if (!cookieStatus) {
+            //todo 发送提醒
+            throw new RuntimeException("cookie过期，请更新cookie");
+        }
+
+        //0.2 检查accessKey
+        try {
+            JSONObject jsonObject = biliApi.getUserInfo();
+            log.info("accessKey验证通过,body={}", jsonObject.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("accessKey验证不通过，请检查");
+        }
+
+        //0.3 更新一下必要的cookie
+        this.updateCookie();
+    }
+
+
+
+
+    /**
+     * 关键词搜索任务 中午12点
+     */
+    public void searchTask() {
+
+        before();
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
+
+        //1.主动搜索，针对搜索视频进行处理
+        /*
+            一个关键字获取几条？肯定是每个关键字都需要搜索遍历的
+            根据关键词搜索后，不能按顺序点击，这是为了模拟用户真实操作
+            不能全部分页获取后，再进行点击，这样容易风控
+            一个关键词，从两页抽20条
+         */
+        log.info("==============开始处理关键词==================");
+        for (String keyword : GlobalVariables.getSearchKeywordSet()) {
+            //不能一次获取完再执行操作，要最大限度模拟用户的行为
+            for (int i = 0; i < 2; i++) {
+                //执行搜索
+                List<SearchResult> searchRaw;
+                try {
+                    searchRaw = biliApi.search(keyword, i);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
+                ThreadUtil.sleep(3);
+                //随机挑选10个
+                DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
+                    //处理挑选结果
+                    try {
+                        this.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
+                        ThreadUtil.sleep(5);
+                    } catch (LogOutException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+            ThreadUtil.sleep(3);
+        }
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
+    }
+
+    /**
+     * 热门排行榜任务
+     */
+    public void hotRankTask() {
+
+        before();
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
+
+        //2. 对排行榜数据进行处理，处理100条，即5页数据
+        log.info("==============开始处理热门排行榜==================");
+        for (int i = 1; i <= 10; i++) {
+            List<VideoDetail> hotRankVideo;
+            try {
+                hotRankVideo = biliApi.getHotRankVideo(i, 20);
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
+            //20条中随机抽10条
+            DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
+                try {
+                    //处理挑选结果
+                    this.handleVideo(
+                            thumbUpVideoList,
+                            dislikeVideoList,
+                            videoDetail.getAid()
+                    );
+                    ThreadUtil.sleep(5);
+                } catch (LogOutException e) {
+                    throw e;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            ThreadUtil.sleep(7);
+        }
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
+    }
+
+
+    /**
+     * 首页推荐任务
+     */
+    public void homeRecommendTask() {
+
+        before();
+        //0.初始化部分
+        //本次点赞视频列表
+        var thumbUpVideoList = new ArrayList<VideoDetail>();
+
+        //本次点踩视频列表
+        var dislikeVideoList = new ArrayList<VideoDetail>();
+
+        //3. 对推荐视频进行处理
+        log.info("==============开始处理首页推荐==================");
+        for (int i = 0; i < 10; i++) {
+            List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
+            DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
+
+                try {
+                    if ("av".equals(recommendCard.getCardGoto())) {
+                        //处理挑选结果
+                        this.handleVideo(
+                                thumbUpVideoList,
+                                dislikeVideoList,
+                                recommendCard.getArgs().getAid()
+                        );
+                        ThreadUtil.sleep(5);
+                    }
+                } catch (LogOutException e) {
+                    throw e;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            ThreadUtil.sleep(7);
+        }
+        videoLogOutput(thumbUpVideoList, dislikeVideoList);
+    }
+
+    /**
+     * 执行完毕后输出日志
+     */
+    public void videoLogOutput(List<VideoDetail> thumbUpVideoList, List<VideoDetail> dislikeVideoList) {
+        log.info("本次点赞的视频：{}", thumbUpVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+        log.info("本次点踩的视频：{}", dislikeVideoList.stream().map(VideoDetail::getTitle).collect(Collectors.toList()));
+    }
+
+
+
+
 }
