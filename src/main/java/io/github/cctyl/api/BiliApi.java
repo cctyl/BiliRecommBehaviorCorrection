@@ -508,6 +508,8 @@ public class BiliApi {
 
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject,body);
+
+        return jsonObject;
     }
 
     /**
@@ -1326,7 +1328,6 @@ public class BiliApi {
         map.put( "platform","android");
         map.put( "mobi_app","android");
         map.put( "build","7110300");
-        map.put("appkey", ANDROID_PINK_APPKEY);
         Map<String, Object> paramSignMap = getAppSign(map);
 
         String body = commonGet(url, paramSignMap).body();
