@@ -11,7 +11,7 @@ import io.github.cctyl.domain.po.Owner;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.service.*;
-import io.github.cctyl.utils.ServerException;
+import io.github.cctyl.exception.ServerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -7,13 +7,13 @@ import io.github.cctyl.domain.dto.RecommendCard;
 import io.github.cctyl.domain.dto.SearchResult;
 
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +31,6 @@ public class BiliTask {
 
 
     private final BiliService biliService;
-
 
     private final BiliApi biliApi;
 
@@ -55,7 +54,7 @@ public class BiliTask {
 
         //0.2 检查accessKey
         try {
-            JSONObject jsonObject =  biliApi.getUserInfo();
+            JSONObject jsonObject = biliApi.getUserInfo();
             log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,7 +70,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 0 12 * * *")
     public void searchTask() {
-        if (!GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()) {
             return;
         }
         before();
@@ -108,6 +107,8 @@ public class BiliTask {
                     try {
                         biliService.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
                         ThreadUtil.sleep(5);
+                    } catch (LogOutException e) {
+                        throw e;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -123,7 +124,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "* 3 18 * * *")
     public void hotRankTask() {
-        if (!GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()) {
             return;
         }
         before();
@@ -152,8 +153,10 @@ public class BiliTask {
                             thumbUpVideoList,
                             dislikeVideoList,
                             videoDetail.getAid()
-                            );
+                    );
                     ThreadUtil.sleep(5);
+                } catch (LogOutException e) {
+                    throw e;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -169,7 +172,7 @@ public class BiliTask {
      */
     @Scheduled(cron = "0 1 19 * * *")
     public void homeRecommendTask() {
-        if (!GlobalVariables.isCron()){
+        if (!GlobalVariables.isCron()) {
             return;
         }
         before();
@@ -193,9 +196,11 @@ public class BiliTask {
                                 thumbUpVideoList,
                                 dislikeVideoList,
                                 recommendCard.getArgs().getAid()
-                                );
+                        );
                         ThreadUtil.sleep(5);
                     }
+                } catch (LogOutException e) {
+                    throw e;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -218,9 +223,9 @@ public class BiliTask {
      * 20分钟持久化一次 cookie
      */
     @Scheduled(cron = "0 */20 * * * *")
-    public void saveRefreshCookie(){
-        log.info("开始持久化 refreshCookie，本次持久化的数量为：{}",GlobalVariables.getRefreshCookieMap().size());
-        if (GlobalVariables.getRefreshCookieMap().size()==0){
+    public void saveRefreshCookie() {
+        log.info("开始持久化 refreshCookie，本次持久化的数量为：{}", GlobalVariables.getRefreshCookieMap().size());
+        if (GlobalVariables.getRefreshCookieMap().size() == 0) {
             log.info("cookie 数量为0，不予持久化");
             return;
         }

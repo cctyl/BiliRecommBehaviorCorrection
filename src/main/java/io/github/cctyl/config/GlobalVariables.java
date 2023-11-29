@@ -1,11 +1,8 @@
 package io.github.cctyl.config;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
-import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.dto.ApiHeader;
 import io.github.cctyl.domain.po.WhiteListRule;
@@ -16,15 +13,13 @@ import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.enumeration.MediaType;
 import io.github.cctyl.service.*;
 import io.github.cctyl.service.impl.BlackRuleService;
-import io.github.cctyl.utils.ServerException;
+import io.github.cctyl.exception.ServerException;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -69,6 +64,10 @@ public class GlobalVariables {
      * 定时任务开关
      */
     private static boolean CRON;
+    /**
+     * bilibili 账号是否登陆
+     */
+    private static boolean BILI_LOGIN;
 
     /**
      * 黑名单up主 id列表
@@ -367,7 +366,6 @@ public class GlobalVariables {
 
     public static void initAccessKey() {
         GlobalVariables.BILI_ACCESS_KEY = configService.findByName(AppConstant.BILI_ACCESS_KEY);
-
     }
 
 
@@ -540,6 +538,10 @@ public class GlobalVariables {
         configService.addOrUpdateConfig(AppConstant.CRON,
                 String.valueOf(cron)
         );
+    }
+
+    public static void setIsLogin(boolean isLogin) {
+        BILI_LOGIN = isLogin;
     }
 
     /**

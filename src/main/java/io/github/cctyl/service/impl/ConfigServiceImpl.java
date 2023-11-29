@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.ServerException;
+import io.github.cctyl.exception.ServerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,8 +68,16 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
     @Override
     public Config addOrUpdateConfig(String configName, String configValue, Integer expireSecond) {
-        Config config = findConfigByName(configName);
 
+        if (configValue==null){
+            LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<Config>().eq(
+                Config::getName,configName
+            );
+            this.remove(wrapper);
+            return null;
+        }
+
+        Config config = findConfigByName(configName);
         if (config != null) {
             config.setValue(configValue)
                     .setExpireSecond(expireSecond)

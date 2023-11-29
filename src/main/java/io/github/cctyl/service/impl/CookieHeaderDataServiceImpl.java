@@ -9,7 +9,7 @@ import io.github.cctyl.domain.po.AuditingEntity;
 import io.github.cctyl.domain.enumeration.Classify;
 import io.github.cctyl.domain.enumeration.MediaType;
 import io.github.cctyl.service.CookieHeaderDataService;
-import io.github.cctyl.utils.ServerException;
+import io.github.cctyl.exception.ServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

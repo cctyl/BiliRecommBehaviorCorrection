@@ -8,14 +8,13 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.*;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.constants.ErrorCode;
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -27,7 +26,6 @@ import java.net.HttpCookie;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.domain.constants.AppConstant.*;
@@ -335,6 +333,7 @@ public class BiliApi {
      * @param body
      */
     public void checkRespAndThrow(JSONObject jsonObject, String body) {
+
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
             log.error("body={}", body);
@@ -342,46 +341,8 @@ public class BiliApi {
         }
     }
 
-    /**
-     * 判断是否是未登陆
-     * true 表示未登陆，false表示其他
-     *
-     * @param jsonObject
-     * @return
-     */
-    public boolean checkIsNoLogin(JSONObject jsonObject) {
-        return jsonObject.getIntValue("code") == -101;
-    }
 
-    /**
-     * accessKey 接口专用
-     * 检查响应，如果响应是未登陆，则刷新accessKey并重试
-     * 如果还是无法获取正确响应，则抛出异常
-     *
-     * @param supplier 重试的方法，需要返回一个响应
-     */
-    public JSONObject checkRespAndRetry(Supplier<JSONObject> supplier) {
 
-        JSONObject jsonObject = supplier.get();
-        if (checkIsNoLogin(jsonObject)) {
-            log.debug("尝试刷新accessToken，并重新发起请求");
-            //账号未登陆，强制刷新token，重新发起这次请求
-            getAccessKeyByCookie(true);
-            ThreadUtil.sleep(1);
-            //重试一次
-            jsonObject = supplier.get();
-            if (checkIsNoLogin(jsonObject)) {
-                throw new RuntimeException("刷新token后访问仍然失败，请检查日志");
-            }
-        }
-
-        if (!checkResp(jsonObject)) {
-            log.error("响应异常，message={}", jsonObject.getString("message"));
-            log.error("body={}", jsonObject.toJSONString());
-            checkOtherCode(jsonObject);
-        }
-        return jsonObject;
-    }
 
     /**
      * 响应
@@ -393,7 +354,9 @@ public class BiliApi {
             case 65007:
                 log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
                 break;
-
+            case -101:
+                GlobalVariables.updateAccessKey(null);
+                throw new LogOutException();
             default:
                 log.error("body={}", jsonObject);
                 throw new RuntimeException("响应异常");
@@ -537,13 +500,14 @@ public class BiliApi {
      */
     public JSONObject dislike(int aid) {
         String url = "https://app.biliapi.net/x/v2/view/dislike";
+        String body = commonPost(url, Map.of(
+                "aid", aid,
+                "access_key", getAccessKey(false),
+                "dislike", 0
+        )).body();
 
-        return checkRespAndRetry(() ->
-                JSONObject.parseObject(commonPost(url, Map.of(
-                        "aid", aid,
-                        "access_key", getAccessKeyByCookie(false),
-                        "dislike", 0
-                )).body()));
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
     }
 
     /**
@@ -551,14 +515,16 @@ public class BiliApi {
      */
     public List<RecommendCard> getRecommendVideo() {
         String url = "https://app.bilibili.com/x/v2/feed/index";
-        JSONObject jsonObject = checkRespAndRetry(() -> JSONObject.parseObject(commonGet(url,
+        String body = commonGet(url,
                 Map.of(
                         "build", "1",
                         "mobi_app", "android",
                         "idx", getIdx(),
                         "appkey", THIRD_PART_APPKEY,
-                        "access_key", getAccessKeyByCookie(false)
-                )).body()));
+                        "access_key", getAccessKey(false)
+                )).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
         return jsonObject
                 .getJSONObject("data")
                 .getJSONArray("items")
@@ -712,40 +678,25 @@ public class BiliApi {
 
 
     /**
-     * 通过sessData 获得 accessKey
-     * 目前来看不可用
+     * 获取accessKey
+     * 若不存在，则抛出异常，提示重新登陆
      *
      * @return
      */
-    @Deprecated
-    public String getAccessKeyByCookie(boolean refresh) {
+    public String getAccessKey(boolean refresh) {
 
         //如果需要刷新，或者缓存中不存在，则更新一次
         //否则从缓存中取出
         if( refresh || StrUtil.isEmpty(GlobalVariables.getBiliAccessKey())){
-            //String url = "https://passport.bilibili.com/login/app/third?appkey=" + THIRD_PART_APPKEY + "&api=https://www.mcbbs.net/template/mcbbs/image/special_photo_bg.png&sign=04224646d1fea004e79606d3b038c84a";
-            //String body = commonGet(url).body();
-            //JSONObject first = JSONObject.parseObject(body);
-            //if (first.getJSONObject("data").getIntValue("has_login") != 1) {
-            //    log.error("未登陆bilibili，无法获取accessKey. body={}", body);
-            //    throw new RuntimeException("未登陆，无法获取accessKey");
-            //}
-            //String confirmUri = first.getJSONObject("data").getString("confirm_uri");
-            //HttpResponse redirect = HttpRequest.head(confirmUri)
-            //        .header(getHeader(url))
-            //        .cookie(getCookieStr(url))
-            //        .execute();
-            //String location = redirect.header(Header.LOCATION);
-            //String accessKey = DataUtil.getUrlQueryParam(location, "access_key");
-            //log.debug("请求获得的accessKey为：{}", accessKey);
-            //GlobalVariables.updateAccessKey(accessKey);
-            //return accessKey;
+            //记录登陆状态
+            GlobalVariables.setIsLogin(false);
 
             //新版本不再支持通过cookie获取
             //提示让用户扫码登陆
-            throw new RuntimeException("请重新扫码登陆");
+            throw new LogOutException();
 
         }else {
+            GlobalVariables.setIsLogin(true);
             log.debug("缓存中得到了accessKey={}", GlobalVariables.getBiliAccessKey());
             return GlobalVariables.getBiliAccessKey();
         }
@@ -881,19 +832,18 @@ public class BiliApi {
      */
     public JSONObject getUserInfo() {
         String url = "https://app.bilibili.com/x/v2/account/myinfo";
+        String body = commonGet(url,
+                getAppSign(
+                        Map.of(
+                                "access_key", getAccessKey(false),
+                                "appkey", THIRD_PART_APPKEY,
+                                "ts", String.valueOf(getTs())
+                        )
+                )
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
 
-        JSONObject jsonObject = checkRespAndRetry(() -> {
-            String body = commonGet(url,
-                    getAppSign(
-                            Map.of(
-                                    "access_key", getAccessKeyByCookie(false),
-                                    "appkey", THIRD_PART_APPKEY,
-                                    "ts", String.valueOf(getTs())
-                            )
-                    )
-            ).body();
-            return JSONObject.parseObject(body);
-        });
+        checkRespAndThrow(jsonObject,body);
 
         String mid = jsonObject.getJSONObject("data").getString("mid");
         GlobalVariables.updateMid(mid);
@@ -1365,7 +1315,7 @@ public class BiliApi {
 
         String url = "https://app.bilibili.com/x/feed/dislike";
         Map<String,String> map = new HashMap<>();
-        map.put( "access_key", getAccessKeyByCookie(false));
+        map.put( "access_key", getAccessKey(false));
         map.put( "goto", "av");
         map.put( "id", String.valueOf(aid));
         map.put( "mid", dislikeMid);

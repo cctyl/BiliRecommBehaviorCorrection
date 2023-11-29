@@ -1,4 +1,4 @@
-package io.github.cctyl.utils;
+package io.github.cctyl.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

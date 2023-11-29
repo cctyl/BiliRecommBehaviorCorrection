@@ -42,7 +42,7 @@ public class GrpcInterceptor implements ClientInterceptor {
                 log.debug("经过grpc拦截器");
                 headers.put(
                         Metadata.Key.of("authorization", ASCII_STRING_MARSHALLER),
-                        "identify_v1 "  + biliApi.getAccessKeyByCookie(false)
+                        "identify_v1 "  + biliApi.getAccessKey(false)
                 );
 
                 headers.put(
@@ -149,7 +149,7 @@ public class GrpcInterceptor implements ClientInterceptor {
     private byte[] generateMetadataBin() {
 
         return MetadataRpcProto.Metadata.newBuilder()
-                .setAccessKey(biliApi.getAccessKeyByCookie(false))
+                .setAccessKey(biliApi.getAccessKey(false))
                 .setMobiApp("android")
                 .setPlatform("android")
                 .setBuild(7380300)

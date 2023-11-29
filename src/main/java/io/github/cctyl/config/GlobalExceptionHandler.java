@@ -4,7 +4,7 @@ package io.github.cctyl.config;
 
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.utils.ExceptionUtil;
-import io.github.cctyl.utils.ServerException;
+import io.github.cctyl.exception.ServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
