@@ -145,11 +145,11 @@ public class AppConstant {
     /**
      * 第三方登陆用到的key
      */
-    public static final String THIRD_PART_APPKEY = "27eb53fc9058f8c3";
+    public static final String THIRD_PART_APPKEY = "783bbb7264451d82";
     /**
      * 第三方登陆用到的secret
      */
-    public static final String THIRD_PART_APPSEC = "c2ed53a74eeefe3cf99fbd01d8c9c375";
+    public static final String THIRD_PART_APPSEC = "2653583c8873dea268ab9386918b1d65";
 
     /**
      * 浏览器端的userAgent

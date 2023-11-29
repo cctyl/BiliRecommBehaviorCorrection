@@ -55,7 +55,7 @@ public class BiliTask {
 
         //0.2 检查accessKey
         try {
-            JSONObject jsonObject = biliApi.checkRespAndRetry(() -> biliApi.getUserInfo());
+            JSONObject jsonObject =  biliApi.getUserInfo();
             log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
             e.printStackTrace();

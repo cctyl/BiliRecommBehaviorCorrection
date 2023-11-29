@@ -2,7 +2,6 @@ package io.github.cctyl.controller;
 
 
 import cn.hutool.core.util.StrUtil;
-import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
@@ -11,7 +10,6 @@ import io.github.cctyl.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -69,19 +67,34 @@ public class ConfigController {
     }
 
 
-    @GetMapping("/qr-code")
-    @Operation(summary = "申请二维码")
-    public R getQrCode() {
+    @GetMapping("/web-qr-code")
+    @Operation(summary = "申请web登陆二维码")
+    public R getWebQrCode() {
 
-        String url = configService.getQrCodeUrl();
+        String url = configService.getWebLoginQrCode();
         return R.data(url);
     }
 
 
-    @GetMapping("/scan-result")
-    @Operation(summary = "获取扫码结果")
-    public R getQrCodeScanResult() {
+    @GetMapping("/web-scan-result")
+    @Operation(summary = "获取web登陆扫码结果")
+    public R getWebQrCodeScanResult() {
+        return R.data(configService.getWebLoginQrCodeScanResult());
+    }
 
-        return R.data(configService.getQrCodeScanResult());
+
+    @GetMapping("/tv-qr-code")
+    @Operation(summary = "申请Tv登陆二维码")
+    public R getTvQrCode() {
+
+        String url = configService.getTvLoginQrCode();
+        return R.data(url);
+    }
+
+
+    @GetMapping("/tv-scan-result")
+    @Operation(summary = "获取Tv登陆扫码结果")
+    public R getTvQrCodeScanResult() {
+        return R.data(configService.getTvLoginQrCodeScanResult());
     }
 }

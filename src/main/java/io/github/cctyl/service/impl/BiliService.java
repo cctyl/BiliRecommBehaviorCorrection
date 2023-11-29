@@ -45,7 +45,7 @@ public class BiliService {
      * @return true 有效  false 无效
      */
     public boolean checkCookie() {
-        JSONObject history = biliApi.getUserInfo();
+        JSONObject history = biliApi.getHistory();
         log.info("检查cookie状态：{}", history.toString());
         return history.getIntValue("code") == 0;
     }

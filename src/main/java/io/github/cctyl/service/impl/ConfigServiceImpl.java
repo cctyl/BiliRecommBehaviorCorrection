@@ -1,8 +1,6 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.lang.Opt;
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -16,11 +14,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.RedisUtil;
 import io.github.cctyl.utils.ServerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -395,13 +391,24 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
 
 
     @Override
-    public String getQrCodeUrl() {
-        return biliApi.getQrCode();
+    public String getWebLoginQrCode() {
+        return biliApi.getWebLoginQrCode();
     }
 
     @Override
-    public Object getQrCodeScanResult() {
-        return   biliApi.getQrCodeScanResult();
+    public Object getWebLoginQrCodeScanResult() {
+        return   biliApi.getWebLoginQrCodeScanResult();
+    }
+
+
+    @Override
+    public String getTvLoginQrCode() {
+        return biliApi.getTvLoginQrCode();
+    }
+
+    @Override
+    public Object getTvLoginQrCodeScanResult() {
+        return biliApi.getTvQrCodeScanResult();
     }
 }
 
