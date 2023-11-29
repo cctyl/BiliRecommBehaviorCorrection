@@ -66,12 +66,15 @@ public class BiliService {
      * @param handleType  处理类型
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
-        if (videoDetail.getId() == null) {
-            throw new RuntimeException("videoDetail.getId()==null");
-        }
         videoDetail.setHandleType(handleType);
         videoDetail.setHandle(true);
-        videoDetailService.updateHandleInfoById(videoDetail);
+        if (videoDetail.getId() == null) {
+            videoDetailService.saveVideoDetail(videoDetail);
+        }else {
+            videoDetailService.updateHandleInfoById(videoDetail);
+        }
+
+
     }
 
 
