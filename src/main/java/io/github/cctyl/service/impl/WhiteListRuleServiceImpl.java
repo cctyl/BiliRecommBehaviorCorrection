@@ -250,7 +250,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                     for (Dict keyword : item.getTagNameList()) {
 
                                         String tagNameFound = tagNameList.stream()
-                                                .filter(s -> keyword.getValue().contains(s))
+                                                .filter(s -> keyword.getValue()!=null&&keyword.getValue().contains(s))
                                                 .findFirst().orElse(null);
 
                                         if (tagNameFound != null) {
