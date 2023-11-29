@@ -12,8 +12,10 @@ import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.constants.ErrorCode;
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -37,8 +39,10 @@ import static io.github.cctyl.domain.constants.AppConstant.*;
 @Component
 @Slf4j
 @Order(1)
+@RequiredArgsConstructor
 public class BiliApi {
 
+    private final CookieHeaderDataService cookieHeaderDataService;
 
     /**
      * 用于获取wbi签名
@@ -49,6 +53,13 @@ public class BiliApi {
             61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
             36, 20, 34, 44, 52
     };
+
+    /**
+     * 二维码验证所需的key
+     */
+    private String tempQrCodeKey;
+
+
 
 
     /**
@@ -531,11 +542,32 @@ public class BiliApi {
 
 
     /**
+     * 申请二维码
+     * @return
+     */
+    public String getQrCode(){
+
+        String url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate";
+
+        String body = commonGet(url).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject,body);
+
+        JSONObject data = jsonObject.getJSONObject("data");
+        String qrCodeUrl = data.getString("url");
+        String qrCodeKey = data.getString("qrcode_key");
+        this.tempQrCodeKey = qrCodeKey;
+        return qrCodeUrl;
+    }
+
+
+    /**
      * 通过sessData 获得 accessKey
      * 目前来看不可用
      *
      * @return
      */
+    @Deprecated
     public String getAccessKeyByCookie(boolean refresh) {
 
         //如果需要刷新，或者缓存中不存在，则更新一次
@@ -1188,6 +1220,53 @@ public class BiliApi {
         String body = commonGet(url, paramSignMap).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
+
+
+    }
+
+    /**
+     * 获取二维码扫描结果
+     * @return
+     */
+    public Object getQrCodeScanResult() {
+
+        if (StrUtil.isBlank(tempQrCodeKey)){
+            return "请先扫描二维码再获取结果";
+        }
+
+        String url = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key="+tempQrCodeKey;
+
+        HttpResponse response = commonGet(url);
+        String body = response.body();
+
+
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+
+        JSONObject data = jsonObject.getJSONObject("data");
+        int code = data.getIntValue("code");
+
+        switch (code){
+            case 0:
+                log.info("扫码成功：{}",jsonObject);
+
+                //立即持久化一次cookie
+                cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
+                this.tempQrCodeKey = null;
+                return "登陆成功！" + GlobalVariables.getRefreshCookieMap();
+            case 86038:
+                log.info("二维码失效");
+                this.tempQrCodeKey = null;
+
+                return "二维码失效，请重新扫描";
+            case 86090:
+                return "请在手机端确认";
+            case 86101:
+                return "未扫码";
+            default:
+                return jsonObject;
+        }
+
 
 
     }

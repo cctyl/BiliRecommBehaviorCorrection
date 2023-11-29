@@ -2,6 +2,7 @@ package io.github.cctyl.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
@@ -9,6 +10,7 @@ import io.github.cctyl.domain.vo.ConfigVo;
 import io.github.cctyl.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,10 +20,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/config")
 @Tag(name = "配置模块")
+@RequiredArgsConstructor
 public class ConfigController {
 
-    @Autowired
-    private ConfigService configService;
+    private final ConfigService configService;
+
+
 
     @PutMapping("/refresh-cookie")
     @Operation(summary = "更新 及时更新的cookie")
@@ -62,5 +66,22 @@ public class ConfigController {
     public R migrationFromRedis(){
          configService.migrationFromRedis();
         return R.ok();
+    }
+
+
+    @GetMapping("/qr-code")
+    @Operation(summary = "申请二维码")
+    public R getQrCode() {
+
+        String url = configService.getQrCodeUrl();
+        return R.data(url);
+    }
+
+
+    @GetMapping("/scan-result")
+    @Operation(summary = "获取扫码结果")
+    public R getQrCodeScanResult() {
+
+        return R.data(configService.getQrCodeScanResult());
     }
 }

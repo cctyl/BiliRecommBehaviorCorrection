@@ -33,4 +33,8 @@ public interface ConfigService extends IService<Config> {
     ConfigVo getStandardConfigInfo();
 
     void migrationFromRedis();
+
+    String getQrCodeUrl();
+
+    Object getQrCodeScanResult();
 }

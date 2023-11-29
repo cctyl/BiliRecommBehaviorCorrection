@@ -1,7 +1,10 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.lang.Opt;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.po.*;
@@ -37,11 +40,13 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService {
 
-    private final RedisUtil redisUtil;
+    private final BiliApi biliApi;
 
     private final VideoDetailService videoDetailService;
 
     private final CookieHeaderDataService cookieHeaderDataService;
+
+
 
     @Override
     public String findByName(String name) {
@@ -113,7 +118,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
         GlobalVariables.updateRefreshCookie(cookieMap);
         //立即持久化
-        cookieHeaderDataService.replaceRefreshCookie(cookieMap);
+        cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
         return GlobalVariables.getRefreshCookieMap();
     }
 
@@ -383,57 +388,20 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         log.debug("转换结束,共花费{}秒", (System.currentTimeMillis() - startTime) / 1000);
     }
 
-//    @NotNull
-//    private static VideoDetail getVideoDetail(io.github.cctyl.entity.VideoDetail v) {
-//        VideoDetail videoDetail = new VideoDetail();
-//        BeanUtils.copyProperties(v, videoDetail);
-//
-//
-//        if (v.getOwner() != null) {
-//            Owner owner = new Owner();
-//            BeanUtils.copyProperties(v.getOwner(), owner);
-//            videoDetail.setOwner(owner);
-//            assert videoDetail.getOwner() != null;
-//        }
-//        if (v.getStat() != null) {
-//            Stat stat = new Stat();
-//            BeanUtils.copyProperties(v.getStat(), stat);
-//            videoDetail.setStat(stat);
-//            assert videoDetail.getStat() != null;
-//        }
-//        if (v.getTags() != null) {
-//
-//            List<Tag> collect = v.getTags().stream().map(t -> {
-//
-//                Tag tag = new Tag();
-//                BeanUtils.copyProperties(t, tag);
-//
-//                return tag;
-//            }).collect(Collectors.toList());
-//            videoDetail.setTags(collect);
-//            assert videoDetail.getTags() != null;
-//        }
-//
-//        if (v.getRelatedVideoList() != null) {
-//
-//            List<VideoDetail> collect = v.getRelatedVideoList().stream().map(t -> {
-//
-//                VideoDetail tag = new VideoDetail();
-//                BeanUtils.copyProperties(t, tag);
-//
-//                return tag;
-//            }).collect(Collectors.toList());
-//            videoDetail.setRelatedVideoList(collect);
-//            assert videoDetail.getRelatedVideoList() != null;
-//        }
-//
-//
-//        return videoDetail;
-//    }
-//
 
     public void runTask(Consumer<Integer> consumer) {
         consumer.accept(-1);
+    }
+
+
+    @Override
+    public String getQrCodeUrl() {
+        return biliApi.getQrCode();
+    }
+
+    @Override
+    public Object getQrCodeScanResult() {
+        return   biliApi.getQrCodeScanResult();
     }
 }
 
