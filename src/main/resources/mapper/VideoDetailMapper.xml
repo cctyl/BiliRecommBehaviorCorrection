@@ -101,6 +101,17 @@
         <result column="videoDetail_black_reason" property="blackReason"/>
     </resultMap>
 
+    <resultMap id="BaseResultMapAssocVo" type="io.github.cctyl.domain.vo.VideoVo">
+        <id column="videoDetail_id" property="id"/>
+        <result column="videoDetail_aid" property="aid"/>
+        <result column="videoDetail_title" property="title"/>
+        <result column="videoDetail_desc" property="desc"/>
+        <result column="videoDetail_bvid" property="bvid"/>
+        <result column="videoDetail_handle_type" property="handleType"/>
+        <result column="videoDetail_thumb_up_reason" property="thumbUpReason"/>
+        <result column="videoDetail_black_reason" property="blackReason"/>
+        <result column="videoDetail_pic" property="coverUrl"/>
+    </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
@@ -164,6 +175,10 @@
         <association property="owner" resultMap="io.github.cctyl.mapper.OwnerMapper.BaseResultMapAssoc"/>
     </resultMap>
 
+    <resultMap id="voWithOwnerMap" type="io.github.cctyl.domain.vo.VideoVo" extends="BaseResultMapAssocVo">
+        <association property="owner" resultMap="io.github.cctyl.mapper.OwnerMapper.BaseResultMapAssoc"/>
+    </resultMap>
+
     <select id="findWithOwnerAndHandle" resultMap="withOwnerMap">
 
         select
@@ -206,6 +221,35 @@
             </otherwise>
         </choose>
 
+
+    </select>
+
+    <select id="findVoWithOwnerByIdIn" resultMap="voWithOwnerMap">
+        select
+        <include refid="Base_Column_List_Assoc"/>,
+        <include refid="io.github.cctyl.mapper.OwnerMapper.Base_Column_List_Assoc"/>
+        from
+        video_detail videoDetail
+        left join owner t_owner on
+        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
+        where
+
+        videoDetail.is_deleted = 0
+        and
+        <choose>
+
+            <when test="idCol !=null and idCol.size>0">
+                videoDetail.id in
+                <foreach collection="idCol" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            </when>
+
+            <!-- 可选 上述所有情况都不满足时，走到该标签-->
+            <otherwise>
+                false
+            </otherwise>
+        </choose>
 
     </select>
 

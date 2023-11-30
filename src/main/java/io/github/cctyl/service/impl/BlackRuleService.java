@@ -1,6 +1,7 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
@@ -125,7 +126,7 @@ public class BlackRuleService {
             boolean human = imageGenderDetectService.isHuman(picByte);
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
             if (human) {
-                videoDetail.setBlackReason("封面:" + videoDetail.getPic() + " 匹配成功");
+                videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"封面:" + videoDetail.getPic() + " 匹配成功");
                 //封面匹配，认为是不喜欢这个up
                 videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
             }
@@ -154,7 +155,8 @@ public class BlackRuleService {
                 matchWord
         );
         if (match) {
-            videoDetail.setBlackReason("标题:" + videoDetail.getTitle() + " 匹配到了关键词：" + matchWord);
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    "标题:" + videoDetail.getTitle() + " 匹配到了关键词：" + matchWord);
             //标题匹配到关键字，认为不感兴趣
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
 
@@ -187,7 +189,7 @@ public class BlackRuleService {
                 matchWord
         );
         if (match) {
-            videoDetail.setBlackReason("描述:" + desc + " 匹配到了关键词：" + matchWord);
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"描述:" + desc + " 匹配到了关键词：" + matchWord);
             //描述匹配，则认为是不感兴趣。因为描述的准确度不是很高
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
         }
@@ -211,7 +213,7 @@ public class BlackRuleService {
                 match);
 
         if (match) {
-            videoDetail.setBlackReason("分区id:" + videoDetail.getTid() + "匹配成功");
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"分区id:" + videoDetail.getTid() + "匹配成功");
             videoDetail.setDislikeReason(DislikeReason.tid(videoDetail.getTname()));
             videoDetail.setDislikeTid(videoDetail.getTid());
         }
@@ -239,7 +241,7 @@ public class BlackRuleService {
                 videoDetail.getOwner().getName(),
                 match);
         if (match) {
-            videoDetail.setBlackReason("up主:" + videoDetail.getOwner().getName() +
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"up主:" + videoDetail.getOwner().getName() +
                     " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
 
             videoDetail.setDislikeMid(Integer.parseInt(videoDetail.getOwner().getMid()));
@@ -269,7 +271,7 @@ public class BlackRuleService {
                 match?matchTag.getTagName():""
         );
         if (match) {
-            videoDetail.setBlackReason("Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
                     GlobalVariables.getBlackTagTree().match(matchTag.getTagName()));
             videoDetail.setDislikeReason(DislikeReason.channel());
             videoDetail.setDislikeTagId(matchTag.getTagId());

@@ -25,6 +25,7 @@ public class VideoVo {
     private String desc;
     public HandleType handleType;
     private String coverUrl;
+    private Owner owner;
 
     public static VideoVo from(VideoDetail v) {
        return new VideoVo(
@@ -38,7 +39,8 @@ public class VideoVo {
                 Opt.ofNullable( v.getOwner()).map(Owner::getName).orElse(""),
                 v.getDesc(),
                 v.getHandleType(),
-                v.getPic()
+                v.getPic(),
+               null
         );
     }
 }

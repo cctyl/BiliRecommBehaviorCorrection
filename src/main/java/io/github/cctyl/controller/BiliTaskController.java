@@ -19,6 +19,7 @@ import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -88,30 +89,8 @@ public class BiliTaskController {
 
     @Operation(summary = "获取等待处理的数据")
     @GetMapping("/ready2handle")
-    public R getReady2HandleVideo(@ParameterObject PageQuery pageQuery) {
-        List<VideoVo> thumbUpList = new ArrayList<>();
-        List<VideoVo> dislikeList = new ArrayList<>();
-
-        List<VideoDetail> videoDetailList =  videoDetailService.findWithOwnerAndHandle(false,pageQuery);
-        videoDetailList
-                .stream()
-                .map(VideoDetail.class::cast)
-                .map(VideoVo::from)
-                .forEach(videoVo -> {
-                    if (videoVo.getBlackReason() != null) {
-                        dislikeList.add(videoVo);
-                        videoVo.setHandleType(HandleType.DISLIKE);
-                    } else {
-                        thumbUpList.add(videoVo);
-                        videoVo.setHandleType(HandleType.THUMB_UP);
-                    }
-                });
-
-        return R.data(Map.of(
-                "dislikeList", dislikeList,
-                "thumbUpList", thumbUpList,
-                "other",Collections.emptyList()
-        ));
+    public R getReady2HandleVideo(@ParameterObject PageQuery pageQuery,HandleType  handleType) {
+        return R.data(videoDetailService.findWithOwnerAndHandle(false,pageQuery,handleType));
     }
 
 

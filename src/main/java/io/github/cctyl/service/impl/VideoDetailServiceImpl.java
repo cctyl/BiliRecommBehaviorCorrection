@@ -5,7 +5,9 @@ import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.query.PageQuery;
+import io.github.cctyl.domain.vo.VideoVo;
 import io.github.cctyl.mapper.VideoDetailMapper;
 import io.github.cctyl.domain.po.Owner;
 import io.github.cctyl.domain.po.Tag;
@@ -162,17 +164,22 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
      * @return
      */
     @Override
-    public List<VideoDetail> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery) {
+    public List<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType) {
 
 
         Page<VideoDetail> page = this.page(Page.of(pageQuery.getPage(), pageQuery.getSize()),
                 new LambdaQueryWrapper<VideoDetail>()
                 .eq(VideoDetail::isHandle,isHandle)
+                .eq(VideoDetail::getHandleType,handleType)
         );
         List<String> idCol = page.getRecords().stream().map(VideoDetail::getId).collect(Collectors.toList());
 
 
-        return baseMapper.findWithOwnerByIdIn(idCol);
+        List<VideoVo> voWithOwnerByIdIn = baseMapper.findVoWithOwnerByIdIn(idCol);
+        voWithOwnerByIdIn.forEach(videoVo -> {
+            videoVo.setUpName(Opt.ofNullable(videoVo.getOwner()).map(Owner::getName).orElse(""));
+        });
+        return voWithOwnerByIdIn;
     }
 
 

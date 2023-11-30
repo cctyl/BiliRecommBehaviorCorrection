@@ -83,8 +83,9 @@ public class BiliService {
      *
      * @param videoDetail
      */
-    public void addReadyToHandleVideo(VideoDetail videoDetail) {
-        videoDetail.setHandle(false);
+    public void addReadyToHandleVideo(VideoDetail videoDetail, HandleType handleType) {
+        videoDetail.setHandle(false)
+                .setHandleType(handleType);
         videoDetailService.saveVideoDetail(videoDetail);
     }
 
@@ -122,13 +123,13 @@ public class BiliService {
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackRuleService.blackMatch(videoDetail)) {
                 //点踩
-                addReadyToHandleVideo(videoDetail);
+                addReadyToHandleVideo(videoDetail,HandleType.DISLIKE);
                 //加日志
                 dislikeVideoList.add(videoDetail);
             } else if (whiteRuleService.whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
-                addReadyToHandleVideo(videoDetail);
+                addReadyToHandleVideo(videoDetail,HandleType.THUMB_UP);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
             } else {
@@ -516,10 +517,10 @@ public class BiliService {
         before();
         //0.初始化部分
         //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
+        var thumbUpVideoList = new LinkedList<VideoDetail>();
 
         //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
+        var dislikeVideoList = new LinkedList<VideoDetail>();
 
         //1.主动搜索，针对搜索视频进行处理
         /*
@@ -567,10 +568,10 @@ public class BiliService {
         before();
         //0.初始化部分
         //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
+        var thumbUpVideoList = new LinkedList<VideoDetail>();
 
         //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
+        var dislikeVideoList = new LinkedList<VideoDetail>();
 
         //2. 对排行榜数据进行处理，处理100条，即5页数据
         log.info("==============开始处理热门排行榜==================");
@@ -612,10 +613,10 @@ public class BiliService {
         before();
         //0.初始化部分
         //本次点赞视频列表
-        var thumbUpVideoList = new ArrayList<VideoDetail>();
+        var thumbUpVideoList = new LinkedList<VideoDetail>();
 
         //本次点踩视频列表
-        var dislikeVideoList = new ArrayList<VideoDetail>();
+        var dislikeVideoList = new LinkedList<VideoDetail>();
 
         //3. 对推荐视频进行处理
         log.info("==============开始处理首页推荐==================");
