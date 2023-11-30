@@ -47,6 +47,8 @@
         <result column="last_modified_date" property="lastModifiedDate"/>
         <result column="is_deleted" property="isDeleted"/>
         <result column="version" property="version"/>
+        <result column="thumb_up_reason" property="thumbUpReason"/>
+        <result column="black_reason" property="blackReason"/>
     </resultMap>
 
 
@@ -95,12 +97,14 @@
         <result column="videoDetail_last_modified_date" property="lastModifiedDate"/>
         <result column="videoDetail_is_deleted" property="isDeleted"/>
         <result column="videoDetail_version" property="version"/>
+        <result column="videoDetail_thumb_up_reason" property="thumbUpReason"/>
+        <result column="videoDetail_black_reason" property="blackReason"/>
     </resultMap>
 
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_link_v2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id,  teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_from_v2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version
+        id, aid, videos, tid, tname, copyright, pic, title, pubdate, ctime, desc, state, duration, mission_id, dynamic, cid, season_id, short_link_v2, first_frame, pub_location, bvid, season_type, is_ogv, owner_id,  teenage_mode, is_chargeable_season, is_story, is_upower_exclusive, is_upower_play, no_cache, is_season_display, like_icon, need_jump_bv, enable_vt, disable_show_up_info, up_from_v2, rcmd_reason, score, handle_type, created_date, last_modified_date, is_deleted, version,thumb_up_reason ,black_reason
     </sql>
 
 
@@ -149,7 +153,10 @@
         videoDetail.created_date as videoDetail_created_date,
         videoDetail.last_modified_date as videoDetail_last_modified_date,
         videoDetail.is_deleted as videoDetail_is_deleted,
-        videoDetail.version as videoDetail_version
+        videoDetail.version as videoDetail_version,
+        videoDetail.thumb_up_reason as videoDetail_thumb_up_reason,
+        videoDetail.black_reason as videoDetail_black_reason
+
     </sql>
 
 
