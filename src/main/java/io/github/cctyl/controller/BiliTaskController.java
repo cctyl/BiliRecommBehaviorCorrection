@@ -94,35 +94,15 @@ public class BiliTaskController {
     }
 
 
-    @Operation(summary = "处理等待处理的数据")
-    @PostMapping("/ready2handle")
-    public R processReady2HandleVideo(
-            @RequestBody Map<String, List<String>> map
-    ) {
-
-        if (map.get("dislikeList") == null &&
-                map.get("thumbUpList") == null
-        ) {
-            return R.error().setMessage("参数错误");
-        }
-
-        TaskPool.putTask(() -> {
-            biliService.processReady2HandleVideo(map);
-        });
-        return R.ok();
-    }
-
-
-    @Operation(summary = "处理单条处理的数据")
+    @Operation(summary = "处理单条处理的数据（二次处理）")
     @PutMapping("/process")
     public R processSingleVideo(
-            @RequestParam Integer aid,
-            @RequestParam HandleType handleType
+            @RequestParam String id,
+            @RequestParam HandleType handleType,
+            @RequestParam(defaultValue = "被用户反转了判断") String reason
     ) {
-
-        //TODO
-        throw new RuntimeException("暂未实现");
-
+       biliService.processSingleVideo(id,handleType,reason);
+       return R.ok();
     }
 
 }

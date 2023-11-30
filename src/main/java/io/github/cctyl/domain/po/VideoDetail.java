@@ -255,7 +255,6 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     /**
      * 点踩原因
      */
-    @TableField(exist = false)
     private String blackReason;
     /**
      * 点踩原因id

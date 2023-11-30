@@ -44,4 +44,13 @@ public interface VideoDetailService extends IService<VideoDetail> {
     void updateHandleInfoById(VideoDetail videoDetail);
 
     boolean exists(Integer aid);
+
+
+
+
+    /**
+     * 保存二次处理的信息
+     * @param video
+     */
+    void updateProcessInfo(VideoDetail video);
 }

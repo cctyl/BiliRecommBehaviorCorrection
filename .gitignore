@@ -157,3 +157,4 @@ application.yml
 ######################
 .eslintcache
 bili-recomm.db
+bili-recomm.db-journal

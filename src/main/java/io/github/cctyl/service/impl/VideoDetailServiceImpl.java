@@ -3,6 +3,7 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.domain.enumeration.HandleType;
@@ -134,6 +135,8 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         return  baseMapper.exists(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, aid));
     }
 
+
+
     @Override
     public VideoDetail findByAid(int avid) {
         return this.getOne(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid,avid));
@@ -182,8 +185,6 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         return voWithOwnerByIdIn;
     }
 
-
-
     /**
      * 修改部分信息
      * @param videoDetail
@@ -200,7 +201,6 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
        this.updateById(temp);
 
     }
-
 
     public VideoDetail findWithOwnerAndTag(LambdaQueryWrapper<VideoDetail> wrapper) {
 
@@ -227,5 +227,25 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
 
         return  videoDetail;
+    }
+
+    /**
+     * 保存二次处理后的信息
+     * 包括： handleType、handle、blackReason、thumbUpReason
+     * @param video
+     */
+    @Override
+    public void updateProcessInfo(VideoDetail video) {
+        if (video.getId() == null) {
+            throw new RuntimeException("video.getId()==null");
+        }
+        this.update(new LambdaUpdateWrapper<VideoDetail>()
+                .eq(VideoDetail::getId, video.getId())
+                .set(VideoDetail::getHandleType, Opt.ofNullable(video.getHandleType()).orElse(HandleType.THUMB_UP))
+                //二次流程了，我认为此视频一定被处理掉了
+                .set(VideoDetail::isHandle, true)
+                //这两个原因字段一定会被修改，不管哪种情况
+                .set(VideoDetail::getBlackReason, video.getBlackReason())
+                .set(VideoDetail::getThumbUpReason, video.getThumbUpReason()));
     }
 }

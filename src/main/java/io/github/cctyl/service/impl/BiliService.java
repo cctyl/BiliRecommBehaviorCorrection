@@ -9,6 +9,8 @@ import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.exception.LogOutException;
+import io.github.cctyl.exception.ServerException;
+import io.github.cctyl.service.PrepareVideoService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.*;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +39,7 @@ public class BiliService {
     private final WhiteListRuleService whiteRuleService;
 
     private final VideoDetailService videoDetailService;
+    private final PrepareVideoService prepareVideoService;
 
 
     /**
@@ -60,7 +64,7 @@ public class BiliService {
     }
 
     /**
-     * 记录已处理过的视频,要求这个视频必须已经存储到了数据库
+     * 记录初次 处理过的视频,要求这个视频必须已经存储到了数据库
      *
      * @param videoDetail 被处理的视频
      * @param handleType  处理类型
@@ -90,7 +94,7 @@ public class BiliService {
     }
 
     /**
-     * 处理搜索结果
+     * 初次处理视频
      * 根据视频信息判断，
      * 最后得出结果，到底是喜欢的视频，还是不喜欢的视频
      * 对于不喜欢的视频，执行点踩操作
@@ -418,12 +422,11 @@ public class BiliService {
 
 
     /**
-     * 处理等待处理的数据
+     * 批量处理等待处理的数据(二次处理)
      * 这些数据已存储到数据库中
      */
-
+    @Deprecated
     public void processReady2HandleVideo(Map<String, List<String>> map) {
-
 
         List<String> dislikeIdList = map.getOrDefault("dislikeList", Collections.emptyList());
         List<String> thumbUpIdList = map.getOrDefault("thumbUpList", Collections.emptyList());
@@ -505,8 +508,6 @@ public class BiliService {
         //0.3 更新一下必要的cookie
         this.updateCookie();
     }
-
-
 
 
     /**
@@ -654,6 +655,49 @@ public class BiliService {
     }
 
 
+    /**
+     * 处理单个视频（二次处理）
+     * 本质是先修改处理状态，然后将视频加入队列中，等待定时任务处理
+     * @param id
+     * @param handleType
+     */
+    @Transactional(rollbackFor = ServerException.class)
+    public void processSingleVideo(String id, HandleType handleType, String reason) {
+        VideoDetail video = videoDetailService.getById(id);
+        if (video==null){
+           throw new RuntimeException("视频："+id+"不存在");
+        }
 
+        //黑名单其实可能变成白名单，存在反转问题，因此这个handleType 也需要进行更新
+        if (
+                video.getHandleType()==null
+            || !video.getHandleType().equals(handleType)
+        ){
+            //原本的处理类型是空，或者HandleType发生变化
+            if (HandleType.THUMB_UP.equals(handleType)){
+                video.setThumbUpReason(reason)
+                    .setBlackReason("ErrorReason:"+Opt.ofNullable(video.getBlackReason()).orElse(""))
+                ;
+            }else if (HandleType.DISLIKE.equals(handleType)){
+                video.setBlackReason(reason)
+                        .setThumbUpReason("ErrorReason:"+Opt.ofNullable(video.getThumbUpReason()).orElse(""))
+                ;
+            }else {
+                //OTHER 类型，不需要黑白名单理由
+                video.setBlackReason(null)
+                     .setThumbUpReason(null);
+            }
+        }
 
+        //此视频已经被处理
+        video.setHandle(true)
+            .setHandleType(handleType)
+        ;
+        videoDetailService.updateProcessInfo(video);
+
+        //加入处理队列当中（其他类型不需要向bilibili  反馈，忽略）
+        if (!HandleType.OTHER.equals(handleType)){
+            prepareVideoService.saveIfNotExists(id,handleType);
+        }
+    }
 }
