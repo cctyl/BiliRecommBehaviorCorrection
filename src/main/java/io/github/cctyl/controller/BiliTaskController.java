@@ -2,14 +2,11 @@ package io.github.cctyl.controller;
 
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.R;
-import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.query.PageQuery;
-import io.github.cctyl.domain.vo.VideoVo;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.service.impl.BlackRuleService;
-import io.github.cctyl.task.BiliTask;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,9 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -101,7 +95,7 @@ public class BiliTaskController {
             @RequestParam HandleType handleType,
             @RequestParam(defaultValue = "被用户反转了判断") String reason
     ) {
-       biliService.processSingleVideo(id,handleType,reason);
+       biliService.secondProcessSingleVideo(id,handleType,reason);
        return R.ok();
     }
 

@@ -16,7 +16,6 @@ import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,9 +103,9 @@ public class BiliService {
      * @param dislikeVideoList
      * @param avid
      */
-    public void handleVideo(List<VideoDetail> thumbUpVideoList,
-                            List<VideoDetail> dislikeVideoList,
-                            int avid
+    public void firstProcess(List<VideoDetail> thumbUpVideoList,
+                             List<VideoDetail> dislikeVideoList,
+                             int avid
     ) {
 
         log.debug("处理视频avid={}", avid);
@@ -547,7 +546,7 @@ public class BiliService {
                 DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                     //处理挑选结果
                     try {
-                        this.handleVideo(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
+                        this.firstProcess(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
                         ThreadUtil.sleep(5);
                     } catch (LogOutException e) {
                         throw e;
@@ -588,7 +587,7 @@ public class BiliService {
             DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
                 try {
                     //处理挑选结果
-                    this.handleVideo(
+                    this.firstProcess(
                             thumbUpVideoList,
                             dislikeVideoList,
                             videoDetail.getAid()
@@ -628,7 +627,7 @@ public class BiliService {
                 try {
                     if ("av".equals(recommendCard.getCardGoto())) {
                         //处理挑选结果
-                        this.handleVideo(
+                        this.firstProcess(
                                 thumbUpVideoList,
                                 dislikeVideoList,
                                 recommendCard.getArgs().getAid()
@@ -662,7 +661,7 @@ public class BiliService {
      * @param handleType
      */
     @Transactional(rollbackFor = ServerException.class)
-    public void processSingleVideo(String id, HandleType handleType, String reason) {
+    public void secondProcessSingleVideo(String id, HandleType handleType, String reason) {
         VideoDetail video = videoDetailService.getById(id);
         if (video==null){
            throw new RuntimeException("视频："+id+"不存在");
@@ -700,4 +699,7 @@ public class BiliService {
             prepareVideoService.saveIfNotExists(id,handleType);
         }
     }
+
+
+
 }
