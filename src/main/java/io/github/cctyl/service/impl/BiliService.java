@@ -712,7 +712,7 @@ public class BiliService {
         List<String> dislikeIdList = prepareVideoService.pageFindId(1, 20, HandleType.DISLIKE);
         List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 20, HandleType.THUMB_UP);
 
-        if (dislikeIdList.size() > 20) {
+        if (dislikeIdList.size() > 40) {
             List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
             //执行点踩
             for (String id : dislikeIdList) {
