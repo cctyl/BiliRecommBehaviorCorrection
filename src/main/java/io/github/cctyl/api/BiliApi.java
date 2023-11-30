@@ -13,6 +13,7 @@ import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.constants.ErrorCode;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.exception.LogOutException;
+import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.DataUtil;
 import lombok.RequiredArgsConstructor;
@@ -357,6 +358,8 @@ public class BiliApi {
             case -101:
                 GlobalVariables.updateAccessKey(null);
                 throw new LogOutException();
+            case -404:
+                throw new NotFoundException();
             default:
                 log.error("body={}", jsonObject);
                 throw new RuntimeException("响应异常");

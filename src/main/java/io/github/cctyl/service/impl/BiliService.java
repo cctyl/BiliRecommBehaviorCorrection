@@ -9,6 +9,7 @@ import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.exception.LogOutException;
+import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.exception.ServerException;
 import io.github.cctyl.service.PrepareVideoService;
 import io.github.cctyl.service.VideoDetailService;
@@ -73,7 +74,7 @@ public class BiliService {
         videoDetail.setHandle(true);
         if (videoDetail.getId() == null) {
             videoDetailService.saveVideoDetail(videoDetail);
-        }else {
+        } else {
             videoDetailService.updateHandleInfoById(videoDetail);
         }
 
@@ -126,13 +127,13 @@ public class BiliService {
             //1. 如果是黑名单内的，直接执行点踩操作
             if (blackRuleService.blackMatch(videoDetail)) {
                 //点踩
-                addReadyToHandleVideo(videoDetail,HandleType.DISLIKE);
+                addReadyToHandleVideo(videoDetail, HandleType.DISLIKE);
                 //加日志
                 dislikeVideoList.add(videoDetail);
             } else if (whiteRuleService.whiteMatch(videoDetail)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
-                addReadyToHandleVideo(videoDetail,HandleType.THUMB_UP);
+                addReadyToHandleVideo(videoDetail, HandleType.THUMB_UP);
                 //加日志
                 thumbUpVideoList.add(videoDetail);
             } else {
@@ -657,49 +658,117 @@ public class BiliService {
     /**
      * 处理单个视频（二次处理）
      * 本质是先修改处理状态，然后将视频加入队列中，等待定时任务处理
+     *
      * @param id
      * @param handleType
      */
     @Transactional(rollbackFor = ServerException.class)
     public void secondProcessSingleVideo(String id, HandleType handleType, String reason) {
         VideoDetail video = videoDetailService.getById(id);
-        if (video==null){
-           throw new RuntimeException("视频："+id+"不存在");
+        if (video == null) {
+            throw new RuntimeException("视频：" + id + "不存在");
         }
 
         //黑名单其实可能变成白名单，存在反转问题，因此这个handleType 也需要进行更新
         if (
-                video.getHandleType()==null
-            || !video.getHandleType().equals(handleType)
-        ){
+                video.getHandleType() == null
+                        || !video.getHandleType().equals(handleType)
+        ) {
             //原本的处理类型是空，或者HandleType发生变化
-            if (HandleType.THUMB_UP.equals(handleType)){
+            if (HandleType.THUMB_UP.equals(handleType)) {
                 video.setThumbUpReason(reason)
-                    .setBlackReason("ErrorReason:"+Opt.ofNullable(video.getBlackReason()).orElse(""))
+                        .setBlackReason("ErrorReason:" + Opt.ofNullable(video.getBlackReason()).orElse(""))
                 ;
-            }else if (HandleType.DISLIKE.equals(handleType)){
+            } else if (HandleType.DISLIKE.equals(handleType)) {
                 video.setBlackReason(reason)
-                        .setThumbUpReason("ErrorReason:"+Opt.ofNullable(video.getThumbUpReason()).orElse(""))
+                        .setThumbUpReason("ErrorReason:" + Opt.ofNullable(video.getThumbUpReason()).orElse(""))
                 ;
-            }else {
+            } else {
                 //OTHER 类型，不需要黑白名单理由
                 video.setBlackReason(null)
-                     .setThumbUpReason(null);
+                        .setThumbUpReason(null);
             }
         }
 
         //此视频已经被处理
         video.setHandle(true)
-            .setHandleType(handleType)
+                .setHandleType(handleType)
         ;
         videoDetailService.updateProcessInfo(video);
 
         //加入处理队列当中（其他类型不需要向bilibili  反馈，忽略）
-        if (!HandleType.OTHER.equals(handleType)){
-            prepareVideoService.saveIfNotExists(id,handleType);
+        if (!HandleType.OTHER.equals(handleType)) {
+            prepareVideoService.saveIfNotExists(id, handleType);
         }
     }
 
 
+    /**
+     * 第三次处理：向bilibili执行反馈（点赞/点踩）
+     * 从 PrepareVideo 表中找到视频，每次处理20条
+     */
+    public void thirdProcess() {
+
+        List<String> dislikeIdList = prepareVideoService.pageFindId(1, 20, HandleType.DISLIKE);
+        List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 20, HandleType.THUMB_UP);
+
+        if (dislikeIdList.size() > 20) {
+            List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
+            //执行点踩
+            for (String id : dislikeIdList) {
+                VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
+
+                if (videoDetail != null) {
+                    blackTrainVideoList.add(videoDetail);
+                    try {
+                        if (videoDetail.getDislikeReason() != null) {
+                            this.dislikeByReason(videoDetail.getDislikeReason(),
+                                    String.valueOf(videoDetail.getDislikeMid()),
+                                    videoDetail.getDislikeTid(),
+                                    videoDetail.getDislikeTagId(),
+                                    videoDetail.getAid()
+                            );
+                        }
+                        this.dislike(videoDetail.getAid());
+                    } catch (NotFoundException e) {
+                        e.printStackTrace();
+                        //删除数据库记录
+                        prepareVideoService.removeByVideoId(id);
+                    }
+
+                } else {
+                    log.debug("{} - {} 未找到匹配的视频", Opt.ofNullable(videoDetail).map(VideoDetail::getBvid).orElse(null),
+                            Opt.ofNullable(videoDetail).map(VideoDetail::getTitle).orElse(null)
+                    );
+                }
+            }
+            //进行黑名单训练
+            blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
+            blackTrainVideoList =null;
+            dislikeIdList = null;
+        }
+
+
+        if (thumbUpIdList.size() > 20) {
+            //执行点赞
+            for (String id : thumbUpIdList) {
+                VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
+                if (videoDetail != null) {
+                    try {
+                        this.playAndThumbUp(videoDetail);
+                    } catch (NotFoundException e) {
+                        e.printStackTrace();
+                        //删除数据库记录
+                        prepareVideoService.removeByVideoId(id);
+                    }
+                } else {
+                    log.debug("{} - {} 未找到匹配的视频", Opt.ofNullable(videoDetail).map(VideoDetail::getBvid).orElse(null),
+                            Opt.ofNullable(videoDetail).map(VideoDetail::getTitle).orElse(null)
+                    );
+                }
+            }
+            thumbUpIdList = null;
+        }
+    }
 
 }
