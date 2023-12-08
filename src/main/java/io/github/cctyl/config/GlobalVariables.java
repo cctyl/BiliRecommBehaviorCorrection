@@ -72,18 +72,17 @@ public class GlobalVariables {
     /**
      * 黑名单up主 id列表
      */
-    private static Set<String> BLACK_USER_ID_SET = new HashSet<>();
+    private static List<String> BLACK_USER_ID_SET = new ArrayList<>();
 
     /**
      * 白名单up主id列表
      */
-    private static Set<String> WHITE_USER_ID_SET = new HashSet<>();
+    private static List<String> WHITE_USER_ID_SET = new ArrayList<>();
 
     /**
      * 黑名单关键词列表
      */
-    //TODO 已经有Tree，这个set是否还有必要？
-    private static Set<String> BLACK_KEYWORD_SET = new HashSet<>();
+    private static List<String> BLACK_KEYWORD_SET = new ArrayList<>();
 
     /**
      * 黑名单关键词树
@@ -93,17 +92,17 @@ public class GlobalVariables {
     /**
      * 黑名单分区id列表
      */
-    private static Set<String> BLACK_TID_SET = new HashSet<>();
+    private static List<String> BLACK_TID_SET = new ArrayList<>();
 
     /**
      * 白名单分区id列表
      */
-    private static Set<String> WHITE_TID_SET = new HashSet<>();
+    private static List<String> WHITE_TID_SET = new ArrayList<>();
 
     /**
      * 黑名单标签列表
      */
-    private static Set<String> BLACK_TAG_SET = new HashSet<>();
+    private static List<String> BLACK_TAG_SET = new ArrayList<>();
 
     /**
      * 黑名单标签树
@@ -119,7 +118,7 @@ public class GlobalVariables {
     /**
      * 搜索关键词列表
      */
-    private static Set<String> SEARCH_KEYWORD_SET = new HashSet<>();
+    private static List<String> SEARCH_KEYWORD_SET = new ArrayList<>();
 
     /**
      * 白名单关键词列表
@@ -157,7 +156,7 @@ public class GlobalVariables {
     /**
      * 停顿词列表
      */
-    private static WordTree STOP_WORD_TREE = new WordTree();
+    private static List<String> STOP_WORD_TREE = new ArrayList<>();
     /**
      * 黑白名单忽略关键词列表
      */
@@ -187,15 +186,15 @@ public class GlobalVariables {
         GlobalVariables.INSTANCE = this;
     }
 
-    public static Set<String> getBlackUserIdSet() {
+    public static List<String> getBlackUserIdSet() {
         return BLACK_USER_ID_SET;
     }
 
-    public static Set<String> getWhiteUserIdSet() {
+    public static List<String> getWhiteUserIdSet() {
         return WHITE_USER_ID_SET;
     }
 
-    public static Set<String> getBlackKeywordSet() {
+    public static List<String> getBlackKeywordSet() {
         return BLACK_KEYWORD_SET;
     }
 
@@ -203,15 +202,15 @@ public class GlobalVariables {
         return BLACK_KEYWORD_TREE;
     }
 
-    public static Set<String> getBlackTidSet() {
+    public static List<String> getBlackTidSet() {
         return BLACK_TID_SET;
     }
 
-    public static Set<String> getWhiteTidSet() {
+    public static List<String> getWhiteTidSet() {
         return WHITE_TID_SET;
     }
 
-    public static Set<String> getBlackTagSet() {
+    public static List<String> getBlackTagSet() {
         return BLACK_TAG_SET;
     }
 
@@ -223,7 +222,7 @@ public class GlobalVariables {
         return MID;
     }
 
-    public static Set<String> getSearchKeywordSet() {
+    public static List<String> getSearchKeywordSet() {
         return SEARCH_KEYWORD_SET;
     }
 
@@ -247,7 +246,7 @@ public class GlobalVariables {
         return MIN_PLAY_SECOND;
     }
 
-    public static WordTree getStopWordTree() {
+    public static List<String> getStopWordTree() {
         return STOP_WORD_TREE;
     }
 
@@ -296,7 +295,9 @@ public class GlobalVariables {
                 .findBlackUserId()
                 .stream()
                 .map(Dict::getValue)
-                .collect(Collectors.toSet());
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     /**
@@ -309,13 +310,18 @@ public class GlobalVariables {
         GlobalVariables.BLACK_KEYWORD_SET = dictService.findBlackKeyWord()
                 .stream()
                 .map(Dict::getValue)
-                .collect(Collectors.toSet())
+                .distinct()
+                .collect(Collectors.toList())
         ;
         GlobalVariables.BLACK_KEYWORD_SET.removeAll(IGNORE_BLACK_KEY_WORD_SET);
 
         //3.构建dfa Tree
+        initBlackKeywordTree(GlobalVariables.BLACK_KEYWORD_SET);
+    }
+
+    public static void initBlackKeywordTree(Collection<String> param ){
         GlobalVariables.BLACK_KEYWORD_TREE = new WordTree();
-        GlobalVariables.BLACK_KEYWORD_TREE.addWords(GlobalVariables.BLACK_KEYWORD_SET);
+        GlobalVariables.BLACK_KEYWORD_TREE.addWords(param);
     }
 
     /**
@@ -328,7 +334,8 @@ public class GlobalVariables {
                 dictService.findBlackTag()
                         .stream()
                         .map(Dict::getValue)
-                        .collect(Collectors.toSet());
+                        .distinct()
+                        .collect(Collectors.toList());
 
         GlobalVariables.BLACK_TAG_SET.removeAll(IGNORE_BLACK_KEY_WORD_SET);
 
@@ -339,15 +346,20 @@ public class GlobalVariables {
     public static void initWhiteUserIdSet() {
         GlobalVariables.WHITE_USER_ID_SET = dictService
                 .findWhiteUserId()
-                .stream().map(Dict::getValue)
-                .collect(Collectors.toSet());
+                .stream()
+                .map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public static void initBlackTidSet() {
         GlobalVariables.BLACK_TID_SET = dictService
                 .findBlackTid()
                 .stream().map(Dict::getValue)
-                .collect(Collectors.toSet());
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public static void initWhiteTidSet() {
@@ -355,7 +367,9 @@ public class GlobalVariables {
                 .findWhiteTid()
                 .stream()
                 .map(Dict::getValue)
-                .collect(Collectors.toSet());
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
 
     }
 
@@ -384,7 +398,10 @@ public class GlobalVariables {
 
     public static void initKeywordSet() {
         GlobalVariables.SEARCH_KEYWORD_SET = dictService.findSearchKeyWord()
-                .stream().map(Dict::getValue).collect(Collectors.toSet());
+                .stream().map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public static void initWhitelistRules() {
@@ -424,7 +441,8 @@ public class GlobalVariables {
             //从数据库中加载停顿词
             stopWordList = dictService.findStopWords();
         }
-        GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
+        GlobalVariables.STOP_WORD_TREE.removeAll(stopWordList);
+        GlobalVariables.STOP_WORD_TREE.addAll(stopWordList);
     }
 
 
@@ -432,7 +450,8 @@ public class GlobalVariables {
         //存入数据库
         dictService.saveStopWords(stopWordList);
 
-        GlobalVariables.STOP_WORD_TREE.addWords(stopWordList);
+        GlobalVariables.STOP_WORD_TREE.removeAll(stopWordList);
+        GlobalVariables.STOP_WORD_TREE.addAll(stopWordList);
     }
 
     public static void initApiHeaderMap() {
@@ -591,7 +610,7 @@ public class GlobalVariables {
                 .setAccessType(AccessType.BLACK)
                 .setValue(mid);
         dictService.save(dict);
-
+        GlobalVariables.BLACK_USER_ID_SET.remove(mid);
         GlobalVariables.BLACK_USER_ID_SET.add(mid);
     }
 
@@ -612,6 +631,7 @@ public class GlobalVariables {
         );
 
         List<String> valueList = Dict.transferToValue(dictService.findByIdIn(keywordIdSet));
+        BLACK_KEYWORD_SET.removeAll(valueList);
         BLACK_KEYWORD_SET.addAll(valueList);
         BLACK_KEYWORD_TREE.addWords(valueList);
     }
@@ -630,6 +650,7 @@ public class GlobalVariables {
         );
 
         List<String> valueList = Dict.transferToValue(dictService.findByIdIn(tagNameIdList));
+        BLACK_TAG_SET.removeAll(valueList);
         BLACK_TAG_SET.addAll(valueList);
         BLACK_TAG_TREE.addWords(valueList);
     }
@@ -647,6 +668,7 @@ public class GlobalVariables {
                 param);
 
         //新增到缓存
+        BLACK_TID_SET.removeAll(param);
         BLACK_TID_SET.addAll(param);
     }
 
@@ -665,6 +687,7 @@ public class GlobalVariables {
                 keywordCol);
 
         //新增到缓存
+        BLACK_KEYWORD_SET.removeAll(keywordCol);
         BLACK_KEYWORD_SET.addAll(keywordCol);
 
     }
@@ -678,6 +701,7 @@ public class GlobalVariables {
                 blackUserIdSet);
 
         //新增到缓存
+        BLACK_USER_ID_SET.removeAll(blackUserIdSet);
         BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
 
@@ -690,6 +714,7 @@ public class GlobalVariables {
                 collect);
 
         //新增到缓存
+        BLACK_TAG_SET.removeAll(collect);
         BLACK_TAG_SET.addAll(collect);
         BLACK_TAG_TREE.addWords(collect);
     }
@@ -722,13 +747,19 @@ public class GlobalVariables {
     public void removeBlackTag(Set<String> param) {
         for (String s : param) {
             BLACK_TAG_SET.remove(s);
-            BLACK_TAG_TREE.remove(s);
+            //remove没有效果,重新构建
+            initBlackTagTree(BLACK_TAG_SET);
         }
         dictService.removeByAccessTypeAndDictTypeAndValue(
                 AccessType.BLACK,
                 DictType.TAG,
                 param
         );
+    }
+
+    private void initBlackTagTree(Collection<String> blackTagSet) {
+        BLACK_TAG_TREE = new WordTree();
+        BLACK_TAG_TREE.addWords(blackTagSet);
     }
 
     public void removeBlackKeyword(Set<String> param) {
@@ -980,7 +1011,7 @@ public class GlobalVariables {
         //添加全部
         dictService.addWhiteUserId(whiteUserIdSet);
 
-        GlobalVariables.WHITE_USER_ID_SET = new HashSet<>(whiteUserIdSet);
+        GlobalVariables.WHITE_USER_ID_SET = new ArrayList<>(whiteUserIdSet);
 
     }
 
@@ -998,6 +1029,7 @@ public class GlobalVariables {
                 whiteTidSet);
 
         //新增到缓存
+        WHITE_TID_SET.removeAll(whiteTidSet);
         WHITE_TID_SET.addAll(whiteTidSet);
     }
 
@@ -1015,6 +1047,7 @@ public class GlobalVariables {
                 searchKeywords);
 
         //新增到缓存
+        SEARCH_KEYWORD_SET.removeAll(searchKeywords);
         SEARCH_KEYWORD_SET.addAll(searchKeywords);
 
     }

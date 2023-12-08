@@ -171,7 +171,7 @@ public class BlackRuleService {
      * @return
      */
     public boolean isDescMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.getBlackKeywordTree() .match(videoDetail.getDesc());
+        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getDesc());
         boolean match = matchWord != null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {

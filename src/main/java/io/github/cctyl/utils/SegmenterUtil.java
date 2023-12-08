@@ -92,7 +92,7 @@ public class SegmenterUtil {
                     ||
                     s.length() < 2
                     ||
-                    GlobalVariables.getStopWordTree().isMatch(s)
+                    GlobalVariables.getStopWordTree().contains(s)
                     ||
                     PUNCTUATION_PATTERN.matcher(s).matches()
             ) {
