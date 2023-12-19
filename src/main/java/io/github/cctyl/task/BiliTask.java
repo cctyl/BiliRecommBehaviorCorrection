@@ -87,4 +87,16 @@ public class BiliTask {
         cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
     }
 
+
+    /**
+     * 每5小时清理一次待处理视频
+     */
+    @Scheduled(cron = "0 0 0/5 * * ?")
+    public void thirdProcess() {
+        log.info("开始执行第三次处理");
+        biliService.thirdProcess();
+        log.info("第三次处理执行完成");
+    }
+
+
 }

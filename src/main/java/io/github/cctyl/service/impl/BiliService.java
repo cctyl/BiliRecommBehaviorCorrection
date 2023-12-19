@@ -709,8 +709,8 @@ public class BiliService {
      */
     public void thirdProcess() {
 
-        List<String> dislikeIdList = prepareVideoService.pageFindId(1, 20, HandleType.DISLIKE);
-        List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 20, HandleType.THUMB_UP);
+        List<String> dislikeIdList = prepareVideoService.pageFindId(1, 100, HandleType.DISLIKE);
+        List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 100, HandleType.THUMB_UP);
 
         if (dislikeIdList.size() > 40) {
             List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
@@ -732,9 +732,9 @@ public class BiliService {
                         this.dislike(videoDetail.getAid());
                     } catch (NotFoundException e) {
                         e.printStackTrace();
-                        //删除数据库记录
-                        prepareVideoService.removeByVideoId(id);
                     }
+                    //删除数据库记录
+                    prepareVideoService.removeByVideoId(id);
 
                 } else {
                     log.debug("{} - {} 未找到匹配的视频", Opt.ofNullable(videoDetail).map(VideoDetail::getBvid).orElse(null),
@@ -756,11 +756,12 @@ public class BiliService {
                 if (videoDetail != null) {
                     try {
                         this.playAndThumbUp(videoDetail);
+
                     } catch (NotFoundException e) {
                         e.printStackTrace();
-                        //删除数据库记录
-                        prepareVideoService.removeByVideoId(id);
                     }
+                    //删除数据库记录
+                    prepareVideoService.removeByVideoId(id);
                 } else {
                     log.debug("{} - {} 未找到匹配的视频", Opt.ofNullable(videoDetail).map(VideoDetail::getBvid).orElse(null),
                             Opt.ofNullable(videoDetail).map(VideoDetail::getTitle).orElse(null)
