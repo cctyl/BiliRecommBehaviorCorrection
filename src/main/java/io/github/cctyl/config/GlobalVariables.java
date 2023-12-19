@@ -859,7 +859,9 @@ public class GlobalVariables {
         //缓存层面的删除
         for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
 
-            List<Dict> coverKeyword = whiteListRule.getCoverKeyword()
+            List<Dict> coverKeyword =
+                    Opt.ofNullable(whiteListRule.getCoverKeyword())
+                            .orElse(Collections.emptyList())
                     .stream()
                     .filter(
                             dict -> !ignoreKeyWordSet.contains(dict.getValue())
@@ -881,7 +883,10 @@ public class GlobalVariables {
         //缓存层面的删除
         for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
 
-            List<Dict> titleKeyWordList = whiteListRule.getTitleKeyWordList()
+            List<Dict> titleKeyWordList =
+                    Opt.ofNullable(whiteListRule.getTitleKeyWordList())
+                            .orElse(Collections.emptyList())
+
                     .stream()
                     .filter(
                             dict -> !ignoreKeyWordSet.contains(dict.getValue())
@@ -904,7 +909,9 @@ public class GlobalVariables {
         //缓存层面的删除
         for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
 
-            List<Dict> descKeyWordList = whiteListRule.getDescKeyWordList()
+            List<Dict> descKeyWordList =
+                    Opt.ofNullable(whiteListRule.getDescKeyWordList())
+                            .orElse(Collections.emptyList())
                     .stream()
                     .filter(
                             dict -> !ignoreKeyWordSet.contains(dict.getValue())
@@ -925,10 +932,11 @@ public class GlobalVariables {
 
         //缓存层面的删除
         for (WhiteListRule whiteListRule : WHITELIST_RULE_LIST) {
-            List<Dict> tagNameList = whiteListRule.getTagNameList()
+            List<Dict> tagNameList = Opt.ofNullable(whiteListRule.getTagNameList())
+                    .orElse(Collections.emptyList())
                     .stream()
                     .filter(
-                            dict -> !ignoreKeyWordSet.contains(dict.getValue())
+                            dict ->    !ignoreKeyWordSet.contains(dict.getValue())
                     ).collect(Collectors.toList());
             whiteListRule.setTagNameList(tagNameList);
         }
