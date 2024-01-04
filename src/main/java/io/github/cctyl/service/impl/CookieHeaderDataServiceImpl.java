@@ -44,7 +44,6 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
                 new LambdaQueryWrapper<CookieHeaderData>()
                         .eq(CookieHeaderData::getClassify, classify)
                         .eq(CookieHeaderData::getMediaType, mediaType)
-                .orderBy(true,false, AuditingEntity::getLastModifiedDate)
         );
 
     }

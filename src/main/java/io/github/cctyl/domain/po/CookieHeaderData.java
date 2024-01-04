@@ -19,7 +19,7 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-public class CookieHeaderData  extends AuditingEntity {
+public class CookieHeaderData{
 
     @TableId(value = "id", type = IdType.ASSIGN_UUID)
     private String id;

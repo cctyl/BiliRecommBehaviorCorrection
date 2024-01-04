@@ -79,8 +79,8 @@ public class BiliApi {
 
         }else {
             //没有匹配的，就返回默认的header
-            //GlobalVariables.getCommonHeaderMap()
-            //        .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+            GlobalVariables.getCommonHeaderMap()
+                    .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
             //公共header时，需要修改host
             result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
         }
@@ -99,11 +99,13 @@ public class BiliApi {
      * @return
      */
     public HttpResponse commonGet(String url) {
+        Map<String, List<String>> header = getHeader(url);
+        String cookieStr = getCookieStr(url);
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
-                .header(getHeader(url),true)
+                .header(header,true)
                 .timeout(10000)
-                .cookie(getCookieStr(url));
+                .cookie(cookieStr);
         HttpResponse response = request
                 .execute();
         updateCookie(response);
@@ -352,6 +354,9 @@ public class BiliApi {
      */
     private void checkOtherCode(JSONObject jsonObject) {
         switch (jsonObject.getIntValue("code")) {
+            case 86090:
+                log.info("已扫码未确认:{}",jsonObject);
+                break;
             case 65007:
                 log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
                 break;
@@ -655,6 +660,7 @@ public class BiliApi {
                 GlobalVariables.updateAccessKey(accessToken);
 
                 //立即持久化一次cookie
+                GlobalVariables.getRefreshCookieMap().putAll(cookieMap);
                 cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
 
                 this.tempTvAuthCode = null;
@@ -1367,6 +1373,9 @@ public class BiliApi {
                 log.info("扫码成功：{}",jsonObject);
 
                 //立即持久化一次cookie
+                //fixme
+                int i = 1/0;
+                log.error("并未进行持久化{}",data);
                 cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
                 this.tempWebQrCodeKey = null;
                 return "登陆成功！" + GlobalVariables.getRefreshCookieMap();

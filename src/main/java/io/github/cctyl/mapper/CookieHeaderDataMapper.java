@@ -18,13 +18,7 @@ import java.util.Map;
  * @since 2023-11-10
  */
 public interface CookieHeaderDataMapper extends BaseMapper<CookieHeaderData> {
-
-
     List<CookieHeaderData> findByType(@Param("dataType") Classify dataType);
-
-    @MapKey("ckey")
-    Map<String, String> findDataByTypeDistinctByKey(@Param("dataType") Classify dataType);
-
 
     void updateRefresh( @Param("cookieMap") Map<String, String> cookieMap);
 }

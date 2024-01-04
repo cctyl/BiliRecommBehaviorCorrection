@@ -8,11 +8,7 @@
         <result column="url" property="url"/>
         <result column="ckey" property="ckey"/>
         <result column="cvalue" property="cvalue"/>
-        <result column="type" property="type"/>
-        <result column="created_date" property="createdDate"/>
-        <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
+
     </resultMap>
 
 
@@ -22,17 +18,13 @@
         <result column="cookieHeaderData_url" property="url"/>
         <result column="cookieHeaderData_ckey" property="ckey"/>
         <result column="cookieHeaderData_cvalue" property="cvalue"/>
-        <result column="cookieHeaderData_type" property="type"/>
-        <result column="cookieHeaderData_created_date" property="createdDate"/>
-        <result column="cookieHeaderData_last_modified_date" property="lastModifiedDate"/>
-        <result column="cookieHeaderData_is_deleted" property="isDeleted"/>
-        <result column="cookieHeaderData_version" property="version"/>
+
     </resultMap>
 
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, url, ckey, cvalue, type, created_date, last_modified_date, is_deleted, version
+        id, url, ckey, cvalue, type
     </sql>
 
 
@@ -44,10 +36,6 @@
         cookieHeaderData.ckey as cookieHeaderData_ckey,
         cookieHeaderData.cvalue as cookieHeaderData_cvalue,
         cookieHeaderData.type as cookieHeaderData_type,
-        cookieHeaderData.created_date as cookieHeaderData_created_date,
-        cookieHeaderData.last_modified_date as cookieHeaderData_last_modified_date,
-        cookieHeaderData.is_deleted as cookieHeaderData_is_deleted,
-        cookieHeaderData.version as cookieHeaderData_version
     </sql>
     <update id="updateRefresh">
 
@@ -66,7 +54,6 @@
         where
         classify = 'COOKIE'
         and media_type = 'TIMELY_UPDATE'
-        and is_deleted = 0
         ;
 
 
@@ -75,26 +62,8 @@
         select *
         from cookie_header_data
         where type = #{dataType}
-          and is_deleted = 0
     </select>
-    <select id="findDataByTypeDistinctByKey" resultType="java.util.Map">
 
-        select t1.ckey,
-               t1.cvalue
-        from cookie_header_data t1
-                 join
-             (SELECT ckey,
-                     MAX(last_modified_date) AS last_modified_date
-              FROM cookie_header_data
-              where type = #{dataType}
-                and is_deleted = 0
-              GROUP BY ckey) t2
-             on
-                         t1.ckey = t2.ckey
-                     and t1.last_modified_date = t2.last_modified_date
-        where t1.is_deleted = 0
-        ;
-    </select>
 
 
 </mapper>
