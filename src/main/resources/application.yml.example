@@ -39,6 +39,9 @@ spring:
     # 验证错误时 是否自动清除数据库 高危操作!
     clean-on-validation-error: false
 
+  threads:
+    virtual:
+      enabled: true
 
 mybatis-plus:
   configuration:
@@ -67,6 +70,10 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: io.github.cctyl.controller
+
+  # 默认是false，需要设置为true
+  default-flat-param-object: true
+
 # knife4j的增强配置，不需要增强可以不配
 knife4j:
   enable: true
