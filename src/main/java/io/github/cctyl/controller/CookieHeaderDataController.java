@@ -3,23 +3,15 @@ package io.github.cctyl.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.domain.po.CookieHeaderData;
 import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.domain.po.CookieHeaderData;
 import io.github.cctyl.service.CookieHeaderDataService;
-import io.github.cctyl.utils.HarAnalysisTool;
-import io.github.cctyl.utils.IdGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -38,9 +30,6 @@ public class CookieHeaderDataController {
     @Autowired
     private CookieHeaderDataService cookieHeaderDataService;
 
-
-    @Autowired
-    private HarAnalysisTool harAnalysisTool;
 
     /**
     * 根据id查询
@@ -119,23 +108,5 @@ public class CookieHeaderDataController {
     }
 
 
-    @PostMapping("/load-har")
-    @Operation(summary = "上传har，更新cookie 和 header")
-    public R loadHar(MultipartFile multipartFile, @RequestParam Boolean refresh) throws IOException {
-
-        //保存到临时文件夹
-        File tempDir = new File(new ApplicationHome().getDir().getParentFile().getPath(), "upload");
-        if (!tempDir.exists()) {
-            tempDir.mkdir();
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        String fileName = IdGenerator.nextId() + "-" + now.getYear() + now.getMonthValue() + now.getDayOfMonth() + ".har";
-        File harFile = new File(tempDir, fileName);
-        multipartFile.transferTo(harFile);
-        harAnalysisTool.load(harFile, refresh);
-
-        return R.ok().setData(GlobalVariables.getApiHeaderMap());
-    }
 
 }
