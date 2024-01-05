@@ -94,10 +94,10 @@
         </dependency>
 
 
-        <dependency>
+<!--        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-        </dependency>
+        </dependency>-->
 
 
 
@@ -225,6 +225,7 @@
                 <configuration>
                     <fork>true</fork>
                     <addResources>true</addResources>
+                    <includeSystemScope>true</includeSystemScope>
                 </configuration>
                 <executions>
                     <execution>
