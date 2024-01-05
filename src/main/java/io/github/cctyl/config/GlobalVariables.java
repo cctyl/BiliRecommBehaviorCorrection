@@ -126,7 +126,7 @@ public class GlobalVariables {
     private static List<WhiteListRule> WHITELIST_RULE_LIST = new ArrayList<>();
 
     /**
-     * ApiHeader
+     * 根据url匹配的 header 以及cookie
      * url 作为键，cookie 和 httpheader 作为值
      */
     private static Map<String, ApiHeader> API_HEADER_MAP = new HashMap<>();

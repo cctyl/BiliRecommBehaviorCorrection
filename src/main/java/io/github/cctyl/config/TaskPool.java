@@ -1,25 +1,21 @@
 package io.github.cctyl.config;
 
 import io.github.cctyl.utils.ReflectUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 /**
  * 任务池子
  */
+@Slf4j
 public class TaskPool {
 
     /**
      * 方法名与对应任务的map
      */
-    private static Map<String, Future<?>> METHOD_NAME_TASK_MAP = new HashMap<>();
+    private static Map<String, Future<?>> METHOD_NAME_TASK_MAP = new ConcurrentHashMap<>();
 
 
     /**
@@ -63,7 +59,8 @@ public class TaskPool {
                 &&
                 !futureTask.isDone()
         ) {
-            throw new RuntimeException(enclosingMethodName + "任务已存在，且尚未运行完成，无法新增该任务");
+            log.info( "{}任务已存在，且尚未运行完成，无法新增该任务",enclosingMethodName);
+            return;
         }
         Future<Void> future = CompletableFuture.runAsync(runnable);
         //如果不存在，或者存在，但是已经完成了，则允许添加新任务

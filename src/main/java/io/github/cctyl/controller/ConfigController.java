@@ -2,6 +2,8 @@ package io.github.cctyl.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
+import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
@@ -22,6 +24,7 @@ import java.util.Map;
 public class ConfigController {
 
     private final ConfigService configService;
+    private final BiliApi biliApi;
 
 
 
@@ -60,6 +63,21 @@ public class ConfigController {
     }
 
 
+
+    @GetMapping("/check-cookie")
+    @Operation(summary ="检查cookie")
+    public R checkCookie(){
+        JSONObject history = biliApi.getHistory();
+        return R.data(history);
+    }
+
+
+    @GetMapping("/check-accesskey")
+    @Operation(summary ="检查accesskey")
+    public R checkAccesskey(){
+        JSONObject info = biliApi.getUserInfo();
+        return R.data(info);
+    }
 
 
     @GetMapping("/web-qr-code")

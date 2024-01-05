@@ -278,7 +278,6 @@ public class BiliApi {
      */
     public String getCookieStr(String url) {
 
-
         Map<String,String> cookies  = new HashMap<>();
         ApiHeader apiHeader = GlobalVariables.getApiHeaderMap().get(url);
         if (apiHeader==null){
