@@ -13,7 +13,7 @@ import java.util.List;
 
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.domain.po.Dict;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
 * <p>

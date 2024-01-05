@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.domain.po.VideoDetail;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
 * <p>

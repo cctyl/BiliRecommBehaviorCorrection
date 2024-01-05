@@ -8,13 +8,13 @@
     <artifactId>BiliRecommBehaviorCorrection</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <java.version>11</java.version>
+        <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <local-libs>${project.basedir}/src/main/resources/libs</local-libs>
         <graalvm.version>22.3.1</graalvm.version>
-        <springboot.version>2.7.15</springboot.version>
-        <mybatis-plus.version>3.5.2</mybatis-plus.version>
+        <springboot.version>3.2.1</springboot.version>
+        <mybatis-plus.version>3.5.5</mybatis-plus.version>
     </properties>
 
     <dependencyManagement>
@@ -132,7 +132,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
 
@@ -146,9 +146,10 @@
         <!--swagger-->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
-            <version>4.3.0</version>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
         </dependency>
+
 
 
         <!--springboot web-->
@@ -187,13 +188,23 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>${mybatis-plus.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mybatis</groupId>
+                    <artifactId>mybatis-spring</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>3.0.3</version>
         </dependency>
 
         <!--数据库迁移支持-->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>5.2.1</version>
         </dependency>
 
 
@@ -225,7 +236,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${springboot.version}</version>
                 <configuration>
-                    <fork>true</fork>
+<!--                    <fork>true</fork>-->
                     <addResources>true</addResources>
                     <includeSystemScope>true</includeSystemScope>
                 </configuration>

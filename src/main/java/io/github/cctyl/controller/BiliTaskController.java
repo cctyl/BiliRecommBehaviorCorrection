@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -83,7 +82,7 @@ public class BiliTaskController {
 
     @Operation(summary = "获取等待处理的数据")
     @GetMapping("/ready2handle")
-    public R getReady2HandleVideo(@ParameterObject PageQuery pageQuery,HandleType  handleType) {
+    public R getReady2HandleVideo( PageQuery pageQuery,HandleType  handleType) {
         return R.data(videoDetailService.findWithOwnerAndHandle(false,pageQuery,handleType));
     }
 

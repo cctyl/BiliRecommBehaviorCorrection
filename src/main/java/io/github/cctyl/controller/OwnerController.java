@@ -12,7 +12,7 @@ import java.util.List;
 import io.github.cctyl.service.OwnerService;
 
 import io.github.cctyl.domain.po.Owner;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
 * <p>

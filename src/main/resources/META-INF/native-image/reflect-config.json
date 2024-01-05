@@ -3951,7 +3951,7 @@
   "methods":[{"name":"service","parameterTypes":["javax.servlet.ServletRequest","javax.servlet.ServletResponse"] }]
 },
 {
-  "name":"javax.servlet.http.HttpServletRequest",
+  "name":"jakarta.servlet.http.HttpServletRequest",
   "methods":[{"name":"getHttpServletMapping","parameterTypes":[] }]
 },
 {
@@ -4702,7 +4702,7 @@
   "name":"org.springdoc.webmvc.api.MultipleOpenApiWebMvcResource",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"openapiJson","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String","java.lang.String","java.util.Locale"] }]
+  "methods":[{"name":"openapiJson","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String","java.lang.String","java.util.Locale"] }]
 },
 {
   "name":"org.springdoc.webmvc.api.OpenApiResource",
@@ -4714,8 +4714,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"openapiJson","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String","java.util.Locale"] }, 
-    {"name":"openapiYaml","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String","java.util.Locale"] }
+    {"name":"openapiJson","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String","java.util.Locale"] },
+    {"name":"openapiYaml","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String","java.util.Locale"] }
   ]
 },
 {
@@ -4793,13 +4793,13 @@
   "name":"org.springdoc.webmvc.ui.SwaggerConfigResource",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"openapiJson","parameterTypes":["javax.servlet.http.HttpServletRequest"] }]
+  "methods":[{"name":"openapiJson","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] }]
 },
 {
   "name":"org.springdoc.webmvc.ui.SwaggerIndexPageTransformer",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"transform","parameterTypes":["javax.servlet.http.HttpServletRequest","org.springframework.core.io.Resource","org.springframework.web.servlet.resource.ResourceTransformerChain"] }]
+  "methods":[{"name":"transform","parameterTypes":["jakarta.servlet.http.HttpServletRequest","org.springframework.core.io.Resource","org.springframework.web.servlet.resource.ResourceTransformerChain"] }]
 },
 {
   "name":"org.springdoc.webmvc.ui.SwaggerIndexTransformer",
@@ -4811,7 +4811,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"resolveResource","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String","java.util.List","org.springframework.web.servlet.resource.ResourceResolverChain"] }, 
+    {"name":"resolveResource","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String","java.util.List","org.springframework.web.servlet.resource.ResourceResolverChain"] },
     {"name":"resolveUrlPath","parameterTypes":["java.lang.String","java.util.List","org.springframework.web.servlet.resource.ResourceResolverChain"] }
   ]
 },
@@ -6023,7 +6023,7 @@
   "name":"org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"error","parameterTypes":["javax.servlet.http.HttpServletRequest"] }]
+  "methods":[{"name":"error","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] }]
 },
 {
   "name":"org.springframework.boot.autoconfigure.web.servlet.error.DefaultErrorViewResolver",
@@ -6031,7 +6031,7 @@
   "queryAllDeclaredMethods":true,
   "methods":[
     {"name":"getOrder","parameterTypes":[] }, 
-    {"name":"resolveErrorView","parameterTypes":["javax.servlet.http.HttpServletRequest","org.springframework.http.HttpStatus","java.util.Map"] }
+    {"name":"resolveErrorView","parameterTypes":["jakarta.servlet.http.HttpServletRequest","org.springframework.http.HttpStatus","java.util.Map"] }
   ]
 },
 {
@@ -6076,7 +6076,7 @@
   "queryAllDeclaredMethods":true,
   "methods":[
     {"name":"getContentType","parameterTypes":[] }, 
-    {"name":"render","parameterTypes":["java.util.Map","javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] }
+    {"name":"render","parameterTypes":["java.util.Map","jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] }
   ]
 },
 {
@@ -6563,7 +6563,7 @@
     {"name":"getError","parameterTypes":["org.springframework.web.context.request.WebRequest"] }, 
     {"name":"getErrorAttributes","parameterTypes":["org.springframework.web.context.request.WebRequest","org.springframework.boot.web.error.ErrorAttributeOptions"] }, 
     {"name":"getOrder","parameterTypes":[] }, 
-    {"name":"resolveException","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object","java.lang.Exception"] }
+    {"name":"resolveException","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object","java.lang.Exception"] }
   ]
 },
 {
@@ -8168,8 +8168,8 @@
   "queryAllDeclaredMethods":true,
   "methods":[
     {"name":"cleanupMultipart","parameterTypes":["org.springframework.web.multipart.MultipartHttpServletRequest"] }, 
-    {"name":"isMultipart","parameterTypes":["javax.servlet.http.HttpServletRequest"] }, 
-    {"name":"resolveMultipart","parameterTypes":["javax.servlet.http.HttpServletRequest"] }
+    {"name":"isMultipart","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] },
+    {"name":"resolveMultipart","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] }
   ]
 },
 {
@@ -8337,9 +8337,9 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"getLastModified","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.Object"] }, 
+    {"name":"getLastModified","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.Object"] },
     {"name":"getOrder","parameterTypes":[] }, 
-    {"name":"handle","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] }, 
+    {"name":"handle","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] },
     {"name":"supports","parameterTypes":["java.lang.Object"] }
   ]
 },
@@ -8366,7 +8366,7 @@
     {"name":"getCorsConfigurationSource","parameterTypes":[] }, 
     {"name":"getCorsProcessor","parameterTypes":[] }, 
     {"name":"getDefaultHandler","parameterTypes":[] }, 
-    {"name":"getHandler","parameterTypes":["javax.servlet.http.HttpServletRequest"] }, 
+    {"name":"getHandler","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] },
     {"name":"getOrder","parameterTypes":[] }, 
     {"name":"getPathMatcher","parameterTypes":[] }, 
     {"name":"getPatternParser","parameterTypes":[] }, 
@@ -8396,9 +8396,9 @@
     {"name":"getHandlerMethods","parameterTypes":[] }, 
     {"name":"getHandlerMethodsForMappingName","parameterTypes":["java.lang.String"] }, 
     {"name":"getMappingPathPatterns","parameterTypes":["java.lang.Object"] }, 
-    {"name":"getMatchingMapping","parameterTypes":["java.lang.Object","javax.servlet.http.HttpServletRequest"] }, 
+    {"name":"getMatchingMapping","parameterTypes":["java.lang.Object","jakarta.servlet.http.HttpServletRequest"] },
     {"name":"getNamingStrategy","parameterTypes":[] }, 
-    {"name":"handleMatch","parameterTypes":["java.lang.Object","java.lang.String","javax.servlet.http.HttpServletRequest"] }, 
+    {"name":"handleMatch","parameterTypes":["java.lang.Object","java.lang.String","jakarta.servlet.http.HttpServletRequest"] },
     {"name":"initCorsConfiguration","parameterTypes":["java.lang.Object","java.lang.reflect.Method","java.lang.Object"] }, 
     {"name":"registerHandlerMethod","parameterTypes":["java.lang.Object","java.lang.reflect.Method","java.lang.Object"] }, 
     {"name":"registerMapping","parameterTypes":["java.lang.Object","java.lang.Object","java.lang.reflect.Method"] }, 
@@ -8420,7 +8420,7 @@
     {"name":"getHandlerMap","parameterTypes":[] }, 
     {"name":"getPathPatternHandlerMap","parameterTypes":[] }, 
     {"name":"getRootHandler","parameterTypes":[] }, 
-    {"name":"match","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String"] }, 
+    {"name":"match","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String"] },
     {"name":"setLazyInitHandlers","parameterTypes":["boolean"] }, 
     {"name":"setPatternParser","parameterTypes":["org.springframework.web.util.pattern.PathPatternParser"] }, 
     {"name":"setRootHandler","parameterTypes":["java.lang.Object"] }, 
@@ -8439,7 +8439,7 @@
   "queryAllDeclaredMethods":true,
   "methods":[
     {"name":"getOrder","parameterTypes":[] }, 
-    {"name":"resolveException","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object","java.lang.Exception"] }
+    {"name":"resolveException","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object","java.lang.Exception"] }
   ]
 },
 {
@@ -8457,8 +8457,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"resolveLocale","parameterTypes":["javax.servlet.http.HttpServletRequest"] }, 
-    {"name":"setLocale","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.util.Locale"] }
+    {"name":"resolveLocale","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] },
+    {"name":"setLocale","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.util.Locale"] }
   ]
 },
 {
@@ -8466,8 +8466,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"getLastModified","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.Object"] }, 
-    {"name":"handle","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] }, 
+    {"name":"getLastModified","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.Object"] },
+    {"name":"handle","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] },
     {"name":"supports","parameterTypes":["java.lang.Object"] }
   ]
 },
@@ -8476,8 +8476,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"getLastModified","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.Object"] }, 
-    {"name":"handle","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] }, 
+    {"name":"getLastModified","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.Object"] },
+    {"name":"handle","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] },
     {"name":"supports","parameterTypes":["java.lang.Object"] }
   ]
 },
@@ -8486,9 +8486,9 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"getLastModified","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.Object"] }, 
+    {"name":"getLastModified","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.Object"] },
     {"name":"getOrder","parameterTypes":[] }, 
-    {"name":"handle","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] }, 
+    {"name":"handle","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.Object"] },
     {"name":"setOrder","parameterTypes":["int"] }, 
     {"name":"supports","parameterTypes":["java.lang.Object"] }
   ]
@@ -8517,7 +8517,7 @@
   "queryAllDeclaredMethods":true,
   "methods":[
     {"name":"afterPropertiesSet","parameterTypes":[] }, 
-    {"name":"match","parameterTypes":["javax.servlet.http.HttpServletRequest","java.lang.String"] }, 
+    {"name":"match","parameterTypes":["jakarta.servlet.http.HttpServletRequest","java.lang.String"] },
     {"name":"registerMapping","parameterTypes":["java.lang.Object","java.lang.Object","java.lang.reflect.Method"] }, 
     {"name":"setEmbeddedValueResolver","parameterTypes":["org.springframework.util.StringValueResolver"] }
   ]
@@ -8548,8 +8548,8 @@
   "methods":[
     {"name":"getFlashMapTimeout","parameterTypes":[] }, 
     {"name":"getUrlPathHelper","parameterTypes":[] }, 
-    {"name":"retrieveAndUpdate","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] }, 
-    {"name":"saveOutputFlashMap","parameterTypes":["org.springframework.web.servlet.FlashMap","javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] }, 
+    {"name":"retrieveAndUpdate","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] },
+    {"name":"saveOutputFlashMap","parameterTypes":["org.springframework.web.servlet.FlashMap","jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse"] },
     {"name":"setFlashMapTimeout","parameterTypes":["int"] }, 
     {"name":"setUrlPathHelper","parameterTypes":["org.springframework.web.util.UrlPathHelper"] }
   ]
@@ -8598,8 +8598,8 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[
-    {"name":"resolveThemeName","parameterTypes":["javax.servlet.http.HttpServletRequest"] }, 
-    {"name":"setThemeName","parameterTypes":["javax.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.String"] }
+    {"name":"resolveThemeName","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] },
+    {"name":"setThemeName","parameterTypes":["jakarta.servlet.http.HttpServletRequest","javax.servlet.http.HttpServletResponse","java.lang.String"] }
   ]
 },
 {
@@ -8643,7 +8643,7 @@
   "name":"org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"getViewName","parameterTypes":["javax.servlet.http.HttpServletRequest"] }]
+  "methods":[{"name":"getViewName","parameterTypes":["jakarta.servlet.http.HttpServletRequest"] }]
 },
 {
   "name":"org.springframework.web.servlet.view.InternalResourceViewResolver",
