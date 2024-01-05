@@ -72,21 +72,11 @@ public class BiliApi {
      */
     public Map<String, List<String>> getHeader(String url) {
         HashMap<String, List<String>> result = new HashMap<>();
-        ApiHeader apiHeader = GlobalVariables.getApiHeaderMap().get(url);
-        if ( apiHeader != null) {
-            apiHeader.getHeaders()
-                    .forEach((k, v) -> result.put(k, Collections.singletonList(v)));
-
-        }else {
-            //没有匹配的，就返回默认的header
-            GlobalVariables.getCommonHeaderMap()
-                    .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
-            //公共header时，需要修改host
-            result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
-        }
-
-
-
+        //没有匹配的，就返回默认的header
+        GlobalVariables.getCommonHeaderMap()
+                .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
+        //公共header时，需要修改host
+        result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
         return result;
     }
 
@@ -277,20 +267,7 @@ public class BiliApi {
      * @return
      */
     public String getCookieStr(String url) {
-
-        Map<String,String> cookies  = new HashMap<>();
-        ApiHeader apiHeader = GlobalVariables.getApiHeaderMap().get(url);
-        if (apiHeader==null){
-            //使用 通用的 cookie
-            cookies.putAll(GlobalVariables.getCommonCookieMap());
-        }else {
-            cookies.putAll(apiHeader.getCookies());
-        }
-
-        //及时更新的cookie覆盖掉同名key
-        cookies.putAll(GlobalVariables.getRefreshCookieMap());
-
-        return cookies.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
+        return GlobalVariables.getRefreshCookieMap().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
     }
 

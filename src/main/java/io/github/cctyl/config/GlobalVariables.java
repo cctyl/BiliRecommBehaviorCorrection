@@ -125,16 +125,7 @@ public class GlobalVariables {
      */
     private static List<WhiteListRule> WHITELIST_RULE_LIST = new ArrayList<>();
 
-    /**
-     * 根据url匹配的 header 以及cookie
-     * url 作为键，cookie 和 httpheader 作为值
-     */
-    private static Map<String, ApiHeader> API_HEADER_MAP = new HashMap<>();
 
-    /**
-     * 通用的cookie，当没有找到匹配的url时使用这个cookie
-     */
-    private static Map<String, String> COMMON_COOKIE_MAP = new HashMap<>();
     /**
      * 通用的header，当没有找到匹配的url时使用这个header
      */
@@ -145,8 +136,6 @@ public class GlobalVariables {
      * 及时刷新类型的cookie 和 header
      */
     private static Map<String, String> REFRESH_COOKIE_MAP = new HashMap<>(20);
-    private static Map<String, String> REFRESH_HEADER_MAP = new HashMap<>(20);
-
 
     /**
      * 最小播放时间
@@ -230,13 +219,8 @@ public class GlobalVariables {
         return WHITELIST_RULE_LIST;
     }
 
-    public static Map<String, ApiHeader> getApiHeaderMap() {
-        return API_HEADER_MAP;
-    }
 
-    public static Map<String, String> getCommonCookieMap() {
-        return COMMON_COOKIE_MAP;
-    }
+
 
     public static Map<String, String> getCommonHeaderMap() {
         return COMMON_HEADER_MAP;
@@ -275,9 +259,7 @@ public class GlobalVariables {
         return REFRESH_COOKIE_MAP;
     }
 
-    public static Map<String, String> getRefreshHeaderMap() {
-        return REFRESH_HEADER_MAP;
-    }
+
 
     /**
      * 黑白名单忽略关键词列表的加载
@@ -456,16 +438,9 @@ public class GlobalVariables {
 
     public static void initApiHeaderMap() {
         //通用类型的数据
-        GlobalVariables.COMMON_COOKIE_MAP = cookieHeaderDataService.findCommonCookieMap();
         GlobalVariables.COMMON_HEADER_MAP = cookieHeaderDataService.findCommonHeaderMap();
-
-        //匹配类型的数据
-        GlobalVariables.API_HEADER_MAP = cookieHeaderDataService.findApiHeaderMap();
-
         //及时更新类型的数据
         GlobalVariables.REFRESH_COOKIE_MAP = cookieHeaderDataService.findRefreshCookie();
-        GlobalVariables.REFRESH_HEADER_MAP = cookieHeaderDataService.findRefreshHeader();
-
     }
 
     /**
@@ -578,21 +553,6 @@ public class GlobalVariables {
         cookieHeaderDataService.saveCommonHeaderMap(commonHeaderMap);
     }
 
-    /**
-     * 删除原本的数据，重新存储
-     *
-     * @param commonCookieMap
-     */
-    @Transactional(rollbackFor = ServerException.class)
-    public void replaceCommonCookieMap(Map<String, String> commonCookieMap) {
-
-        //删除原有的
-        COMMON_COOKIE_MAP = commonCookieMap;
-        cookieHeaderDataService.removeAllCommonCookie();
-
-        //重新保存新的数据
-        cookieHeaderDataService.saveCommonCookieMap(commonCookieMap);
-    }
 
 
     /**
@@ -965,28 +925,8 @@ public class GlobalVariables {
         return SUB_KEY;
     }
 
-    public void replaceApiHeaderMap(List<ApiHeader> apiHeaderList) {
-        //删除原有的,将apiHeaderList 加入到 API_HEADER_MAP
-        API_HEADER_MAP.clear();
-        for (ApiHeader apiHeader : apiHeaderList) {
-            API_HEADER_MAP.put(apiHeader.getUrl(), apiHeader);
-        }
 
-        cookieHeaderDataService.removeAllApiHeader();
 
-        //重新保存新的数据
-        cookieHeaderDataService.saveApiHeader(apiHeaderList);
-
-    }
-
-    public void updateCommonCookieMap(Map<String, String> commonCookieMap) {
-        COMMON_COOKIE_MAP.putAll(commonCookieMap);
-        //删除同名的
-        Set<String> keySet = commonCookieMap.keySet();
-        cookieHeaderDataService.removeByKeyInAndClassifyAndMediaType(keySet, Classify.COOKIE, MediaType.GENERAL);
-        //重新保存
-        cookieHeaderDataService.saveCommonCookieMap(commonCookieMap);
-    }
 
     public void updateCommonHeaderMap(Map<String, String> commonHeaderMap) {
         COMMON_HEADER_MAP.putAll(commonHeaderMap);
@@ -997,18 +937,7 @@ public class GlobalVariables {
         cookieHeaderDataService.saveCommonHeaderMap(commonHeaderMap);
     }
 
-    public void updateApiHeaderMap(List<ApiHeader> apiHeaderList) {
-        for (ApiHeader apiHeader : apiHeaderList) {
-            API_HEADER_MAP.put(apiHeader.getUrl(), apiHeader);
-        }
 
-        cookieHeaderDataService.removeByUrlAndMediaType(
-                apiHeaderList.stream().map(ApiHeader::getUrl).collect(Collectors.toList()),
-                MediaType.URL_MATCHING);
-
-        cookieHeaderDataService.saveApiHeader(apiHeaderList);
-
-    }
 
 
     @Transactional(rollbackFor = ServerException.class)
