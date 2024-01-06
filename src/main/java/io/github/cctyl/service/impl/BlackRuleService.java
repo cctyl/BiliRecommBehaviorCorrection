@@ -145,7 +145,7 @@ public class BlackRuleService {
      * @return
      */
     public boolean isTitleMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.getBlackKeywordTree() .match(videoDetail.getTitle());
+        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getTitle());
         boolean match = matchWord != null;
         log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
                 videoDetail.getBvid(),

@@ -254,8 +254,7 @@ public class BlackRuleController {
     @Operation(summary = "获得忽略关键词列表")
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet() {
-        List<Dict> blackIgnoreKeyWord = dictService.findBlackIgnoreKeyWord();
-        return R.ok().setData(blackIgnoreKeyWord);
+        return R.ok().setData( GlobalVariables.getIgnoreBlackKeyWordSet());
     }
 
     @Operation(summary = "添加到忽略关键词列表")

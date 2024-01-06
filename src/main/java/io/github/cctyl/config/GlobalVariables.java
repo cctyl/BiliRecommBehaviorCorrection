@@ -651,6 +651,7 @@ public class GlobalVariables {
         //新增到缓存
         BLACK_KEYWORD_SET.removeAll(keywordCol);
         BLACK_KEYWORD_SET.addAll(keywordCol);
+        BLACK_KEYWORD_TREE.addWords(keywordCol);
 
     }
 
@@ -728,7 +729,8 @@ public class GlobalVariables {
 
         for (String s : param) {
             BLACK_KEYWORD_SET.remove(s);
-            BLACK_KEYWORD_TREE.remove(s);
+            BLACK_KEYWORD_TREE = new WordTree();
+            BLACK_KEYWORD_TREE.addWords(BLACK_KEYWORD_SET);
         }
         dictService.removeByAccessTypeAndDictTypeAndValue(
                 AccessType.BLACK,

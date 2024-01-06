@@ -157,7 +157,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     @Override
     public List<Dict> findBlackIgnoreKeyWord() {
-        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.WHITE);
+        return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.BLACK);
     }
 
     @Override
