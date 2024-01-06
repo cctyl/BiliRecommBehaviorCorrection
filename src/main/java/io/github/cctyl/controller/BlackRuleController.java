@@ -102,7 +102,7 @@ public class BlackRuleController {
                     log.info("完成对{}分区的点踩任务", tid);
                     ThreadUtil.s5();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
             }
             log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
@@ -128,7 +128,7 @@ public class BlackRuleController {
                     log.info("完成对{}分区的点踩任务", userId);
                     ThreadUtil.s20();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
             }
             log.info("本次共对{}个用户:{}进行点踩，共点踩{}个视频",

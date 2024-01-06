@@ -15,6 +15,7 @@ import io.github.cctyl.service.*;
 import io.github.cctyl.service.impl.BlackRuleService;
 import io.github.cctyl.exception.ServerException;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  */
 @Data
 @Component
+@Slf4j
 public class GlobalVariables {
 
     /**
@@ -372,7 +374,7 @@ public class GlobalVariables {
             try {
                 GlobalVariables.MIN_PLAY_SECOND = Integer.parseInt(minPlaySecond);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
         }
 

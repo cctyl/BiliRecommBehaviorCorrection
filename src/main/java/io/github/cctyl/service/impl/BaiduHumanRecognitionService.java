@@ -44,7 +44,7 @@ public class BaiduHumanRecognitionService implements ImageGenderDetectService {
 
         } catch (Exception e) {
             log.error("识别异常！msg={}", e.getMessage());
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
             return 4;
         }
     }

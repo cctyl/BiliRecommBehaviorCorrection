@@ -146,7 +146,7 @@ public class BiliService {
             //出现任何异常，都进行跳过
             log.error("处理视频：{} 时出现异常，信息如下：", Opt.ofNullable(videoDetail)
                     .map(VideoDetail::getTitle).get());
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
     }
 
@@ -184,7 +184,7 @@ public class BiliService {
                 biliApi.dislike(videoDetail.getAid());
                 ThreadUtil.s30();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
         }
     }
@@ -501,7 +501,7 @@ public class BiliService {
             JSONObject jsonObject = biliApi.getUserInfo();
             log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
             throw new RuntimeException("accessKey验证不通过，请检查");
         }
 
@@ -539,7 +539,7 @@ public class BiliService {
                 try {
                     searchRaw = biliApi.search(keyword, i);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                     continue;
                 }
                 ThreadUtil.sleep(3);
@@ -552,7 +552,7 @@ public class BiliService {
                     } catch (LogOutException e) {
                         throw e;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error(e.getMessage(),e);
                     }
                 });
             }
@@ -581,7 +581,7 @@ public class BiliService {
             try {
                 hotRankVideo = biliApi.getHotRankVideo(i, 20);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
                 continue;
             }
             //20条中随机抽10条
@@ -597,7 +597,7 @@ public class BiliService {
                 } catch (LogOutException e) {
                     throw e;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
             });
             ThreadUtil.sleep(7);
@@ -638,7 +638,7 @@ public class BiliService {
                 } catch (LogOutException e) {
                     throw e;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
             });
             ThreadUtil.sleep(7);
@@ -731,7 +731,7 @@ public class BiliService {
                         }
                         this.dislike(videoDetail.getAid());
                     } catch (NotFoundException e) {
-                        e.printStackTrace();
+                        log.error(e.getMessage(),e);
                     }
                     //删除数据库记录
                     prepareVideoService.removeByVideoId(id);
@@ -758,7 +758,7 @@ public class BiliService {
                         this.playAndThumbUp(videoDetail);
 
                     } catch (NotFoundException e) {
-                        e.printStackTrace();
+                        log.error(e.getMessage(),e);
                     }
                     //删除数据库记录
                     prepareVideoService.removeByVideoId(id);

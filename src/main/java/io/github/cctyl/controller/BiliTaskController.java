@@ -41,7 +41,7 @@ public class BiliTaskController {
             try {
                 biliService.searchTask();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
         });
         return R.ok();
@@ -57,7 +57,7 @@ public class BiliTaskController {
             try {
                 biliService.hotRankTask();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
         });
         return R.ok();
@@ -73,7 +73,7 @@ public class BiliTaskController {
             try {
                 biliService.homeRecommendTask();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
         });
         return R.ok();

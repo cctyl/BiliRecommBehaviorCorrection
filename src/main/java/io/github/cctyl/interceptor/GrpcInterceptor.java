@@ -199,7 +199,7 @@ public class GrpcInterceptor implements ClientInterceptor {
             char[] md5MacChars = md5MacStr.toCharArray();
             return "XY" + md5MacChars[2] + md5MacChars[12] + md5MacChars[22] + md5MacStr;
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
         return "";
     }

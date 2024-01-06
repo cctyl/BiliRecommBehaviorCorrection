@@ -88,7 +88,7 @@ public class BaiduApi {
                         );
             }
         } catch (HttpException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
             return false;
         }
 

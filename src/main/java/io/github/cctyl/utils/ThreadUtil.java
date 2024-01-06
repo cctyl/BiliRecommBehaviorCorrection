@@ -1,5 +1,8 @@
 package io.github.cctyl.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ThreadUtil {
 
 
@@ -11,7 +14,7 @@ public class ThreadUtil {
         try {
             Thread.sleep(second* 1000L);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
     }
     public static void s2(){

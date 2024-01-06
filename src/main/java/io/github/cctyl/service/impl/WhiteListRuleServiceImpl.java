@@ -99,7 +99,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                             tidMatch
                     ;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
             return false;
         }
     }
@@ -261,7 +261,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                                 break;
                                             }
                                         } catch (Exception e) {
-                                            e.printStackTrace();
+                                            log.error(e.getMessage(),e);
                                         }
                                     }
 
@@ -279,7 +279,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                 );
                             } catch (Exception e) {
                                 log.error("出现异常:{},视频信息：{}", e.getMessage(), videoDetail.toString());
-                                e.printStackTrace();
+                                log.error(e.getMessage(),e);
                             }
                             //两个以上的判断都通过，才表示通过
                             return Stream.of(titleMatch, descMatch, tagMatch)
@@ -360,7 +360,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 tagNameProcess.addAll(tagNameList);
                 log.info("获得视频信息:{}", videoDetail);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(),e);
             }
 
             ThreadUtil.sleep(10);
@@ -435,7 +435,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                     allVideo.addAll(pageBean
                             .getData());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(),e);
                 }
             }
 

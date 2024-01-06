@@ -133,7 +133,7 @@ public class BlackRuleService {
             return human;
         } catch (Exception e) {
             log.error("获取图片字节码出错：{}", e.getMessage());
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
         return false;
     }

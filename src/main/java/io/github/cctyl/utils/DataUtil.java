@@ -1,5 +1,7 @@
 package io.github.cctyl.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
@@ -8,6 +10,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DataUtil {
     private static final String TABLE = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF";
     private static final int[] S = new int[]{11, 10, 3, 8, 4, 6};
@@ -147,7 +150,7 @@ public class DataUtil {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
         return null;
     }

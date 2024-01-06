@@ -1,5 +1,6 @@
 package io.github.cctyl.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.invoke.SerializedLambda;
@@ -15,6 +16,7 @@ import java.lang.reflect.Method;
  * 以及: https://baomidou.com
  * 提供的灵感
  */
+@Slf4j
 public class LambdaUtil {
 
     public static <T> Field extractColum(SFunction<T, ?> column) {
@@ -90,7 +92,7 @@ public class LambdaUtil {
         try {
             aClass = Class.forName(serializedLambda.getImplClass().replace("/", "."));
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
         return (Class<T>) aClass;
     }
@@ -100,7 +102,7 @@ public class LambdaUtil {
         try {
             aClass = Class.forName(serializedLambda.getImplClass().replace("/", "."));
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
         return (Class<T>) aClass;
     }
@@ -112,7 +114,7 @@ public class LambdaUtil {
         try {
             writeReplaceMethod = writeReplaceClass.getDeclaredMethod("writeReplace");
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(),e);
         }
 
         boolean isAccessible = writeReplaceMethod.isAccessible();
