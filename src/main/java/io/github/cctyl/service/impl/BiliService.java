@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 /**
  * 相关任务处理
  */
@@ -112,7 +113,12 @@ public class BiliService {
         log.debug("处理视频avid={}", avid);
         VideoDetail videoDetail = videoDetailService.findWithDetailByAid(avid);
         if (
-                videoDetail != null && videoDetail.isHandle()
+                videoDetail != null && (
+                        videoDetail.isHandle() ||
+                        videoDetail.getBlackReason()!=null ||
+                        videoDetail.getThumbUpReason()!=null
+
+                )
         ) {
             log.info("视频：{} 之前已处理过", avid);
             return;
@@ -432,7 +438,7 @@ public class BiliService {
         List<String> thumbUpIdList = map.getOrDefault("thumbUpList", Collections.emptyList());
         List<String> other = map.getOrDefault("other", Collections.emptyList());
 
-        if (dislikeIdList.size() > 0) {
+        if (!dislikeIdList.isEmpty()) {
             List<VideoDetail> blackTrainVideoList = new ArrayList<>();
             //执行点踩
             for (String id : dislikeIdList) {
@@ -459,7 +465,7 @@ public class BiliService {
         }
 
 
-        if (thumbUpIdList.size() > 0) {
+        if (!thumbUpIdList.isEmpty()) {
             //执行点赞
             for (String id : thumbUpIdList) {
                 VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
@@ -473,7 +479,7 @@ public class BiliService {
         }
 
 
-        if (other.size() > 0) {
+        if (!other.isEmpty()) {
             //不处理的
             for (String id : other) {
                 VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
@@ -666,7 +672,11 @@ public class BiliService {
     public void secondProcessSingleVideo(String id, HandleType handleType, String reason) {
         VideoDetail video = videoDetailService.getById(id);
         if (video == null) {
-            throw new RuntimeException("视频：" + id + "不存在");
+            throw new ServerException(400,"视频："+id+"不存在");
+        }
+
+        if (video.isHandle()){
+            throw new ServerException(400,"视频："+id+"已处理过");
         }
 
         //黑名单其实可能变成白名单，存在反转问题，因此这个handleType 也需要进行更新
