@@ -4,7 +4,6 @@ import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.domain.po.Dict;
-import io.github.cctyl.domain.dto.ApiHeader;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.domain.enumeration.AccessType;
@@ -147,7 +146,7 @@ public class GlobalVariables {
     /**
      * 停顿词列表
      */
-    private static List<String> STOP_WORD_TREE = new ArrayList<>();
+    private static List<String> STOP_WORD_LIST = new ArrayList<>(0);
     /**
      * 黑白名单忽略关键词列表
      */
@@ -232,8 +231,8 @@ public class GlobalVariables {
         return MIN_PLAY_SECOND;
     }
 
-    public static List<String> getStopWordTree() {
-        return STOP_WORD_TREE;
+    public static List<String> getStopWordList() {
+        return STOP_WORD_LIST;
     }
 
     public static Set<String> getIgnoreBlackKeyWordSet() {
@@ -425,8 +424,7 @@ public class GlobalVariables {
             //从数据库中加载停顿词
             stopWordList = dictService.findStopWords();
         }
-        GlobalVariables.STOP_WORD_TREE.removeAll(stopWordList);
-        GlobalVariables.STOP_WORD_TREE.addAll(stopWordList);
+        GlobalVariables.STOP_WORD_LIST = new ArrayList<>(stopWordList);
     }
 
 
@@ -434,8 +432,8 @@ public class GlobalVariables {
         //存入数据库
         dictService.saveStopWords(stopWordList);
 
-        GlobalVariables.STOP_WORD_TREE.removeAll(stopWordList);
-        GlobalVariables.STOP_WORD_TREE.addAll(stopWordList);
+        GlobalVariables.STOP_WORD_LIST.removeAll(stopWordList);
+        GlobalVariables.STOP_WORD_LIST.addAll(stopWordList);
     }
 
     public static void initApiHeaderMap() {
