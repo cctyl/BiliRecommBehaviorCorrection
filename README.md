@@ -74,8 +74,8 @@ bilibili就会减少搞笑分区的投稿。
     
 # 食用
 ## 环境要求
-- jdk11
-- redis
+- jdk21
+- ~~redis~~
 
 ## 步骤
 1. 下载release压缩包
