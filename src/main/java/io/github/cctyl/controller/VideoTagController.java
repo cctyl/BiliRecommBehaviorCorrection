@@ -55,8 +55,8 @@ public class VideoTagController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
         HttpServletRequest request,
-        @PathVariable("page") Long page,
-        @PathVariable("limit") Long limit) {
+        @PathVariable("page") long page,
+        @PathVariable("limit") long limit) {
 
         Page<VideoTag> pageBean = new Page<>(page, limit);
         IPage<VideoTag> iPage = videoTagService.page(pageBean, null);

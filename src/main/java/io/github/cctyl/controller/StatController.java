@@ -55,8 +55,8 @@ public class StatController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
         HttpServletRequest request,
-        @PathVariable("page") Long page,
-        @PathVariable("limit") Long limit) {
+        @PathVariable("page") long page,
+        @PathVariable("limit") long limit) {
 
         Page<Stat> pageBean = new Page<>(page, limit);
         IPage<Stat> iPage = statService.page(pageBean, null);

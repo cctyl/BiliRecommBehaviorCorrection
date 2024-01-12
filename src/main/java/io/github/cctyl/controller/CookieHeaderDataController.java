@@ -57,8 +57,8 @@ public class CookieHeaderDataController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
         HttpServletRequest request,
-        @PathVariable("page") Long page,
-        @PathVariable("limit") Long limit) {
+        @PathVariable("page") long page,
+        @PathVariable("limit") long limit) {
 
         Page<CookieHeaderData> pageBean = new Page<>(page, limit);
         IPage<CookieHeaderData> iPage = cookieHeaderDataService.page(pageBean, null);

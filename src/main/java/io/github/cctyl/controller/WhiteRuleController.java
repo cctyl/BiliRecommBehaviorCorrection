@@ -205,8 +205,8 @@ public class WhiteRuleController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
             HttpServletRequest request,
-            @PathVariable("page") Long page,
-            @PathVariable("limit") Long limit) {
+            @PathVariable("page") long page,
+            @PathVariable("limit") long limit) {
 
         IPage<WhiteListRule> iPage = whiteRuleService.pageSearch(new Page<>(page, limit));
         return R.data("list", iPage.getRecords());

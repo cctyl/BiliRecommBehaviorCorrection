@@ -56,8 +56,8 @@ public class OwnerController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
         HttpServletRequest request,
-        @PathVariable("page") Long page,
-        @PathVariable("limit") Long limit) {
+        @PathVariable("page") long page,
+        @PathVariable("limit") long limit) {
 
         Page<Owner> pageBean = new Page<>(page, limit);
         IPage<Owner> iPage = ownerService.page(pageBean, null);

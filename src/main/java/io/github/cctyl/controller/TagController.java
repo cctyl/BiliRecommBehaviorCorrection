@@ -54,8 +54,8 @@ public class TagController {
     @GetMapping("/list/{page}/{limit}")
     public R getList(
         HttpServletRequest request,
-        @PathVariable("page") Long page,
-        @PathVariable("limit") Long limit) {
+        @PathVariable("page") long page,
+        @PathVariable("limit") long limit) {
 
         Page<Tag> pageBean = new Page<>(page, limit);
         IPage<Tag> iPage = tagService.page(pageBean, null);
