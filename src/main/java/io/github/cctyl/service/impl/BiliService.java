@@ -723,6 +723,7 @@ public class BiliService {
         List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 100, HandleType.THUMB_UP);
 
         if (dislikeIdList.size() > 40) {
+            log.debug("三次处理{}条黑名单数据",dislikeIdList.size());
             List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
             //执行点踩
             for (String id : dislikeIdList) {
@@ -760,6 +761,7 @@ public class BiliService {
 
 
         if (thumbUpIdList.size() > 20) {
+            log.debug("三次处理{}条白名单数据",thumbUpIdList.size());
             //执行点赞
             for (String id : thumbUpIdList) {
                 VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
