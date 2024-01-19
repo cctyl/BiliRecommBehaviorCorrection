@@ -82,9 +82,20 @@ public class InitFromRedis implements ApplicationRunner {
 
 
         //16.获取一下wbi
-        CompletableFuture.runAsync(biliApi::getHome);
-        //17.检查下accessKey
-        CompletableFuture.runAsync(biliApi::getUserInfo);
+        CompletableFuture
+                .runAsync(biliApi::getHome)
+                //17.检查下accessKey
+                .thenRun(biliApi::getUserInfo)
+                .whenComplete((unused, throwable) -> {
+                    if (throwable==null){
+                        log.info("凭证检测通过");
+                    }else {
+                        log.error(throwable.getMessage(),throwable);
+                    }
+                })
+        ;
+
+
 
         log.debug("初始化...加载完毕...");
     }

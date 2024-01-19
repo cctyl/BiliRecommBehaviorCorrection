@@ -768,7 +768,6 @@ public class BiliService {
                 if (videoDetail != null) {
                     try {
                         this.playAndThumbUp(videoDetail);
-
                     } catch (NotFoundException e) {
                         log.error(e.getMessage(),e);
                     }

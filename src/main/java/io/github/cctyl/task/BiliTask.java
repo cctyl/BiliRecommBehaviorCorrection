@@ -65,7 +65,7 @@ public class BiliTask {
     /**
      * 首页推荐任务
      */
-    @Scheduled(cron = "0 0 0/2 * * *")
+    @Scheduled(cron = "0 0 2 * * *")
     public void homeRecommendTask() {
         if (!GlobalVariables.isCron()) {
             return;
