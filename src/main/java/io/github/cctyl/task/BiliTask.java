@@ -80,7 +80,7 @@ public class BiliTask {
     @Scheduled(cron = "0 */20 * * * *")
     public void saveRefreshCookie() {
         log.info("开始持久化 refreshCookie，本次持久化的数量为：{}", GlobalVariables.getRefreshCookieMap().size());
-        if (GlobalVariables.getRefreshCookieMap().size() == 0) {
+        if (GlobalVariables.getRefreshCookieMap().isEmpty()) {
             log.info("cookie 数量为0，不予持久化");
             return;
         }
