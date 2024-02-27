@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 任务池子
+ * @author tyl
  */
 @Slf4j
 public class TaskPool {
@@ -16,7 +17,7 @@ public class TaskPool {
     /**
      * 方法名与对应任务的map
      */
-    private static Map<String, Future<?>> METHOD_NAME_TASK_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, Future<?>> METHOD_NAME_TASK_MAP = new ConcurrentHashMap<>();
 
     private static final ReentrantReadWriteLock rw = new ReentrantReadWriteLock();
     private static final ReentrantReadWriteLock.ReadLock r = rw.readLock();
