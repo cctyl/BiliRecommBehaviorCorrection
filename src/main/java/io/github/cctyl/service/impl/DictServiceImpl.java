@@ -2,6 +2,7 @@ package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.mapper.DictMapper;
@@ -335,6 +336,5 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
         return this.list(new LambdaQueryWrapper<Dict>().in(Dict::getOuterId,idList));
     }
-
 
 }

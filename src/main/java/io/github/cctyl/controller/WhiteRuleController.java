@@ -13,6 +13,7 @@ import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.WhiteListRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,7 +49,8 @@ public class WhiteRuleController {
     @Autowired
     private WhiteListRuleService whiteRuleService;
 
-
+    @Autowired
+    private DictService dictService;
 
 
     @Operation(summary = "指定视频是否符合白名单")
@@ -146,6 +148,14 @@ public class WhiteRuleController {
 
         GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate.transform());
         return R.ok().setMessage("添加成功").setData(toUpdate);
+    }
+
+
+    @Operation(summary = "添加搜索关键词")
+    @PostMapping("/search")
+    public R addSearchKeyword(@RequestParam List<String> newSearchKeyword){
+        GlobalVariables.INSTANCE.addSearchKeyword(newSearchKeyword);
+        return R.ok();
     }
 
 

@@ -977,7 +977,7 @@ public class GlobalVariables {
      *
      * @param searchKeywords
      */
-    public void addSearchKeyword(Set<String> searchKeywords) {
+    public void addSearchKeyword(Collection<String> searchKeywords) {
 
         dictService.removeAndAddDict(
                 AccessType.OTHER,
