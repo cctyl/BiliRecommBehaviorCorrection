@@ -108,7 +108,7 @@ public class BiliTaskController {
     @Operation(summary = "主动触发三次处理")
     @PutMapping("/third-process")
     public R thirdProcess( ) {
-        biliService.thirdProcess();
+        TaskPool.putTask(biliService::thirdProcess);
         return R.ok();
     }
 }
