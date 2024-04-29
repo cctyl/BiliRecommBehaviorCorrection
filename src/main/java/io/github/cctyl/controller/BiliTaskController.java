@@ -105,5 +105,10 @@ public class BiliTaskController {
         biliService.defaultProcessVideo();
         return R.ok();
     }
-
+    @Operation(summary = "主动触发三次处理")
+    @PutMapping("/third-process")
+    public R thirdProcess( ) {
+        biliService.thirdProcess();
+        return R.ok();
+    }
 }
