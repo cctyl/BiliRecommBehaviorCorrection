@@ -169,14 +169,11 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     @Override
     public List<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType) {
 
-
-        Page<VideoDetail> page = this.page(Page.of(pageQuery.getPage(), pageQuery.getSize()),
-                new LambdaQueryWrapper<VideoDetail>()
-                .eq(VideoDetail::isHandle,isHandle)
-                .eq(VideoDetail::getHandleType,handleType)
-        );
+        Page<VideoDetail> page = this.lambdaQuery()
+                .eq(VideoDetail::isHandle, isHandle)
+                .eq(VideoDetail::getHandleType, handleType)
+                .page(Page.of(pageQuery.getPage(), pageQuery.getSize()));
         List<String> idCol = page.getRecords().stream().map(VideoDetail::getId).collect(Collectors.toList());
-
 
         List<VideoVo> voWithOwnerByIdIn = baseMapper.findVoWithOwnerByIdIn(idCol);
         voWithOwnerByIdIn.forEach(videoVo -> {
@@ -248,4 +245,6 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
                 .set(VideoDetail::getBlackReason, video.getBlackReason())
                 .set(VideoDetail::getThumbUpReason, video.getThumbUpReason()));
     }
+
+
 }

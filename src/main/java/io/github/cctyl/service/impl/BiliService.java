@@ -3,6 +3,7 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.*;
@@ -806,4 +807,30 @@ public class BiliService {
         }
     }
 
+    /**
+     * 把未处理的视频，全部加入处理队列中，按照默认的状态去处理
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void defaultProcessVideo() {
+
+        int pageNo = 1;
+        while (true){
+            List<VideoDetail> records = videoDetailService.lambdaQuery()
+                    .select(VideoDetail::getId,VideoDetail::getHandleType)
+                    .eq(VideoDetail::isHandle, false)
+                    .isNotNull(VideoDetail::getHandleType)
+                    .page(Page.of(pageNo, 100))
+                    .getRecords();
+            if (CollUtil.isEmpty(records)){
+                //结束循环
+                break;
+            }
+
+
+            for (VideoDetail record : records) {
+                this.secondProcessSingleVideo(record.getId(),record.getHandleType(),"默认处理");
+            }
+        }
+
+    }
 }

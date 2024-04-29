@@ -53,4 +53,5 @@ public interface VideoDetailService extends IService<VideoDetail> {
      * @param video
      */
     void updateProcessInfo(VideoDetail video);
+
 }
