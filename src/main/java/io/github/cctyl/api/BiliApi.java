@@ -16,6 +16,7 @@ import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -1368,5 +1369,34 @@ public class BiliApi {
                 return jsonObject;
         }
 
+    }
+
+    /**
+     * 查询指定用户所有的投稿视频
+     * @param mid
+     * @param pageNumber
+     * @param keyword
+     * @return
+     */
+    public List<UserSubmissionVideo> searchUserAllSubmissionVideo(
+            String mid,
+            long pageNumber,
+            String keyword
+    ) {
+        PageBean<UserSubmissionVideo> pageBean = this.searchUserSubmissionVideo(mid, pageNumber, keyword);
+        List<UserSubmissionVideo> allVideo = new ArrayList<>(pageBean.getData());
+        while (pageBean.hasMore()) {
+            try {
+                ThreadUtil.s10();
+                pageBean = this.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, keyword);
+                allVideo.addAll(pageBean
+                        .getData());
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }
+
+        return allVideo;
     }
 }
