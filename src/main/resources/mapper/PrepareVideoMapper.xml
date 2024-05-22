@@ -9,8 +9,7 @@
         <result column="handle_type" property="handleType"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
+
     </resultMap>
 
 
@@ -19,7 +18,7 @@
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, video_id, handle_type,
-        created_date, last_modified_date, is_deleted, version
+        created_date, last_modified_date
     </sql>
 
 

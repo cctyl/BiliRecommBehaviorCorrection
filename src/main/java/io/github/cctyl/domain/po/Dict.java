@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Accessors(chain = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Dict extends AuditingEntity {
+public class Dict extends SimpleAuditingEntity {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;

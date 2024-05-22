@@ -33,8 +33,7 @@
         <result column="jump_url" property="jumpUrl"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
+
     </resultMap>
 
 
@@ -69,15 +68,14 @@
         <result column="tag_jump_url" property="jumpUrl"/>
         <result column="tag_created_date" property="createdDate"/>
         <result column="tag_last_modified_date" property="lastModifiedDate"/>
-        <result column="tag_is_deleted" property="isDeleted"/>
-        <result column="tag_version" property="version"/>
+
     </resultMap>
 
 
 
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, tag_id, tag_name, cover, head_cover, content, short_content, type, state, ctime, is_atten, likes, hates, attribute, liked, hated, extra_attr, music_id, tag_type, is_activity, color, alpha, is_season, subscribed_count, archive_count, featured_count, jump_url, created_date, last_modified_date, is_deleted, version
+        id, tag_id, tag_name, cover, head_cover, content, short_content, type, state, ctime, is_atten, likes, hates, attribute, liked, hated, extra_attr, music_id, tag_type, is_activity, color, alpha, is_season, subscribed_count, archive_count, featured_count, jump_url, created_date, last_modified_date
     </sql>
 
 
@@ -112,9 +110,7 @@
         tag.featured_count as tag_featured_count,
         tag.jump_url as tag_jump_url,
         tag.created_date as tag_created_date,
-        tag.last_modified_date as tag_last_modified_date,
-        tag.is_deleted as tag_is_deleted,
-        tag.version as tag_version
+        tag.last_modified_date as tag_last_modified_date
     </sql>
     <select id="findByVideoId" resultMap="BaseResultMapAssoc">
 

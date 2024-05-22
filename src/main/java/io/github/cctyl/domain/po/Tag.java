@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class Tag extends AuditingEntity {
+public class Tag extends SimpleAuditingEntity {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;

@@ -3,12 +3,15 @@ package io.github.cctyl.config;
 import io.github.cctyl.utils.ReflectUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 任务池子
+ *
  * @author tyl
  */
 @Slf4j
@@ -22,6 +25,19 @@ public class TaskPool {
     private static final ReentrantReadWriteLock rw = new ReentrantReadWriteLock();
     private static final ReentrantReadWriteLock.ReadLock r = rw.readLock();
     private static final ReentrantReadWriteLock.WriteLock w = rw.writeLock();
+
+
+    public static List<String> getRunningTaskName() {
+        var list = new ArrayList<String>();
+        for (Map.Entry<String, Future<?>> entry : METHOD_NAME_TASK_MAP.entrySet()) {
+            if (
+                    entry.getValue() != null && !entry.getValue().isDone()
+            ) {
+                list.add(entry.getKey());
+            }
+        }
+        return list;
+    }
 
     /**
      * 获取调用者方法所对应的任务

@@ -9,8 +9,7 @@
         <result column="video_id" property="videoId"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
+
     </resultMap>
 
 
@@ -21,15 +20,14 @@
         <result column="videoTag_video_id" property="videoId"/>
         <result column="videoTag_created_date" property="createdDate"/>
         <result column="videoTag_last_modified_date" property="lastModifiedDate"/>
-        <result column="videoTag_is_deleted" property="isDeleted"/>
-        <result column="videoTag_version" property="version"/>
+
     </resultMap>
 
 
 
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, tag_id, video_id, created_date, last_modified_date, is_deleted, version
+        id, tag_id, video_id, created_date, last_modified_date
     </sql>
 
 
@@ -40,9 +38,8 @@
         videoTag.tag_id as videoTag_tag_id,
         videoTag.video_id as videoTag_video_id,
         videoTag.created_date as videoTag_created_date,
-        videoTag.last_modified_date as videoTag_last_modified_date,
-        videoTag.is_deleted as videoTag_is_deleted,
-        videoTag.version as videoTag_version
+        videoTag.last_modified_date as videoTag_last_modified_date
+
     </sql>
 
 </mapper>

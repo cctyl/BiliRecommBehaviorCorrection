@@ -666,6 +666,9 @@ public class GlobalVariables {
         BLACK_USER_ID_SET.addAll(blackUserIdSet);
     }
 
+
+
+
     public void addBlackTagSet(Set<String> collect) {
 
         dictService.removeAndAddDict(
@@ -992,4 +995,13 @@ public class GlobalVariables {
     }
 
 
+    public void delBlackUserIdSet(Set<String> blackUserIdSet) {
+            dictService.removeByAccessTypeAndDictTypeAndValue(
+                    AccessType.BLACK,
+                    DictType.MID,
+                    blackUserIdSet);
+
+            //新增到缓存
+            BLACK_USER_ID_SET.removeAll(blackUserIdSet);
+    }
 }

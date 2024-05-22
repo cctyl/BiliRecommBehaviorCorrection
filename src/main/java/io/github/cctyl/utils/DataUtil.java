@@ -1,5 +1,6 @@
 package io.github.cctyl.utils;
 
+import cn.hutool.core.collection.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -7,53 +8,33 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class DataUtil {
-    private static final String TABLE = "fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF";
-    private static final int[] S = new int[]{11, 10, 3, 8, 4, 6};
-    private static final int XOR = 177451812;
-    private static final long ADD = 8728348608L;
-    private static final Map<Character, Integer> TABLE_MAP = new HashMap<>();
 
-    static {
-        for (int i = 0; i < 58; i++) {
-            TABLE_MAP.put(TABLE.charAt(i), i);
-        }
-    }
 
     /**
      * av号转换bv号
      * 参考 https://github.com/SocialSisterYi/bilibili-API-collect/blob/b52187a48bd05bf985b70ae7fe3afde38c254052/docs/misc/bvid_desc.md
      * @param aid
-     * @return
+     * @return bvId
      */
     public static String aidToBvid(int aid) {
-        long x = (aid ^ XOR) + ADD;
-        char[] chars = new char[]{'B', 'V', '1', ' ', ' ', '4', ' ', '1', ' ', '7', ' ', ' '};
-        for (int i = 0; i < 6; i++) {
-            int pow = (int) Math.pow(58, i);
-            long i1 = x / pow;
-            int index = (int) (i1 % 58);
-            chars[S[i]] = TABLE.charAt(index);
-        }
-        return String.valueOf(chars);
+        return AVBVConverter.av2bv(aid);
     }
 
     /**
      * bv转换av号
      * 参考 https://github.com/SocialSisterYi/bilibili-API-collect/blob/b52187a48bd05bf985b70ae7fe3afde38c254052/docs/misc/bvid_desc.md
      * @param bvid
-     * @return
+     * @return avid
      */
     public static int bvidToAid(String bvid) {
-        long r = 0;
-        for (int i = 0; i < 6; i++) {
-            r += (long) (TABLE_MAP.get(bvid.charAt(S[i])) * Math.pow(58, i));
-        }
-        return (int) ((r - ADD) ^ XOR);
+       return AVBVConverter.bv2av(bvid);
     }
 
     /**
@@ -208,4 +189,50 @@ public class DataUtil {
         return Math.toIntExact(diff / 1000);
     }
 
+
+    /**
+     * 循环获取数据
+     * @param startPage 起始页
+     * @param pageSize 每页大小，用于判断是否查询完毕了，若返回记录数量小于每页大小，说明数据快要结束了
+     * @param getDataFunction 获取数据的方法，pageNo传入页码，pageSize传入每页大小,返回记录
+     * @param afterPageGet  每一页获取完毕后要执行的操作
+     * @param maxLoopNum  最大循环次数，null 表示直到查询结束
+     * @return 所有获取到的记录
+     * @param <T> 数据类型
+     */
+    public static<T> List<T> eachGetPageData(
+            int startPage,
+            int pageSize,
+            Integer maxLoopNum,
+            BiFunction<Integer,Integer,List<T>> getDataFunction,
+            Consumer<List<T>> afterPageGet
+       ){
+
+
+        int loopNum = 0;
+        List<T> result = new LinkedList<>();
+        while (true){
+            loopNum++;
+            List<T> list = getDataFunction.apply(startPage++,pageSize);
+
+            if (list!=null){
+               result.addAll(list);
+                log.info("第{}次读取得到{}条数据",loopNum,list.size());
+            }else {
+                log.info("第{}次读取得到0条数据",loopNum);
+            }
+            afterPageGet.accept(list);
+            if (
+                    //已经没有数据了
+                    CollUtil.isEmpty(list)
+                    //记录已经小于每页大小
+                    || list.size() < pageSize
+                    //有循环次数，且已经达到循环次数，则退出
+                    || (maxLoopNum !=null && loopNum >= maxLoopNum)
+            ) {
+                break;
+            }
+        }
+        return result;
+    }
 }

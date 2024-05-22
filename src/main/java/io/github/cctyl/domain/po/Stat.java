@@ -16,7 +16,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
-public class Stat extends AuditingEntity implements Serializable {
+public class Stat extends SimpleAuditingEntity implements Serializable {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;

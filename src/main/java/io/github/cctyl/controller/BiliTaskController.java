@@ -30,6 +30,15 @@ public class BiliTaskController {
     private final BlackRuleService blackRuleService;
     private final VideoDetailService videoDetailService;
 
+
+
+    @GetMapping("/running-task")
+    @Operation(summary = "查询正在运行的任务")
+    public R getRunningTask() {
+        return R.data( TaskPool.getRunningTaskName());
+    }
+
+
     @PostMapping("/search-task")
     @Operation(summary = "触发关键词任务")
     public R startSearchTask() {

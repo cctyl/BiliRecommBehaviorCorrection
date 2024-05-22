@@ -228,7 +228,7 @@ public class WhiteRuleController {
     public R thumbUpUserAllVideo(
             @PathVariable("mid") String mid,
             @RequestParam(value="page",defaultValue = "1") long page,
-            @RequestParam("keyword") String keyword
+            @RequestParam(value = "keyword",defaultValue = "") String keyword
     ) {
         TaskPool.putTask(() -> {
             whiteRuleService.thumbUpUserAllVideo(mid,page,keyword);
