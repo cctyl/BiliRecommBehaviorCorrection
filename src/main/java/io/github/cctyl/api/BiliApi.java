@@ -1479,8 +1479,6 @@ public class BiliApi {
                 log.info("扫码成功：{}",jsonObject);
 
                 //立即持久化一次cookie
-                //fixme
-                int i = 1/0;
                 log.error("并未进行持久化{}",data);
                 cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
                 this.tempWebQrCodeKey = null;
