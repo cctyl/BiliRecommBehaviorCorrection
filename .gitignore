@@ -140,7 +140,7 @@ Desktop.ini
 *~
 .merge_file*
 
-application.yml
+application-local.yml
 
 ######################
 # Gradle Wrapper
