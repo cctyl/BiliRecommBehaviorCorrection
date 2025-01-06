@@ -23,7 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 * @date 2023-11-09
 */
 @RestController
-@Tag(name = "ownerCRUD接口")
+@Tag(name = "owner 接口")
 @RequestMapping("/owner")
 public class OwnerController {
 

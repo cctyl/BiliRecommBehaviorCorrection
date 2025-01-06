@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 * @date 2023-11-09
 */
 @RestController
-@Tag(name = "statCRUD接口")
+@Tag(name = "stat 接口")
 @RequestMapping("/stat")
 public class StatController {
 

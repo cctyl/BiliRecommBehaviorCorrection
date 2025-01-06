@@ -24,7 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 * @date 2023-11-09
 */
 @RestController
-@Tag(name = "dictCRUD接口")
+@Tag(name = "字典接口")
 @RequestMapping("/dict")
 public class DictController {
 

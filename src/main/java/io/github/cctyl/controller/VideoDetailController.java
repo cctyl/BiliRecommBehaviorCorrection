@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 * @date 2023-11-09
 */
 @RestController
-@Tag(name = "videoDetailCRUD接口")
+@Tag(name = "视频详情 接口")
 @RequestMapping("/video-detail")
 public class VideoDetailController {
 

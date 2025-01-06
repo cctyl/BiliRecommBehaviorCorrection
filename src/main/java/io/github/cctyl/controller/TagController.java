@@ -21,7 +21,7 @@ import java.util.List;
 * @date 2023-11-17
 */
 @RestController
-@io.swagger.v3.oas.annotations.tags.Tag(name = "tagCRUD接口")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "tag 接口")
 @RequestMapping("/cctyl/tag")
 public class TagController {
 

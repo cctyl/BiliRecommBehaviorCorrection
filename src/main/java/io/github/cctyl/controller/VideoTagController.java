@@ -22,7 +22,7 @@ import java.util.List;
 * @date 2023-11-17
 */
 @RestController
-@Tag(name = "videoTagCRUD接口")
+@Tag(name = "视频标签 接口")
 @RequestMapping("/cctyl/video-tag")
 public class VideoTagController {
 

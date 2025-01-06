@@ -23,7 +23,7 @@ import java.util.List;
 * @date 2023-11-10
 */
 @RestController
-@Tag(name = "cookieHeaderDataCRUD接口")
+@Tag(name = "cookie与请求头接口")
 @RequestMapping("/cookie-header-data")
 public class CookieHeaderDataController {
 
