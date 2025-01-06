@@ -32,7 +32,7 @@ public class ReplyController {
     @PostMapping("/save-reply")
     public R saveVideoReplay(
             @RequestParam(required = false) String bvid,
-            @RequestParam(required = false) Integer avid
+            @RequestParam(required = false) Long avid
     ){
         if (StrUtil.isNotBlank(bvid)){
             avid = DataUtil.bvidToAid(bvid);
@@ -41,7 +41,7 @@ public class ReplyController {
             return R.error().setMessage("bvid / avid不能为空");
         }
 
-        Integer finalAvid = avid;
+        Long finalAvid = avid;
         TaskPool.putTask(() -> {
             replyService.saveReply(finalAvid);
         });
@@ -63,7 +63,7 @@ public class ReplyController {
     @Operation(summary = "获取指定视频的评论")
     public R getVideoReplyListByVideoId(
             @RequestParam(required = false) String bvid,
-            @RequestParam(required = false) Integer avid,
+            @RequestParam(required = false) Long avid,
             @PathVariable("page") long page,
             @PathVariable("limit") long limit
     ){

@@ -75,7 +75,7 @@ public class BiliService {
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
         videoDetail.setHandleType(handleType);
-        videoDetail.setHandle(true);
+        videoDetail.setHandle(true);//TODO 这里也许应该为false
         if (videoDetail.getId() == null) {
             videoDetailService.saveVideoDetail(videoDetail);
         } else {
@@ -128,7 +128,7 @@ public class BiliService {
         }
 
         try {
-            //0.获取视频详情 实际上，信息已经足够，但是为了模拟用户真实操作，还是调用一次
+            //0.获取视频详情
             if (videoDetail == null) {
                 videoDetail = biliApi.getVideoDetail(avid);
             }

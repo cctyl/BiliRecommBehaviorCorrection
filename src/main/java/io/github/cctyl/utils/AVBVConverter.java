@@ -14,7 +14,7 @@ public class AVBVConverter {
 
     private static final String DATA = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf";
 
-    public static String av2bv(int aidParam) {
+    public static String av2bv(long aidParam) {
 
         BigInteger aid = BigInteger.valueOf(aidParam);
         char[] bytes = {'B', 'V', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0'};
@@ -34,7 +34,7 @@ public class AVBVConverter {
         return sb.toString();
     }
 
-    public static int bv2av(String bvid) {
+    public static Long bv2av(String bvid) {
         char[] bvidArr = bvid.toCharArray();
         swap(bvidArr, 3, 9);
         swap(bvidArr, 4, 7);
@@ -44,7 +44,7 @@ public class AVBVConverter {
             tmp = tmp.multiply(BigInteger.valueOf(BASE)).add(BigInteger.valueOf(DATA.indexOf(c)));
         }
         BigInteger xor = tmp.and(MASK_CODE).xor(XOR_CODE);
-        return xor.intValue();
+        return xor.longValue();
     }
 
 

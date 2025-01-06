@@ -392,7 +392,7 @@ public class BiliApi {
      * @param pageNo 页码
      * @return
      */
-    public List<VideoReply> getReply(int avid,int pageNo,int pageSize) {
+    public List<VideoReply> getReply(long avid,int pageNo,int pageSize) {
 
         if (pageSize>=20){
             pageSize = 20;
@@ -461,7 +461,7 @@ public class BiliApi {
      * @param rpid 评论的rpid
      * @return
      */
-    public List<VideoReply> getReplyReply(int avid,int pageNo,int pageSize,long rpid) {
+    public List<VideoReply> getReplyReply(long avid,int pageNo,int pageSize,long rpid) {
 
         if (pageSize>20){
             pageSize=20;

@@ -96,7 +96,7 @@ public class WhiteRuleController {
 
 
     /**
-     * 输入指定的视频训练白名单规则
+     * 输入指定的视频训练已存在的白名单规则或根据训练结果创建白名单规则
      *
      * @param id             白名单条件id，为空表示创建新的规则
      * @param trainedAvidList 用于训练的视频avid列表，与mid二选一

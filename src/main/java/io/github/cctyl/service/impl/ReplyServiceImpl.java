@@ -35,7 +35,7 @@ public class ReplyServiceImpl extends ServiceImpl<VideoReplyMapper, VideoReply> 
 
 
     @Override
-    public Page<VideoReply> getReplyByVideoId(int avid, long page, long limit) {
+    public Page<VideoReply> getReplyByVideoId(long avid, long page, long limit) {
         return this.lambdaQuery()
                 .eq(VideoReply::getOid, avid)
                 .page(new Page<>(page, limit));
@@ -43,7 +43,7 @@ public class ReplyServiceImpl extends ServiceImpl<VideoReplyMapper, VideoReply> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveReply(int avid) {
+    public void saveReply(long avid) {
         log.info("保存视频:{} 评论开始",avid);
 
         VideoDetail videoDetail = videoDetailService.findByAid(avid);

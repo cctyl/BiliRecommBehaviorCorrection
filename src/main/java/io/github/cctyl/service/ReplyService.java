@@ -18,7 +18,7 @@ import java.util.List;
 public interface ReplyService extends IService<VideoReply> {
 
 
-    Page<VideoReply> getReplyByVideoId(int avid, long page, long limit);
+    Page<VideoReply> getReplyByVideoId(long avid, long page, long limit);
 
-    void saveReply(int avid);
+    void saveReply(long avid);
 }
