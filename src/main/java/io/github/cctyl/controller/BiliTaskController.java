@@ -30,6 +30,15 @@ public class BiliTaskController {
     private final BlackRuleService blackRuleService;
     private final VideoDetailService videoDetailService;
 
+
+
+    @GetMapping("/running-task")
+    @Operation(summary = "查询正在运行的任务")
+    public R getRunningTask() {
+        return R.data( TaskPool.getRunningTaskName());
+    }
+
+
     @PostMapping("/search-task")
     @Operation(summary = "触发关键词任务")
     public R startSearchTask() {
@@ -98,4 +107,17 @@ public class BiliTaskController {
        return R.ok();
     }
 
+
+    @Operation(summary = "按照默认状态处理所有未处理视频")
+    @PutMapping("/default-process")
+    public R defaultProcessVideo( ) {
+        biliService.defaultProcessVideo();
+        return R.ok();
+    }
+    @Operation(summary = "主动触发三次处理")
+    @PutMapping("/third-process")
+    public R thirdProcess( ) {
+        TaskPool.putTask(biliService::thirdProcess);
+        return R.ok();
+    }
 }

@@ -1,9 +1,8 @@
 package io.github.cctyl.domain.po;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.enumeration.HandleType;
 import lombok.Data;
@@ -18,7 +17,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Data
 @Accessors(chain = true)
-public class VideoDetail extends AuditingEntity implements Serializable {
+public class VideoDetail extends SimpleAuditingEntity implements Serializable {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;
@@ -284,7 +283,10 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      */
     private String thumbUpReason;
 
-
+    @TableField(value = "version",fill = FieldFill.INSERT)
+    @Version
+    @JsonIgnore
+    private Integer version;
 
 
 

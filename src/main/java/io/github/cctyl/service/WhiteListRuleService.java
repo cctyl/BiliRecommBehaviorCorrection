@@ -44,4 +44,6 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
     IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page);
 
     WhiteListRule findWithDetailById(String id);
+
+    void thumbUpUserAllVideo(String mid, long page, String keyword);
 }

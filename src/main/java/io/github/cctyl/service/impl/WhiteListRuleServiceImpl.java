@@ -2,6 +2,7 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
@@ -18,6 +19,7 @@ import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.WhiteListRuleService;
+import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.SegmenterUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -426,19 +428,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         } else if (StrUtil.isNotBlank(mid)) {
             //从给定的up主的投稿视频进行训练
             log.info("根据up主id进行训练");
-            PageBean<UserSubmissionVideo> pageBean = biliApi.searchUserSubmissionVideo(mid, 1, "");
-            List<UserSubmissionVideo> allVideo = new ArrayList<>(pageBean.getData());
-            while (pageBean.hasMore()) {
-                try {
-                    ThreadUtil.s10();
-                    pageBean = biliApi.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, "");
-                    allVideo.addAll(pageBean
-                            .getData());
-                } catch (Exception e) {
-                    log.error(e.getMessage(),e);
-                }
-            }
-
+            List<UserSubmissionVideo> allVideo = biliApi.searchUserAllSubmissionVideo(mid,1,"");
             whitelistRule = this.trainWhitelistRule(
                     whitelistRule,
                     allVideo.stream().map(UserSubmissionVideo::getAid).collect(Collectors.toList())
@@ -522,5 +512,28 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
             return null;
         }
 
+    }
+
+    @Override
+    public void thumbUpUserAllVideo(String mid, long page, String keyword) {
+
+        List<UserSubmissionVideo> userSubmissionVideos = biliApi.searchUserAllSubmissionVideo(mid, page, keyword);
+
+        if (CollUtil.isEmpty(userSubmissionVideos)){
+            log.info("该用户{}投稿视频为空",mid);
+            return;
+        }
+
+        DataUtil.randomAccessList(
+                userSubmissionVideos,
+                userSubmissionVideos.size(),
+                userSubmissionVideo -> {
+                    JSONObject jsonObject = biliApi.thumpUp(userSubmissionVideo.getAid());
+                    log.debug("点赞：{} 结果为：{}",userSubmissionVideo.getTitle(),jsonObject.getString("message"));
+                    ThreadUtil.sleep(DataUtil.getRandom(10,23));
+                }
+        );
+
+        log.info("共点赞{}用户{}条视频",mid,userSubmissionVideos.size());
     }
 }

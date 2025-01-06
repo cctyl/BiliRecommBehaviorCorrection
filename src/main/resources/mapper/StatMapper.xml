@@ -21,8 +21,7 @@
         <result column="video_id" property="videoId"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
+
     </resultMap>
 
 
@@ -45,15 +44,14 @@
         <result column="stat_video_id" property="videoId"/>
         <result column="stat_created_date" property="createdDate"/>
         <result column="stat_last_modified_date" property="lastModifiedDate"/>
-        <result column="stat_is_deleted" property="isDeleted"/>
-        <result column="stat_version" property="version"/>
+
     </resultMap>
 
 
 
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, aid, view, danmaku, reply, favorite, coin, share, now_rank, his_rank, like, dislike, vt, vv, video_id, created_date, last_modified_date, is_deleted, version
+        id, aid, view, danmaku, reply, favorite, coin, share, now_rank, his_rank, like, dislike, vt, vv, video_id, created_date, last_modified_date
     </sql>
 
 
@@ -76,9 +74,8 @@
         stat.vv as stat_vv,
         stat.video_id as stat_video_id,
         stat.created_date as stat_created_date,
-        stat.last_modified_date as stat_last_modified_date,
-        stat.is_deleted as stat_is_deleted,
-        stat.version as stat_version
+        stat.last_modified_date as stat_last_modified_date
+
     </sql>
 
 </mapper>

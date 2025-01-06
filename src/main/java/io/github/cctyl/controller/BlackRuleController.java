@@ -219,13 +219,22 @@ public class BlackRuleController {
         return R.ok().setData(blackUserId);
     }
 
-    @Operation(summary = "增加黑名单用户id列表")
+    @Operation(summary = "修改黑名单用户id列表")
     @PostMapping("/user-id")
     public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
         GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
 
         return R.ok();
     }
+
+    @Operation(summary = "修改黑名单用户id列表")
+    @DeleteMapping("/user-id")
+    public R deleteBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
+        GlobalVariables.INSTANCE.delBlackUserIdSet(blackUserIdSet);
+
+        return R.ok();
+    }
+
 
 
     @Operation(summary = "获得黑名单分区列表")

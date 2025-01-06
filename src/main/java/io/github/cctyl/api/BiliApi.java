@@ -6,16 +6,19 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.http.*;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.constants.ErrorCode;
 import io.github.cctyl.domain.po.VideoDetail;
+import io.github.cctyl.domain.po.VideoReply;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -381,6 +384,133 @@ public class BiliApi {
                 .toList(SearchResult.class);
 
         return data;
+    }
+
+    /**
+     * 获取视频的评论（最新的评论倒序）
+     * @param avid 视频avid
+     * @param pageNo 页码
+     * @return
+     */
+    public List<VideoReply> getReply(int avid,int pageNo,int pageSize) {
+
+        if (pageSize>=20){
+            pageSize = 20;
+        }
+
+        String url = "https://api.bilibili.com/x/v2/reply";
+        Map<String, Object> paramMap = Map.of(
+                "type", "1",
+                "oid",avid ,
+                "sort",0,//按时间排序
+                "nohot",1,//不显示热评
+                "ps",pageSize,//每页大小
+                "pn",pageNo//页码
+
+        );
+        String body = commonGet(url, paramMap).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        if (jsonObject.getIntValue("code")==12061){
+            log.error("获取评论失败：{}",jsonObject.getString("message"));
+            return new ArrayList<>(0);
+        }
+        checkRespAndThrow(jsonObject, body);
+
+        JSONArray repliesList = jsonObject.getJSONObject("data")
+                .getJSONArray("replies");
+        if (CollUtil.isEmpty(repliesList)){
+            return new ArrayList<>(0);
+        }
+        List<VideoReply> result = new LinkedList<>();
+
+        for (Object o : repliesList) {
+            JSONObject replyJsonObject = (JSONObject) o;
+
+            VideoReply videoReply = replyJsonObject.to(VideoReply.class)
+                    .setCurrentLevel((Integer) replyJsonObject.getByPath("$.member.level_info.current_level"))
+                    .setVipType((Integer) replyJsonObject.getByPath("$.member.vip.vipType"))
+                    .setMessage((String) replyJsonObject.getByPath("$.content.message"))
+                    .setSex((String) replyJsonObject.getByPath("$.member.sex"));
+
+            //如果有评论，则抓取评论树
+            if (
+                    replyJsonObject.getJSONArray("replies") != null
+                            &&
+                    !replyJsonObject.getJSONArray("replies").isEmpty())
+            {
+                List<VideoReply> childReply = DataUtil.eachGetPageData(
+                        1, 20, null,
+                        (pn, ps) -> this.getReplyReply(avid, pn, ps, videoReply.getRpid()),
+                        videoReplies -> {
+                            ThreadUtil.s10();
+                        }
+                );
+                result.addAll(childReply);
+            }
+            result.add(videoReply);
+        }
+        return result;
+    }
+
+
+    /**
+     * 获取指定评论的回复
+     * @param avid 视频id
+     * @param pageNo 页码
+     * @param pageSize 每页大小
+     * @param rpid 评论的rpid
+     * @return
+     */
+    public List<VideoReply> getReplyReply(int avid,int pageNo,int pageSize,long rpid) {
+
+        if (pageSize>20){
+            pageSize=20;
+        }
+
+        String url = "https://api.bilibili.com/x/v2/reply/reply";
+        Map<String, Object> paramMap = Map.of(
+                "type", "1",
+                "oid",avid ,
+                "root",rpid,
+                "ps",pageSize,//每页大小
+                "pn",pageNo//页码
+
+        );
+        String body = commonGet(url, paramMap).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        if (jsonObject.getIntValue("code")==12061){
+            log.error("获取评论失败：{}",jsonObject.getString("message"));
+            return new ArrayList<>(0);
+        }
+        checkRespAndThrow(jsonObject, body);
+
+        JSONArray repliesList = jsonObject.getJSONObject("data")
+                .getJSONArray("replies");
+        if (CollUtil.isEmpty(repliesList)){
+            return new ArrayList<>(0);
+        }
+
+        return repliesList.stream().map(o -> {
+            JSONObject replyJsonObject = (JSONObject) o;
+            return   replyJsonObject.to(VideoReply.class)
+                    .setCurrentLevel(
+                            (Integer) replyJsonObject.getByPath("$.member.level_info.current_level")
+                    )
+                    .setVipType(
+                            (Integer) replyJsonObject.getByPath("$.member.vip.vipType")
+                    )
+                    .setMessage(
+                            (String) replyJsonObject.getByPath("$.content.message")
+                    )
+
+                    .setSex(
+                            (String) replyJsonObject.getByPath("$.member.sex")
+                    )
+                    ;
+
+
+        }).collect(Collectors.toList());
+
     }
 
     /**
@@ -1349,8 +1479,6 @@ public class BiliApi {
                 log.info("扫码成功：{}",jsonObject);
 
                 //立即持久化一次cookie
-                //fixme
-                //int i = 1/0;
                 log.error("并未进行持久化{}",data);
                 cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
                 this.tempWebQrCodeKey = null;
@@ -1368,5 +1496,34 @@ public class BiliApi {
                 return jsonObject;
         }
 
+    }
+
+    /**
+     * 查询指定用户所有的投稿视频
+     * @param mid
+     * @param pageNumber
+     * @param keyword
+     * @return
+     */
+    public List<UserSubmissionVideo> searchUserAllSubmissionVideo(
+            String mid,
+            long pageNumber,
+            String keyword
+    ) {
+        PageBean<UserSubmissionVideo> pageBean = this.searchUserSubmissionVideo(mid, pageNumber, keyword);
+        List<UserSubmissionVideo> allVideo = new ArrayList<>(pageBean.getData());
+        while (pageBean.hasMore()) {
+            try {
+                ThreadUtil.s10();
+                pageBean = this.searchUserSubmissionVideo(mid, pageBean.getPageNum() + 1, keyword);
+                allVideo.addAll(pageBean
+                        .getData());
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }
+
+        return allVideo;
     }
 }

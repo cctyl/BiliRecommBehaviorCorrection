@@ -11,13 +11,18 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseBody
+    public R error(NoResourceFoundException e){
+        return R.error().setMessage("无此资源");
+    }
 
     @ExceptionHandler(Exception.class)
     @ResponseBody

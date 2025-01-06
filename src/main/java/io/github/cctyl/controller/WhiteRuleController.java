@@ -223,4 +223,18 @@ public class WhiteRuleController {
     }
 
 
+    @Operation(summary = "对该用户的所有视频均进行点赞")
+    @PostMapping("/thumb-up-all/{mid}")
+    public R thumbUpUserAllVideo(
+            @PathVariable("mid") String mid,
+            @RequestParam(value="page",defaultValue = "1") long page,
+            @RequestParam(value = "keyword",defaultValue = "") String keyword
+    ) {
+        TaskPool.putTask(() -> {
+            whiteRuleService.thumbUpUserAllVideo(mid,page,keyword);
+        });
+
+        return R.ok().setMessage("点赞任务已开始");
+    }
+
 }

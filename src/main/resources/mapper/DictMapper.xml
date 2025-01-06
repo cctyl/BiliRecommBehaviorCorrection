@@ -10,8 +10,6 @@
         <result column="dict_type" property="dictType"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
-        <result column="is_deleted" property="isDeleted"/>
-        <result column="version" property="version"/>
         <result column="outer_id" property="outerId"/>
     </resultMap>
 
@@ -24,8 +22,6 @@
         <result column="t_dict_dict_type" property="dictType"/>
         <result column="t_dict_created_date" property="createdDate"/>
         <result column="t_dict_last_modified_date" property="lastModifiedDate"/>
-        <result column="t_dict_is_deleted" property="isDeleted"/>
-        <result column="t_dict_version" property="version"/>
         <result column="t_dict_outer_id" property="outerId"/>
     </resultMap>
 
@@ -33,7 +29,7 @@
 
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, value, access_type, dict_type, created_date, last_modified_date, is_deleted, version,outer_id
+        id, value, access_type, dict_type, created_date, last_modified_date,outer_id
     </sql>
 
 
@@ -46,9 +42,7 @@
         t_dict.dict_type    as t_dict_dict_type,
         t_dict.created_date as t_dict_created_date,
         t_dict.last_modified_date as t_dict_last_modified_date,
-        t_dict.is_deleted as t_dict_is_deleted,
-        t_dict.version as t_dict_version,
-      t_dict.outer_id  as t_dict_outer_id
+        t_dict.outer_id  as t_dict_outer_id
     </sql>
 
 </mapper>
