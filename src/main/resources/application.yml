@@ -1,24 +1,15 @@
 spring:
-  redis:
-    host: 127.0.0.1
-    port: 6379
-    lettuce:
-      pool:
-        max-active: 8
-        max-wait: -1ms
-        max-idle: 8
-        min-idle: 0
 
   servlet:
-     multipart:
-        max-file-size: 100MB
-        max-request-size: 150MB
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 150MB
 
 
   datasource:
     driver-class-name: org.sqlite.JDBC
-    username: root
-    password: root
+    username:
+    password:
     url: jdbc:sqlite:./db/bili-recomm.db
     hikari:
       connection-test-query: SELECT 1
@@ -26,10 +17,10 @@ spring:
       idle-timeout: 500000
       max-lifetime: 540000
       maximum-pool-size: 5
+      pool-name: HikariPool
   jackson:
     time-zone: GMT+8
     date-format:  yyyy-MM-dd HH:mm:ss
-
 
   flyway:
     # 如果启动的时候需要flyway管理sql脚本的话，将enabled设置为true
@@ -38,10 +29,13 @@ spring:
     baseline-on-migrate: true
     # 验证错误时 是否自动清除数据库 高危操作!
     clean-on-validation-error: false
-
   threads:
     virtual:
       enabled: true
+
+
+
+
 
 mybatis-plus:
   configuration:
@@ -52,10 +46,7 @@ mybatis-plus:
       logic-delete-field: isDeleted # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-
-
-server:
-  port: 8080
+#  typeEnumsPackage: io.github.cctyl.pojo.enumeration
 
 
 # springdoc-openapi项目配置
@@ -70,7 +61,6 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: io.github.cctyl.controller
-
   # 默认是false，需要设置为true
   default-flat-param-object: true
 
@@ -80,11 +70,33 @@ knife4j:
   setting:
     language: zh_cn
 
+grpc:
+  client:
+    # 注意，下面这行 grpc-server 可以是任意的字符串，后续用于注入的就是他
+    grpc:
+      address: 'static://grpc.biliapi.net'
+      negotiation-type: TLS
+
+    failover:
+      address: 'static://app.bilibili.com'
+      negotiation-type: TLS
+
+server:
+  port: 9000
+  tomcat:
+    threads:
+      min-spare: 2
+      max: 5
+  undertow:
+    threads:
+      io: 1
+      worker: 1
 common:
   #是否需要执行初始化
-  init: false
+  init: true
   #图像识别服务
   imgService: baidu,
+
 
   ws:
     # 是否开启ws

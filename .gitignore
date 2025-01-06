@@ -140,7 +140,6 @@ Desktop.ini
 *~
 .merge_file*
 
-application.yml
 
 ######################
 # Gradle Wrapper
@@ -156,5 +155,5 @@ application.yml
 # ESLint
 ######################
 .eslintcache
-bili-recomm.db
+
 bili-recomm.db-journal
