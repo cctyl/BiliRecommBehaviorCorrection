@@ -22,7 +22,7 @@ public class Stat extends AuditingEntity implements Serializable {
     private String id;
 
     @JSONField(name = "aid")
-    private Integer aid;
+    private Long aid;
 
     @JSONField(name = "view")
     private Integer view;

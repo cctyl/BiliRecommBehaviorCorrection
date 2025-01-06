@@ -57,7 +57,7 @@ public class WhiteRuleController {
     @GetMapping("/check-video")
     public R checkVideo(
             @Parameter(name = "aid", description = "avid")
-            @RequestParam(required = false) Integer aid,
+            @RequestParam(required = false) Long aid,
             @Parameter(name = "bvid", description = "bvid")
             @RequestParam(required = false) String bvid
     ) {
@@ -107,7 +107,7 @@ public class WhiteRuleController {
     @PostMapping("/train")
     public R addTrain(
             @Parameter(name = "id", description = "白名单条件id,为空表示创建新的规则") @RequestParam(required = false) String id,
-            @Parameter(name = "trainedAvidList", description = "用于训练的视频avid列表，与mid二选一") @RequestParam(required = false) List<Integer> trainedAvidList,
+            @Parameter(name = "trainedAvidList", description = "用于训练的视频avid列表，与mid二选一") @RequestParam(required = false) List<Long> trainedAvidList,
             @Parameter(name = "mid", description = "up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一") @RequestParam(required = false) String mid
     ) {
 

@@ -55,7 +55,7 @@ public class SearchResult {
      * 稿件avid
      */
     @JSONField(name = "aid")
-    private Integer aid;
+    private Long aid;
     /**
      * bvid
      */

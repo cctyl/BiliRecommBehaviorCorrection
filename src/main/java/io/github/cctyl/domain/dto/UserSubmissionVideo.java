@@ -13,7 +13,7 @@ public class UserSubmissionVideo {
     @JSONField(name = "comment")
     private Integer comment;
     @JSONField(name = "typeid")
-    private Integer typeid;
+    private Long typeid;
     @JSONField(name = "play")
     private String play;
     @JSONField(name = "pic")
@@ -31,7 +31,7 @@ public class UserSubmissionVideo {
     @JSONField(name = "author")
     private String author;
     @JSONField(name = "mid")
-    private Integer mid;
+    private Long mid;
     @JSONField(name = "created")
     private Integer created;
     @JSONField(name = "length")
@@ -39,7 +39,7 @@ public class UserSubmissionVideo {
     @JSONField(name = "video_review")
     private Integer videoReview;
     @JSONField(name = "aid")
-    private Integer aid;
+    private Long aid;
     @JSONField(name = "bvid")
     private String bvid;
     @JSONField(name = "hide_click")

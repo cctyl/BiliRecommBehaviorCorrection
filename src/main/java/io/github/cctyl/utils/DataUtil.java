@@ -30,7 +30,7 @@ public class DataUtil {
      * @param aid
      * @return
      */
-    public static String aidToBvid(int aid) {
+    public static String aidToBvid(Long aid) {
         long x = (aid ^ XOR) + ADD;
         char[] chars = new char[]{'B', 'V', '1', ' ', ' ', '4', ' ', '1', ' ', '7', ' ', ' '};
         for (int i = 0; i < 6; i++) {
@@ -48,12 +48,12 @@ public class DataUtil {
      * @param bvid
      * @return
      */
-    public static int bvidToAid(String bvid) {
+    public static Long bvidToAid(String bvid) {
         long r = 0;
         for (int i = 0; i < 6; i++) {
             r += (long) (TABLE_MAP.get(bvid.charAt(S[i])) * Math.pow(58, i));
         }
-        return (int) ((r - ADD) ^ XOR);
+        return  ((r - ADD) ^ XOR);
     }
 
     /**

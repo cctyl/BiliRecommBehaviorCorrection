@@ -26,9 +26,9 @@ public interface VideoDetailService extends IService<VideoDetail> {
 
     List<VideoDetail> saveIfNotExists(List<VideoDetail> relatedVideoList);
 
-    VideoDetail findByAid(int avid);
+    VideoDetail findByAid(Long avid);
 
-    VideoDetail findWithDetailByAid(int avid);
+    VideoDetail findWithDetailByAid(Long avid);
 
     VideoDetail findWithDetailById(String id);
 
@@ -43,7 +43,7 @@ public interface VideoDetailService extends IService<VideoDetail> {
 
     void updateHandleInfoById(VideoDetail videoDetail);
 
-    boolean exists(Integer aid);
+    boolean exists(Long aid);
 
 
 

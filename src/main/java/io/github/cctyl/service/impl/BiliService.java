@@ -109,7 +109,7 @@ public class BiliService {
      */
     public void firstProcess(List<VideoDetail> thumbUpVideoList,
                              List<VideoDetail> dislikeVideoList,
-                             int avid
+                             Long avid
     ) {
 
         log.debug("处理视频avid={}", avid);
@@ -164,7 +164,7 @@ public class BiliService {
      *
      * @param aid
      */
-    public void dislike(int aid) {
+    public void dislike(Long aid) {
         biliApi.dislike(aid);
     }
 
@@ -218,7 +218,7 @@ public class BiliService {
      * 模拟播放，每次播放时间不固定
      * 必须有从开始到结束的几个心跳
      */
-    public void simulatePlay(int aid, int cid, int videoDuration) {
+    public void simulatePlay(Long aid, Long cid, int videoDuration) {
         long start_ts = System.currentTimeMillis() / 1000;
 
         //0.初始播放
@@ -329,7 +329,7 @@ public class BiliService {
      * @param tid 分区id
      * @return 本次点踩数量
      */
-    public int dislikeByTid(Integer tid) {
+    public int dislikeByTid(Long tid) {
         log.debug("----开始对{}分区进行点踩----", tid);
 
         //1.获取该分区的排行榜视频
@@ -415,9 +415,9 @@ public class BiliService {
      */
     public void dislikeByReason(DislikeReason dislikeReason,
                                 String dislikeMid,
-                                Integer dislikeTid,
-                                Integer dislikeTagId,
-                                Integer aid
+                                long dislikeTid,
+                                long dislikeTagId,
+                                long aid
     ) {
 
         biliApi.dislikeByReason(dislikeReason,

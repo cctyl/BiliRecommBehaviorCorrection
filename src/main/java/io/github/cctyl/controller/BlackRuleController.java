@@ -45,7 +45,7 @@ public class BlackRuleController {
     @GetMapping("/check-video")
     public R checkVideo(
             @Parameter(name = "aid", description = "avid")
-            @RequestParam(required = false) Integer aid,
+            @RequestParam(required = false) Long aid,
             @Parameter(name = "bvid", description = "bvid")
             @RequestParam(required = false) String bvid
     ) {
@@ -90,13 +90,13 @@ public class BlackRuleController {
     @PostMapping("/disklike-by-tid")
     public R dislikeByTid(
             @Parameter(name = "tidList", description = "需要点踩的分区id")
-            @RequestParam List<Integer> tidList
+            @RequestParam List<Long> tidList
     ) {
 
 
         TaskPool.putTask(() -> {
             int disklikeNum = 0;
-            for (Integer tid : tidList) {
+            for (Long tid : tidList) {
                 try {
                     disklikeNum += biliService.dislikeByTid(tid);
                     log.info("完成对{}分区的点踩任务", tid);

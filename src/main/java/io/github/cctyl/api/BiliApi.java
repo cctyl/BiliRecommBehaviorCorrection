@@ -424,7 +424,7 @@ public class BiliApi {
      * @param cid
      * @return
      */
-    public String getVideoUrl(String bvid, int cid) {
+    public String getVideoUrl(String bvid, long cid) {
         String url = "https://api.bilibili.com/x/player/playurl";
         String body = commonGet(url, Map.of(
                 "bvid", bvid,
@@ -454,7 +454,7 @@ public class BiliApi {
      * @param aid
      * @return
      */
-    public JSONObject thumpUp(int aid) {
+    public JSONObject thumpUp(long aid) {
         String url = "https://api.bilibili.com/x/web-interface/archive/like";
         String body = commonPost(url, Map.of(
                 "aid", aid,
@@ -482,7 +482,7 @@ public class BiliApi {
      * @param aid
      * @return
      */
-    public JSONObject dislike(int aid) {
+    public JSONObject dislike(long aid) {
         String url = "https://app.biliapi.net/x/v2/view/dislike";
         String body = commonPost(url, Map.of(
                 "aid", aid,
@@ -714,8 +714,8 @@ public class BiliApi {
      */
     public JSONObject reportHeartBeat(
             long start_ts,
-            int aid,
-            int cid,
+            long aid,
+            Long cid,
             int type,
             int sub_type,
             int dt,
@@ -792,7 +792,7 @@ public class BiliApi {
      *
      * @param aid
      */
-    public List<Tag> getVideoTag(int aid) {
+    public List<Tag> getVideoTag(long aid) {
 
         String url = "https://api.bilibili.com/x/tag/archive/tags";
         String body = commonGet(url, Map.of("aid", aid)).body();
@@ -985,7 +985,7 @@ public class BiliApi {
      *
      * @param avid 视频id
      */
-    public VideoDetail getVideoDetail(Integer avid) {
+    public VideoDetail getVideoDetail(long avid) {
         String url = "https://api.bilibili.com/x/web-interface/view/detail";
         String body = commonGet(url, Map.of("aid", avid)).body();
 
@@ -1027,7 +1027,7 @@ public class BiliApi {
      */
     public List<VideoDetail> getRegionLatestVideo(
             int pageNum,
-            int tid
+            long tid
     ) {
         String url = "https://api.bilibili.com/x/web-interface/dynamic/region";
         String body = commonGet(url, Map.of(
@@ -1054,7 +1054,7 @@ public class BiliApi {
      *
      * @param tid
      */
-    public List<VideoDetail> getRankByTid(int tid) {
+    public List<VideoDetail> getRankByTid(long tid) {
 
         String url = "https://api.bilibili.com/x/web-interface/ranking/v2";
         String body = commonGet(url, Map.of(
@@ -1270,7 +1270,7 @@ public class BiliApi {
      * @param url
      * @return
      */
-    public Integer getAvidByUrl(String url){
+    public long getAvidByUrl(String url){
         return DataUtil.bvidToAid(getBvidByUrl(url));
     }
 
@@ -1280,7 +1280,7 @@ public class BiliApi {
      * @param shortUrl
      * @return
      */
-    public Integer getAvidByShortUrl(String shortUrl){
+    public long getAvidByShortUrl(String shortUrl){
         String bvid = getBvidByShortUrl(shortUrl);
         return DataUtil.bvidToAid(bvid);
     }
@@ -1295,9 +1295,9 @@ public class BiliApi {
      */
     public void dislikeByReason(DislikeReason dislikeReason,
                                 String dislikeMid,
-                                Integer dislikeTid,
-                                Integer dislikeTagId,
-                                Integer aid
+                                long dislikeTid,
+                                long dislikeTagId,
+                                long aid
                                 ) {
 
         String url = "https://app.bilibili.com/x/feed/dislike";
@@ -1350,7 +1350,7 @@ public class BiliApi {
 
                 //立即持久化一次cookie
                 //fixme
-                int i = 1/0;
+                //int i = 1/0;
                 log.error("并未进行持久化{}",data);
                 cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
                 this.tempWebQrCodeKey = null;

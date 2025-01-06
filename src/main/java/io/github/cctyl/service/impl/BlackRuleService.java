@@ -244,7 +244,7 @@ public class BlackRuleService {
             videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"up主:" + videoDetail.getOwner().getName() +
                     " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
 
-            videoDetail.setDislikeMid(Integer.parseInt(videoDetail.getOwner().getMid()));
+            videoDetail.setDislikeMid(Long.parseLong(videoDetail.getOwner().getMid()));
             videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
         }
         return match;

@@ -31,12 +31,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     public List<Tag> saveIfNotExists(List<Tag> tags) {
 
         //查询已存在的tag
-        List<Integer> tagIdList = tags.stream().map(Tag::getTagId).collect(Collectors.toList());
+        List<Long> tagIdList = tags.stream().map(Tag::getTagId).collect(Collectors.toList());
         List<Tag> existTagList = this.list(
                 new LambdaQueryWrapper<Tag>()
                 .in(Tag::getTagId, tagIdList)
         );
-        List<Integer> existsTagIdList = existTagList
+        List<Long> existsTagIdList = existTagList
                 .stream().map(Tag::getTagId).collect(Collectors.toList());
 
         //过滤得到新的tag

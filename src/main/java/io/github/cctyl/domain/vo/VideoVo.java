@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class VideoVo {
 
     private String id;
-    private Integer aid;
+    private Long aid;
     private String bvid;
     private String title;
     private String blackReason;

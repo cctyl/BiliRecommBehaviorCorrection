@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Data
 public  class Pages implements Serializable {
     @JSONField(name = "cid")
-    private Integer cid;
+    private Long cid;
     @JSONField(name = "page")
     private Integer page;
     @JSONField(name = "from")

@@ -16,7 +16,7 @@ public class Tag extends AuditingEntity {
     private String id;
 
     @JSONField(name = "tag_id")
-    private Integer tagId;
+    private Long tagId;
 
     @JSONField(name = "tag_name")
     private String tagName;

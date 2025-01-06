@@ -332,13 +332,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     @Override
     public WhiteListRule trainWhitelistRule(
             WhiteListRule whitelistRule,
-            List<Integer> whiteAvidList) {
+            List<Long> whiteAvidList) {
 
         log.info("开始对:{} 规则进行训练,训练数据：{}", whitelistRule.getId(), whiteAvidList);
         List<String> titleProcess = new ArrayList<>();
         List<String> descProcess = new ArrayList<>();
         List<String> tagNameProcess = new ArrayList<>();
-        for (Integer avid : whiteAvidList) {
+        for (Long avid : whiteAvidList) {
             try {
                 VideoDetail videoDetail = biliApi.getVideoDetail(avid);
                 //1. 标题处理
@@ -399,7 +399,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     }
 
     @Override
-    public void addTrain(String id,List<Integer> trainedAvidList,String mid) {
+    public void addTrain(String id,List<Long> trainedAvidList,String mid) {
         log.info("开始训练");
         List<WhiteListRule> whitelistRuleList = GlobalVariables.getWhitelistRuleList() ;
         WhiteListRule whitelistRule;

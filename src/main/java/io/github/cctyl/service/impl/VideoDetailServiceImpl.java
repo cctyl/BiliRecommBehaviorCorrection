@@ -106,13 +106,13 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     @Override
     public List<VideoDetail> saveIfNotExists(List<VideoDetail> relatedVideoList) {
         //查询已存在的
-        List<Integer> aidList = relatedVideoList.stream().map(VideoDetail::getAid)
+        List<Long> aidList = relatedVideoList.stream().map(VideoDetail::getAid)
                 .collect(Collectors.toList());
         List<VideoDetail> existVideoList = this.list(
                 new LambdaQueryWrapper<VideoDetail>()
                         .in(VideoDetail::getAid, aidList)
         );
-        List<Integer> existsAidList = existVideoList
+        List<Long> existsAidList = existVideoList
                 .stream()
                 .map(VideoDetail::getAid)
                 .collect(Collectors.toList());
@@ -131,14 +131,14 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     }
 
     @Override
-    public boolean exists(Integer aid) {
+    public boolean exists(Long aid) {
         return  baseMapper.exists(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, aid));
     }
 
 
 
     @Override
-    public VideoDetail findByAid(int avid) {
+    public VideoDetail findByAid(Long avid) {
         return this.getOne(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid,avid));
     }
 
@@ -147,7 +147,7 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
      * @return
      */
     @Override
-    public VideoDetail findWithDetailByAid(int avid) {
+    public VideoDetail findWithDetailByAid(Long avid) {
 
         return   this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
                 .eq(VideoDetail::getAid,avid));

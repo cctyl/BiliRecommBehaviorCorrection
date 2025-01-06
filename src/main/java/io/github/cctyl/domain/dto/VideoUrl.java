@@ -28,7 +28,7 @@ public class VideoUrl {
     @JSONField(name = "accept_quality")
     private List<Integer> acceptQuality;
     @JSONField(name = "video_codecid")
-    private Integer videoCodecid;
+    private Long videoCodecid;
     @JSONField(name = "seek_param")
     private String seekParam;
     @JSONField(name = "seek_type")
@@ -42,7 +42,7 @@ public class VideoUrl {
     @JSONField(name = "last_play_time")
     private Integer lastPlayTime;
     @JSONField(name = "last_play_cid")
-    private Integer lastPlayCid;
+    private Long lastPlayCid;
 
     @NoArgsConstructor
     @Data

@@ -140,28 +140,28 @@ public class RecommendCard {
     @Data
     public static class Args {
         @JSONField(name = "up_id")
-        private Integer upId;
+        private Long upId;
         @JSONField(name = "up_name")
         private String upName;
         @JSONField(name = "rid")
-        private Integer rid;
+        private Long rid;
         @JSONField(name = "rname")
         private String rname;
         @JSONField(name = "tid")
-        private Integer tid;
+        private Long tid;
         @JSONField(name = "tname")
         private String tname;
         @JSONField(name = "aid")
-        private Integer aid;
+        private Long aid;
     }
 
     @NoArgsConstructor
     @Data
     public static class PlayerArgs {
         @JSONField(name = "aid")
-        private Integer aid;
+        private Long aid;
         @JSONField(name = "cid")
-        private Integer cid;
+        private Long cid;
         @JSONField(name = "type")
         private String type;
         @JSONField(name = "duration")
@@ -212,7 +212,7 @@ public class RecommendCard {
         @Data
         public static class Reasons {
             @JSONField(name = "id")
-            private Integer id;
+            private Long id;
             @JSONField(name = "name")
             private String name;
             @JSONField(name = "toast")

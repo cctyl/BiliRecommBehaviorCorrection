@@ -27,7 +27,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      * aid
      */
     @JSONField(name = "aid")
-    private Integer aid;
+    private Long aid;
 
 
     @JSONField(name = "videos")
@@ -36,7 +36,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      * 分区id
      */
     @JSONField(name = "tid")
-    private Integer tid;
+    private Long tid;
     /**
      * 分区名
      */
@@ -83,7 +83,7 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     private Integer duration;
 
     @JSONField(name = "mission_id")
-    private Integer missionId;
+    private Long missionId;
 
     /**
      * 视频同步发布的的动态的文字内容
@@ -92,10 +92,10 @@ public class VideoDetail extends AuditingEntity implements Serializable {
     private String dynamic;
 
     @JSONField(name = "cid")
-    private Integer cid;
+    private Long cid;
 
     @JSONField(name = "season_id")
-    private Integer seasonId;
+    private Long seasonId;
 
     @JSONField(name = "short_link_v2")
     private String shortLinkV2;
@@ -265,18 +265,18 @@ public class VideoDetail extends AuditingEntity implements Serializable {
      * 点踩的up id
      */
     @TableField(exist = false)
-    private Integer dislikeMid;
+    private Long dislikeMid;
     /**
      * 点踩的对象板块id
      */
     @TableField(exist = false)
-    private Integer dislikeTid;
+    private Long dislikeTid;
 
     /**
      * 点踩的tag id
      */
     @TableField(exist = false)
-    private Integer dislikeTagId;
+    private Long dislikeTagId;
 
 
     /**
