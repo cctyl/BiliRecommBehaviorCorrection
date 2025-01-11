@@ -62,7 +62,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         LambdaQueryWrapper<Dict> eq = new LambdaQueryWrapper<Dict>()
                 .eq(Dict::getAccessType, accessType)
                 .eq(Dict::getDictType, dictType)
-                .in(Dict::getValue,valueCol);
+                .in(Dict::getValue, valueCol);
         return this.list(eq);
     }
 
@@ -95,13 +95,13 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     public List<Dict> addDict(Collection<String> param, AccessType accessType, DictType dictType) {
         List<Dict> newDictList = param.stream().map(
-                s -> {
-                    return new Dict()
-                            .setAccessType(accessType)
-                            .setDictType(dictType)
-                            .setValue(s);
-                }
-        )
+                        s -> {
+                            return new Dict()
+                                    .setAccessType(accessType)
+                                    .setDictType(dictType)
+                                    .setValue(s);
+                        }
+                )
                 .collect(Collectors.toList());
         this.saveBatch(newDictList);
         return newDictList;
@@ -164,7 +164,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Override
     public List<Dict> findBlackCacheKeyWord() {
 
-      return   this.findByDictTypeAndAccessType(
+        return this.findByDictTypeAndAccessType(
                 DictType.KEYWORD,
                 AccessType.BLACK_CACHE
         );
@@ -172,7 +172,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     @Override
     public List<Dict> findBlackCacheTag() {
-        return   this.findByDictTypeAndAccessType(
+        return this.findByDictTypeAndAccessType(
                 DictType.TAG,
                 AccessType.BLACK_CACHE
         );
@@ -198,6 +198,20 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     }
 
+    /**
+     * 根据id更新 accsessType 和 dictType
+     * @param accessType
+     * @param dictType
+     * @param keywordIdSet
+     */
+    @Override
+    public void updateAccessTypeAndDictTypeByIdIn(AccessType accessType, DictType dictType, Collection<String> keywordIdSet) {
+        this.lambdaUpdate()
+                .in(Dict::getId, keywordIdSet)
+                .set(Dict::getAccessType, accessType)
+                .set(Dict::getDictType, dictType)
+                .update();
+    }
 
     @Override
     public void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol) {
@@ -230,11 +244,11 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Transactional
     public void removeAndAddDict(
             AccessType accessType,
-                                 DictType dictType,
+            DictType dictType,
 
-                                 String outerId,
+            String outerId,
 
-                                 Collection<String> valueCol) {
+            Collection<String> valueCol) {
 
         //先删除之前的
         this.removeByAccessTypeAndDictTypeAndValue(
@@ -246,7 +260,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         //新增到数据库
         List<Dict> dictList = Dict.keyword2Dict(
                 valueCol,
-               dictType,
+                dictType,
                 accessType,
                 outerId
         );
@@ -259,7 +273,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Transactional
     public void updateByWhiteListRule(WhiteListRule whitelistRule) {
 
-        if (whitelistRule.getId()==null){
+        if (whitelistRule.getId() == null) {
             throw new RuntimeException("缺少白名单主键id");
         }
 
@@ -312,7 +326,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
      */
     @Override
     public List<String> findStopWords() {
-       return this.findByDictTypeAndAccessType(
+        return this.findByDictTypeAndAccessType(
                 DictType.STOP_WORDS,
                 AccessType.OTHER
         ).stream().map(Dict::getValue).collect(Collectors.toList());
@@ -322,19 +336,25 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Override
     public void removeAllWhiteUserId() {
         this.removeByAccessTypeAndDictType(
-                 AccessType.WHITE,DictType.MID
+                AccessType.WHITE, DictType.MID
         );
     }
 
     @Override
     public void addWhiteUserId(Collection<String> whiteUserIdSet) {
-        this.addDict(whiteUserIdSet, AccessType.WHITE,DictType.MID);
+        this.addDict(whiteUserIdSet, AccessType.WHITE, DictType.MID);
     }
 
     @Override
     public List<Dict> findByOuterIdIn(Collection<String> idList) {
 
-        return this.list(new LambdaQueryWrapper<Dict>().in(Dict::getOuterId,idList));
+        return this.list(new LambdaQueryWrapper<Dict>().in(Dict::getOuterId, idList));
     }
 
+    @Override
+    public List<Dict> findBlackIgnoreTag() {
+      return   this.lambdaQuery().eq(Dict::getAccessType, AccessType.BLACK)
+                .eq(Dict::getDictType, DictType.IGNORE_TAG)
+                .list();
+    }
 }

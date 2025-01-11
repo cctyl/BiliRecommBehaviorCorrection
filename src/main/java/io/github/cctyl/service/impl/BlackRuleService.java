@@ -79,8 +79,8 @@ public class BlackRuleService {
             }
         }
         List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess);
-        List<String> topTagName = SegmenterUtil.getTopFrequentWord(descProcess);
-        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(tagNameProcess);
+        List<String> topTagName = SegmenterUtil.getTopFrequentWord( tagNameProcess);
+        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(descProcess);
 
         log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}", topDescKeyWord,
                 topTagName,
@@ -103,6 +103,7 @@ public class BlackRuleService {
         }
 
         topTagName.removeAll(GlobalVariables. getBlackTagSet()  );
+        //TODO tag的忽略名单不要套用黑名单关键词的，单独一份，这里需要修改
         topTagName.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTagName)) {
             dictService.addBlackCache(topTagName,DictType.TAG);
@@ -155,7 +156,7 @@ public class BlackRuleService {
                 matchWord
         );
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("-")+
                     "标题:" + videoDetail.getTitle() + " 匹配到了关键词：" + matchWord);
             //标题匹配到关键字，认为不感兴趣
             videoDetail.setDislikeReason(DislikeReason.notInteresting());

@@ -12,7 +12,7 @@ import java.util.Map;
  */
 @Data
 @Accessors(chain = true)
-public class R {
+public class R<T> {
 
     private static final int SUCCESS = 20000;
     private static final int FAIL = 50000;
@@ -28,45 +28,43 @@ public class R {
     private String message;
 
     @Schema(name = "返回数据")
-    private Object data;
+    private T data;
 
     private R() {
     }
 
-    public static R ok() {
-        R r = new R();
+    public static<T> R<T> ok() {
+        R<T> r = new R<T>();
         r.setSuccess(true);
         r.setCode(SUCCESS);
         r.setMessage("成功");
         return r;
     }
 
-    public static R data(Object o) {
-        R r = ok();
+    public static<T> R<T> data(T o) {
+        R<T> r = ok();
         r.setData(o);
         return r;
     }
 
 
-    public static R error() {
-        R r = new R();
+    public static<T> R<T> error() {
+        R<T> r = new R<T>();
         r.setSuccess(false);
         r.setCode(FAIL);
         r.setMessage("失败");
         return r;
     }
 
-    public static R data(String key, Object value) {
+    public static R<Map<String, Object>> data(String key, Object value) {
         HashMap<String, Object> map = new HashMap<>();
         map.put(key, value);
 
-        R r = ok();
-        r.setData(map);
-        return r;
+        return data(map);
     }
 
-    public static R data(Map<String, Object> map) {
-        R r = ok();
+    public static R<Map<String, Object>> data(Map<String, Object> map) {
+        R<Map<String, Object>> r = ok();
         r.setData(map);
         return r;
     }

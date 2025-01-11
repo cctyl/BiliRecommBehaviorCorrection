@@ -50,6 +50,11 @@ public enum DictType {
     IGNORE_KEYWORD,
 
     /**
+     *  需要忽略的标签
+     */
+    IGNORE_TAG,
+
+    /**
      * 停顿词
      */
     STOP_WORDS,

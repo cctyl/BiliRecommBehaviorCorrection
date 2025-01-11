@@ -336,6 +336,9 @@ public class BiliApi {
             case 86090:
                 log.info("已扫码未确认:{}",jsonObject);
                 break;
+            case 86039:
+                log.info("二维码尚未确认:{}",jsonObject);
+                break;
             case 65007:
                 log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
                 break;
@@ -1116,20 +1119,25 @@ public class BiliApi {
      * @param avid 视频id
      */
     public VideoDetail getVideoDetail(long avid) {
-        String url = "https://api.bilibili.com/x/web-interface/view/detail";
-        String body = commonGet(url, Map.of("aid", avid)).body();
+        try {
+            String url = "https://api.bilibili.com/x/web-interface/view/detail";
+            assert avid>0;
+            String body = commonGet(url, Map.of("aid", avid)).body();
 
-        JSONObject jsonObject = JSONObject.parseObject(body);
-        checkRespAndThrow(
-                jsonObject, body
-        );
+            JSONObject jsonObject = JSONObject.parseObject(body);
+            checkRespAndThrow(
+                    jsonObject, body
+            );
 
-        JSONObject data = jsonObject.getJSONObject("data");
-        VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
-        videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
-        videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
+            JSONObject data = jsonObject.getJSONObject("data");
+            VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
+            videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
+            videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
 
-        return videoDetail;
+            return videoDetail;
+        } catch (HttpException e) {
+            throw new RuntimeException(e);
+        }
     }
     public VideoDetail getVideoDetail(String bvid ) {
         String url = "https://api.bilibili.com/x/web-interface/view/detail";

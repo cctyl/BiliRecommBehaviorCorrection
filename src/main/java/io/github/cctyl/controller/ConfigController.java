@@ -1,19 +1,27 @@
 package io.github.cctyl.controller;
 
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.server.HttpServerResponse;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.domain.po.Config;
 import io.github.cctyl.domain.vo.ConfigVo;
 import io.github.cctyl.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 
@@ -48,18 +56,17 @@ public class ConfigController {
         return R.data(refreshCookieMap);
     }
 
-    @PutMapping("/standard")
+    @PostMapping("/standard")
     @Operation(summary = "更新基本配置信息")
-    public R updateStandardConfigInfo(@RequestBody ConfigDTO configDTO){
-        ConfigVo configVo = configService.updateStandardConfigInfo(configDTO);
-        return R.data(configVo);
+    public R updateStandardConfigInfo(@RequestBody List<Config>  configList){
+        configService.updateConfigList(configList);
+        return R.ok();
     }
 
     @GetMapping("/standard")
     @Operation(summary = "查询基本配置信息")
-    public R getStandardConfigInfo(){
-        ConfigVo configVo = configService.getStandardConfigInfo();
-        return R.data(configVo);
+    public R<List<Config>> getStandardConfigInfo(){
+        return R.data(configService.getConfigList());
     }
 
 
@@ -75,13 +82,36 @@ public class ConfigController {
     @GetMapping("/check-accesskey")
     @Operation(summary ="检查accesskey")
     public R checkAccesskey(){
-        JSONObject info = biliApi.getUserInfo();
-        return R.data(info);
+        try {
+            JSONObject info = biliApi.getUserInfo();
+            return R.data(info);
+        } catch (Exception e) {
+
+            return R.error().setMessage(e.getMessage());
+        }
+    }
+    @GetMapping("/getPic")
+    @Operation(summary ="获取图片")
+    public void getPic(
+            @RequestParam("url") String url,
+            HttpServletResponse response
+    ) throws IOException {
+        // 使用 Hutool 从 URL 下载图片
+        InputStream inputStream = HttpUtil.createGet(url).execute().bodyStream();
+
+        // 设置响应内容类型
+        response.setContentType("image/jpeg"); // 根据实际情况设置内容类型
+
+        // 将图片流写入响应
+        IoUtil.copy(inputStream, response.getOutputStream());
+        response.flushBuffer();
+        IoUtil.close(inputStream);
+
     }
 
 
     @GetMapping("/web-qr-code")
-    @Operation(summary = "申请web登陆二维码")
+    @Operation(summary = "申请web登陆二维码（该接口拿不到accessKey）")
     public R getWebQrCode() {
 
         String url = configService.getWebLoginQrCode();
@@ -90,7 +120,7 @@ public class ConfigController {
 
 
     @GetMapping("/web-scan-result")
-    @Operation(summary = "获取web登陆扫码结果")
+    @Operation(summary = "获取web登陆扫码结果（该接口拿不到accessKey）")
     public R getWebQrCodeScanResult() {
         return R.data(configService.getWebLoginQrCodeScanResult());
     }

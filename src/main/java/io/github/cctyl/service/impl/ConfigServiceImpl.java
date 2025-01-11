@@ -132,7 +132,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public ConfigVo updateStandardConfigInfo(ConfigDTO configDTO) {
-
+//TODO 改为列表批量修改
         if (configDTO.getBiliAccessKey() != null) {
             GlobalVariables.updateAccessKey(configDTO.getBiliAccessKey());
         }
@@ -227,6 +227,25 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     @Override
     public Object getTvLoginQrCodeScanResult() {
         return biliApi.getTvQrCodeScanResult();
+    }
+
+    @Override
+    public List<Config> getConfigList() {
+        return this.list();
+    }
+
+    /**
+     * 更新配置项列表
+     * 此方法用于批量更新配置项，通过接收一个配置对象列表来实现配置的批量修改或添加
+     * 主要用途是当有一批新的配置需要应用或者现有配置发生变更时，通过调用此方法来更新系统内的配置信息
+     *
+     * @param configList 一个包含多个Config对象的列表，用于更新系统配置
+     */
+    @Override
+    public void updateConfigList(List<Config> configList) {
+
+        this.saveOrUpdateBatch(configList);
+
     }
 }
 

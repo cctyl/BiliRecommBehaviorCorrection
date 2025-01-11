@@ -63,7 +63,7 @@ public class CookieHeaderDataController {
         Page<CookieHeaderData> pageBean = new Page<>(page, limit);
         IPage<CookieHeaderData> iPage = cookieHeaderDataService.page(pageBean, null);
         List<CookieHeaderData> records = iPage.getRecords();
-        return R.data("list", records);
+        return R.data("page", iPage);
     }
 
 

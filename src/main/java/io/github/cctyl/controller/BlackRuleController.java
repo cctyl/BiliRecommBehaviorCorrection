@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.dto.R;
@@ -28,7 +30,6 @@ import java.util.stream.Collectors;
 public class BlackRuleController {
 
 
-
     @Autowired
     private BiliService biliService;
 
@@ -43,12 +44,7 @@ public class BlackRuleController {
 
     @Operation(summary = "指定视频是否符合黑名单")
     @GetMapping("/check-video")
-    public R checkVideo(
-            @Parameter(name = "aid", description = "avid")
-            @RequestParam(required = false) Long aid,
-            @Parameter(name = "bvid", description = "bvid")
-            @RequestParam(required = false) String bvid
-    ) {
+    public R checkVideo(@Parameter(name = "aid", description = "avid") @RequestParam(required = false) Long aid, @Parameter(name = "bvid", description = "bvid") @RequestParam(required = false) String bvid) {
 
         VideoDetail videoDetail;
         if (aid != null) {
@@ -88,10 +84,7 @@ public class BlackRuleController {
 
     @Operation(summary = "对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
-    public R dislikeByTid(
-            @Parameter(name = "tidList", description = "需要点踩的分区id")
-            @RequestParam List<Long> tidList
-    ) {
+    public R dislikeByTid(@Parameter(name = "tidList", description = "需要点踩的分区id") @RequestParam List<Long> tidList) {
 
 
         TaskPool.putTask(() -> {
@@ -102,24 +95,17 @@ public class BlackRuleController {
                     log.info("完成对{}分区的点踩任务", tid);
                     ThreadUtil.s5();
                 } catch (Exception e) {
-                    log.error(e.getMessage(),e);
+                    log.error(e.getMessage(), e);
                 }
             }
-            log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频",
-                    tidList.size(),
-                    tidList,
-                    disklikeNum
-            );
+            log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频", tidList.size(), tidList, disklikeNum);
         });
         return R.ok().setMessage("对指定分区点踩任务已开始");
     }
 
     @Operation(summary = "对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
-    public R dislikeByUserId(
-            @Parameter(name = "userIdList", description = "二选一，需要点踩的用户id")
-            @RequestParam List<String> userIdList
-    ) {
+    public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestParam List<String> userIdList) {
         TaskPool.putTask(() -> {
             int disklikeNum = 0;
             for (String userId : userIdList) {
@@ -128,46 +114,64 @@ public class BlackRuleController {
                     log.info("完成对{}分区的点踩任务", userId);
                     ThreadUtil.s20();
                 } catch (Exception e) {
-                    log.error(e.getMessage(),e);
+                    log.error(e.getMessage(), e);
                 }
             }
-            log.info("本次共对{}个用户:{}进行点踩，共点踩{}个视频",
-                    userIdList.size(),
-                    userIdList,
-                    disklikeNum
-            );
+            log.info("本次共对{}个用户:{}进行点踩，共点踩{}个视频", userIdList.size(), userIdList, disklikeNum);
         });
         return R.ok().setMessage("对指定用户点踩任务已开始");
     }
 
 
     @Operation(summary = "获得缓存的训练结果")
-    @GetMapping("/cache-train-result")
-    public R getCacheTrainResult() {
-        List<Dict> keywordList = dictService.findBlackCacheKeyWord();
-        List<Dict> tagNameList = dictService.findBlackCacheTag();
-        return R.data(Map.of(
-                "keywordSet", keywordList,
-                "tagNameSet", tagNameList
-        ));
+    @GetMapping("/cache-train-result/{type}")
+    public R getCacheTrainResult(@PathVariable("type") DictType type) {
+
+        List<Dict> list = new ArrayList<>(0);
+        if (type.equals(DictType.KEYWORD)) {
+            list = dictService.findBlackCacheKeyWord();
+
+        } else if (type.equals(DictType.TAG)) {
+            list = dictService.findBlackCacheTag();
+        }
+        return R.data(list);
     }
 
 
     @Operation(summary = "将缓存的结果存入")
-    @PutMapping("/cache-train-result")
-    public R getCacheTrainResult(
-            @RequestBody Map<String, List<String>> map
+    @PutMapping("/cache-train-result/{type}")
+    public R getCacheTrainResult(@PathVariable("type") DictType type,
+                                 @RequestBody Map<String, List<String>> map
+
     ) {
-        List<String> keywordIdList = map.getOrDefault("keywordIdList", Collections.emptyList());
-        List<String> tagNameIdList = map.getOrDefault("tagNameIdList", Collections.emptyList());
-
-        //添加黑名单关键词
-        GlobalVariables.INSTANCE.addBlackKeyWordFromCache(keywordIdList);
-
-        //添加黑名单标签
-        GlobalVariables.INSTANCE.addBlackTagFromCache(tagNameIdList);
+        List<String> selectedId = map.getOrDefault("selectedId", new ArrayList<String>());
+        List<String> discardedId = map.getOrDefault("discardedId", new ArrayList<String>());
 
 
+        if (type.equals(DictType.KEYWORD)) {
+
+            if (!selectedId.isEmpty()) {
+                //添加黑名单关键词
+                GlobalVariables.INSTANCE.addBlackKeyWordFromCache(selectedId);
+            }
+
+            //舍弃的关键词下次不会再出现
+            if (!discardedId.isEmpty()) {
+                dictService.updateAccessTypeAndDictTypeByIdIn(AccessType.BLACK, DictType.IGNORE_KEYWORD, discardedId);
+                //TODO 需要更新Global 里面的缓存，除非去掉Global
+            }
+
+        } else if (type.equals(DictType.TAG)) {
+            if (!selectedId.isEmpty()) {
+                //添加黑名单标签
+                GlobalVariables.INSTANCE.addBlackTagFromCache(selectedId);
+            }
+            //舍弃的标签下次不会再出现
+            if (!discardedId.isEmpty()) {
+                dictService.updateAccessTypeAndDictTypeByIdIn(AccessType.BLACK, DictType.IGNORE_TAG, discardedId);
+            }
+
+        }
 
         return R.ok();
     }
@@ -198,10 +202,7 @@ public class BlackRuleController {
     @Operation(summary = "添加黑名单关键词")
     @PostMapping("/keyword")
     public R addOrUpdateBlackKeyWord(@RequestBody List<String> keywordList) {
-        Set<String> collect = keywordList.stream()
-                .filter(StrUtil::isNotBlank)
-                .map(String::trim)
-                .collect(Collectors.toSet());
+        Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
 
         //与忽略的关键词进行过滤
         collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
@@ -236,7 +237,6 @@ public class BlackRuleController {
     }
 
 
-
     @Operation(summary = "获得黑名单分区列表")
     @GetMapping("/tag")
     public R getBlackTagSet() {
@@ -248,11 +248,7 @@ public class BlackRuleController {
     @PostMapping("/tag")
     public R updateBlackTagSet(@RequestBody Set<String> blackTagSet) {
 
-        Set<String> collect = blackTagSet
-                .stream()
-                .filter(StrUtil::isNotBlank)
-                .map(String::trim)
-                .collect(Collectors.toSet());
+        Set<String> collect = blackTagSet.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
         //与忽略的关键词进行过滤
         collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
         GlobalVariables.INSTANCE.addBlackTagSet(collect);
@@ -263,18 +259,20 @@ public class BlackRuleController {
     @Operation(summary = "获得忽略关键词列表")
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet() {
-        return R.ok().setData( GlobalVariables.getIgnoreBlackKeyWordSet());
+        return R.ok().setData(dictService.findBlackIgnoreKeyWord());
+    }
+
+    @Operation(summary = "获得忽略Tag列表")
+    @GetMapping("/ignoreTag")
+    public R getIgnoreTagSet() {
+        return R.ok().setData(dictService.findBlackIgnoreTag());
     }
 
     @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
 
-        Set<String> collect = ignoreKeyWordSet
-                .stream()
-                .filter(StrUtil::isNotBlank)
-                .map(String::trim)
-                .collect(Collectors.toSet());
+        Set<String> collect = ignoreKeyWordSet.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
         GlobalVariables.INSTANCE.addBlackIgnoreKeyword(collect);
 
         return R.ok();

@@ -50,6 +50,7 @@ public interface DictService extends IService<Dict> {
     List<Dict> findByIdIn(Collection<String> idList);
 
     void updateAccessTypeByIdIn(AccessType blackCache, Collection<String> keywordIdSet);
+    void updateAccessTypeAndDictTypeByIdIn(AccessType blackCache,DictType dictType, Collection<String> keywordIdSet);
 
     void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol);
 
@@ -70,4 +71,5 @@ public interface DictService extends IService<Dict> {
     List<Dict> findByOuterIdIn(Collection<String> idList);
 
 
+    List<Dict> findBlackIgnoreTag();
 }

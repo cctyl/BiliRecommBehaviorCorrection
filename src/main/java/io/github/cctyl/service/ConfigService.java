@@ -5,6 +5,7 @@ import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.vo.ConfigVo;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,4 +40,8 @@ public interface ConfigService extends IService<Config> {
     String getTvLoginQrCode();
 
     Object getTvLoginQrCodeScanResult();
+
+    List<Config> getConfigList();
+
+    void updateConfigList(List<Config> configList);
 }
