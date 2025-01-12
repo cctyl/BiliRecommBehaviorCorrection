@@ -7,6 +7,7 @@ CREATE TABLE dict
     access_type        varchar(50)  null,
     dict_type          varchar(50)  null,
     outer_id           varchar(60)  NULL,
+    desc               varchar(50)  NULL,
 
     created_date       DATE         null,
     last_modified_date DATE         null,

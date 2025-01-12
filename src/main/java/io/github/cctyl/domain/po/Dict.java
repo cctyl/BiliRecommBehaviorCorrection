@@ -44,6 +44,11 @@ public class Dict extends SimpleAuditingEntity {
     private String outerId;
 
     /**
+     * 描述
+     */
+    private String desc;
+
+    /**
      * 对象转数据
      * @param dictCollection
      * @return

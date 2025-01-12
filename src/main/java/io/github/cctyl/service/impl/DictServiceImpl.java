@@ -357,4 +357,13 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
                 .eq(Dict::getDictType, DictType.IGNORE_TAG)
                 .list();
     }
+
+
+    @Override
+    public List<Dict> getListByDictTypeAndAccessType(DictType dictType, AccessType accessType) {
+       return this.lambdaQuery()
+                .eq(Dict::getDictType, dictType)
+                .eq(Dict::getAccessType, accessType)
+                .list();
+    }
 }

@@ -11,6 +11,7 @@
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
         <result column="outer_id" property="outerId"/>
+        <result column="desc" property="desc"/>
     </resultMap>
 
 
@@ -23,13 +24,14 @@
         <result column="t_dict_created_date" property="createdDate"/>
         <result column="t_dict_last_modified_date" property="lastModifiedDate"/>
         <result column="t_dict_outer_id" property="outerId"/>
+        <result column="t_dict_desc" property="desc"/>
     </resultMap>
 
 
 
         <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, value, access_type, dict_type, created_date, last_modified_date,outer_id
+        id, value, access_type, dict_type, created_date, last_modified_date,outer_id,desc
     </sql>
 
 
@@ -42,7 +44,8 @@
         t_dict.dict_type    as t_dict_dict_type,
         t_dict.created_date as t_dict_created_date,
         t_dict.last_modified_date as t_dict_last_modified_date,
-        t_dict.outer_id  as t_dict_outer_id
+        t_dict.outer_id  as t_dict_outer_id,
+        t_dict.desc  as t_dict_desc
     </sql>
 
 </mapper>

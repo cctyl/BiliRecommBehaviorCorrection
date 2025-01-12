@@ -78,7 +78,7 @@ public class CookieHeaderDataController {
         @RequestBody CookieHeaderData cookieHeaderData,
         HttpServletRequest request) {
         boolean result = cookieHeaderDataService.save(cookieHeaderData);
-        return result ? R.ok() : R.error();
+        return result ? R.ok().setData(cookieHeaderData) : R.error();
     }
 
 

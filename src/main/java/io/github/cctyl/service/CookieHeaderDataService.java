@@ -51,4 +51,6 @@ public interface CookieHeaderDataService extends IService<CookieHeaderData> {
     void removeByUrlAndMediaType(List<String> collect, MediaType mediaType);
 
     void replaceRefreshCookie(Map<String, String> cookieMap);
+
+    void updateRefreshCookie(String key, String value);
 }

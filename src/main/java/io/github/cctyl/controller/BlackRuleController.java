@@ -105,12 +105,14 @@ public class BlackRuleController {
 
     @Operation(summary = "对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
-    public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestParam List<String> userIdList) {
+    public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestParam List<String> userIdList,
+                             @Parameter(name = "train", description = "是否将这些用户的投稿视频加入黑名单训练") @RequestParam boolean train
+                             ) {
         TaskPool.putTask(() -> {
             int disklikeNum = 0;
             for (String userId : userIdList) {
                 try {
-                    disklikeNum += biliService.dislikeByUserId(userId);
+                    disklikeNum += biliService.dislikeByUserId(userId,train);
                     log.info("完成对{}分区的点踩任务", userId);
                     ThreadUtil.s20();
                 } catch (Exception e) {

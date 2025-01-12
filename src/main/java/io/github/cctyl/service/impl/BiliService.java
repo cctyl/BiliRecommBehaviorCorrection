@@ -2,6 +2,8 @@ package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
@@ -12,6 +14,7 @@ import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.exception.ServerException;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.service.PrepareVideoService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.WhiteListRuleService;
@@ -21,9 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.HttpCookie;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import static io.github.cctyl.domain.constants.AppConstant.*;
 
 
 /**
@@ -40,6 +47,7 @@ public class BiliService {
     private final BlackRuleService blackRuleService;
 
     private final WhiteListRuleService whiteRuleService;
+    private final CookieHeaderDataService cookieHeaderDataService;
 
     private final VideoDetailService videoDetailService;
     private final PrepareVideoService prepareVideoService;
@@ -53,11 +61,63 @@ public class BiliService {
      * @return true 有效  false 无效
      */
     public boolean checkCookie() {
+        //检查cookie
+        Map<String, String> refreshCookie = cookieHeaderDataService.findRefreshCookie();
+        if (refreshCookie.get(BILITICKET)==null){
+            updateBiliTicket();
+        }
+
+        if (refreshCookie.get(B_NUT)==null){
+            updateBNut();
+        }
+        if (refreshCookie.get(BUVID3) == null || refreshCookie.get(BUVID4) == null){
+            updateBuvid();
+        }
+
+
         JSONObject history = biliApi.getHistory();
         log.info("检查cookie状态：{}", history.toString());
         return history.getIntValue("code") == 0;
     }
 
+    /**
+     * 更新bNut
+     */
+    public void updateBNut() {
+
+
+        HttpResponse execute =  biliApi.noAuthCookieGet("https://www.bilibili.com/");
+        if (execute.getStatus() == 200) {
+           Optional.ofNullable(execute.getCookie(B_NUT))
+                    .map(HttpCookie::getValue)
+                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(B_NUT,s));
+            Optional.ofNullable(execute.getCookie(BUVID3))
+                    .map(HttpCookie::getValue)
+                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(BUVID3,s));
+        }
+
+    }
+
+    /**
+     * 更新bNut
+     */
+    public void updateBuvid() {
+        String url = "https://api.bilibili.com/x/frontend/finger/spi";
+        HttpResponse execute =   biliApi.noAuthCookieGet(url);
+        if (execute.getStatus() == 200) {
+            String body = execute.body();
+            JSONObject jsonObject = JSONObject.parseObject(body);
+
+            JSONObject data = jsonObject.getJSONObject("data");
+            String b3 = data.getString("b_3");
+            String b4 = data.getString("b_4");
+
+            cookieHeaderDataService.updateRefreshCookie(BUVID3,b3);
+            cookieHeaderDataService.updateRefreshCookie(BUVID4,b4);
+
+        }
+
+    }
 
     /**
      * 更新一下必要的cookie
@@ -65,6 +125,15 @@ public class BiliService {
     public void updateCookie() {
         log.debug("更新一次cookie");
         biliApi.getHome();
+    }
+
+    /**
+     * 更新biliticket
+     */
+    public void updateBiliTicket() {
+        log.debug("updateBiliTicket");
+        String biliTicket = biliApi.getBiliTicket();
+        cookieHeaderDataService.updateRefreshCookie(BILITICKET,biliTicket);
     }
 
     /**
@@ -362,9 +431,10 @@ public class BiliService {
      * 根据用户id进行点踩
      *
      * @param userId
+     * @param train
      * @return
      */
-    public int dislikeByUserId(String userId) {
+    public int dislikeByUserId(String userId, boolean train) {
         //该用户会被加入黑名单
         GlobalVariables.INSTANCE.addBlackUserId(userId);
 
@@ -400,8 +470,11 @@ public class BiliService {
                 }
         );
 
-        //开始训练黑名单
-        blackRuleService.trainBlacklistByVideoList(videoDetailList);
+        if (train){
+            //开始训练黑名单
+            blackRuleService.trainBlacklistByVideoList(videoDetailList);
+        }
+
 
         return videoDetailList.size();
     }

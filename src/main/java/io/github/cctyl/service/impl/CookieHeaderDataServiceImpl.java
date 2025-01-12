@@ -1,6 +1,7 @@
 package io.github.cctyl.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.domain.po.CookieHeaderData;
 import io.github.cctyl.mapper.CookieHeaderDataMapper;
@@ -296,5 +297,34 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     public void replaceRefreshCookie(Map<String, String> cookieMap) {
         removeAllRefreshCookie();
         saveRefreshCookieMap(cookieMap);
+    }
+
+    @Override
+    public void updateRefreshCookie(String key, String value) {
+
+        //判断这个key是否存在,count的形式
+        if(this.count(
+                new LambdaQueryWrapper<CookieHeaderData>()
+                        .eq(CookieHeaderData::getCkey,key)
+                        .eq(CookieHeaderData::getMediaType,MediaType.TIMELY_UPDATE)
+        )==0){
+            //不存在,新增
+            this.save(
+                    new CookieHeaderData()
+                            .setCkey(key)
+                            .setCvalue(value)
+                            .setMediaType(MediaType.TIMELY_UPDATE)
+            );
+        }else {
+            this.update(
+                    new LambdaUpdateWrapper<CookieHeaderData>()
+                            .eq(CookieHeaderData::getCkey,key)
+                            .eq(CookieHeaderData::getMediaType,MediaType.TIMELY_UPDATE)
+                            .set(CookieHeaderData::getCvalue,value)
+            );
+        }
+
+
+
     }
 }

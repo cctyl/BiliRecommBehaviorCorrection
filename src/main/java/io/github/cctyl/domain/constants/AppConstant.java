@@ -21,6 +21,10 @@ public class AppConstant {
     public static final String WBI = PREFIX + "wbi";
     public static final String IMG_KEY = PREFIX + "imgKey";
     public static final String SUB_KEY = PREFIX + "subKey";
+    public static final String BILITICKET = "bili_ticket";
+    public static final String B_NUT = "b_nut";
+    public static final String BUVID3 = "buvid3";
+    public static final String BUVID4 = "buvid4";
 
     /**
      * 每个api对应需要用到的header

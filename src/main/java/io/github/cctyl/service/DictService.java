@@ -72,4 +72,6 @@ public interface DictService extends IService<Dict> {
 
 
     List<Dict> findBlackIgnoreTag();
+
+    List<Dict> getListByDictTypeAndAccessType(DictType dictType, AccessType accessType);
 }

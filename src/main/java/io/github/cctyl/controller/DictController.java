@@ -4,6 +4,8 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +66,16 @@ public class DictController {
         IPage<Dict> iPage = dictService.page(pageBean, null);
         List<Dict> records = iPage.getRecords();
         return R.data("list", records);
+    }
+    @Operation(summary = "根据DictType 和 AccessType 查询dict列表")
+    @GetMapping("/list")
+    public R getListByDictTypeAndAccessType(
+            HttpServletRequest request,
+            @RequestParam DictType dictType,
+            @RequestParam AccessType accessType
+            ) {
+
+        return R.data("list", dictService.getListByDictTypeAndAccessType(dictType,accessType));
     }
 
 

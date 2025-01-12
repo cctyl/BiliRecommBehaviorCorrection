@@ -17,6 +17,7 @@ import io.github.cctyl.domain.po.VideoReply;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.service.CookieHeaderDataService;
+import io.github.cctyl.utils.BiliTicketUtil;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import lombok.RequiredArgsConstructor;
@@ -304,7 +305,7 @@ public class BiliApi {
      * @param jsonObject
      * @return
      */
-    public boolean checkResp(JSONObject jsonObject) {
+    public static boolean checkResp(JSONObject jsonObject) {
         return jsonObject.getIntValue("code") == 0;
     }
 
@@ -314,7 +315,7 @@ public class BiliApi {
      * @param jsonObject
      * @param body
      */
-    public void checkRespAndThrow(JSONObject jsonObject, String body) {
+    public static void checkRespAndThrow(JSONObject jsonObject, String body) {
 
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
@@ -322,6 +323,18 @@ public class BiliApi {
             checkOtherCode(jsonObject);
         }
     }
+
+    public String getBiliTicket(){
+        try {
+            String biliTicketJsonStr = BiliTicketUtil.getBiliTicket("");
+            JSONObject jsonObject = JSONObject.parseObject(biliTicketJsonStr);
+            checkRespAndThrow(jsonObject, biliTicketJsonStr);
+            return jsonObject.getJSONObject("data").getString("ticket");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
 
 
@@ -331,7 +344,7 @@ public class BiliApi {
      *
      * @param jsonObject
      */
-    private void checkOtherCode(JSONObject jsonObject) {
+    private static void checkOtherCode(JSONObject jsonObject) {
         switch (jsonObject.getIntValue("code")) {
             case 86090:
                 log.info("已扫码未确认:{}",jsonObject);
@@ -1109,6 +1122,24 @@ public class BiliApi {
 
 
     /**
+     * 获取用户名片信息
+     * @param mid
+     */
+    public void getUserCardByMid(String mid){
+        String url = "https://api.bilibili.com/x/web-interface/card";
+        String body = commonGet(url,
+                Map.of("mid", mid,"photo",true)
+        ).body();
+        JSONObject jsonObject = JSONObject.parseObject(body);
+        checkRespAndThrow(jsonObject, body);
+
+        JSONObject data = jsonObject.getJSONObject("data");
+
+        System.out.println("end");
+    }
+
+
+    /**
      * 获取视频非常详细的信息
      * view 视频基本信息
      * Card UP主信息
@@ -1533,5 +1564,21 @@ public class BiliApi {
         }
 
         return allVideo;
+    }
+
+    /**
+     * 不携带cookie和其他任何认证信息的陌生人请求
+     * @param url
+     * @return
+     */
+    public HttpResponse noAuthCookieGet(String url) {
+       return HttpRequest
+                .get(url)
+                .clearHeaders()
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
+                .header("referer", "https://t.bilibili.com/")
+                .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7/")
+                .timeout(10000)
+                .execute();
     }
 }
