@@ -9,15 +9,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.*;
+import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.exception.ServerException;
-import io.github.cctyl.service.CookieHeaderDataService;
-import io.github.cctyl.service.PrepareVideoService;
-import io.github.cctyl.service.VideoDetailService;
-import io.github.cctyl.service.WhiteListRuleService;
+import io.github.cctyl.service.*;
 import io.github.cctyl.utils.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +50,7 @@ public class BiliService {
     private final VideoDetailService videoDetailService;
     private final PrepareVideoService prepareVideoService;
     private final ReentrantLock reentrantLock = new ReentrantLock();
+    private final DictService dictService;
 
 
     /**
@@ -95,6 +94,28 @@ public class BiliService {
                     .map(HttpCookie::getValue)
                     .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(BUVID3,s));
         }
+
+    }
+
+
+    /**
+     * 填充dict表中,DictType 为mid 的这些用户的用户名
+     */
+    public void fillDictEmptyUserName(){
+        List<Dict> emptyDescMidDict = dictService.findEmptyDescMidDict();
+        for (Dict dict : emptyDescMidDict) {
+
+            String mid = dict.getValue();
+            String userName = biliApi.onlyGetUserNameByMid(mid);
+            if (userName!=null){
+                dict.setDesc(userName);
+                dictService.updateById(dict);
+            }
+
+            ThreadUtil.sleep(2);
+
+        }
+
 
     }
 

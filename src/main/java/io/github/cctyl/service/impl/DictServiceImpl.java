@@ -156,6 +156,9 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         this.addDict(param, AccessType.BLACK_CACHE, dictType);
     }
 
+
+
+
     @Override
     public List<Dict> findBlackIgnoreKeyWord() {
         return this.findByDictTypeAndAccessType(DictType.IGNORE_KEYWORD, AccessType.BLACK);
@@ -364,6 +367,16 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
        return this.lambdaQuery()
                 .eq(Dict::getDictType, dictType)
                 .eq(Dict::getAccessType, accessType)
+                .list();
+    }
+
+
+    @Override
+    public List<Dict> findEmptyDescMidDict() {
+
+        return this.lambdaQuery()
+                .eq(Dict::getDictType, DictType.MID)
+                .isNull(Dict::getDesc)
                 .list();
     }
 }

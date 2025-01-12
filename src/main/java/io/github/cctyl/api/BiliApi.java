@@ -31,6 +31,8 @@ import java.net.HttpCookie;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.domain.constants.AppConstant.*;
@@ -1125,19 +1127,44 @@ public class BiliApi {
      * 获取用户名片信息
      * @param mid
      */
-    public void getUserCardByMid(String mid){
+    public JSONObject getUserCardByMid(String mid){
         String url = "https://api.bilibili.com/x/web-interface/card";
         String body = commonGet(url,
                 Map.of("mid", mid,"photo",true)
         ).body();
         JSONObject jsonObject = JSONObject.parseObject(body);
         checkRespAndThrow(jsonObject, body);
-
-        JSONObject data = jsonObject.getJSONObject("data");
-
-        System.out.println("end");
+        JSONObject data = jsonObject.getJSONObject("data")
+                .getJSONObject("card");
+        return data;
     }
 
+    String userNameRegex = "<title>(.*?)的个人空间-(.*?)个人主页-哔哩哔哩视频</title>";;
+    Pattern userNamePattern = Pattern.compile(userNameRegex);
+
+    /**
+     * 仅获取用户名,不携带认证参数,通过解析html来获得数据
+     * @param mid
+     * @return
+     */
+    public String onlyGetUserNameByMid(String mid){
+
+        HttpResponse httpResponse = noAuthCookieGet("https://space.bilibili.com/" + mid);
+        String body = httpResponse.body();
+        Matcher matcher = userNamePattern.matcher(body);
+        if (matcher.find()) {
+            String xxx1 = matcher.group(1);
+            String xxx2 = matcher.group(2);
+
+            if (xxx1.equals(xxx2)){
+                return xxx1;
+            }
+        }
+
+        log.error("无法找到{}的用户名",mid);
+
+        return null;
+    }
 
     /**
      * 获取视频非常详细的信息
