@@ -379,4 +379,12 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
                 .isNull(Dict::getDesc)
                 .list();
     }
+
+    @Override
+    public List<Dict> findEmptyDescTidDict() {
+        return this.lambdaQuery()
+                .eq(Dict::getDictType, DictType.TID)
+                .isNull(Dict::getDesc)
+                .list();
+    }
 }

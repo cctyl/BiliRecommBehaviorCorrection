@@ -1,5 +1,6 @@
 package io.github.cctyl.controller;
 
+import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -33,6 +34,9 @@ public class DictController {
     @Autowired
     private DictService dictService;
 
+    @Autowired
+    private BiliApi biliApi;
+
     /**
     * 根据id查询
     *
@@ -47,6 +51,11 @@ public class DictController {
         return R.data("data",dict);
     }
 
+    @Operation(summary = "根据mid获取用户名")
+    @GetMapping("/getUserNameByMid/{mid}")
+    public R getUserNameByMid(@PathVariable("mid") String mid) {
+        return R.data(biliApi.onlyGetUserNameByMid(mid));
+    }
     /**
     * 分页查询
     *
@@ -96,13 +105,10 @@ public class DictController {
 
     /**
     * 删除一个
-    * @param dict 预留接口，用于后续根据条件删除
-    * @param request
-    * @return
     */
-    @DeleteMapping("")
-    public R del(@RequestBody Dict dict, HttpServletRequest request){
-        boolean result = dictService.removeById(dict.getId());
+    @DeleteMapping("/{id}")
+    public R del(@PathVariable("id") String id, HttpServletRequest request){
+        boolean result = dictService.removeById(id);
         return result ? R.ok() : R.error();
     }
 

@@ -82,6 +82,11 @@ public class BlackRuleService {
         List<String> topTagName = SegmenterUtil.getTopFrequentWord( tagNameProcess);
         List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(descProcess);
 
+        //排除bv开头的无用关键词
+        topDescKeyWord = filterStartWithBv(topDescKeyWord);
+        topTagName = filterStartWithBv(topTagName);
+        topTitleKeyWord = filterStartWithBv(topTitleKeyWord);
+
         log.info("本次训练结果： desc关键词:{}, 标签:{}, 标题关键词:{}", topDescKeyWord,
                 topTagName,
                 topTitleKeyWord);
@@ -112,7 +117,9 @@ public class BlackRuleService {
 
     }
 
-
+    private static List<String> filterStartWithBv(List<String> topDescKeyWord) {
+        return topDescKeyWord.stream().filter(s -> !(s.startsWith("bv") || s.startsWith("BV") || s.startsWith("Bv"))).collect(Collectors.toList());
+    }
 
 
     /**

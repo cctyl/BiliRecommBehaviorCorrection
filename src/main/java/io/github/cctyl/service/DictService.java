@@ -76,4 +76,5 @@ public interface DictService extends IService<Dict> {
     List<Dict> getListByDictTypeAndAccessType(DictType dictType, AccessType accessType);
 
     List<Dict> findEmptyDescMidDict();
+    List<Dict> findEmptyDescTidDict();
 }

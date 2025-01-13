@@ -112,12 +112,32 @@ public class BiliService {
                 dictService.updateById(dict);
             }
 
-            ThreadUtil.sleep(2);
+            ThreadUtil.sleep(10);
 
         }
 
 
     }
+
+    /**
+     * 填充空分区描述
+     */
+    public void fillDictEmptyTname(){
+        List<Dict> emptyDescMidDict = dictService.findEmptyDescTidDict();
+        List<Region> allRegion = biliApi.getAllRegion(false);
+        for (Dict dict : emptyDescMidDict) {
+
+            String tid = dict.getValue();
+            allRegion.stream().filter(region -> region.getTid().compareTo(Integer.parseInt(tid))==0)
+                    .findFirst()
+                    .ifPresent(region -> {
+                        dict.setDesc(region.getName());
+                        dictService.updateById(dict);
+                    });
+        }
+
+    }
+
 
     /**
      * 更新bNut
@@ -861,6 +881,8 @@ public class BiliService {
                         this.dislike(videoDetail.getAid());
                     } catch (NotFoundException e) {
                         log.error(e.getMessage(),e);
+                    }catch (Exception e){
+                        log.error(e.getMessage());
                     }
                     //删除数据库记录
                     prepareVideoService.removeByVideoId(id);
