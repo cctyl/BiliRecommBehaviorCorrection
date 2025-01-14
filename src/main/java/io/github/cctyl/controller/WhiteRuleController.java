@@ -123,7 +123,7 @@ public class WhiteRuleController {
 
 
     @Operation(summary = "添加或修改指定的白名单对象")
-    @PostMapping("/")
+    @PostMapping("")
     public R addOrUpdateWhiteRule(
             @Parameter(name = "toUpdate", description = "将要修改的白名单对象")
             @RequestBody WhiteListRuleAddUpdateDto toUpdate
@@ -141,13 +141,13 @@ public class WhiteRuleController {
         }
 
         //添加之前，过滤掉需要忽略的关键词
-        toUpdate.setDescKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getDescKeyWordList()));
-        toUpdate.setTagNameList(whiteRuleService.filterIgnoreValue(toUpdate.getTagNameList()));
-        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getTitleKeyWordList()));
-        toUpdate.setCoverKeyword(whiteRuleService.filterIgnoreValue(toUpdate.getCoverKeyword()));
+//        toUpdate.setDescKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getDescKeyWordList()));
+//        toUpdate.setTagNameList(whiteRuleService.filterIgnoreValue(toUpdate.getTagNameList()));
+//        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getTitleKeyWordList()));
+//        toUpdate.setCoverKeyword(whiteRuleService.filterIgnoreValue(toUpdate.getCoverKeyword()));
 
-        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate.transform());
-        return R.ok().setMessage("添加成功").setData(toUpdate);
+        WhiteListRule whiteListRule = GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate.transform());
+        return R.ok().setMessage("添加成功").setData(whiteListRule);
     }
 
 
@@ -218,7 +218,7 @@ public class WhiteRuleController {
             @PathVariable("page") long page,
             @PathVariable("limit") long limit) {
 
-        IPage<WhiteListRule> iPage = whiteRuleService.pageSearch(new Page<>(page, limit));
+        IPage<WhiteListRuleAddUpdateDto> iPage = whiteRuleService.pageSearch(new Page<>(page, limit));
         return R.data("list", iPage.getRecords());
     }
 

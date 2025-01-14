@@ -4,9 +4,11 @@ import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
@@ -472,19 +474,26 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     }
 
     @Override
-    public IPage<WhiteListRule> pageSearch(IPage<WhiteListRule> page) {
+    public IPage<WhiteListRuleAddUpdateDto> pageSearch(IPage<WhiteListRule> page) {
 
         List<WhiteListRule> records = this.page(page).getRecords();
         List<String> idList = records.stream().map(WhiteListRule::getId).collect(Collectors.toList());
         List<Dict> dictList =  dictService.findByOuterIdIn(idList);
         Map<String, List<Dict>> outerIdDictListMap = dictList.stream().collect(Collectors.groupingBy(Dict::getOuterId));
 
-        for (WhiteListRule item : records) {
-            groupDict(item,outerIdDictListMap.getOrDefault(item.getId(),Collections.emptyList()));
-        }
 
-        return page;
+        List<WhiteListRuleAddUpdateDto> collect = records.stream().map(item -> {
+            WhiteListRuleAddUpdateDto whiteListRuleAddUpdateDto = new WhiteListRuleAddUpdateDto();
+            whiteListRuleAddUpdateDto.setId(item.getId());
+            groupDict(
+                    whiteListRuleAddUpdateDto,
+                    outerIdDictListMap.getOrDefault(item.getId(), Collections.emptyList())
+            );
+            return whiteListRuleAddUpdateDto;
+        }).toList();
 
+        return new Page<WhiteListRuleAddUpdateDto>(page.getCurrent(),page.getSize(),page.getTotal())
+                .setRecords(collect);
     }
 
     public void groupDict(WhiteListRule whiteListRule, Collection<Dict> dictCollection) {
@@ -498,6 +507,18 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 .setTitleKeyWordList(dictTypeListMap.get(DictType.TITLE))
                 .setCoverKeyword(dictTypeListMap.get(DictType.COVER))
         ;
+    }
+
+    public void groupDict(WhiteListRuleAddUpdateDto whiteListRule, Collection<Dict> dictCollection) {
+        Map<DictType, List<Dict>> dictTypeListMap =
+                dictCollection
+                .stream()
+                .collect(Collectors.groupingBy(Dict::getDictType));
+        whiteListRule
+                .setTagNameList(Optional.ofNullable(dictTypeListMap.get(DictType.TAG)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList())
+                .setCoverKeyword(Optional.ofNullable(dictTypeListMap.get(DictType.COVER)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList())
+                .setTitleKeyWordList(Optional.ofNullable(dictTypeListMap.get(DictType.TITLE)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList())
+                .setDescKeyWordList(Optional.ofNullable(dictTypeListMap.get(DictType.DESC)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList());
     }
 
     @Override

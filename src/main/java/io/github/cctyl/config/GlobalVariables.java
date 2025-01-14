@@ -746,7 +746,7 @@ public class GlobalVariables {
      * @param whitelistRule
      */
     @Transactional(rollbackFor = ServerException.class)
-    public void addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
+    public WhiteListRule addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
 
         if (StrUtil.isNotBlank(whitelistRule.getId())) {
             WHITELIST_RULE_LIST.remove(whitelistRule);
@@ -758,6 +758,8 @@ public class GlobalVariables {
 
         WHITELIST_RULE_LIST.add(whitelistRule);
 
+
+        return whitelistRule;
     }
 
 

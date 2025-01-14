@@ -10,11 +10,13 @@ import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@Accessors(chain = true)
 public class WhiteListRuleAddUpdateDto {
 
     @Schema(description = "白名单id")

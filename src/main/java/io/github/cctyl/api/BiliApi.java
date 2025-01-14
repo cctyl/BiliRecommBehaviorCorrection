@@ -351,6 +351,9 @@ public class BiliApi {
             case 86090:
                 log.info("已扫码未确认:{}",jsonObject);
                 break;
+            case 10003:
+                log.info("稿件不存在:{}",jsonObject);
+                break;
             case 86039:
                 log.info("二维码尚未确认:{}",jsonObject);
                 break;
