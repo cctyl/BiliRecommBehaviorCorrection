@@ -1,4 +1,5 @@
 package io.github.cctyl.service.impl;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
@@ -483,7 +484,9 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
 
         List<WhiteListRuleAddUpdateDto> collect = records.stream().map(item -> {
-            WhiteListRuleAddUpdateDto whiteListRuleAddUpdateDto = new WhiteListRuleAddUpdateDto();
+
+
+            WhiteListRuleAddUpdateDto whiteListRuleAddUpdateDto = BeanUtil.copyProperties(item, WhiteListRuleAddUpdateDto.class);
             whiteListRuleAddUpdateDto.setId(item.getId());
             groupDict(
                     whiteListRuleAddUpdateDto,
