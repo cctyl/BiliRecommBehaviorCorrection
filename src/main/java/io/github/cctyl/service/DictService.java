@@ -8,6 +8,7 @@ import io.github.cctyl.domain.enumeration.DictType;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -77,4 +78,6 @@ public interface DictService extends IService<Dict> {
 
     List<Dict> findEmptyDescMidDict();
     List<Dict> findEmptyDescTidDict();
+
+    List<Dict> batchRemoveAndUpdate(DictType dictType, AccessType accessType, List<Dict> dictSet);
 }

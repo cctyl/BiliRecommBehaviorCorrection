@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
+import java.util.Set;
 
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.domain.po.Dict;
@@ -131,6 +132,20 @@ public class DictController {
     public R addStopWord(List<String> stopWordList) {
         GlobalVariables.addStopWords(stopWordList);
         return R.ok().setMessage("停顿词列表长度为:" + GlobalVariables.getStopWordList().size());
+    }
+
+
+    @Operation(summary = "批量删除后新增词典")
+    @PostMapping("/batchRemoveAndUpdate")
+    public R batchRemoveAndUpdate(
+            @RequestParam DictType dictType,
+            @RequestParam AccessType accessType,
+            @RequestBody List<Dict> dictSet
+
+            ) {
+
+
+        return R.data(dictService.batchRemoveAndUpdate(dictType,accessType,dictSet));
     }
 
 }

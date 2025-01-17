@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -386,5 +387,17 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
                 .eq(Dict::getDictType, DictType.TID)
                 .isNull(Dict::getDesc)
                 .list();
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<Dict> batchRemoveAndUpdate(DictType dictType, AccessType accessType, List<Dict> dictSet) {
+
+        this.removeByAccessTypeAndDictType(accessType,dictType);
+        dictSet.forEach(dict -> dict.setAccessType(accessType).setDictType(dictType).setId(null));
+        this.saveBatch(dictSet);
+
+        return dictSet;
     }
 }
