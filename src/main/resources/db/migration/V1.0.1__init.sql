@@ -223,3 +223,74 @@ create table video_relate
     version            int        default 1,
     constraint pk_video_tag primary key (id)
 );
+
+
+CREATE TABLE video_reply
+(
+    id char(30) NOT NULL,
+    created_date DATE null,
+    last_modified_date DATE null,
+--    视频id
+    video_id char(30) not null ,
+--	评论id
+    rpid bigint not null,
+--    评论区对象 id
+    oid bigint not null,
+--	发送者 mid
+    mid varchar(200) not null,
+--	根评论 rpid
+--	若为一级评论则为 0
+--	大于一级评论则为根评论 id
+    root bigint not null,
+--	回复父评论 rpid
+--	若为一级评论则为 0
+--	若为二级评论则为根评论 rpid
+--	大于二级评论为上一级评 论 rpid
+    parent bigint not null,
+--	回复对方 rpid
+--	若为一级评论则为 0
+--	若为二级评论则为该评论 rpid
+--	大于二级评论为上一级评论 rpid
+    dialog bigint not null,
+--	评论发送时间
+    ctime int not null,
+-- 评论者等级
+    current_level int not null,
+-- 评论者vip状态
+    vip_type int not null,
+--    评论信息
+    message varchar(2000) not null,
+
+
+-- 性别
+    sex varchar(20),
+
+    CONSTRAINT pk_video_reply PRIMARY KEY (id)
+);
+CREATE TABLE prepare_video
+(
+    id                 char(30)    NOT NULL,
+    video_id           char(30)    not null,
+    handle_type        varchar(30) not null,
+    created_date       DATE        null,
+    last_modified_date DATE        null,
+    is_deleted         tinyint(1) default 0,
+    version            int        default 1,
+    CONSTRAINT pk_prepare_video PRIMARY KEY (id)
+);
+
+
+
+
+CREATE TABLE task (
+       id  char(30)    NOT NULL,
+       last_run_time DATE,  -- 上次运行时间
+       current_run_status int,  -- 当前运行状态
+       has_scheduled_task int,  -- 待会有没有定时任务要执行（注意系统级别的定时任务开关有没有打开）
+       total_run_count int,  -- 总运行次数
+       last_run_duration int,  -- 上次运行花费了多久
+       task_name TEXT,  -- 任务名
+       scheduled_run_time int,  -- 定时执行的时间，整点
+       is_scheduled_task_enabled int,  -- 是否开启定时任务
+       CONSTRAINT pk_task PRIMARY KEY (id)
+);

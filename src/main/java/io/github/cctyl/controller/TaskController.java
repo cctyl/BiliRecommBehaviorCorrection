@@ -22,11 +22,11 @@ import java.lang.reflect.Method;
  * bili任务
  */
 @RestController
-@RequestMapping("/bili-task")
+@RequestMapping("/task")
 @Tag(name = "bili任务模块")
 @Slf4j
 @RequiredArgsConstructor
-public class BiliTaskController {
+public class TaskController {
 
 
     private final BiliService biliService;
