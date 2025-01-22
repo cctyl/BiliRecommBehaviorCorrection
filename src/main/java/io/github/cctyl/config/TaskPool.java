@@ -49,7 +49,6 @@ public class TaskPool {
         r.lock();
         try {
             return METHOD_NAME_TASK_MAP.get(enclosingMethodName);
-
         } finally {
             r.unlock();
         }
@@ -78,6 +77,34 @@ public class TaskPool {
             r.unlock();
         }
 
+    }
+
+    public static boolean putIfAbsent(Runnable runnable) {
+        String enclosingMethodName = ReflectUtil.getEnclosingMethodName();
+        r.lock();
+        try {
+            Future<?> futureTask = METHOD_NAME_TASK_MAP.get(enclosingMethodName);
+            if (
+                    futureTask != null
+                            &&
+                            !futureTask.isDone()
+            ) {
+                return false;
+            }
+
+        } finally {
+            r.unlock();
+        }
+
+        w.lock();
+        try {
+            Future<Void> future = CompletableFuture.runAsync(runnable);
+            METHOD_NAME_TASK_MAP.put(enclosingMethodName, future);
+        } finally {
+            w.unlock();
+        }
+
+        return true;
     }
 
 

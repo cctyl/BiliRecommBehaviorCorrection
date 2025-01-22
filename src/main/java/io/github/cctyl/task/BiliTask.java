@@ -47,7 +47,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        biliService.searchTask();
+        biliService.doSearchTask();
     }
 
     /**
@@ -58,7 +58,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        biliService.hotRankTask();
+        biliService.doHotRankTask();
     }
 
 
@@ -70,7 +70,7 @@ public class BiliTask {
         if (!GlobalVariables.isCron()) {
             return;
         }
-        biliService.homeRecommendTask();
+        biliService.doHomeRecommendTask();
     }
 
 

@@ -14,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 
 /**
  * bili任务
@@ -29,70 +32,48 @@ public class BiliTaskController {
     private final BiliService biliService;
     private final BlackRuleService blackRuleService;
     private final VideoDetailService videoDetailService;
-
+    private static final String BILI_SERVICE_CLASS_NAME = BiliService.class.getName();
 
 
     @GetMapping("/running-task")
     @Operation(summary = "查询正在运行的任务")
     public R getRunningTask() {
-        return R.data( TaskPool.getRunningTaskName());
+        return R.data(TaskPool.getRunningTaskName());
     }
 
 
-    @PostMapping("/search-task")
-    @Operation(summary = "触发关键词任务")
-    public R startSearchTask() {
-
-        if (TaskPool.existsRunningTask()) {
-            return R.error().setMessage("searchTask 任务正在进行中");
+    @GetMapping("common-trigger-task")
+    public R commonTriggerTask(@RequestParam String taskName) {
+        Class<?> clazz;
+        if (taskName.startsWith(BILI_SERVICE_CLASS_NAME)) {
+            clazz = BiliService.class;
+            taskName = taskName.replace(BILI_SERVICE_CLASS_NAME + ".", "");
+        } else {
+            return R.error().setMessage("类名不存在");
         }
-        TaskPool.putTask(() -> {
-            try {
-                biliService.searchTask();
-            } catch (Exception e) {
-                log.error(e.getMessage(),e);
-            }
-        });
-        return R.ok();
-    }
 
-    @PostMapping("/hot-rank-task")
-    @Operation(summary = "触发热门排行榜任务")
-    public R startHotRankTask() {
-        if (TaskPool.existsRunningTask()) {
-            return R.error().setMessage("hotRankTask 任务正在进行中");
-        }
-        TaskPool.putTask(() -> {
-            try {
-                biliService.hotRankTask();
-            } catch (Exception e) {
-                log.error(e.getMessage(),e);
+        try {
+            Method taskMethod = clazz.getDeclaredMethod(taskName);
+            boolean invoke = (boolean) taskMethod.invoke(biliService);
+            if (invoke) {
+                return R.ok().setData(taskName + " 任务已启动");
+            } else {
+                return R.error().setMessage(taskName + " 任务正在进行中");
             }
-        });
-        return R.ok();
-    }
-
-    @PostMapping("/home-recommend-task")
-    @Operation(summary = "触发首页推荐任务")
-    public R startHomeRecommendTask() {
-        if (TaskPool.existsRunningTask()) {
-            return R.error().setMessage("hotRankTask 任务正在进行中");
+        } catch (NoSuchMethodException e) {
+            return R.error().setMessage("无此任务：" + taskName);
+        } catch (IllegalAccessException e) {
+            return R.error().setMessage("该任务不允许外部访问：" + taskName);
+        } catch (InvocationTargetException e) {
+            return R.error().setMessage("调用异常");
         }
-        TaskPool.putTask(() -> {
-            try {
-                biliService.homeRecommendTask();
-            } catch (Exception e) {
-                log.error(e.getMessage(),e);
-            }
-        });
-        return R.ok();
     }
 
 
     @Operation(summary = "获取等待处理的数据")
     @GetMapping("/ready2handle")
-    public R getReady2HandleVideo( PageQuery pageQuery,HandleType  handleType) {
-        return R.data(videoDetailService.findWithOwnerAndHandle(false,pageQuery,handleType));
+    public R getReady2HandleVideo(PageQuery pageQuery, HandleType handleType) {
+        return R.data(videoDetailService.findWithOwnerAndHandle(false, pageQuery, handleType));
     }
 
 
@@ -103,20 +84,21 @@ public class BiliTaskController {
             @RequestParam HandleType handleType,
             @RequestParam(defaultValue = "被用户反转了判断") String reason
     ) {
-       biliService.secondProcessSingleVideo(id,handleType,reason);
-       return R.ok();
+        biliService.secondProcessSingleVideo(id, handleType, reason);
+        return R.ok();
     }
 
 
     @Operation(summary = "按照默认状态处理所有未处理视频")
     @PutMapping("/default-process")
-    public R defaultProcessVideo( ) {
+    public R defaultProcessVideo() {
         biliService.defaultProcessVideo();
         return R.ok();
     }
+
     @Operation(summary = "主动触发三次处理")
     @PutMapping("/third-process")
-    public R thirdProcess( ) {
+    public R thirdProcess() {
         TaskPool.putTask(biliService::thirdProcess);
         return R.ok();
     }

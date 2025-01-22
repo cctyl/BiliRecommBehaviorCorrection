@@ -8,6 +8,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.*;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
@@ -633,10 +634,53 @@ public class BiliService {
     }
 
 
+    public boolean doSearchTask(){
+        return true;
+//        return TaskPool.putIfAbsent(()->{
+//            try {
+//                this.searchTask();
+//            } catch (Exception e) {
+//                log.error(e.getMessage(),e);
+//            }
+//        });
+    }
+
+
+    public boolean doHotRankTask(){
+
+
+
+        return true;
+
+//        return TaskPool.putIfAbsent(()->{
+//            try {
+//                this.hotRankTask();
+//            } catch (Exception e) {
+//                log.error(e.getMessage(),e);
+//            }
+//        });
+    }
+
+    public boolean doHomeRecommendTask(){
+        return true;
+
+//        return TaskPool.putIfAbsent(()->{
+//            try {
+//                this.homeRecommendTask();
+//            } catch (Exception e) {
+//                log.error(e.getMessage(),e);
+//            }
+//        });
+    }
+
+
+
+
+
     /**
      * 关键词搜索任务 中午12点
      */
-    public void searchTask() {
+    private void searchTask() {
         reentrantLock.lock();
         try {
 
@@ -693,7 +737,7 @@ public class BiliService {
     /**
      * 热门排行榜任务
      */
-    public void hotRankTask() {
+    private void hotRankTask() {
 
 
         reentrantLock.lock();
@@ -746,7 +790,7 @@ public class BiliService {
     /**
      * 首页推荐任务
      */
-    public void homeRecommendTask() {
+    private void homeRecommendTask() {
 
         reentrantLock.lock();
 
