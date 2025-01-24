@@ -642,8 +642,7 @@ public class BiliService {
 
 
     public boolean doHotRankTask() {
-        return true;
-//        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::hotRankTask);
+        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::hotRankTask);
     }
 
     public boolean doHomeRecommendTask() {

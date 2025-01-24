@@ -8,6 +8,7 @@ import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.mapper.TaskMapper;
 import io.github.cctyl.service.TaskService;
 import io.github.cctyl.utils.BeanUtil;
+import io.github.cctyl.utils.ThreadUtil;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
@@ -58,13 +59,13 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
      */
     public boolean doTask(String name, Runnable runnable) {
 
-        updateTaskStatus(name, TaskStatus.WAITING);
-        return TaskPool.putIfAbsent(() -> {
+        return TaskPool.putIfAbsent(name,() -> {
             try {
                 updateTaskStatus(name, TaskStatus.RUNNING);
                 Task task = getByClassAndMethodName(name);
                 long start = System.currentTimeMillis();
                 runnable.run();
+
                 long end = System.currentTimeMillis();
                 task.setLastRunTime(new Date(start))
                         .setTotalRunCount(task.getTotalRunCount() + 1)
@@ -93,6 +94,12 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
                 .list();
     }
 
+    @Override
+    public void resetTaskStatus() {
+
+        this.lambdaUpdate().set(Task::getCurrentRunStatus,TaskStatus.STOPPED).update();
+
+    }
 
     @Override
     public R commonTriggerTask(String classAndMethodName) {

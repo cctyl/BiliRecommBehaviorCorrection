@@ -79,8 +79,7 @@ public class TaskPool {
 
     }
 
-    public static boolean putIfAbsent(Runnable runnable) {
-        String enclosingMethodName = ReflectUtil.getEnclosingMethodName();
+    public static boolean putIfAbsent(String enclosingMethodName ,Runnable runnable) {
         r.lock();
         try {
             Future<?> futureTask = METHOD_NAME_TASK_MAP.get(enclosingMethodName);
@@ -106,7 +105,10 @@ public class TaskPool {
 
         return true;
     }
-
+    public static boolean putIfAbsent(Runnable runnable) {
+        String enclosingMethodName = ReflectUtil.getEnclosingMethodName();
+        return putIfAbsent(enclosingMethodName,runnable);
+    }
 
     /**
      * 放入一个新任务

@@ -2,6 +2,7 @@ package io.github.cctyl.initialization;
 
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.service.TaskService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 public class InitFromRedis implements ApplicationRunner {
 
     private final BiliApi biliApi;
+    private final TaskService taskService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -80,6 +82,8 @@ public class InitFromRedis implements ApplicationRunner {
         //9.白名单关键词列表
         GlobalVariables.initWhitelistRules();
 
+        //11.所有任务状态回归未启动
+        taskService.resetTaskStatus();
 
         //16.获取一下wbi
         CompletableFuture
