@@ -2,7 +2,6 @@ package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
-import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,7 +9,9 @@ import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.*;
+import io.github.cctyl.domain.enumeration.TaskStatus;
 import io.github.cctyl.domain.po.Dict;
+import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.exception.LogOutException;
@@ -25,8 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.HttpCookie;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.github.cctyl.domain.constants.AppConstant.*;
@@ -52,6 +53,7 @@ public class BiliService {
     private final PrepareVideoService prepareVideoService;
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private final DictService dictService;
+    private final TaskService taskService;
 
 
     /**
@@ -63,14 +65,14 @@ public class BiliService {
     public boolean checkCookie() {
         //检查cookie
         Map<String, String> refreshCookie = cookieHeaderDataService.findRefreshCookie();
-        if (refreshCookie.get(BILITICKET)==null){
+        if (refreshCookie.get(BILITICKET) == null) {
             updateBiliTicket();
         }
 
-        if (refreshCookie.get(B_NUT)==null){
+        if (refreshCookie.get(B_NUT) == null) {
             updateBNut();
         }
-        if (refreshCookie.get(BUVID3) == null || refreshCookie.get(BUVID4) == null){
+        if (refreshCookie.get(BUVID3) == null || refreshCookie.get(BUVID4) == null) {
             updateBuvid();
         }
 
@@ -86,14 +88,14 @@ public class BiliService {
     public void updateBNut() {
 
 
-        HttpResponse execute =  biliApi.noAuthCookieGet("https://www.bilibili.com/");
+        HttpResponse execute = biliApi.noAuthCookieGet("https://www.bilibili.com/");
         if (execute.getStatus() == 200) {
-           Optional.ofNullable(execute.getCookie(B_NUT))
+            Optional.ofNullable(execute.getCookie(B_NUT))
                     .map(HttpCookie::getValue)
-                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(B_NUT,s));
+                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(B_NUT, s));
             Optional.ofNullable(execute.getCookie(BUVID3))
                     .map(HttpCookie::getValue)
-                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(BUVID3,s));
+                    .ifPresent(s -> cookieHeaderDataService.updateRefreshCookie(BUVID3, s));
         }
 
     }
@@ -102,13 +104,13 @@ public class BiliService {
     /**
      * 填充dict表中,DictType 为mid 的这些用户的用户名
      */
-    public void fillDictEmptyUserName(){
+    public void fillDictEmptyUserName() {
         List<Dict> emptyDescMidDict = dictService.findEmptyDescMidDict();
         for (Dict dict : emptyDescMidDict) {
 
             String mid = dict.getValue();
             String userName = biliApi.onlyGetUserNameByMid(mid);
-            if (userName!=null){
+            if (userName != null) {
                 dict.setDesc(userName);
                 dictService.updateById(dict);
             }
@@ -123,13 +125,13 @@ public class BiliService {
     /**
      * 填充空分区描述
      */
-    public void fillDictEmptyTname(){
+    public void fillDictEmptyTname() {
         List<Dict> emptyDescMidDict = dictService.findEmptyDescTidDict();
         List<Region> allRegion = biliApi.getAllRegion(false);
         for (Dict dict : emptyDescMidDict) {
 
             String tid = dict.getValue();
-            allRegion.stream().filter(region -> region.getTid().compareTo(Integer.parseInt(tid))==0)
+            allRegion.stream().filter(region -> region.getTid().compareTo(Integer.parseInt(tid)) == 0)
                     .findFirst()
                     .ifPresent(region -> {
                         dict.setDesc(region.getName());
@@ -145,7 +147,7 @@ public class BiliService {
      */
     public void updateBuvid() {
         String url = "https://api.bilibili.com/x/frontend/finger/spi";
-        HttpResponse execute =   biliApi.noAuthCookieGet(url);
+        HttpResponse execute = biliApi.noAuthCookieGet(url);
         if (execute.getStatus() == 200) {
             String body = execute.body();
             JSONObject jsonObject = JSONObject.parseObject(body);
@@ -154,8 +156,8 @@ public class BiliService {
             String b3 = data.getString("b_3");
             String b4 = data.getString("b_4");
 
-            cookieHeaderDataService.updateRefreshCookie(BUVID3,b3);
-            cookieHeaderDataService.updateRefreshCookie(BUVID4,b4);
+            cookieHeaderDataService.updateRefreshCookie(BUVID3, b3);
+            cookieHeaderDataService.updateRefreshCookie(BUVID4, b4);
 
         }
 
@@ -175,7 +177,7 @@ public class BiliService {
     public void updateBiliTicket() {
         log.debug("updateBiliTicket");
         String biliTicket = biliApi.getBiliTicket();
-        cookieHeaderDataService.updateRefreshCookie(BILITICKET,biliTicket);
+        cookieHeaderDataService.updateRefreshCookie(BILITICKET, biliTicket);
     }
 
     /**
@@ -229,8 +231,8 @@ public class BiliService {
         if (
                 videoDetail != null && (
                         videoDetail.isHandle() ||
-                        videoDetail.getBlackReason()!=null ||
-                        videoDetail.getThumbUpReason()!=null
+                                videoDetail.getBlackReason() != null ||
+                                videoDetail.getThumbUpReason() != null
 
                 )
         ) {
@@ -266,7 +268,7 @@ public class BiliService {
             //出现任何异常，都进行跳过
             log.error("处理视频：{} 时出现异常，信息如下：", Opt.ofNullable(videoDetail)
                     .map(VideoDetail::getTitle).get());
-            log.error(e.getMessage(),e);
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -304,7 +306,7 @@ public class BiliService {
                 biliApi.dislike(videoDetail.getAid());
                 ThreadUtil.s30();
             } catch (Exception e) {
-                log.error(e.getMessage(),e);
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -512,7 +514,7 @@ public class BiliService {
                 }
         );
 
-        if (train){
+        if (train) {
             //开始训练黑名单
             blackRuleService.trainBlacklistByVideoList(videoDetailList);
         }
@@ -625,7 +627,7 @@ public class BiliService {
             JSONObject jsonObject = biliApi.getUserInfo();
             log.info("accessKey验证通过,body={}", jsonObject.toString());
         } catch (Exception e) {
-            log.error(e.getMessage(),e);
+            log.error(e.getMessage(), e);
             throw new RuntimeException("accessKey验证不通过，请检查");
         }
 
@@ -634,47 +636,19 @@ public class BiliService {
     }
 
 
-    public boolean doSearchTask(){
-        return true;
-//        return TaskPool.putIfAbsent(()->{
-//            try {
-//                this.searchTask();
-//            } catch (Exception e) {
-//                log.error(e.getMessage(),e);
-//            }
-//        });
+    public boolean doSearchTask() {
+        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::searchTask);
     }
 
 
-    public boolean doHotRankTask(){
-
-
-
+    public boolean doHotRankTask() {
         return true;
-
-//        return TaskPool.putIfAbsent(()->{
-//            try {
-//                this.hotRankTask();
-//            } catch (Exception e) {
-//                log.error(e.getMessage(),e);
-//            }
-//        });
+//        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::hotRankTask);
     }
 
-    public boolean doHomeRecommendTask(){
-        return true;
-
-//        return TaskPool.putIfAbsent(()->{
-//            try {
-//                this.homeRecommendTask();
-//            } catch (Exception e) {
-//                log.error(e.getMessage(),e);
-//            }
-//        });
+    public boolean doHomeRecommendTask() {
+        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::homeRecommendTask);
     }
-
-
-
 
 
     /**
@@ -708,7 +682,7 @@ public class BiliService {
                     try {
                         searchRaw = biliApi.search(keyword, i);
                     } catch (Exception e) {
-                        log.error(e.getMessage(),e);
+                        log.error(e.getMessage(), e);
                         continue;
                     }
                     ThreadUtil.sleep(3);
@@ -721,14 +695,14 @@ public class BiliService {
                         } catch (LogOutException e) {
                             throw e;
                         } catch (Exception e) {
-                            log.error(e.getMessage(),e);
+                            log.error(e.getMessage(), e);
                         }
                     });
                 }
                 ThreadUtil.sleep(3);
             }
             videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        }finally {
+        } finally {
             reentrantLock.unlock();
         }
 
@@ -757,7 +731,7 @@ public class BiliService {
                 try {
                     hotRankVideo = biliApi.getHotRankVideo(i, 20);
                 } catch (Exception e) {
-                    log.error(e.getMessage(),e);
+                    log.error(e.getMessage(), e);
                     continue;
                 }
                 //20条中随机抽10条
@@ -773,13 +747,13 @@ public class BiliService {
                     } catch (LogOutException e) {
                         throw e;
                     } catch (Exception e) {
-                        log.error(e.getMessage(),e);
+                        log.error(e.getMessage(), e);
                     }
                 });
                 ThreadUtil.sleep(7);
             }
             videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        }finally {
+        } finally {
             reentrantLock.unlock();
         }
 
@@ -822,13 +796,13 @@ public class BiliService {
                     } catch (LogOutException e) {
                         throw e;
                     } catch (Exception e) {
-                        log.error(e.getMessage(),e);
+                        log.error(e.getMessage(), e);
                     }
                 });
                 ThreadUtil.sleep(7);
             }
             videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        }finally {
+        } finally {
             reentrantLock.unlock();
         }
 
@@ -854,11 +828,11 @@ public class BiliService {
     public void secondProcessSingleVideo(String id, HandleType handleType, String reason) {
         VideoDetail video = videoDetailService.getById(id);
         if (video == null) {
-            throw new ServerException(400,"视频："+id+"不存在");
+            throw new ServerException(400, "视频：" + id + "不存在");
         }
 
-        if (video.isHandle()){
-            throw new ServerException(400,"视频："+id+"已处理过");
+        if (video.isHandle()) {
+            throw new ServerException(400, "视频：" + id + "已处理过");
         }
 
         //黑名单其实可能变成白名单，存在反转问题，因此这个handleType 也需要进行更新
@@ -905,7 +879,7 @@ public class BiliService {
         List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 100, HandleType.THUMB_UP);
 
         if (dislikeIdList.size() > 40) {
-            log.debug("三次处理{}条黑名单数据",dislikeIdList.size());
+            log.debug("三次处理{}条黑名单数据", dislikeIdList.size());
             List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
             //执行点踩
             for (String id : dislikeIdList) {
@@ -924,8 +898,8 @@ public class BiliService {
                         }
                         this.dislike(videoDetail.getAid());
                     } catch (NotFoundException e) {
-                        log.error(e.getMessage(),e);
-                    }catch (Exception e){
+                        log.error(e.getMessage(), e);
+                    } catch (Exception e) {
                         log.error(e.getMessage());
                     }
                     //删除数据库记录
@@ -939,13 +913,13 @@ public class BiliService {
             }
             //进行黑名单训练
             blackRuleService.trainBlacklistByVideoList(blackTrainVideoList);
-            blackTrainVideoList =null;
+            blackTrainVideoList = null;
             dislikeIdList = null;
         }
 
 
         if (thumbUpIdList.size() > 20) {
-            log.debug("三次处理{}条白名单数据",thumbUpIdList.size());
+            log.debug("三次处理{}条白名单数据", thumbUpIdList.size());
             //执行点赞
             for (String id : thumbUpIdList) {
                 VideoDetail videoDetail = videoDetailService.findWithDetailById(id);
@@ -953,7 +927,7 @@ public class BiliService {
                     try {
                         this.playAndThumbUp(videoDetail);
                     } catch (NotFoundException e) {
-                        log.error(e.getMessage(),e);
+                        log.error(e.getMessage(), e);
                     }
                     //删除数据库记录
                     prepareVideoService.removeByVideoId(id);
@@ -974,21 +948,21 @@ public class BiliService {
     public void defaultProcessVideo() {
 
         int pageNo = 1;
-        while (true){
+        while (true) {
             List<VideoDetail> records = videoDetailService.lambdaQuery()
-                    .select(VideoDetail::getId,VideoDetail::getHandleType)
+                    .select(VideoDetail::getId, VideoDetail::getHandleType)
                     .eq(VideoDetail::isHandle, false)
                     .isNotNull(VideoDetail::getHandleType)
                     .page(Page.of(pageNo, 100))
                     .getRecords();
-            if (CollUtil.isEmpty(records)){
+            if (CollUtil.isEmpty(records)) {
                 //结束循环
                 break;
             }
 
 
             for (VideoDetail record : records) {
-                this.secondProcessSingleVideo(record.getId(),record.getHandleType(),"默认处理");
+                this.secondProcessSingleVideo(record.getId(), record.getHandleType(), "默认处理");
             }
         }
 

@@ -279,6 +279,22 @@ CREATE TABLE prepare_video
     CONSTRAINT pk_prepare_video PRIMARY KEY (id)
 );
 
+drop table  if exists task;
+CREATE TABLE task
+(
+    id                 char(30) NOT NULL,
+    last_run_time      DATE, -- 上次运行时间
+    current_run_status int,  -- 当前运行状态
+    total_run_count    int,  -- 总运行次数
+    last_run_duration  int,  -- 上次运行花费了多久
+    task_name          TEXT, -- 任务名
+    scheduled_hour     int,  -- 定时执行的时间，整点
+    is_enabled         int,  -- 是否开启定时任务
+    class_method_name  text, --该任务对应的方法路径
+    description        text,-- 任务描述
+    img                text,--任务图片
+    CONSTRAINT pk_task PRIMARY KEY (id)
+);
 
 
 

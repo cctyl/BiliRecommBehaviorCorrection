@@ -6,9 +6,11 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.RecommendCard;
 import io.github.cctyl.domain.dto.SearchResult;
 
+import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.service.CookieHeaderDataService;
+import io.github.cctyl.service.TaskService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.utils.ThreadUtil;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,44 +37,25 @@ public class BiliTask {
 
     private final CookieHeaderDataService cookieHeaderDataService;
 
-    //@Autowired
-    //@Qualifier("vchat")
-    //private WebSocketClient vchatCliet;
+    private final TaskService taskService;
 
 
     /**
      * 关键词搜索任务 中午12点
      */
-    @Scheduled(cron = "* 0 12 * * *")
-    public void searchTask() {
-        if (!GlobalVariables.isCron()) {
-            return;
-        }
-        biliService.doSearchTask();
-    }
+    @Scheduled(cron = "0 0 * * * *")
+    public void doTask() {
+        int hour = LocalDateTime.now().getHour();
 
-    /**
-     * 热门排行榜任务
-     */
-    @Scheduled(cron = "* 3 18 * * *")
-    public void hotRankTask() {
-        if (!GlobalVariables.isCron()) {
-            return;
+        List<Task> enableScheduleTask = taskService.getEnableScheduleTask(hour);
+        for (Task task : enableScheduleTask) {
+             taskService.commonTriggerTask(task.getClassMethodName());
         }
-        biliService.doHotRankTask();
+
     }
 
 
-    /**
-     * 首页推荐任务
-     */
-    @Scheduled(cron = "0 0 2 * * *")
-    public void homeRecommendTask() {
-        if (!GlobalVariables.isCron()) {
-            return;
-        }
-        biliService.doHomeRecommendTask();
-    }
+
 
 
     /**

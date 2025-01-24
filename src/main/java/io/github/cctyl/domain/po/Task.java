@@ -4,13 +4,16 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.github.cctyl.domain.enumeration.TaskStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.Date;
 
 @NoArgsConstructor
 @Data
+@Accessors(chain = true)
 public class Task {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
@@ -27,11 +30,11 @@ public class Task {
     /**
      * 当前运行状态
      */
-    private Boolean currentRunStatus;
+    private TaskStatus currentRunStatus;
     /**
      * 定时执行的时间，整点
      */
-    private String scheduledHour;
+    private Integer scheduledHour;
     /**
      * 总运行次数
      */

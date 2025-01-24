@@ -12,6 +12,7 @@ import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.service.ConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.service.CookieHeaderDataService;
+import io.github.cctyl.service.TaskService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.utils.DataUtil;
 import io.github.cctyl.exception.ServerException;
@@ -41,6 +42,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     private final VideoDetailService videoDetailService;
 
     private final CookieHeaderDataService cookieHeaderDataService;
+    private final TaskService taskService;
 
 
 
@@ -242,8 +244,15 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      * @param configList 一个包含多个Config对象的列表，用于更新系统配置
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateConfigList(List<Config> configList) {
 
+        configList.stream()
+                .filter(config -> AppConstant.CRON.equals(config.getName()))
+                .findFirst()
+                .ifPresent(config -> {
+                    taskService.updateTaskEnable("true".equals(config.getValue()));
+                });
         this.saveOrUpdateBatch(configList);
 
     }

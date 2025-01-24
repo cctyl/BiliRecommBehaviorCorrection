@@ -10,6 +10,7 @@ import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.service.impl.BlackRuleService;
 
+import io.github.cctyl.utils.BeanUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -45,32 +46,17 @@ public class TaskController {
         return R.data(taskService.getTaskList());
     }
 
+    @PutMapping("")
+    @Operation(summary = "更新任务")
+    public R updateTask(@RequestBody Task task) {
+        taskService.updateById(task);
+        return R.ok();
+    }
 
     @GetMapping("/common-trigger-task")
-    public R commonTriggerTask(@RequestParam String taskName) {
-        Class<?> clazz;
-        if (taskName.startsWith(BILI_SERVICE_CLASS_NAME)) {
-            clazz = BiliService.class;
-            taskName = taskName.replace(BILI_SERVICE_CLASS_NAME + ".", "");
-        } else {
-            return R.error().setMessage("类名不存在");
-        }
+    public R commonTriggerTask(@RequestParam String classAndMethodName) throws ClassNotFoundException {
 
-        try {
-            Method taskMethod = clazz.getDeclaredMethod(taskName);
-            boolean invoke = (boolean) taskMethod.invoke(biliService);
-            if (invoke) {
-                return R.ok().setData(taskName + " 任务已启动");
-            } else {
-                return R.error().setMessage(taskName + " 任务正在进行中");
-            }
-        } catch (NoSuchMethodException e) {
-            return R.error().setMessage("无此任务：" + taskName);
-        } catch (IllegalAccessException e) {
-            return R.error().setMessage("该任务不允许外部访问：" + taskName);
-        } catch (InvocationTargetException e) {
-            return R.error().setMessage("调用异常");
-        }
+        return taskService.commonTriggerTask(classAndMethodName);
     }
 
 

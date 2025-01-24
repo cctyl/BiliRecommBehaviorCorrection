@@ -8,6 +8,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,45 @@ public class ReflectUtil extends ReflectionUtils {
 		return null;
 	}
 
+    /**
+     * 获取当前所在方法名
+     * @return
+     */
+    public static Method getCurrentMethod() {
+        // 获取当前线程的调用栈
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // 获取调用getCurrentMethod的方法的信息
+        StackTraceElement element = stackTrace[2];
+        String className = element.getClassName();
+        String methodName = element.getMethodName();
+
+        try {
+            // 获取类对象
+            Class<?> clazz = Class.forName(className);
+            // 获取方法对象
+            Method method = clazz.getDeclaredMethod(methodName);
+            return method;
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前方法的路径
+     * @return
+     */
+    public static String getCurrentMethodPath() {
+        // 获取当前线程的调用栈
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // 获取调用getCurrentMethod的方法的信息
+        StackTraceElement element = stackTrace[2];
+        String className = element.getClassName();
+        String methodName = element.getMethodName();
+
+
+        return className+"."+methodName;
+    }
     /**
      * 获取 类属性
      * @param clazz 类信息
