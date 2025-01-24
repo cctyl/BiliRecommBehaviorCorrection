@@ -8,8 +8,14 @@ import io.github.cctyl.mapper.TaskMapper;
 import io.github.cctyl.service.TaskService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements TaskService {
 
+    @Override
+    public List<Task> getTaskList() {
+        return this.list();
+    }
 }
