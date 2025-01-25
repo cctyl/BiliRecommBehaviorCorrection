@@ -42,11 +42,16 @@ public class ReplyController {
         }
 
         Long finalAvid = avid;
-        TaskPool.putTask(() -> {
+        boolean b = TaskPool.putIfAbsent(() -> {
             replyService.saveReply(finalAvid);
         });
+        if (b){
+            return R.ok().setMessage("任务已开始");
+        }else {
+            return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
+        }
 
-        return R.ok().setMessage("任务已开始");
+
 
     }
 

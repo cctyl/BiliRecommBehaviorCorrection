@@ -25,8 +25,8 @@ public class TaskPool {
     private static final ReentrantReadWriteLock rw = new ReentrantReadWriteLock();
     private static final ReentrantReadWriteLock.ReadLock r = rw.readLock();
     private static final ReentrantReadWriteLock.WriteLock w = rw.writeLock();
-
-
+    //单个线程的线程池
+    private static final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     public static List<String> getRunningTaskName() {
         var list = new ArrayList<String>();
         for (Map.Entry<String, Future<?>> entry : METHOD_NAME_TASK_MAP.entrySet()) {
@@ -97,7 +97,7 @@ public class TaskPool {
 
         w.lock();
         try {
-            Future<Void> future = CompletableFuture.runAsync(runnable);
+            Future<Void> future = CompletableFuture.runAsync(runnable,singleThreadExecutor);
             METHOD_NAME_TASK_MAP.put(enclosingMethodName, future);
         } finally {
             w.unlock();
@@ -135,7 +135,7 @@ public class TaskPool {
 
         w.lock();
         try {
-            Future<Void> future = CompletableFuture.runAsync(runnable);
+            Future<Void> future = CompletableFuture.runAsync(runnable,singleThreadExecutor);
             //如果不存在，或者存在，但是已经完成了，则允许添加新任务
             METHOD_NAME_TASK_MAP.put(enclosingMethodName, future);
         } finally {
