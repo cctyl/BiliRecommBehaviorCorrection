@@ -868,11 +868,15 @@ public class BiliService {
     }
 
 
+    public boolean doThirdProcess() {
+       return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::thirdProcess);
+    }
+
     /**
      * 第三次处理：向bilibili执行反馈（点赞/点踩）
      * 从 PrepareVideo 表中找到视频，每次处理20条
      */
-    public void thirdProcess() {
+    private void thirdProcess() {
 
         List<String> dislikeIdList = prepareVideoService.pageFindId(1, 100, HandleType.DISLIKE);
         List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 100, HandleType.THUMB_UP);
@@ -939,7 +943,9 @@ public class BiliService {
             thumbUpIdList = null;
         }
     }
-
+    public boolean doDefaultProcessVideo() {
+        return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::defaultProcessVideo);
+    }
     /**
      * 把未处理的视频，全部加入处理队列中，按照默认的状态去处理
      */

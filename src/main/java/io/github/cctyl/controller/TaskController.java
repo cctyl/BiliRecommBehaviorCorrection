@@ -37,7 +37,6 @@ public class TaskController {
     private final BlackRuleService blackRuleService;
     private final TaskService taskService;
     private final VideoDetailService videoDetailService;
-    private static final String BILI_SERVICE_CLASS_NAME = BiliService.class.getName();
 
 
     @GetMapping("/task-list")
@@ -54,9 +53,8 @@ public class TaskController {
     }
 
     @GetMapping("/common-trigger-task")
-    public R commonTriggerTask(@RequestParam String classAndMethodName) throws ClassNotFoundException {
-
-        return taskService.commonTriggerTask(classAndMethodName);
+    public R commonTriggerTask(@RequestParam String classAndMethodName,@RequestParam String[] paramArr) throws ClassNotFoundException {
+        return taskService.commonTriggerTask(classAndMethodName,paramArr);
     }
 
 
@@ -78,18 +76,4 @@ public class TaskController {
         return R.ok();
     }
 
-
-    @Operation(summary = "按照默认状态处理所有未处理视频")
-    @PutMapping("/default-process")
-    public R defaultProcessVideo() {
-        biliService.defaultProcessVideo();
-        return R.ok();
-    }
-
-    @Operation(summary = "主动触发三次处理")
-    @PutMapping("/third-process")
-    public R thirdProcess() {
-        TaskPool.putTask(biliService::thirdProcess);
-        return R.ok();
-    }
 }

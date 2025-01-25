@@ -41,7 +41,7 @@ public class BiliTask {
 
 
     /**
-     * 关键词搜索任务 中午12点
+     * 每小时查看一下哪些任务需要被执行
      */
     @Scheduled(cron = "0 0 * * * *")
     public void doTask() {
@@ -49,13 +49,11 @@ public class BiliTask {
 
         List<Task> enableScheduleTask = taskService.getEnableScheduleTask(hour);
         for (Task task : enableScheduleTask) {
-             taskService.commonTriggerTask(task.getClassMethodName());
+            //定时执行的任务，都不需要参数
+            taskService.commonTriggerTask(task.getClassMethodName(), new String[0]);
         }
 
     }
-
-
-
 
 
     /**
@@ -72,15 +70,15 @@ public class BiliTask {
     }
 
 
-    /**
-     * 每5小时清理一次待处理视频
-     */
-    @Scheduled(cron = "0 0 0/5 * * ?")
-    public void thirdProcess() {
-        log.info("开始执行第三次处理");
-        biliService.thirdProcess();
-        log.info("第三次处理执行完成");
-    }
+//    /**
+//     * 每5小时清理一次待处理视频
+//     */
+//    @Scheduled(cron = "0 0 0/5 * * ?")
+//    public void thirdProcess() {
+//        log.info("开始执行第三次处理");
+//        biliService.doThirdProcess();
+//        log.info("第三次处理执行完成");
+//    }
 
 
 }

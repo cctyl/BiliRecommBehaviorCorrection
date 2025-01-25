@@ -23,7 +23,7 @@ public interface TaskService extends IService<Task> {
 
     List<Task> getEnableScheduleTask(int hour);
 
-    R commonTriggerTask(String classAndMethodName);
+    R commonTriggerTask(String classAndMethodName,String[] paramArr);
 
     void resetTaskStatus();
 }

@@ -102,15 +102,42 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
     }
 
     @Override
-    public R commonTriggerTask(String classAndMethodName) {
-        int i = classAndMethodName.lastIndexOf('.');
-        String className = classAndMethodName.substring(0, i);
-        String methodName = classAndMethodName.substring(i + 1);
+    public R commonTriggerTask(String classAndMethodName,String[] paramArr) {
+        int index = classAndMethodName.lastIndexOf('.');
+        String className = classAndMethodName.substring(0, index);
+        String methodName = classAndMethodName.substring(index + 1);
 
         try {
             Object beanByClassPath = BeanUtil.getBeanByClassPath(className);
             Method taskMethod = beanByClassPath.getClass().getDeclaredMethod(methodName);
-            boolean invoke = (boolean) taskMethod.invoke(beanByClassPath);
+            Class<?>[] parameterTypeArr = taskMethod.getParameterTypes();
+            boolean invoke;
+            if (parameterTypeArr.length < 1) {
+                invoke = (boolean) taskMethod.invoke(beanByClassPath);
+            } else {
+                Object[] args = new Object[parameterTypeArr.length];
+                for (int i = 0; i < paramArr.length; i++) {
+
+                    if (parameterTypeArr[i].equals(String.class)) {
+                        args[i] = paramArr[i];
+                    } else if (parameterTypeArr[i].equals(Integer.class)) {
+                        args[i] = Integer.parseInt(paramArr[i]);
+                    } else if (parameterTypeArr[i].equals(Long.class)) {
+                        args[i] = Long.parseLong(paramArr[i]);
+                    } else if (parameterTypeArr[i].equals(Double.class)) {
+                        args[i] = Double.parseDouble(paramArr[i]);
+                    } else if (parameterTypeArr[i].equals(Boolean.class)) {
+                        args[i] = Boolean.parseBoolean(paramArr[i]);
+                    } else if (parameterTypeArr[i].equals(Date.class)) {
+                        args[i] = new Date(Long.parseLong(paramArr[i]));
+                    } else {
+                        throw new RuntimeException("不支持的转换 String -->" + paramArr[i].getClass().getName());
+                    }
+                }
+                invoke = (boolean) taskMethod.invoke(beanByClassPath, args);
+            }
+
+
             if (invoke) {
                 return R.ok().setData(classAndMethodName + " 任务已启动");
             } else {
