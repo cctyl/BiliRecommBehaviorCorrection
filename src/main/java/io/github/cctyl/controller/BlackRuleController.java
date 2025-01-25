@@ -84,10 +84,10 @@ public class BlackRuleController {
 
     @Operation(summary = "对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")
-    public R dislikeByTid(@Parameter(name = "tidList", description = "需要点踩的分区id") @RequestParam List<Long> tidList) {
+    public R dislikeByTid(@Parameter(name = "tidList", description = "需要点踩的分区id") @RequestBody List<Long> tidList) {
 
 
-        TaskPool.putTask(() -> {
+        TaskPool.putIfAbsent(() -> {
             int disklikeNum = 0;
             for (Long tid : tidList) {
                 try {
