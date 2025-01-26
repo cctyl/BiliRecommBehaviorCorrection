@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.github.cctyl.domain.constants.AppConstant.REASON_FORMAT;
+
 /**
  * 黑名单相关的方法
  */
@@ -38,6 +40,8 @@ public class BlackRuleService {
     @Autowired
     private ImageGenderDetectService imageGenderDetectService;
 
+    
+    
     /**
      * 根据视频列表训练黑名单
      *
@@ -134,7 +138,13 @@ public class BlackRuleService {
             boolean human = imageGenderDetectService.isHuman(picByte);
             log.debug("视频:{}-{}的封面：{}，匹配结果：{}", videoDetail.getBvid(), videoDetail.getTitle(), videoDetail.getPic(), human);
             if (human) {
-                videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"封面:" + videoDetail.getPic() + " 匹配成功");
+                videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                        String.format(REASON_FORMAT,
+                                "封面",
+                                videoDetail.getTid(),
+                                "成功"
+                        )
+                );
                 //封面匹配，认为是不喜欢这个up
                 videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
             }
@@ -163,8 +173,9 @@ public class BlackRuleService {
                 matchWord
         );
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("-")+
-                    "标题:" + videoDetail.getTitle() + " 匹配到了关键词：" + matchWord);
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    String.format(REASON_FORMAT,"标题",videoDetail.getTitle(),matchWord)
+            );
             //标题匹配到关键字，认为不感兴趣
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
 
@@ -197,7 +208,9 @@ public class BlackRuleService {
                 matchWord
         );
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"描述:" + desc + " 匹配到了关键词：" + matchWord);
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    String.format(REASON_FORMAT,"描述",desc,matchWord)
+            );
             //描述匹配，则认为是不感兴趣。因为描述的准确度不是很高
             videoDetail.setDislikeReason(DislikeReason.notInteresting());
         }
@@ -222,6 +235,14 @@ public class BlackRuleService {
 
         if (match) {
             videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"分区id:" + videoDetail.getTid() + "匹配成功");
+
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    String.format(REASON_FORMAT,
+                            "分区id",
+                            videoDetail.getTid(),
+                            "成功"
+                    )
+            );
             videoDetail.setDislikeReason(DislikeReason.tid(videoDetail.getTname()));
             videoDetail.setDislikeTid(videoDetail.getTid());
         }
@@ -249,9 +270,16 @@ public class BlackRuleService {
                 videoDetail.getOwner().getName(),
                 match);
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"up主:" + videoDetail.getOwner().getName() +
-                    " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
 
+
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    String.format(REASON_FORMAT,
+                            "up主",
+                            videoDetail.getOwner().getMid(),
+                            "成功"
+                    )
+            );
+            
             videoDetail.setDislikeMid(Long.parseLong(videoDetail.getOwner().getMid()));
             videoDetail.setDislikeReason(DislikeReason.up(videoDetail.getOwner().getName()));
         }
@@ -279,8 +307,16 @@ public class BlackRuleService {
                 match?matchTag.getTagName():""
         );
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"Tag:" + matchTag.getTagName() + " 匹配到了关键词：" +
-                    GlobalVariables.getBlackTagTree().match(matchTag.getTagName()));
+
+
+            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
+                    String.format(REASON_FORMAT,
+                            "Tag",
+                            matchTag.getTagName(),
+                            GlobalVariables.getBlackTagTree().match(matchTag.getTagName())
+                    )
+            );
+            
             videoDetail.setDislikeReason(DislikeReason.channel());
             videoDetail.setDislikeTagId(matchTag.getTagId());
         }

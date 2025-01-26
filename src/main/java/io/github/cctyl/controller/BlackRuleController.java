@@ -66,10 +66,12 @@ public class BlackRuleController {
         boolean tidMatch = blackRuleService.isTidMatch(videoDetail);
         //1.6 封面是否触发
         boolean coverMatch = blackRuleService.isCoverMatch(videoDetail);
-
+        //总结
+        boolean total = titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch;
 
         HashMap<String, Object> map = new HashMap<>();
         map.put("videoDetail", videoDetail);
+        map.put("total", total);
         map.put("titleMatch", titleMatch);
         map.put("descMatch", descMatch);
         map.put("tagMatch", tagMatch);

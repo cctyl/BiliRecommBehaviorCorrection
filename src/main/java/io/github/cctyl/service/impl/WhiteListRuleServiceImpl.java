@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.github.cctyl.domain.constants.AppConstant.REASON_FORMAT;
+
 
 /**
  * <p>
@@ -131,8 +133,18 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 videoDetail.getOwner().getName(),
                 match);
         if (match) {
-            videoDetail.setThumbUpReason(    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+"\nup主:" + videoDetail.getOwner().getName() +
-                    " id:" + videoDetail.getOwner().getMid() + " 匹配成功");
+            videoDetail.setThumbUpReason(
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
+                    String.format(REASON_FORMAT,
+                            "up主",
+                            videoDetail.getOwner().getName(),
+                            "成功"
+                    )
+
+            );
+
+
+
         }
 
         return match;
@@ -160,7 +172,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         if (match) {
             videoDetail.setThumbUpReason(    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
-                    "\n分区id:" + videoDetail.getTid() + "匹配成功");
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
+                            String.format(REASON_FORMAT,
+                                    "分区id",
+                                    videoDetail.getTid(),
+                                    "成功"
+                            )
+            );
         }
         return match;
     }
@@ -301,16 +319,21 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         if (match) {
             matchDetail =
                     " \t 关键词：" + matchWordArr[0] + "\t 标题：" + matchWordArr[1] + "\n" +
-                            " \t 关键词：" + matchWordArr[2] + "\t desc：" + matchWordArr[3] + "\n" +
-                            " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
-                            " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n";
+                    " \t 关键词：" + matchWordArr[2] + "\t desc：" + matchWordArr[3] + "\n" +
+                    " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
+                    " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n"
+            ;
 
             videoDetail.setThumbUpReason(
 
                     Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
-                    String.format("\n匹配到了白名单：%s，具体如下：\n%s",
-                            whitelistRule.getId(),
-                            matchDetail)
+
+                            String.format(REASON_FORMAT,
+                                    "规则名",
+                                    whitelistRule.getInfo(),
+                                    "成功"
+                            )
+
             );
         }
 

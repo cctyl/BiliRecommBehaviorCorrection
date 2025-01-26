@@ -74,17 +74,19 @@ public class WhiteRuleController {
         //白名单规则匹配
         boolean whitelistRuleMatch = whiteRuleService.isWhitelistRuleMatch(videoDetail);
         //up主id匹配
-        boolean userIdMatch = whiteRuleService.isUserIdMatch(videoDetail);
+        boolean midMatch = whiteRuleService.isUserIdMatch(videoDetail);
 
         //分区id匹配
         boolean tidMatch = whiteRuleService.isTidMatch(videoDetail);
 
+        boolean total = whitelistRuleMatch || midMatch || tidMatch;
 
         HashMap<String, Object> map = new HashMap<>();
         map.put("videoDetail", videoDetail);
         map.put("whitelistRuleMatch", whitelistRuleMatch);
-        map.put("userIdMatch", userIdMatch);
+        map.put("midMatch", midMatch);
         map.put("tidMatch", tidMatch);
+        map.put("total", total);
         map.put("thumbUpReason", videoDetail.getThumbUpReason());
 
         return R.data(map);

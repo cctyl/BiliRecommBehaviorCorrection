@@ -14,7 +14,7 @@ public class AppConstant {
      * accessKey
      */
     public static final String BILI_ACCESS_KEY = PREFIX + "access_key";
-
+    public static final String REASON_FORMAT= "%s=%s,匹配:%s,  <br/> ";
     /**
      * wbi
      */
