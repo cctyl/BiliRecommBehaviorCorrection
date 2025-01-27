@@ -15,6 +15,7 @@ import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.WhiteListRuleService;
+import io.github.cctyl.utils.DataUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -101,7 +102,7 @@ public class WhiteRuleController {
      * 输入指定的视频训练已存在的白名单规则或根据训练结果创建白名单规则
      *
      * @param id             白名单条件id，为空表示创建新的规则
-     * @param trainedAvidList 用于训练的视频avid列表，与mid二选一
+     * @param trainedBvidList 用于训练的视频bvid列表，与mid二选一
      * @param mid            up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一
      * @return 返回结果
      */
@@ -109,18 +110,27 @@ public class WhiteRuleController {
     @PostMapping("/train")
     public R addTrain(
             @Parameter(name = "id", description = "白名单条件id,为空表示创建新的规则") @RequestParam(required = false) String id,
-            @Parameter(name = "trainedAvidList", description = "用于训练的视频avid列表，与mid二选一") @RequestParam(required = false) List<Long> trainedAvidList,
+            @Parameter(name = "trainedBvidList", description = "用于训练的视频bvid列表，与mid二选一") @RequestBody(required = false) List<String> trainedBvidList,
             @Parameter(name = "mid", description = "up主id，表示从该up主的投稿视频抽取进行训练，与trainedAvidList 二选一") @RequestParam(required = false) String mid
     ) {
 
-        if (CollUtil.isEmpty(trainedAvidList) && StrUtil.isBlank(mid)) {
+        if (CollUtil.isEmpty(trainedBvidList) && StrUtil.isBlank(mid)) {
             return R.error().setMessage("视频来源参数缺失");
         }
+        List<Long> trainedAvidList = List.of();
+        if (CollUtil.isNotEmpty(trainedBvidList)) {
+            trainedAvidList = trainedBvidList.stream().map(DataUtil::bvidToAid).toList();
+        }
 
-        TaskPool.putTask(() -> {
-            whiteRuleService.addTrain(id, trainedAvidList, mid);
+        List<Long> finalTrainedAvidList = trainedAvidList;
+        boolean b = TaskPool.putIfAbsent(() -> {
+            whiteRuleService.addTrain(id, finalTrainedAvidList, mid);
         });
-        return R.ok().setMessage("训练任务已开始");
+        if (b){
+            return R.ok().setMessage("训练任务已开始");
+        }else {
+            return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
+        }
     }
 
 
@@ -232,11 +242,16 @@ public class WhiteRuleController {
             @RequestParam(value="page",defaultValue = "1") long page,
             @RequestParam(value = "keyword",defaultValue = "") String keyword
     ) {
-        TaskPool.putTask(() -> {
-            whiteRuleService.thumbUpUserAllVideo(mid,page,keyword);
+        boolean b = TaskPool.putIfAbsent(() -> {
+            whiteRuleService.thumbUpUserAllVideo(mid, page, keyword);
         });
+        if (b){
+            return R.ok().setMessage("点赞任务已开始");
+        }else {
+            return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
+        }
 
-        return R.ok().setMessage("点赞任务已开始");
+
     }
 
 }

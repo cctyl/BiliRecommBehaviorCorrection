@@ -107,10 +107,10 @@ public class BlackRuleController {
 
     @Operation(summary = "对指定用户的视频进行点踩")
     @PostMapping("/disklike-by-uid")
-    public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestParam List<String> userIdList,
+    public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestBody List<String> userIdList,
                              @Parameter(name = "train", description = "是否将这些用户的投稿视频加入黑名单训练") @RequestParam boolean train
                              ) {
-        TaskPool.putTask(() -> {
+        boolean b = TaskPool.putIfAbsent(() -> {
             int disklikeNum = 0;
             for (String userId : userIdList) {
                 try {
@@ -123,7 +123,12 @@ public class BlackRuleController {
             }
             log.info("本次共对{}个用户:{}进行点踩，共点踩{}个视频", userIdList.size(), userIdList, disklikeNum);
         });
-        return R.ok().setMessage("对指定用户点踩任务已开始");
+
+        if (b){
+            return R.ok().setMessage("对指定用户点踩任务已开始");
+        }else {
+            return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
+        }
     }
 
 

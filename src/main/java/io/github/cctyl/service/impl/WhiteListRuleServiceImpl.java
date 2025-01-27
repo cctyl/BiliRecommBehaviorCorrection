@@ -22,9 +22,7 @@ import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.WhiteListRuleService;
-import io.github.cctyl.utils.DataUtil;
-import io.github.cctyl.utils.SegmenterUtil;
-import io.github.cctyl.utils.ThreadUtil;
+import io.github.cctyl.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -412,6 +410,12 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
 
+
+        if (topTagName.isEmpty() &&topTitleKeyWord.isEmpty() && topDescKeyWord.isEmpty() ){
+            log.info("本次训练没有得到任何结果，将删除该规则");
+            return null;
+        }
+
         WhiteListRule finalWhitelistRule = whitelistRule;
         whitelistRule.getTagNameList().addAll(
                 Dict.keyword2Dict(topTagName, DictType.TAG, AccessType.WHITE, finalWhitelistRule.getId())
@@ -431,9 +435,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         log.info("开始训练");
         List<WhiteListRule> whitelistRuleList = GlobalVariables.getWhitelistRuleList() ;
         WhiteListRule whitelistRule;
-        if (id == null) {
+        if ( StrUtil.isBlank(id)) {
             //创建新规则
-            whitelistRule = new WhiteListRule();
+            whitelistRule = new WhiteListRule()
+                    .setInfo(String.valueOf(IdGenerator.nextId()))
+            ;
         } else {
             //从redis中找
             whitelistRule =
@@ -462,8 +468,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         }
         log.info("训练完成，训练结果为:" + whitelistRule);
 
-        //更新白名单
-        GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
+        if (whitelistRule!=null){
+            //更新白名单
+            GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
+        }
+
 
     }
 
