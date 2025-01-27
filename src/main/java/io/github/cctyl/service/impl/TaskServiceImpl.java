@@ -58,14 +58,16 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
      * @return
      */
     public boolean doTask(String name, Runnable runnable) {
-
+        addIfNotExist(name);
+        updateTaskStatus(name, TaskStatus.WAITING);
         return TaskPool.putIfAbsent(name,() -> {
             try {
                 updateTaskStatus(name, TaskStatus.RUNNING);
                 Task task = getByClassAndMethodName(name);
                 long start = System.currentTimeMillis();
-                runnable.run();
-
+                //TODO
+                //runnable.run();
+                ThreadUtil.s20();
                 long end = System.currentTimeMillis();
                 task.setLastRunTime(new Date(start))
                         .setTotalRunCount(task.getTotalRunCount() + 1)
@@ -76,6 +78,30 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
                 log.error(e.getMessage(), e);
             }
         });
+    }
+
+    /**
+     * 不存在则新增该任务
+     * @param name
+     */
+    private synchronized void addIfNotExist(String name) {
+
+
+        boolean exists = this.lambdaQuery()
+                .eq(Task::getClassMethodName, name)
+                .exists();
+        if (!exists){
+            this.save(new Task()
+                    .setClassMethodName(name)
+                    .setIsEnabled(false)
+                    .setCurrentRunStatus(TaskStatus.STOPPED)
+                    .setTotalRunCount(0)
+                    .setScheduledHour(-1)
+            )
+
+            ;
+        }
+
     }
 
     @Override

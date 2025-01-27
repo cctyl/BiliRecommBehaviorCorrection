@@ -14,8 +14,10 @@ import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.service.DictService;
+import io.github.cctyl.service.TaskService;
 import io.github.cctyl.service.WhiteListRuleService;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.ReflectUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,6 +54,8 @@ public class WhiteRuleController {
 
     @Autowired
     private DictService dictService;
+    @Autowired
+    private TaskService taskService;
 
 
     @Operation(summary = "指定视频是否符合白名单")
@@ -123,7 +127,7 @@ public class WhiteRuleController {
         }
 
         List<Long> finalTrainedAvidList = trainedAvidList;
-        boolean b = TaskPool.putIfAbsent(() -> {
+        boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             whiteRuleService.addTrain(id, finalTrainedAvidList, mid);
         });
         if (b){
@@ -242,7 +246,7 @@ public class WhiteRuleController {
             @RequestParam(value="page",defaultValue = "1") long page,
             @RequestParam(value = "keyword",defaultValue = "") String keyword
     ) {
-        boolean b = TaskPool.putIfAbsent(() -> {
+        boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             whiteRuleService.thumbUpUserAllVideo(mid, page, keyword);
         });
         if (b){

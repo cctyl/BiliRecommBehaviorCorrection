@@ -9,7 +9,9 @@ import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.po.VideoReply;
 import io.github.cctyl.service.DictService;
 import io.github.cctyl.service.ReplyService;
+import io.github.cctyl.service.TaskService;
 import io.github.cctyl.utils.DataUtil;
+import io.github.cctyl.utils.ReflectUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +29,7 @@ import java.util.List;
 public class ReplyController {
 
     private final ReplyService replyService;
+    private final TaskService taskService;
 
     @Operation(summary = "保存指定视频的评论")
     @PostMapping("/save-reply")
@@ -42,7 +45,7 @@ public class ReplyController {
         }
 
         Long finalAvid = avid;
-        boolean b = TaskPool.putIfAbsent(() -> {
+        boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             replyService.saveReply(finalAvid);
         });
         if (b){

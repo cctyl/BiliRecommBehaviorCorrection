@@ -9,9 +9,11 @@ import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.dto.R;
+import io.github.cctyl.service.TaskService;
 import io.github.cctyl.service.impl.BiliService;
 import io.github.cctyl.service.impl.BlackRuleService;
 import io.github.cctyl.service.DictService;
+import io.github.cctyl.utils.ReflectUtil;
 import io.github.cctyl.utils.ThreadUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,6 +43,10 @@ public class BlackRuleController {
 
     @Autowired
     private BiliApi biliApi;
+
+
+    @Autowired
+    private TaskService taskService;
 
     @Operation(summary = "指定视频是否符合黑名单")
     @GetMapping("/check-video")
@@ -89,7 +95,7 @@ public class BlackRuleController {
     public R dislikeByTid(@Parameter(name = "tidList", description = "需要点踩的分区id") @RequestBody List<Long> tidList) {
 
 
-        TaskPool.putIfAbsent(() -> {
+        boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             int disklikeNum = 0;
             for (Long tid : tidList) {
                 try {
@@ -101,8 +107,14 @@ public class BlackRuleController {
                 }
             }
             log.info("本次共对{}个分区:{}进行点踩，共点踩{}个视频", tidList.size(), tidList, disklikeNum);
+
         });
-        return R.ok().setMessage("对指定分区点踩任务已开始");
+        if (b){
+            return R.ok().setMessage("对指定分区点踩任务已开始");
+        }else {
+            return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
+        }
+
     }
 
     @Operation(summary = "对指定用户的视频进行点踩")
@@ -110,7 +122,7 @@ public class BlackRuleController {
     public R dislikeByUserId(@Parameter(name = "userIdList", description = "二选一，需要点踩的用户id") @RequestBody List<String> userIdList,
                              @Parameter(name = "train", description = "是否将这些用户的投稿视频加入黑名单训练") @RequestParam boolean train
                              ) {
-        boolean b = TaskPool.putIfAbsent(() -> {
+        boolean b =taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             int disklikeNum = 0;
             for (String userId : userIdList) {
                 try {
