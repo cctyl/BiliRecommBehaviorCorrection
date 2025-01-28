@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.enumeration.TaskStatus;
 import io.github.cctyl.domain.po.Task;
+import io.github.cctyl.domain.vo.OverviewVo;
 
 import java.util.List;
 
@@ -26,4 +27,6 @@ public interface TaskService extends IService<Task> {
     R commonTriggerTask(String classAndMethodName,String[] paramArr);
 
     void resetTaskStatus();
+
+    void fillOverviewInfo(OverviewVo overviewVo);
 }

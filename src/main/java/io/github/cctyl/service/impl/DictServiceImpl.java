@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.mapper.DictMapper;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
@@ -13,9 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -156,8 +155,6 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
         this.addDict(param, AccessType.BLACK_CACHE, dictType);
     }
-
-
 
 
     @Override
@@ -357,7 +354,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     @Override
     public List<Dict> findBlackIgnoreTag() {
-      return   this.lambdaQuery().eq(Dict::getAccessType, AccessType.BLACK)
+        return this.lambdaQuery().eq(Dict::getAccessType, AccessType.BLACK)
                 .eq(Dict::getDictType, DictType.IGNORE_TAG)
                 .list();
     }
@@ -365,7 +362,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     @Override
     public List<Dict> getListByDictTypeAndAccessType(DictType dictType, AccessType accessType) {
-       return this.lambdaQuery()
+        return this.lambdaQuery()
                 .eq(Dict::getDictType, dictType)
                 .eq(Dict::getAccessType, accessType)
                 .list();
@@ -394,10 +391,43 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     @Transactional(rollbackFor = Exception.class)
     public List<Dict> batchRemoveAndUpdate(DictType dictType, AccessType accessType, List<Dict> dictSet) {
 
-        this.removeByAccessTypeAndDictType(accessType,dictType);
+        this.removeByAccessTypeAndDictType(accessType, dictType);
         dictSet.forEach(dict -> dict.setAccessType(accessType).setDictType(dictType).setId(null));
         this.saveBatch(dictSet);
 
         return dictSet;
     }
+
+
+    @Override
+    public void fillOverviewInfo(OverviewVo overviewVo) {
+
+        Long blackCount = this.lambdaQuery()
+                .eq(Dict::getAccessType, AccessType.BLACK)
+                .count();
+
+        Long whiteCount = this.lambdaQuery()
+                .eq(Dict::getAccessType, AccessType.WHITE)
+                .count();
+
+        Long searchCount = this.lambdaQuery()
+                .eq(Dict::getAccessType, AccessType.OTHER)
+                .eq(Dict::getDictType, DictType.SEARCH_KEYWORD)
+                .count();
+        Long blackCacheCount = this.lambdaQuery()
+                .eq(Dict::getAccessType, AccessType.BLACK_CACHE)
+                .count();
+
+        //统计黑名单dict数量
+        overviewVo.setBlackRuleCount(blackCount)
+                .setWhiteRuleCount(whiteCount)
+                .setSearchKeywordCount(searchCount)
+                .setBlackCacheCount(blackCacheCount)
+        ;
+
+
+
+    }
+
+
 }

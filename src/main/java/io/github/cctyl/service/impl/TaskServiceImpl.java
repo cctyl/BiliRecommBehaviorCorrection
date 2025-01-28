@@ -5,6 +5,7 @@ import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.enumeration.TaskStatus;
 import io.github.cctyl.domain.po.Task;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.mapper.TaskMapper;
 import io.github.cctyl.service.TaskService;
 import io.github.cctyl.utils.BeanUtil;
@@ -60,14 +61,13 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
     public boolean doTask(String name, Runnable runnable) {
         addIfNotExist(name);
         updateTaskStatus(name, TaskStatus.WAITING);
+        updateLastRunTime(name,  System.currentTimeMillis());
         return TaskPool.putIfAbsent(name,() -> {
             try {
                 updateTaskStatus(name, TaskStatus.RUNNING);
                 Task task = getByClassAndMethodName(name);
                 long start = System.currentTimeMillis();
-                //TODO
-                //runnable.run();
-                ThreadUtil.s20();
+                runnable.run();
                 long end = System.currentTimeMillis();
                 task.setLastRunTime(new Date(start))
                         .setTotalRunCount(task.getTotalRunCount() + 1)
@@ -125,6 +125,20 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
 
         this.lambdaUpdate().set(Task::getCurrentRunStatus,TaskStatus.STOPPED).update();
 
+    }
+
+
+    @Override
+    public void fillOverviewInfo(OverviewVo overviewVo) {
+
+        //查找正在运行的任务数量
+        List<Task> runningTaskList = this.lambdaQuery()
+                .in(Task::getCurrentRunStatus, TaskStatus.RUNNING,TaskStatus.WAITING)
+                .orderByAsc(Task::getLastRunTime)
+                .list();
+
+        overviewVo.setRunningTaskCount(runningTaskList.size())
+                .setTaskList(runningTaskList);
     }
 
     @Override

@@ -1,13 +1,16 @@
 package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.query.PageQuery;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.domain.vo.VideoVo;
 import io.github.cctyl.mapper.VideoDetailMapper;
 import io.github.cctyl.domain.po.Owner;
@@ -247,4 +250,51 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
     }
 
 
+    @Override
+    public void fillOverviewInfo(OverviewVo overviewVo) {
+
+        //统计handle字段是false的数量
+        Long count = this.lambdaQuery()
+                .eq(VideoDetail::isHandle, false)
+                .isNotNull(VideoDetail::getHandleType)
+                .count();
+
+        overviewVo.setSecondHandleCount(count);
+
+        int year = overviewVo.getYear();
+        //给一个year参数，获取这一年的最开始和最后时间，要Date对象
+        Date startDate = DateUtil.parse(year + "-01-01 00:00:00");
+        Date endDate = DateUtil.parse(year + "-12-31 23:59:59");
+
+
+        //历史上的数据
+        List<Map<String, Object>> whiteMapList = baseMapper.countByHandTypeAndGroupByLastModifiedDateAndYearBetween(
+                HandleType.THUMB_UP,
+                startDate,
+                endDate
+        );
+        overviewVo.setWhiteHistory(transfer(whiteMapList));
+
+        List<Map<String, Object>> blackMapList = baseMapper.countByHandTypeAndGroupByLastModifiedDateAndYearBetween(HandleType.DISLIKE,
+                startDate,
+                endDate
+        );
+        overviewVo.setBlackHistory(transfer(blackMapList));
+
+        List<Map<String, Object>> otherMapList = baseMapper.countByHandTypeAndGroupByLastModifiedDateAndYearBetween(HandleType.OTHER,
+                startDate,
+                endDate
+        );
+        overviewVo.setOtherHistory(transfer(otherMapList));
+
+    }
+
+    private static List<Map<String, Integer>> transfer(List<Map<String, Object>> blackMapList) {
+        return blackMapList.stream().map(item -> {
+            Map<String, Integer> map = new HashMap<>();
+            map.put((String) item.get("last_modified_date"),Integer.parseInt(item.get("count").toString()));
+            return map;
+        }).collect(Collectors.toList());
+
+    }
 }

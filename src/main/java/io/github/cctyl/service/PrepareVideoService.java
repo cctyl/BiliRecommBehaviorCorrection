@@ -6,6 +6,7 @@ import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.Config;
 import io.github.cctyl.domain.po.PrepareVideo;
 import io.github.cctyl.domain.vo.ConfigVo;
+import io.github.cctyl.domain.vo.OverviewVo;
 
 import java.util.List;
 import java.util.Map;
@@ -26,4 +27,6 @@ public interface PrepareVideoService extends IService<PrepareVideo> {
     List<String> pageFindId(int page, int size, HandleType handleType);
 
     void removeByVideoId(String id);
+
+    void fillOverviewInfo(OverviewVo overviewVo);
 }

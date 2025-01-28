@@ -7,6 +7,7 @@ import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.po.*;
 import io.github.cctyl.domain.vo.ConfigVo;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.mapper.ConfigMapper;
 import io.github.cctyl.domain.constants.AppConstant;
 import io.github.cctyl.service.ConfigService;
@@ -20,8 +21,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
+
+import static io.github.cctyl.domain.constants.AppConstant.FIRST_START_TIME;
 
 
 /**
@@ -254,6 +261,21 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
                     taskService.updateTaskEnable("true".equals(config.getValue()));
                 });
         this.saveOrUpdateBatch(configList);
+
+    }
+
+    @Override
+    public void fillOverviewInfo(OverviewVo overviewVo) {
+
+        Config configByName = this.findConfigByName(FIRST_START_TIME);
+        if (configByName!=null){
+            //configByName.getValue() 是一个毫秒值，与当前天数做比较，计算出间隔多少天
+            long millis = Long.parseLong(configByName.getValue());
+            LocalDate startDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(millis), ZoneId.systemDefault());
+            LocalDate currentDate = LocalDate.now(ZoneId.systemDefault());
+            long daysBetween = ChronoUnit.DAYS.between(startDate, currentDate);
+            overviewVo.setRunDays(daysBetween);
+        }
 
     }
 }

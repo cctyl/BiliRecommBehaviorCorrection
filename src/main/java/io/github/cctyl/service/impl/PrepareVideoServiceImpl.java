@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.Owner;
 import io.github.cctyl.domain.po.PrepareVideo;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.mapper.OwnerMapper;
 import io.github.cctyl.mapper.PrepareVideoMapper;
 import io.github.cctyl.service.OwnerService;
@@ -67,5 +68,10 @@ public class PrepareVideoServiceImpl extends ServiceImpl<PrepareVideoMapper, Pre
                 .eq(PrepareVideo::getVideoId,id)
         );
 
+    }
+
+    @Override
+    public void fillOverviewInfo(OverviewVo overviewVo) {
+        overviewVo.setThirdHandleCount(this.count());
     }
 }

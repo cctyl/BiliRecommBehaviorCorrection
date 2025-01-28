@@ -4,6 +4,7 @@ import io.github.cctyl.domain.dto.ConfigDTO;
 import io.github.cctyl.domain.po.Config;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.vo.ConfigVo;
+import io.github.cctyl.domain.vo.OverviewVo;
 
 import java.util.List;
 import java.util.Map;
@@ -44,4 +45,6 @@ public interface ConfigService extends IService<Config> {
     List<Config> getConfigList();
 
     void updateConfigList(List<Config> configList);
+
+    void fillOverviewInfo(OverviewVo overviewVo);
 }

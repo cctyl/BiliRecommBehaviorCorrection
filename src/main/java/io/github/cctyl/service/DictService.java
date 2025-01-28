@@ -5,6 +5,7 @@ import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
+import io.github.cctyl.domain.vo.OverviewVo;
 
 import java.util.Collection;
 import java.util.List;
@@ -80,4 +81,6 @@ public interface DictService extends IService<Dict> {
     List<Dict> findEmptyDescTidDict();
 
     List<Dict> batchRemoveAndUpdate(DictType dictType, AccessType accessType, List<Dict> dictSet);
+
+    void fillOverviewInfo(OverviewVo overviewVo);
 }

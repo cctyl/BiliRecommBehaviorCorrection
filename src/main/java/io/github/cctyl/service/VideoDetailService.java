@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.query.PageQuery;
+import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.domain.vo.VideoVo;
 
 import java.util.List;
@@ -54,4 +55,5 @@ public interface VideoDetailService extends IService<VideoDetail> {
      */
     void updateProcessInfo(VideoDetail video);
 
+    void fillOverviewInfo(OverviewVo overviewVo);
 }
