@@ -2,6 +2,7 @@ package io.github.cctyl.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.dfa.WordTree;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,6 +15,7 @@ import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
 import io.github.cctyl.exception.ServerException;
@@ -54,6 +56,7 @@ public class BiliService {
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private final DictService dictService;
     private final TaskService taskService;
+    private final ConfigService configService;
 
 
     /**
@@ -221,9 +224,13 @@ public class BiliService {
      * @param dislikeVideoList
      * @param avid
      */
-    public void firstProcess(List<VideoDetail> thumbUpVideoList,
-                             List<VideoDetail> dislikeVideoList,
-                             Long avid
+    public void firstProcess(List<VideoDetail> thumbUpVideoList, List<VideoDetail> dislikeVideoList, Long avid,
+                             List<WhiteListRule> whitelistRuleList,
+                             List<String> whiteUserIdList,
+                             List<String> whiteTidList,
+                             WordTree blackTagTree,
+                             WordTree blackKeywordTree,
+                             List<String> blackTidSet
     ) {
 
         log.debug("处理视频avid={}", avid);
@@ -247,12 +254,12 @@ public class BiliService {
             }
 
             //1. 如果是黑名单内的，直接执行点踩操作
-            if (blackRuleService.blackMatch(videoDetail)) {
+            if (blackRuleService.blackMatch(videoDetail,blackTagTree,blackKeywordTree,blackTidSet)) {
                 //点踩
                 addReadyToHandleVideo(videoDetail, HandleType.DISLIKE);
                 //加日志
                 dislikeVideoList.add(videoDetail);
-            } else if (whiteRuleService.whiteMatch(videoDetail)) {
+            } else if (whiteRuleService.whiteMatch(videoDetail, whitelistRuleList, whiteUserIdList, whiteTidList)) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
                 addReadyToHandleVideo(videoDetail, HandleType.THUMB_UP);
@@ -379,8 +386,8 @@ public class BiliService {
         int playTime = DataUtil.getRandom(0, videoDuration);
 
         //playTime 不能太长,最大值50
-        if (playTime >= GlobalVariables.getMinPlaySecond()) {
-            playTime = GlobalVariables.getMinPlaySecond() + DataUtil.getRandom(1, 10);
+        if (playTime >= configService.getMinPlaySecond()) {
+            playTime = configService.getMinPlaySecond() + DataUtil.getRandom(1, 10);
         }
         //不能太短,最小值 15
         if (playTime <= 15) {
@@ -480,7 +487,7 @@ public class BiliService {
      */
     public int dislikeByUserId(String userId, boolean train) {
         //该用户会被加入黑名单
-        GlobalVariables.INSTANCE.addBlackUserId(userId);
+       dictService.addBlackUserId(userId);
 
         //视频详情
         List<VideoDetail> videoDetailList = new ArrayList<>();
@@ -664,6 +671,13 @@ public class BiliService {
 
             //本次点踩视频列表
             var dislikeVideoList = new LinkedList<VideoDetail>();
+            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
+            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
+            List<String> whiteTidSet = dictService.getWhiteTidSet();
+
+            WordTree blackTagTree = dictService.getBlackTagTree();
+            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
+            List<String> blackTidSet = dictService.getBlackTidSet();
 
             //1.主动搜索，针对搜索视频进行处理
         /*
@@ -673,7 +687,7 @@ public class BiliService {
             一个关键词，从两页抽20条
          */
             log.info("==============开始处理关键词==================");
-            for (String keyword : GlobalVariables.getSearchKeywordSet()) {
+            for (String keyword : dictService.getSearchKeywordSet()) {
                 //不能一次获取完再执行操作，要最大限度模拟用户的行为
                 for (int i = 0; i < 2; i++) {
                     //执行搜索
@@ -689,7 +703,9 @@ public class BiliService {
                     DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
                         //处理挑选结果
                         try {
-                            this.firstProcess(thumbUpVideoList, dislikeVideoList, searchResult.getAid());
+                            this.firstProcess(thumbUpVideoList, dislikeVideoList, searchResult.getAid(),
+                                    whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
+                            );
                             ThreadUtil.sleep(5);
                         } catch (LogOutException e) {
                             throw e;
@@ -722,6 +738,13 @@ public class BiliService {
 
             //本次点踩视频列表
             var dislikeVideoList = new LinkedList<VideoDetail>();
+            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
+            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
+            List<String> whiteTidSet = dictService.getWhiteTidSet();
+
+            WordTree blackTagTree = dictService.getBlackTagTree();
+            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
+            List<String> blackTidSet = dictService.getBlackTidSet();
 
             //2. 对排行榜数据进行处理，处理100条，即5页数据
             log.info("==============开始处理热门排行榜==================");
@@ -741,6 +764,7 @@ public class BiliService {
                                 thumbUpVideoList,
                                 dislikeVideoList,
                                 videoDetail.getAid()
+                                ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
                         );
                         ThreadUtil.sleep(5);
                     } catch (LogOutException e) {
@@ -775,6 +799,13 @@ public class BiliService {
 
             //本次点踩视频列表
             var dislikeVideoList = new LinkedList<VideoDetail>();
+            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
+            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
+            List<String> whiteTidSet = dictService.getWhiteTidSet();
+
+            WordTree blackTagTree = dictService.getBlackTagTree();
+            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
+            List<String> blackTidSet = dictService.getBlackTidSet();
 
             //3. 对推荐视频进行处理
             log.info("==============开始处理首页推荐==================");
@@ -789,6 +820,7 @@ public class BiliService {
                                     thumbUpVideoList,
                                     dislikeVideoList,
                                     recommendCard.getArgs().getAid()
+                                    ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
                             );
                             ThreadUtil.sleep(5);
                         }

@@ -130,8 +130,8 @@ public class DictController {
     @Operation(summary = "添加停顿词")
     @PostMapping("/add-stopword")
     public R addStopWord(List<String> stopWordList) {
-        GlobalVariables.addStopWords(stopWordList);
-        return R.ok().setMessage("停顿词列表长度为:" + GlobalVariables.getStopWordList().size());
+        dictService.addStopWords(stopWordList);
+        return R.ok().setMessage("停顿词列表长度为:" + dictService.getStopWordList().size());
     }
 
 

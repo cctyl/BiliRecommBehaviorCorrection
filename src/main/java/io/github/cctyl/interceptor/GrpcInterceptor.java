@@ -7,6 +7,7 @@ import bilibili.metadata.locale.LocaleRpcProto;
 import bilibili.metadata.network.NetworkRpcProto;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
+import io.github.cctyl.service.ConfigService;
 import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.interceptor.GrpcGlobalClientInterceptor;
@@ -28,6 +29,9 @@ public class GrpcInterceptor implements ClientInterceptor {
 
     @Autowired
     private BiliApi biliApi;
+
+    @Autowired
+    private ConfigService configService;
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
@@ -52,11 +56,11 @@ public class GrpcInterceptor implements ClientInterceptor {
 
                 headers.put(
                         Metadata.Key.of("x-bili-aurora-eid", ASCII_STRING_MARSHALLER),
-                        genAuroraEid(GlobalVariables.getMID())
+                        genAuroraEid(configService.getMID())
                 );
                 headers.put(
                         Metadata.Key.of("x-bili-mid", ASCII_STRING_MARSHALLER),
-                        GlobalVariables.getMID()
+                        configService.getMID()
                 );
                 headers.put(
                         Metadata.Key.of("x-bili-aurora-zone", ASCII_STRING_MARSHALLER),

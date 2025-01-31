@@ -13,6 +13,7 @@ import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.po.Config;
 import io.github.cctyl.domain.vo.ConfigVo;
 import io.github.cctyl.service.ConfigService;
+import io.github.cctyl.service.CookieHeaderDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +34,7 @@ public class ConfigController {
 
     private final ConfigService configService;
     private final BiliApi biliApi;
+    private final CookieHeaderDataService cookieHeaderDataService;
 
 
 
@@ -52,7 +54,7 @@ public class ConfigController {
     public R getRefreshCookie(
     ) {
 
-        Map<String, String> refreshCookieMap = GlobalVariables.getRefreshCookieMap();
+        Map<String, String> refreshCookieMap = cookieHeaderDataService.getRefreshCookieMap();
         return R.data(refreshCookieMap);
     }
 
@@ -114,7 +116,7 @@ public class ConfigController {
     @Operation(summary = "申请web登陆二维码（该接口拿不到accessKey）")
     public R getWebQrCode() {
 
-        String url = configService.getWebLoginQrCode();
+        String url = biliApi.getWebLoginQrCode();
         return R.data(url);
     }
 
@@ -122,7 +124,7 @@ public class ConfigController {
     @GetMapping("/web-scan-result")
     @Operation(summary = "获取web登陆扫码结果（该接口拿不到accessKey）")
     public R getWebQrCodeScanResult() {
-        return R.data(configService.getWebLoginQrCodeScanResult());
+        return R.data(biliApi.getWebLoginQrCodeScanResult());
     }
 
 
@@ -130,7 +132,7 @@ public class ConfigController {
     @Operation(summary = "申请Tv登陆二维码")
     public R getTvQrCode() {
 
-        String url = configService.getTvLoginQrCode();
+        String url = biliApi.getTvLoginQrCode();
         return R.data(url);
     }
 
@@ -138,6 +140,6 @@ public class ConfigController {
     @GetMapping("/tv-scan-result")
     @Operation(summary = "获取Tv登陆扫码结果")
     public R getTvQrCodeScanResult() {
-        return R.data(configService.getTvLoginQrCodeScanResult());
+        return R.data(biliApi.getTvQrCodeScanResult());
     }
 }

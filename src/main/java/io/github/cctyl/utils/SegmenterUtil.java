@@ -65,12 +65,12 @@ public class SegmenterUtil {
      * @param strProcess
      * @return
      */
-    public static List<String> getTopFrequentWord(List<String> strProcess,int limit) {
-        return getTopFrequentWord(generateFrequencyMap(strProcess),limit);
+    public static List<String> getTopFrequentWord(List<String> strProcess,int limit,List<String> stopWordList) {
+        return getTopFrequentWord(generateFrequencyMap(strProcess,stopWordList),limit);
     }
 
-    public static List<String> getTopFrequentWord(List<String> strProcess) {
-        return getTopFrequentWord(generateFrequencyMap(strProcess),Math.max(strProcess.size()/100,5));
+    public static List<String> getTopFrequentWord(List<String> strProcess,List<String> stopWordList) {
+        return getTopFrequentWord(generateFrequencyMap(strProcess,stopWordList),Math.max(strProcess.size()/100,5));
     }
 
 
@@ -81,7 +81,7 @@ public class SegmenterUtil {
      * @param strProcess
      * @return
      */
-    public static Map<String, Integer> generateFrequencyMap(List<String> strProcess) {
+    public static Map<String, Integer> generateFrequencyMap(List<String> strProcess,List<String> stopWordList) {
 
 
 
@@ -92,7 +92,7 @@ public class SegmenterUtil {
                     ||
                     s.length() < 2
                     ||
-                    GlobalVariables.getStopWordList().contains(s)
+                            stopWordList.contains(s)
                     ||
                     PUNCTUATION_PATTERN.matcher(s).matches()
             ) {

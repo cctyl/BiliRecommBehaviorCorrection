@@ -287,6 +287,20 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         );
         overviewVo.setOtherHistory(transfer(otherMapList));
 
+
+        overviewVo.setLikeVideoCount(
+                        this.lambdaQuery()
+                                .eq(VideoDetail::getHandleType, HandleType.THUMB_UP)
+                                .eq(VideoDetail::isHandle, true)
+                                .count()
+                )
+                .setHateVideoCount(
+                        this.lambdaQuery()
+                                .eq(VideoDetail::getHandleType, HandleType.DISLIKE)
+                                .eq(VideoDetail::isHandle, true)
+                                .count()
+                );
+
     }
 
     private static List<Map<String, Integer>> transfer(List<Map<String, Object>> blackMapList) {

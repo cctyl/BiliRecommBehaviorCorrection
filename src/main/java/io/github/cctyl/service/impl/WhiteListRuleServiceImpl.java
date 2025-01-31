@@ -1,4 +1,5 @@
 package io.github.cctyl.service.impl;
+
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
@@ -8,14 +9,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
-import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
+import io.github.cctyl.exception.ServerException;
 import io.github.cctyl.mapper.WhiteListRuleMapper;
 import io.github.cctyl.domain.dto.DescV2;
-import io.github.cctyl.domain.dto.PageBean;
 import io.github.cctyl.domain.po.Tag;
 import io.github.cctyl.domain.dto.UserSubmissionVideo;
 import io.github.cctyl.domain.enumeration.AccessType;
@@ -26,6 +26,7 @@ import io.github.cctyl.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,7 +67,10 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean whiteMatch(VideoDetail videoDetail) {
+    public boolean whiteMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList
+            , List<String> whiteUserIdList
+            , List<String> whiteTidList
+    ) {
 
         /**
          * 假设，白名单使用一个专门的条件构造器，一个对象。里面包含 关键词 分区 up主id 等多个条件
@@ -89,13 +93,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         try {
             //白名单规则匹配
-            boolean whitelistRuleMatch = isWhitelistRuleMatch(videoDetail);
+            boolean whitelistRuleMatch = isWhitelistRuleMatch(videoDetail,whitelistRuleList);
 
             //up主id匹配
-            boolean userIdMatch = isUserIdMatch(videoDetail);
+            boolean userIdMatch = isUserIdMatch(videoDetail,whiteUserIdList);
 
             //分区id匹配
-            boolean tidMatch = isTidMatch(videoDetail);
+            boolean tidMatch = isTidMatch(videoDetail,whiteTidList);
             return
                     whitelistRuleMatch
                             ||
@@ -104,7 +108,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                             tidMatch
                     ;
         } catch (Exception e) {
-            log.error(e.getMessage(),e);
+            log.error(e.getMessage(), e);
             return false;
         }
     }
@@ -116,12 +120,12 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean isUserIdMatch(VideoDetail videoDetail) {
+    public boolean isUserIdMatch(VideoDetail videoDetail, List<String> whiteUserIdList) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail);
             return false;
         }
-        boolean match = GlobalVariables.getWhiteUserIdSet()
+        boolean match = whiteUserIdList
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -132,15 +136,14 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 match);
         if (match) {
             videoDetail.setThumbUpReason(
-                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
-                    String.format(REASON_FORMAT,
-                            "up主",
-                            videoDetail.getOwner().getName(),
-                            "成功"
-                    )
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                            String.format(REASON_FORMAT,
+                                    "up主",
+                                    videoDetail.getOwner().getName(),
+                                    "成功"
+                            )
 
             );
-
 
 
         }
@@ -155,10 +158,10 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean isTidMatch(VideoDetail videoDetail) {
+    public boolean isTidMatch(VideoDetail videoDetail, List<String> whiteTidList) {
 
 
-        boolean match = GlobalVariables.getWhiteTidSet()
+        boolean match = whiteTidList
                 .contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
@@ -169,13 +172,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 match);
 
         if (match) {
-            videoDetail.setThumbUpReason(    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
-                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
-                            String.format(REASON_FORMAT,
-                                    "分区id",
-                                    videoDetail.getTid(),
-                                    "成功"
-                            )
+            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    String.format(REASON_FORMAT,
+                            "分区id",
+                            videoDetail.getTid(),
+                            "成功"
+                    )
             );
         }
         return match;
@@ -188,9 +191,9 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean isWhitelistRuleMatch(VideoDetail videoDetail) {
+    public boolean isWhitelistRuleMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList) {
         String[] matchWordArr = new String[8];
-        WhiteListRule whitelistRule = GlobalVariables.getWhitelistRuleList()
+        WhiteListRule whitelistRule = whitelistRuleList
                 .stream()
                 .filter(item ->
                         {
@@ -204,8 +207,8 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
                                 //标题
                                 item.getTitleKeyWordList().stream().filter(keyword -> {
-                                    return videoDetail.getTitle().contains(keyword.getValue());
-                                })
+                                            return videoDetail.getTitle().contains(keyword.getValue());
+                                        })
                                         .findFirst()
                                         .ifPresent(s -> {
                                             titleMatch.set(true);
@@ -272,7 +275,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
                                         try {
                                             String tagNameFound = tagNameList.stream()
-                                                    .filter(s -> keyword.getValue()!=null&&keyword.getValue().contains(s))
+                                                    .filter(s -> keyword.getValue() != null && keyword.getValue().contains(s))
                                                     .findFirst().orElse(null);
 
                                             if (tagNameFound != null) {
@@ -282,7 +285,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                                 break;
                                             }
                                         } catch (Exception e) {
-                                            log.error(e.getMessage(),e);
+                                            log.error(e.getMessage(), e);
                                         }
                                     }
 
@@ -300,7 +303,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                 );
                             } catch (Exception e) {
                                 log.error("出现异常:{},视频信息：{}", e.getMessage(), videoDetail.toString());
-                                log.error(e.getMessage(),e);
+                                log.error(e.getMessage(), e);
                             }
                             //两个以上的判断都通过，才表示通过
                             return Stream.of(titleMatch, descMatch, tagMatch)
@@ -317,14 +320,14 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         if (match) {
             matchDetail =
                     " \t 关键词：" + matchWordArr[0] + "\t 标题：" + matchWordArr[1] + "\n" +
-                    " \t 关键词：" + matchWordArr[2] + "\t desc：" + matchWordArr[3] + "\n" +
-                    " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
-                    " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n"
+                            " \t 关键词：" + matchWordArr[2] + "\t desc：" + matchWordArr[3] + "\n" +
+                            " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
+                            " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n"
             ;
 
             videoDetail.setThumbUpReason(
 
-                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("")+
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
 
                             String.format(REASON_FORMAT,
                                     "规则名",
@@ -346,6 +349,62 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         return match;
     }
 
+    @Transactional(rollbackFor = ServerException.class)
+    public boolean removeWhitelistRules(String id) {
+
+        boolean result = this.removeById(id);
+
+        //删除关联的数据
+        dictService.removeByOuterId(id);
+
+        return result;
+    }
+
+    public void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.COVER,
+                ignoreKeyWordSet
+        );
+
+    }
+
+    public void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.TITLE,
+                ignoreKeyWordSet
+        );
+
+    }
+
+    public void removeWhiteDescKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.DESC,
+                ignoreKeyWordSet
+        );
+
+
+    }
+
+    public void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet) {
+
+        //数据库层面的删除
+        dictService.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.WHITE,
+                DictType.TAG,
+                ignoreKeyWordSet
+        );
+
+
+    }
 
     /**
      * 白名单关键词自动修正补全
@@ -386,16 +445,16 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 tagNameProcess.addAll(tagNameList);
                 log.info("获得视频信息:{}", videoDetail);
             } catch (Exception e) {
-                log.error(e.getMessage(),e);
+                log.error(e.getMessage(), e);
             }
 
             ThreadUtil.sleep(10);
         }
-
+        List<String> stopWordList = dictService.getStopWordList();
         //统计频次
-        Map<String, Integer> descKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(descProcess);
-        Map<String, Integer> tagNameFrequencyMap = SegmenterUtil.generateFrequencyMap(tagNameProcess);
-        Map<String, Integer> titleKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(titleProcess);
+        Map<String, Integer> descKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(descProcess,stopWordList);
+        Map<String, Integer> tagNameFrequencyMap = SegmenterUtil.generateFrequencyMap(tagNameProcess,stopWordList);
+        Map<String, Integer> titleKeywordFrequencyMap = SegmenterUtil.generateFrequencyMap(titleProcess,stopWordList);
         List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(descKeywordFrequencyMap);
         List<String> topTagName = SegmenterUtil.getTopFrequentWord(tagNameFrequencyMap);
         List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(titleKeywordFrequencyMap);
@@ -405,13 +464,13 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 topTagName,
                 topDescKeyWord
         );
-        Set<String> ignoreKeyWordSet = GlobalVariables.getIgnoreWhiteKeyWordSet() ;
+        Set<String> ignoreKeyWordSet = dictService.getIgnoreWhiteKeyWordSet();
         topTagName.removeAll(ignoreKeyWordSet);
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         topDescKeyWord.removeAll(ignoreKeyWordSet);
 
 
-        if (topTagName.isEmpty() &&topTitleKeyWord.isEmpty() && topDescKeyWord.isEmpty() ){
+        if (topTagName.isEmpty() && topTitleKeyWord.isEmpty() && topDescKeyWord.isEmpty()) {
             log.info("本次训练没有得到任何结果，将删除该规则");
             return null;
         }
@@ -430,12 +489,34 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         return whitelistRule;
     }
 
+
+    public List<WhiteListRule> getWhitelistRuleList() {
+        return this.findWithDetail();
+
+    }
+
+    /**
+     * 添加或更新白名单
+     *
+     * @param whitelistRule
+     */
+    @Transactional(rollbackFor = ServerException.class)
+    public WhiteListRule addOrUpdateWhitelitRule(WhiteListRule whitelistRule) {
+
+        //修改主对象
+        this.saveOrUpdate(whitelistRule);
+        //修改关联的数据
+        dictService.updateByWhiteListRule(whitelistRule);
+
+        return whitelistRule;
+    }
+
     @Override
-    public void addTrain(String id,List<Long> trainedAvidList,String mid) {
+    public void addTrain(String id, List<Long> trainedAvidList, String mid) {
         log.info("开始训练");
-        List<WhiteListRule> whitelistRuleList = GlobalVariables.getWhitelistRuleList() ;
+        List<WhiteListRule> whitelistRuleList = this.getWhitelistRuleList();
         WhiteListRule whitelistRule;
-        if ( StrUtil.isBlank(id)) {
+        if (StrUtil.isBlank(id)) {
             //创建新规则
             whitelistRule = new WhiteListRule()
                     .setInfo(String.valueOf(IdGenerator.nextId()))
@@ -460,7 +541,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         } else if (StrUtil.isNotBlank(mid)) {
             //从给定的up主的投稿视频进行训练
             log.info("根据up主id进行训练");
-            List<UserSubmissionVideo> allVideo = biliApi.searchUserAllSubmissionVideo(mid,1,"");
+            List<UserSubmissionVideo> allVideo = biliApi.searchUserAllSubmissionVideo(mid, 1, "");
             whitelistRule = this.trainWhitelistRule(
                     whitelistRule,
                     allVideo.stream().map(UserSubmissionVideo::getAid).collect(Collectors.toList())
@@ -468,9 +549,9 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         }
         log.info("训练完成，训练结果为:" + whitelistRule);
 
-        if (whitelistRule!=null){
+        if (whitelistRule != null) {
             //更新白名单
-            GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(whitelistRule);
+            this.addOrUpdateWhitelitRule(whitelistRule);
         }
 
 
@@ -492,7 +573,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     @Override
     public List<Dict> filterIgnore(List<Dict> dictList) {
 
-        Set<String> ignoreSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
+        Set<String> ignoreSet = dictService.getIgnoreWhiteKeyWordSet();
         return dictList.stream().filter(
                 dict -> !ignoreSet.contains(dict.getValue())
         ).collect(Collectors.toList());
@@ -500,18 +581,48 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
     @Override
     public List<String> filterIgnoreValue(List<String> dictList) {
-        Set<String> ignoreSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
+        Set<String> ignoreSet = dictService.getIgnoreWhiteKeyWordSet();
         return dictList.stream().filter(
                 dict -> !ignoreSet.contains(dict)
         ).collect(Collectors.toList());
     }
+
+    /**
+     * 添加白名单忽略关键词
+     *
+     * @param ignoreKeyWordSet
+     */
+    @Transactional
+    public void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet) {
+
+        if (ignoreKeyWordSet == null) {
+            return;
+        }
+        dictService.removeAndAddDict(
+                AccessType.WHITE,
+                DictType.IGNORE_KEYWORD,
+                null,
+                ignoreKeyWordSet
+        );
+
+
+        //删除白名单对应的关键词,不区分具体是哪个白名单对象的
+        //并且需要同时删除缓存内对应的数据
+        removeWhiteTagKeyword(ignoreKeyWordSet);
+        removeWhiteDescKeyword(ignoreKeyWordSet);
+        removeWhiteTitleKeyword(ignoreKeyWordSet);
+        removeWhiteCoverKeyword(ignoreKeyWordSet);
+
+
+    }
+
 
     @Override
     public IPage<WhiteListRuleAddUpdateDto> pageSearch(IPage<WhiteListRule> page) {
 
         List<WhiteListRule> records = this.page(page).getRecords();
         List<String> idList = records.stream().map(WhiteListRule::getId).collect(Collectors.toList());
-        List<Dict> dictList =  dictService.findByOuterIdIn(idList);
+        List<Dict> dictList = dictService.findByOuterIdIn(idList);
         Map<String, List<Dict>> outerIdDictListMap = dictList.stream().collect(Collectors.groupingBy(Dict::getOuterId));
 
 
@@ -527,7 +638,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
             return whiteListRuleAddUpdateDto;
         }).toList();
 
-        return new Page<WhiteListRuleAddUpdateDto>(page.getCurrent(),page.getSize(),page.getTotal())
+        return new Page<WhiteListRuleAddUpdateDto>(page.getCurrent(), page.getSize(), page.getTotal())
                 .setRecords(collect);
     }
 
@@ -547,8 +658,8 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     public void groupDict(WhiteListRuleAddUpdateDto whiteListRule, Collection<Dict> dictCollection) {
         Map<DictType, List<Dict>> dictTypeListMap =
                 dictCollection
-                .stream()
-                .collect(Collectors.groupingBy(Dict::getDictType));
+                        .stream()
+                        .collect(Collectors.groupingBy(Dict::getDictType));
         whiteListRule
                 .setTagNameList(Optional.ofNullable(dictTypeListMap.get(DictType.TAG)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList())
                 .setCoverKeyword(Optional.ofNullable(dictTypeListMap.get(DictType.COVER)).orElse(Collections.emptyList()).stream().map(Dict::getValue).toList())
@@ -560,11 +671,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
     public WhiteListRule findWithDetailById(String id) {
         WhiteListRule whiteListRule = baseMapper.findWithDetailById(id);
 
-        if(whiteListRule!=null){
+        if (whiteListRule != null) {
 
-            groupDict(whiteListRule,whiteListRule.getTotalDict());
+            groupDict(whiteListRule, whiteListRule.getTotalDict());
             return whiteListRule;
-        }else {
+        } else {
             return null;
         }
 
@@ -575,8 +686,8 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         List<UserSubmissionVideo> userSubmissionVideos = biliApi.searchUserAllSubmissionVideo(mid, page, keyword);
 
-        if (CollUtil.isEmpty(userSubmissionVideos)){
-            log.info("该用户{}投稿视频为空",mid);
+        if (CollUtil.isEmpty(userSubmissionVideos)) {
+            log.info("该用户{}投稿视频为空", mid);
             return;
         }
 
@@ -585,11 +696,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 userSubmissionVideos.size(),
                 userSubmissionVideo -> {
                     JSONObject jsonObject = biliApi.thumpUp(userSubmissionVideo.getAid());
-                    log.debug("点赞：{} 结果为：{}",userSubmissionVideo.getTitle(),jsonObject.getString("message"));
-                    ThreadUtil.sleep(DataUtil.getRandom(10,23));
+                    log.debug("点赞：{} 结果为：{}", userSubmissionVideo.getTitle(), jsonObject.getString("message"));
+                    ThreadUtil.sleep(DataUtil.getRandom(10, 23));
                 }
         );
 
-        log.info("共点赞{}用户{}条视频",mid,userSubmissionVideos.size());
+        log.info("共点赞{}用户{}条视频", mid, userSubmissionVideos.size());
     }
 }

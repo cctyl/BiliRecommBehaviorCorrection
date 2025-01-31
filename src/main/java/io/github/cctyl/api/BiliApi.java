@@ -16,6 +16,7 @@ import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.VideoReply;
 import io.github.cctyl.exception.LogOutException;
 import io.github.cctyl.exception.NotFoundException;
+import io.github.cctyl.service.ConfigService;
 import io.github.cctyl.service.CookieHeaderDataService;
 import io.github.cctyl.utils.BiliTicketUtil;
 import io.github.cctyl.utils.DataUtil;
@@ -49,6 +50,7 @@ import static io.github.cctyl.domain.constants.AppConstant.*;
 public class BiliApi {
 
     private final CookieHeaderDataService cookieHeaderDataService;
+    private final ConfigService configService;
 
     /**
      * 用于获取wbi签名
@@ -71,6 +73,8 @@ public class BiliApi {
     private String tempTvAuthCode;
 
 
+
+
     /**
      * 获取请求头信息
      *
@@ -79,7 +83,7 @@ public class BiliApi {
     public Map<String, List<String>> getHeader(String url) {
         HashMap<String, List<String>> result = new HashMap<>();
         //没有匹配的，就返回默认的header
-        GlobalVariables.getCommonHeaderMap()
+        cookieHeaderDataService.getCommonHeaderMap()
                 .forEach((k, v) ->result.put(k,Collections.singletonList(v)) );
         //公共header时，需要修改host
         result.put("Host",Collections.singletonList(DataUtil.getHost(url)));
@@ -96,7 +100,7 @@ public class BiliApi {
      */
     public HttpResponse commonGet(String url) {
         Map<String, List<String>> header = getHeader(url);
-        String cookieStr = getCookieStr(url);
+        String cookieStr = getCookieStr();
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
                 .header(header,true)
@@ -123,7 +127,7 @@ public class BiliApi {
                 .header(getHeader(url),true)
                 .form(paramMap)
                 .timeout(10000)
-                .cookie(getCookieStr(url));
+                .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
         log.trace("body={}", response.body());
@@ -147,7 +151,7 @@ public class BiliApi {
                 .header(getHeader(url),true)
                 .form(paramMap)
                 .timeout(10000)
-                .cookie(getCookieStr(url));
+                .cookie(getCookieStr());
 
         otherHeader.forEach(request::header);
         HttpResponse response = request
@@ -174,7 +178,7 @@ public class BiliApi {
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .form(paramMap)
                         .timeout(10000)
-                        .cookie(getCookieStr(url));
+                        .cookie(getCookieStr());
         HttpResponse response = request
                 .execute();
         log.trace("body={}", response.body());
@@ -213,7 +217,7 @@ public class BiliApi {
     public byte[] getPicByte(String picUrl) throws IOException {
         HttpResponse response = HttpRequest.get(picUrl)
                 .header(getHeader(picUrl))
-                .cookie(getCookieStr(picUrl))
+                .cookie(getCookieStr())
                 .executeAsync();
         InputStream inputStream = response.bodyStream();
         FastByteArrayOutputStream fastByteArrayOutputStream = new FastByteArrayOutputStream();
@@ -272,8 +276,8 @@ public class BiliApi {
      *
      * @return
      */
-    public String getCookieStr(String url) {
-        return GlobalVariables.getRefreshCookieMap().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
+    public String getCookieStr() {
+        return cookieHeaderDataService.getRefreshCookieMap().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue() + ";")
                 .collect(Collectors.joining());
     }
 
@@ -292,8 +296,9 @@ public class BiliApi {
         List<HttpCookie> cookies = response.getCookies();
         Map<String,String> cookieMap = new HashMap<>();
         cookies.forEach(httpCookie -> cookieMap.put(httpCookie.getName(),httpCookie.getValue()));
-
-        GlobalVariables.updateRefreshCookie(cookieMap);
+        Map<String, String> refreshCookieMap = cookieHeaderDataService.getRefreshCookieMap();
+        refreshCookieMap.putAll(cookieMap);
+        cookieHeaderDataService.replaceRefreshCookie(refreshCookieMap);
     }
 
     /**
@@ -317,7 +322,7 @@ public class BiliApi {
      * @param jsonObject
      * @param body
      */
-    public static void checkRespAndThrow(JSONObject jsonObject, String body) {
+    public  void checkRespAndThrow(JSONObject jsonObject, String body) {
 
         if (!checkResp(jsonObject)) {
             log.error("响应异常，message={}", jsonObject.getString("message"));
@@ -346,7 +351,7 @@ public class BiliApi {
      *
      * @param jsonObject
      */
-    private static void checkOtherCode(JSONObject jsonObject) {
+    private  void checkOtherCode(JSONObject jsonObject) {
         switch (jsonObject.getIntValue("code")) {
             case 86090:
                 log.info("已扫码未确认:{}",jsonObject);
@@ -361,7 +366,7 @@ public class BiliApi {
                 log.info(ErrorCode.ALREAD_THUMBUP.getMessage());
                 break;
             case -101:
-                GlobalVariables.updateAccessKey(null);
+                configService.updateAccessKey(null);
                 throw new LogOutException();
             case -404:
                 throw new NotFoundException();
@@ -783,12 +788,11 @@ public class BiliApi {
 
                         });
 
-                GlobalVariables.updateMid(mid);
-                GlobalVariables.updateAccessKey(accessToken);
+                configService.updateMid(mid);
+                configService.updateAccessKey(accessToken);
 
                 //立即持久化一次cookie
-                GlobalVariables.getRefreshCookieMap().putAll(cookieMap);
-                cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
+                cookieHeaderDataService.replaceRefreshCookie(cookieMap);
 
                 this.tempTvAuthCode = null;
                 return "登陆成功！ accessKey="+ accessToken;
@@ -825,18 +829,17 @@ public class BiliApi {
 
         //如果需要刷新，或者缓存中不存在，则更新一次
         //否则从缓存中取出
-        if( refresh || StrUtil.isEmpty(GlobalVariables.getBiliAccessKey())){
+        String biliAccessKey = configService.getBiliAccessKey();
+        if( refresh || StrUtil.isEmpty(biliAccessKey)){
             //记录登陆状态
-            GlobalVariables.setIsLogin(false);
 
             //新版本不再支持通过cookie获取
             //提示让用户扫码登陆
             throw new LogOutException();
 
         }else {
-            GlobalVariables.setIsLogin(true);
-            log.debug("缓存中得到了accessKey={}", GlobalVariables.getBiliAccessKey());
-            return GlobalVariables.getBiliAccessKey();
+            log.debug("缓存中得到了accessKey={}", biliAccessKey);
+            return biliAccessKey;
         }
 
     }
@@ -883,7 +886,7 @@ public class BiliApi {
 
         paramMap.put("start_ts", start_ts);
         //播放视频的用户id
-        paramMap.put("mid", GlobalVariables.getMID());
+        paramMap.put("mid", configService.getMID());
         paramMap.put("aid", aid);
         paramMap.put("cid", cid);
         paramMap.put("type", type);
@@ -923,7 +926,7 @@ public class BiliApi {
      * @return
      */
     public String getCsrf() {
-        return GlobalVariables.getRefreshCookieMap().getOrDefault("bili_jct", "");
+        return cookieHeaderDataService.getByName("bili_jct");
     }
 
 
@@ -933,7 +936,7 @@ public class BiliApi {
      * @return
      */
     public String getSessData() {
-        return GlobalVariables.getRefreshCookieMap().getOrDefault("SESSDATA", "");
+        return cookieHeaderDataService.getRefreshCookieMap().getOrDefault("SESSDATA", "");
     }
 
 
@@ -984,7 +987,7 @@ public class BiliApi {
         checkRespAndThrow(jsonObject,body);
 
         String mid = jsonObject.getJSONObject("data").getString("mid");
-        GlobalVariables.updateMid(mid);
+        configService.updateMid(mid);
 
         return jsonObject;
     }
@@ -1032,7 +1035,7 @@ public class BiliApi {
         String imgKey;
         String subKey;
 
-        if (refresh || GlobalVariables.getImgKey() == null || GlobalVariables.getSubKey()==null) {
+        if (refresh || configService.getImgKey() == null || configService.getSubKey()==null) {
             String url = "https://api.bilibili.com/x/web-interface/nav";
             String body = commonGet(url).body();
             JSONObject jsonObject = JSONObject.parseObject(body);
@@ -1047,13 +1050,13 @@ public class BiliApi {
 
 
             //20小时刷新一次
-            GlobalVariables.updateWbi(imgKey,subKey);
+            configService.updateWbi(imgKey,subKey);
 
 
         } else {
 
-            imgKey = GlobalVariables.getImgKey();
-            subKey = GlobalVariables.getSubKey();
+            imgKey = configService.getImgKey();
+            subKey = configService.getSubKey();
         }
 
         String mixinKey = getMixinKey(imgKey, subKey);
@@ -1549,9 +1552,9 @@ public class BiliApi {
 
                 //立即持久化一次cookie
                 log.error("并未进行持久化{}",data);
-                cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
+                updateCookie(response);
                 this.tempWebQrCodeKey = null;
-                return "登陆成功！" + GlobalVariables.getRefreshCookieMap();
+                return "登陆成功！" + cookieHeaderDataService.getRefreshCookieMap();
             case 86038:
                 log.info("二维码失效");
                 this.tempWebQrCodeKey = null;

@@ -55,19 +55,24 @@ public class BiliTask {
 
     }
 
+    @Scheduled(cron = "0 */20 * * * *")
+    public void refreshCommomHeaderMap(){
+        cookieHeaderDataService. refreshCommonHeaderMap();
+    }
+
 
     /**
      * 20分钟持久化一次 cookie
      */
-    @Scheduled(cron = "0 */20 * * * *")
-    public void saveRefreshCookie() {
-        log.info("开始持久化 refreshCookie，本次持久化的数量为：{}", GlobalVariables.getRefreshCookieMap().size());
-        if (GlobalVariables.getRefreshCookieMap().isEmpty()) {
-            log.info("cookie 数量为0，不予持久化");
-            return;
-        }
-        cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
-    }
+//    @Scheduled(cron = "0 */20 * * * *")
+//    public void saveRefreshCookie() {
+//        log.info("开始持久化 refreshCookie，本次持久化的数量为：{}", cookieHeaderDataService.getRefreshCookieMap().size());
+//        if (cookieHeaderDataService.getRefreshCookieMap().isEmpty()) {
+//            log.info("cookie 数量为0，不予持久化");
+//            return;
+//        }
+//        cookieHeaderDataService.replaceRefreshCookie(cookieHeaderDataService.getRefreshCookieMap());
+//    }
 
 
 //    /**

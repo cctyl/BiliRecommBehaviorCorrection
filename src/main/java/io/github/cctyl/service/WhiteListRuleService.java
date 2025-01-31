@@ -1,14 +1,23 @@
 package io.github.cctyl.service;
 
+import cn.hutool.core.lang.Opt;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
+import io.github.cctyl.domain.enumeration.AccessType;
+import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
+import io.github.cctyl.exception.ServerException;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -20,21 +29,53 @@ import java.util.List;
  */
 public interface WhiteListRuleService extends IService<WhiteListRule> {
 
+
+    /**
+     * 添加白名单忽略关键词
+     *
+     * @param ignoreKeyWordSet
+     */
+    void addWhiteIgnoreKeyword(Set<String> ignoreKeyWordSet);
+
     List<WhiteListRule> findAll();
 
-    boolean whiteMatch(VideoDetail videoDetail);
 
-    boolean isUserIdMatch(VideoDetail videoDetail);
-
-    boolean isTidMatch(VideoDetail videoDetail);
-
-    boolean isWhitelistRuleMatch(VideoDetail videoDetail);
 
     WhiteListRule trainWhitelistRule(
             WhiteListRule whitelistRule,
             List<Long> whiteAvidList);
 
-    void addTrain(String id,List<Long> trainedAvidList,String mid);
+    void removeWhiteTitleKeyword(Set<String> ignoreKeyWordSet);
+
+    void removeWhiteTagKeyword(Set<String> ignoreKeyWordSet);
+
+    void removeWhiteDescKeyword(Set<String> ignoreKeyWordSet);
+
+    void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet);
+
+    boolean whiteMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList
+            , List<String> whiteUserIdList
+            , List<String> whiteTidList
+    );
+
+    boolean isUserIdMatch(VideoDetail videoDetail, List<String> whiteUserIdList);
+
+    boolean isTidMatch(VideoDetail videoDetail, List<String> whiteTidList);
+
+    boolean isWhitelistRuleMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList);
+
+    boolean removeWhitelistRules(String id);
+
+    /**
+     * 添加或更新白名单
+     *
+     * @param whitelistRule
+     */
+    WhiteListRule addOrUpdateWhitelitRule(WhiteListRule whitelistRule);
+
+    List<WhiteListRule> getWhitelistRuleList();
+
+    void addTrain(String id, List<Long> trainedAvidList, String mid);
 
     List<WhiteListRule> findWithDetail();
 

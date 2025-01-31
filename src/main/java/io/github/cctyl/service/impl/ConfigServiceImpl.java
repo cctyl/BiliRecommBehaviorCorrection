@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -44,14 +45,104 @@ import static io.github.cctyl.domain.constants.AppConstant.FIRST_START_TIME;
 @RequiredArgsConstructor
 public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> implements ConfigService {
 
-    private final BiliApi biliApi;
 
-    private final VideoDetailService videoDetailService;
 
     private final CookieHeaderDataService cookieHeaderDataService;
     private final TaskService taskService;
 
+    public void updateMinPlaySecond(Integer minPlaySecond) {
 
+        this.addOrUpdateConfig(AppConstant.MIN_PLAY_SECOND, String.valueOf(minPlaySecond));
+    }
+
+    public void updateAccessKey(String newKey) {
+
+        this.addOrUpdateConfig(AppConstant.BILI_ACCESS_KEY, newKey, 2_505_600);
+    }
+
+    @Override
+    public String getBaiduClientId() {
+        return this.findByName(AppConstant.BAIDU_CLIENT_ID);
+    }
+    public  String getBaiduClientSecret() {
+       return this.findByName(AppConstant.BAIDU_CLIENT_SECRET);
+    }
+
+
+    /**
+     * 加载一些标记信息
+     */
+    public  void setInfo() {
+        //1.是否第一次使用本系统
+      boolean  FIRST_USE = this.isFirstUse();
+
+
+        if (FIRST_USE) {
+            //2.第一次使用系统时间
+            this.addOrUpdateConfig(AppConstant.FIRST_START_TIME,
+                    String.valueOf(Instant.now().toEpochMilli())
+            );
+            //3.定时任务开关
+            setCron(false);
+        }
+
+
+    }
+    
+    public  void updateBaiduClientInfo(String clientId, String clientSecret) {
+      
+        this.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_ID, clientId);
+        this.addOrUpdateConfig(AppConstant.BAIDU_CLIENT_SECRET, clientSecret);
+    }
+    
+    public void updateWbi(String imgKey, String subKey) {
+
+
+        this.addOrUpdateConfig(AppConstant.IMG_KEY, imgKey, 72_000);
+        this.addOrUpdateConfig(AppConstant.SUB_KEY, subKey, 72_000);
+    }
+
+    public void updateBaiduAskKey(String accessToken) {
+
+        this.addOrUpdateConfig(AppConstant.BAIDU_ASK_KEY, accessToken, 2592000);
+    }
+
+    public String getSubKey() {
+        return this.findByName(AppConstant.SUB_KEY);
+    }
+
+    public  boolean isCron() {
+        return Boolean.parseBoolean(Opt.ofNullable(this.findByName(AppConstant.CRON)).orElse("false"));
+    }
+    public  void setCron(boolean cron) {
+      
+        this.addOrUpdateConfig(AppConstant.CRON,
+                String.valueOf(cron)
+        );
+    }
+    public String getBaiduAskKey() {
+        return this.findByName(AppConstant.BAIDU_ASK_KEY);
+    }
+
+    public String getBiliAccessKey() {
+        return this.findByName(AppConstant.BILI_ACCESS_KEY);
+    }
+
+    public int getMinPlaySecond() {
+        String minPlaySecond = this.findByName(AppConstant.MIN_PLAY_SECOND);
+        if (minPlaySecond != null) {
+            try {
+                return Integer.parseInt(minPlaySecond);
+            } catch (NumberFormatException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+        return -1;
+    }
+
+    public String getImgKey() {
+        return this.findByName(AppConstant.IMG_KEY);
+    }
 
     @Override
     public String findByName(String name) {
@@ -75,12 +166,21 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         return config;
     }
 
+    public String getMID() {
+
+        return this.findByName(AppConstant.MID_KEY);
+    }
+
+    public void updateMid(String mid) {
+        this.addOrUpdateConfig(AppConstant.MID_KEY, mid);
+    }
+
     @Override
     public Config addOrUpdateConfig(String configName, String configValue, Integer expireSecond) {
 
-        if (configValue==null){
+        if (configValue == null) {
             LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<Config>().eq(
-                Config::getName,configName
+                    Config::getName, configName
             );
             this.remove(wrapper);
             return null;
@@ -129,10 +229,11 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     @Override
     public Map<String, String> updateRefreshCookie(String cookieStr) {
         Map<String, String> cookieMap = DataUtil.splitCookie(cookieStr);
-        GlobalVariables.updateRefreshCookie(cookieMap);
         //立即持久化
-        cookieHeaderDataService.replaceRefreshCookie(GlobalVariables.getRefreshCookieMap());
-        return GlobalVariables.getRefreshCookieMap();
+        Map<String, String> refreshCookieMap = cookieHeaderDataService.getRefreshCookieMap();
+        refreshCookieMap.putAll(cookieMap);
+        cookieHeaderDataService.replaceRefreshCookie(refreshCookieMap);
+        return cookieHeaderDataService.getRefreshCookieMap();
     }
 
     /**
@@ -141,29 +242,29 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
      */
     @Override
     public ConfigVo updateStandardConfigInfo(ConfigDTO configDTO) {
-//TODO 改为列表批量修改
+        //TODO 改为列表批量修改
         if (configDTO.getBiliAccessKey() != null) {
-            GlobalVariables.updateAccessKey(configDTO.getBiliAccessKey());
+            this.updateAccessKey(configDTO.getBiliAccessKey());
         }
         if (configDTO.getBaiduClientId() != null &&
                 configDTO.getBaiduClientSecret() != null
         ) {
-            GlobalVariables.updateBaiduClientInfo(configDTO.getBaiduClientId(), configDTO.getBaiduClientSecret());
+            this.updateBaiduClientInfo(configDTO.getBaiduClientId(), configDTO.getBaiduClientSecret());
         }
 
         if (configDTO.getBaiduAskKey() != null) {
-            GlobalVariables.updateBaiduAskKey(configDTO.getBaiduAskKey());
+            this.updateBaiduAskKey(configDTO.getBaiduAskKey());
         }
 
         if (configDTO.getMinPlaySecond() != null) {
-            GlobalVariables.updateMinPlaySecond(configDTO.getMinPlaySecond());
+            this.updateMinPlaySecond(configDTO.getMinPlaySecond());
         }
 
         if (configDTO.getMid() != null) {
-            GlobalVariables.updateMid(configDTO.getMid());
+            this.updateMid(configDTO.getMid());
         }
         if (configDTO.getCron() != null) {
-            GlobalVariables.setCron(configDTO.getCron());
+            this.setCron(configDTO.getCron());
         }
 
         //其他配置暂不允许更新
@@ -201,15 +302,15 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     @Override
     public ConfigVo getStandardConfigInfo() {
         return new ConfigVo()
-                .setMid(GlobalVariables.getMID())
-                .setImgKey(GlobalVariables.getImgKey())
-                .setSubKey(GlobalVariables.getSubKey())
-                .setBaiduClientId(GlobalVariables.getBaiduClientId())
-                .setBaiduAskKey(GlobalVariables.getBaiduAskKey())
-                .setBaiduClientSecret(GlobalVariables.getBaiduClientSecret())
-                .setBiliAccessKey(GlobalVariables.getBiliAccessKey())
-                .setMinPlaySecond(GlobalVariables.getMinPlaySecond())
-                .setCron(GlobalVariables.isCron())
+                .setMid(this.getMID())
+                .setImgKey(this.getImgKey())
+                .setSubKey(this.getSubKey())
+                .setBaiduClientId(this.getBaiduClientId())
+                .setBaiduAskKey(this.getBaiduAskKey())
+                .setBaiduClientSecret(this.getBaiduClientSecret())
+                .setBiliAccessKey(this.getBiliAccessKey())
+                .setMinPlaySecond(this.getMinPlaySecond())
+                .setCron(this.isCron())
                 ;
     }
 
@@ -217,26 +318,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
         consumer.accept(-1);
     }
 
-    @Override
-    public String getWebLoginQrCode() {
-        return biliApi.getWebLoginQrCode();
-    }
 
-    @Override
-    public Object getWebLoginQrCodeScanResult() {
-        return   biliApi.getWebLoginQrCodeScanResult();
-    }
-
-
-    @Override
-    public String getTvLoginQrCode() {
-        return biliApi.getTvLoginQrCode();
-    }
-
-    @Override
-    public Object getTvLoginQrCodeScanResult() {
-        return biliApi.getTvQrCodeScanResult();
-    }
 
     @Override
     public List<Config> getConfigList() {
@@ -268,7 +350,7 @@ public class ConfigServiceImpl extends ServiceImpl<ConfigMapper, Config> impleme
     public void fillOverviewInfo(OverviewVo overviewVo) {
 
         Config configByName = this.findConfigByName(FIRST_START_TIME);
-        if (configByName!=null){
+        if (configByName != null) {
             //configByName.getValue() 是一个毫秒值，与当前天数做比较，计算出间隔多少天
             long millis = Long.parseLong(configByName.getValue());
             LocalDate startDate = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(millis), ZoneId.systemDefault());

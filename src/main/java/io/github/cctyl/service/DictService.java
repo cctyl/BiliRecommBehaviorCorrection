@@ -1,15 +1,26 @@
 package io.github.cctyl.service;
 
+import cn.hutool.dfa.WordTree;
 import com.baomidou.mybatisplus.extension.service.IService;
+import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.vo.OverviewVo;
+import io.github.cctyl.exception.ServerException;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -35,7 +46,7 @@ public interface DictService extends IService<Dict> {
 
     List<Dict> addBlackTag(Collection<String> param);
 
-    List<Dict>  findWhiteUserId();
+    List<Dict> findWhiteUserId();
 
     List<Dict> findWhiteTid();
 
@@ -52,13 +63,53 @@ public interface DictService extends IService<Dict> {
     List<Dict> findByIdIn(Collection<String> idList);
 
     void updateAccessTypeByIdIn(AccessType blackCache, Collection<String> keywordIdSet);
-    void updateAccessTypeAndDictTypeByIdIn(AccessType blackCache,DictType dictType, Collection<String> keywordIdSet);
+
+    void updateAccessTypeAndDictTypeByIdIn(AccessType blackCache, DictType dictType, Collection<String> keywordIdSet);
+
+    void addBlackTagFromCache(List<String> tagNameIdList);
+
+    List<String> getBlackTidSet();
+
+    List<String> getBlackTagSet();
+
+    List<String> getWhiteTidSet();
+
+    void addBlackTagSet(Set<String> collect);
+
+    void addBlackTidSet(Set<String> param);
+
+    void addWhiteTidSet(Set<String> whiteTidSet);
+
+    void removeBlackTag(Set<String> param);
 
     void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol);
 
-    void removeAndAddDict(AccessType accessType, DictType dictType,  String outerId,Collection<String> valueCol);
+    WordTree getBlackTagTree();
+
+    List<String> getSearchKeywordSet();
+
+    void addSearchKeyword(Collection<String> searchKeywords);
+
+    List<String> getStopWordList();
+
+    WordTree getBlackKeywordTree();
+
+    void addStopWords(Collection<String> stopWordList);
+
+
+    void addBlackIgnoreKeyword(Set<String> collect);
+
+    Set<String> getIgnoreWhiteKeyWordSet();
+
+    Set<String> getIgnoreBlackKeyWordSet();
+
+    void removeAndAddDict(AccessType accessType, DictType dictType, String outerId, Collection<String> valueCol);
+
+    void addBlackKeywordAndRemoveIfExist(Collection<String> keywordCol);
 
     void updateByWhiteListRule(WhiteListRule whitelistRule);
+
+    void removeBlackKeyword(Set<String> param);
 
     void removeByOuterId(String id);
 
@@ -78,9 +129,27 @@ public interface DictService extends IService<Dict> {
     List<Dict> getListByDictTypeAndAccessType(DictType dictType, AccessType accessType);
 
     List<Dict> findEmptyDescMidDict();
+
     List<Dict> findEmptyDescTidDict();
 
     List<Dict> batchRemoveAndUpdate(DictType dictType, AccessType accessType, List<Dict> dictSet);
 
     void fillOverviewInfo(OverviewVo overviewVo);
+
+    Collection<String> getBlackUserIdSet();
+
+    void addBlackUserId(String mid);
+
+    void addBlackUserIdSet(Set<String> blackUserIdSet);
+
+    void delBlackUserIdSet(Set<String> blackUserIdSet);
+
+    List<String> getWhiteUserIdSet();
+
+    List<String> getBlackKeywordSet();
+
+    void setWhiteUserIdSet(Collection<String> whiteUserIdSet);
+
+    void addBlackKeyWordFromCache(List<String> keywordIdSet);
+
 }

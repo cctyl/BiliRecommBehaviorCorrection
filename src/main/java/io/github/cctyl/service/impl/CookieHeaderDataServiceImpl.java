@@ -1,5 +1,6 @@
 package io.github.cctyl.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -297,6 +298,59 @@ public class CookieHeaderDataServiceImpl extends ServiceImpl<CookieHeaderDataMap
     public void replaceRefreshCookie(Map<String, String> cookieMap) {
         removeAllRefreshCookie();
         saveRefreshCookieMap(cookieMap);
+    }
+
+    public static Map<String, String> commomHeaderMap = null;
+
+    public synchronized Map<String, String> getCommonHeaderMap() {
+        if (commomHeaderMap == null){
+            commomHeaderMap = this.findCommonHeaderMap();
+        }
+        return commomHeaderMap;
+    }
+
+    public synchronized void refreshCommonHeaderMap() {
+        commomHeaderMap = this.findCommonHeaderMap();
+    }
+    public void updateCommonHeaderMap(Map<String, String> commonHeaderMap) {
+        //删除同名的
+        Set<String> keySet = commonHeaderMap.keySet();
+        this.removeByKeyInAndClassifyAndMediaType(keySet, Classify.REQUEST_HEADER, MediaType.GENERAL);
+        //重新保存
+        this.saveCommonHeaderMap(commonHeaderMap);
+    }
+
+
+
+    public  Map<String, String> getRefreshCookieMap() {
+
+
+        return this.findRefreshCookie();
+    }
+    /**
+     * 删除原本的header 重新存储
+     *
+     * @param commonHeaderMap
+     */
+    @Transactional(rollbackFor = ServerException.class)
+    public void replaceCommonHeaderMap(Map<String, String> commonHeaderMap) {
+
+        this.removeAllCommonHeader();
+
+        //重新保存新的数据
+        this.saveCommonHeaderMap(commonHeaderMap);
+    }
+
+    @Override
+    public String getByName(String key) {
+
+        List<CookieHeaderData> list = this.lambdaQuery()
+                .eq(CookieHeaderData::getCkey, key)
+                .list();
+        if (CollUtil.isNotEmpty(list)){
+            return list.getFirst().getCvalue();
+        }
+        return null;
     }
 
     @Override

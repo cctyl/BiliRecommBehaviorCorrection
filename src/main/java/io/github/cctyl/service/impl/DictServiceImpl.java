@@ -1,19 +1,28 @@
 package io.github.cctyl.service.impl;
 
+import cn.hutool.dfa.WordTree;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.vo.OverviewVo;
+import io.github.cctyl.exception.ServerException;
 import io.github.cctyl.mapper.DictMapper;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
+import io.github.cctyl.service.ConfigService;
 import io.github.cctyl.service.DictService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.github.cctyl.service.WhiteListRuleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +35,11 @@ import java.util.stream.Collectors;
  * @since 2023-11-09
  */
 @Service
+@RequiredArgsConstructor
 public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements DictService {
+
+
+    private final ConfigService configService;
 
 
     /**
@@ -214,6 +227,140 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
                 .update();
     }
 
+    public void addBlackTidSet(Set<String> param) {
+        this.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.TID,
+                null,
+                param);
+
+    }
+
+    public void addWhiteTidSet(Set<String> whiteTidSet) {
+        this.removeAndAddDict(
+                AccessType.WHITE,
+                DictType.TID,
+                null,
+                whiteTidSet);
+    }
+
+    public List<String> getWhiteTidSet() {
+
+        return this
+                .findWhiteTid()
+                .stream()
+                .map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+    }
+
+    public void addBlackTagFromCache(List<String> tagNameIdList) {
+
+        //将这些标签的类型由CACHE 改为正常类型即可
+        this.updateAccessTypeByIdIn(
+                AccessType.BLACK,
+                tagNameIdList
+        );
+
+    }
+
+    public void addSearchKeyword(Collection<String> searchKeywords) {
+
+        this.removeAndAddDict(
+                AccessType.OTHER,
+                DictType.SEARCH_KEYWORD,
+                null,
+                searchKeywords);
+
+
+    }
+
+    public List<String> getStopWordList() {
+        List<String> stopWordList;
+        if (configService.isFirstUse()) {
+            //初次使用时，从文件中加载停顿词
+
+            try (
+                    InputStream inputStream = this.getClass().getResourceAsStream("/cn_stopwords.txt");
+                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
+            ) {
+
+                stopWordList = bufferedReader.lines()
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            //存入数据库
+            this.saveStopWords(stopWordList);
+        } else {
+            //从数据库中加载停顿词
+            stopWordList = this.findStopWords();
+        }
+
+        return stopWordList;
+    }
+
+
+    public List<String> getSearchKeywordSet() {
+
+
+        return this.findSearchKeyWord()
+                .stream().map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public WordTree getBlackTagTree() {
+        WordTree BLACK_TAG_TREE = new WordTree();
+        BLACK_TAG_TREE.addWords(getBlackTagSet());
+        return BLACK_TAG_TREE;
+    }
+
+    public void removeBlackTag(Set<String> param) {
+
+        this.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.TAG,
+                param
+        );
+    }
+
+    public void addBlackTagSet(Set<String> collect) {
+
+        this.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.TAG,
+                null,
+                collect);
+
+
+    }
+
+    public List<String> getBlackTagSet() {
+
+
+        return this.findBlackTag()
+                .stream()
+                .map(Dict::getValue)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getBlackTidSet() {
+        return this
+                .findBlackTid()
+                .stream().map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
     @Override
     public void removeByAccessTypeAndDictTypeAndValue(AccessType accessType, DictType dictType, Collection<String> valueCol) {
 
@@ -233,6 +380,54 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         );
 
     }
+
+    public void removeBlackKeyword(Set<String> param) {
+        this.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.KEYWORD,
+                param
+        );
+    }
+
+    public void addStopWords(Collection<String> stopWordList) {
+        //存入数据库
+        this.saveStopWords(stopWordList);
+    }
+
+
+    public Set<String> getIgnoreBlackKeyWordSet() {
+
+        return this.findBlackIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+    }
+
+    public Set<String> getIgnoreWhiteKeyWordSet() {
+
+        return this.findWhiteIgnoreKeyWord().stream().map(Dict::getValue).collect(Collectors.toSet());
+    }
+
+    @Transactional
+    public void addBlackIgnoreKeyword(Set<String> collect) {
+        this.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.IGNORE_KEYWORD,
+                null,
+                collect);
+
+
+        //黑名单关键词需要删除
+        removeBlackKeyword(collect);
+
+        //黑名单Tag需要删除
+        removeBlackTag(collect);
+
+    }
+
+    public WordTree getBlackKeywordTree() {
+        WordTree wordTree = new WordTree();
+        wordTree.addWords(this.getBlackKeywordSet());
+        return wordTree;
+    }
+
 
     /**
      * 删除并新增字典
@@ -426,8 +621,104 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
         ;
 
 
-
     }
 
 
+    /**
+     * 添加一个黑名单用户id
+     *
+     * @param mid
+     */
+    public void addBlackUserId(String mid) {
+        Collection<String> blackUserIdSet = getBlackUserIdSet();
+        if (blackUserIdSet.contains(mid)) {
+            return;
+        }
+        Dict dict = new Dict()
+                .setDictType(DictType.MID)
+                .setAccessType(AccessType.BLACK)
+                .setValue(mid);
+        this.save(dict);
+    }
+
+    public void addBlackUserIdSet(Set<String> blackUserIdSet) {
+
+        this.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.MID,
+                null,
+                blackUserIdSet);
+
+
+    }
+
+    public List<String> getBlackKeywordSet() {
+        return this.findBlackKeyWord()
+                .stream()
+                .map(Dict::getValue)
+                .distinct()
+                .collect(Collectors.toList())
+                ;
+    }
+
+    public void addBlackKeyWordFromCache(List<String> keywordIdSet) {
+
+        //过滤掉忽略的关键词(无需，添加关键词时，如果匹配忽略关键词则不允许添加)
+
+        //将这些标签的类型由CACHE 改为正常类型即可
+        this.updateAccessTypeByIdIn(
+                AccessType.BLACK,
+                keywordIdSet
+        );
+
+        List<String> valueList = Dict.transferToValue(this.findByIdIn(keywordIdSet));
+
+    }
+
+    public void addBlackKeywordAndRemoveIfExist(Collection<String> keywordCol) {
+
+        this.removeAndAddDict(
+                AccessType.BLACK,
+                DictType.KEYWORD,
+                null,
+                keywordCol);
+    }
+
+    @Transactional(rollbackFor = ServerException.class)
+    public void setWhiteUserIdSet(Collection<String> whiteUserIdSet) {
+        //删除以前的
+        this.removeAllWhiteUserId();
+
+        //添加全部
+        this.addWhiteUserId(whiteUserIdSet);
+    }
+
+
+    public List<String> getWhiteUserIdSet() {
+        return this
+                .findWhiteUserId()
+                .stream()
+                .map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public void delBlackUserIdSet(Set<String> blackUserIdSet) {
+        this.removeByAccessTypeAndDictTypeAndValue(
+                AccessType.BLACK,
+                DictType.MID,
+                blackUserIdSet);
+    }
+
+    @Override
+    public Collection<String> getBlackUserIdSet() {
+        return this
+                .findBlackUserId()
+                .stream()
+                .map(Dict::getValue)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
 }

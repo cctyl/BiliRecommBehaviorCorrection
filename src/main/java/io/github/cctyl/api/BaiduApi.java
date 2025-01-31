@@ -8,7 +8,9 @@ import com.alibaba.fastjson2.JSONObject;
 import io.github.cctyl.anno.NoLog;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.BaiduImageClassify;
+import io.github.cctyl.service.ConfigService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,8 @@ import java.util.function.Supplier;
 public class BaiduApi {
 
 
+    @Autowired
+    private ConfigService configService;
 
 
     /**
@@ -117,7 +121,7 @@ public class BaiduApi {
      */
     public String getAccessToken(boolean refresh) {
 
-        String baiduAskKey = GlobalVariables.getBaiduAskKey();
+        String baiduAskKey = configService.getBaiduAskKey();
 
         if (!(StrUtil.isBlankIfStr(baiduAskKey) || refresh)) {
             return baiduAskKey;
@@ -129,8 +133,8 @@ public class BaiduApi {
                 .header("Accept", "application/json")
                 .form(Map.of(
                         "grant_type", "client_credentials",
-                        "client_id", GlobalVariables.getBaiduClientId(),
-                        "client_secret", GlobalVariables.getBaiduClientSecret()
+                        "client_id", configService.getBaiduClientId(),
+                        "client_secret", configService.getBaiduClientSecret()
                 ))
                 .execute()
                 .body();
@@ -138,7 +142,7 @@ public class BaiduApi {
         String accessToken = JSONObject.parseObject(body).getString("access_token");
 
 
-        GlobalVariables.updateBaiduAskKey(accessToken);
+        configService.updateBaiduAskKey(accessToken);
 
         return accessToken;
     }

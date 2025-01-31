@@ -3,8 +3,8 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
-import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.dto.DescV2;
 import io.github.cctyl.domain.dto.DislikeReason;
 import io.github.cctyl.domain.po.Tag;
@@ -57,7 +57,7 @@ public class BlackRuleService {
 
         for (VideoDetail videoDetail : videoList) {
             if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
-                GlobalVariables.INSTANCE.addBlackUserId(videoDetail.getOwner().getMid());
+                dictService.addBlackUserId(videoDetail.getOwner().getMid());
             }
             //1. 标题处理
             String title = videoDetail.getTitle();
@@ -82,9 +82,10 @@ public class BlackRuleService {
                 tagNameProcess.addAll(tagNameList);
             }
         }
-        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess);
-        List<String> topTagName = SegmenterUtil.getTopFrequentWord( tagNameProcess);
-        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(descProcess);
+        List<String> stopWordList = dictService.getStopWordList();
+        List<String> topDescKeyWord = SegmenterUtil.getTopFrequentWord(titleProcess,stopWordList);
+        List<String> topTagName = SegmenterUtil.getTopFrequentWord( tagNameProcess,stopWordList);
+        List<String> topTitleKeyWord = SegmenterUtil.getTopFrequentWord(descProcess,stopWordList);
 
         //排除bv开头的无用关键词
         topDescKeyWord = filterStartWithBv(topDescKeyWord);
@@ -97,21 +98,21 @@ public class BlackRuleService {
 
 
         //拿到需要忽略的黑名单关键词
-        Set<String> ignoreKeyWordSet = GlobalVariables.getIgnoreBlackKeyWordSet();
+        Set<String> ignoreKeyWordSet = dictService.getIgnoreBlackKeyWordSet();
 
-        topDescKeyWord.removeAll(GlobalVariables. getBlackKeywordSet());
+        topDescKeyWord.removeAll(dictService. getBlackKeywordSet());
         topDescKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topDescKeyWord)) {
             dictService.addBlackCache(topDescKeyWord, DictType.KEYWORD);
         }
 
-        topTitleKeyWord.removeAll(GlobalVariables.getBlackKeywordSet()  );
+        topTitleKeyWord.removeAll(dictService.getBlackKeywordSet()  );
         topTitleKeyWord.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTitleKeyWord)) {
             dictService.addBlackCache(topTitleKeyWord,DictType.KEYWORD);
         }
 
-        topTagName.removeAll(GlobalVariables. getBlackTagSet()  );
+        topTagName.removeAll(dictService. getBlackTagSet()  );
         //TODO tag的忽略名单不要套用黑名单关键词的，单独一份，这里需要修改
         topTagName.removeAll(ignoreKeyWordSet);
         if (CollUtil.isNotEmpty(topTagName)) {
@@ -162,8 +163,8 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTitleMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getTitle());
+    public boolean isTitleMatch(VideoDetail videoDetail,WordTree blackKeywordTree) {
+        String matchWord = blackKeywordTree.match(videoDetail.getTitle());
         boolean match = matchWord != null;
         log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
                 videoDetail.getBvid(),
@@ -189,15 +190,15 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isDescMatch(VideoDetail videoDetail) {
-        String matchWord = GlobalVariables.getBlackKeywordTree().match(videoDetail.getDesc());
+    public boolean isDescMatch(VideoDetail videoDetail,WordTree blackKeywordTree) {
+        String matchWord = blackKeywordTree.match(videoDetail.getDesc());
         boolean match = matchWord != null;
         String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
         if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
             match = match || videoDetail.getDescV2()
                     .stream()
                     .map(DescV2::getRawText)
-                    .anyMatch(GlobalVariables.getBlackKeywordTree() ::isMatch);
+                    .anyMatch(blackKeywordTree ::isMatch);
             desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
         }
         log.debug("视频:{}-{}的 简介：{}，匹配结果：{},匹配到的关键词：{}",
@@ -223,8 +224,8 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTidMatch(VideoDetail videoDetail) {
-        boolean match = GlobalVariables.getBlackTidSet() .contains(String.valueOf(videoDetail.getTid()));
+    public boolean isTidMatch(VideoDetail videoDetail,List<String> blackTidSet) {
+        boolean match = blackTidSet .contains(String.valueOf(videoDetail.getTid()));
 
         log.debug("视频:{}-{}的 分区：{}-{}，匹配结果：{}",
                 videoDetail.getBvid(),
@@ -260,7 +261,7 @@ public class BlackRuleService {
             log.error("视频:{}缺少up主信息", videoDetail);
             return false;
         }
-        boolean match = GlobalVariables.getBlackUserIdSet()
+        boolean match = dictService.getBlackUserIdSet()
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -292,10 +293,10 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTagMatch(VideoDetail videoDetail) {
+    public boolean isTagMatch(VideoDetail videoDetail, WordTree blackTagTree) {
         Tag matchTag = videoDetail.getTags()
                 .stream()
-                .filter(tag -> GlobalVariables.getBlackTagTree().isMatch(tag.getTagName()))
+                .filter(tag -> blackTagTree.isMatch(tag.getTagName()))
                 .findAny().orElse(null);
 
         boolean match = matchTag != null;
@@ -313,7 +314,7 @@ public class BlackRuleService {
                     String.format(REASON_FORMAT,
                             "Tag",
                             matchTag.getTagName(),
-                            GlobalVariables.getBlackTagTree().match(matchTag.getTagName())
+                            blackTagTree.match(matchTag.getTagName())
                     )
             );
             
@@ -327,23 +328,29 @@ public class BlackRuleService {
      * 黑名单判断
      *
      * @param videoDetail
+     * @param blackTagTree
+     * @param blackKeywordTree
      * @return
      */
-    public boolean blackMatch(VideoDetail videoDetail) {
+    public boolean blackMatch(VideoDetail videoDetail,
+                              WordTree blackTagTree,
+                              WordTree blackKeywordTree,
+                              List<String> blackTidSet
+                              ) {
         //1.1 标题是否触发黑名单关键词
-        return isTitleMatch(videoDetail)
+        return isTitleMatch(videoDetail, blackKeywordTree)
                 ||
                 //1.2 简介是否触发黑名单关键词
-                isDescMatch(videoDetail)
+                isDescMatch(videoDetail,blackKeywordTree)
                 ||
                 //1.3 标签是否触发关键词,需要先获取标签
-                isTagMatch(videoDetail)
+                isTagMatch(videoDetail,blackTagTree)
                 ||
                 //1.4 up主id是否在黑名单内
                 isMidMatch(videoDetail)
                 ||
                 //1.5 分区是否触发
-                isTidMatch(videoDetail)
+                isTidMatch(videoDetail,blackTidSet)
                 || //1.6 封面是否触发
                 isCoverMatch(videoDetail);
     }

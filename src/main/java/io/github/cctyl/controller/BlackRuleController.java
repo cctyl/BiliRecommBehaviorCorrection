@@ -1,6 +1,7 @@
 package io.github.cctyl.controller;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
 import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.config.TaskPool;
@@ -61,15 +62,18 @@ public class BlackRuleController {
         } else {
             return R.error().setMessage("参数缺失");
         }
-        boolean titleMatch = blackRuleService.isTitleMatch(videoDetail);
+        WordTree blackTagTree = dictService.getBlackTagTree();
+        WordTree blackKeywordTree = dictService.getBlackKeywordTree();
+        List<String> blackTidSet = dictService.getBlackTidSet();
+        boolean titleMatch = blackRuleService.isTitleMatch(videoDetail,blackKeywordTree);
         //1.2 简介是否触发黑名单关键词
-        boolean descMatch = blackRuleService.isDescMatch(videoDetail);
+        boolean descMatch = blackRuleService.isDescMatch(videoDetail,blackKeywordTree);
         //1.3 标签是否触发关键词,需要先获取标签
-        boolean tagMatch = blackRuleService.isTagMatch(videoDetail);
+        boolean tagMatch = blackRuleService.isTagMatch(videoDetail, blackTagTree);
         //1.4 up主id是否在黑名单内
         boolean midMatch = blackRuleService.isMidMatch(videoDetail);
         //1.5 分区是否触发
-        boolean tidMatch = blackRuleService.isTidMatch(videoDetail);
+        boolean tidMatch = blackRuleService.isTidMatch(videoDetail,blackTidSet);
         //1.6 封面是否触发
         boolean coverMatch = blackRuleService.isCoverMatch(videoDetail);
         //总结
@@ -173,7 +177,7 @@ public class BlackRuleController {
 
             if (!selectedId.isEmpty()) {
                 //添加黑名单关键词
-                GlobalVariables.INSTANCE.addBlackKeyWordFromCache(selectedId);
+               dictService.addBlackKeyWordFromCache(selectedId);
             }
 
             //舍弃的关键词下次不会再出现
@@ -185,7 +189,7 @@ public class BlackRuleController {
         } else if (type.equals(DictType.TAG)) {
             if (!selectedId.isEmpty()) {
                 //添加黑名单标签
-                GlobalVariables.INSTANCE.addBlackTagFromCache(selectedId);
+               dictService.addBlackTagFromCache(selectedId);
             }
             //舍弃的标签下次不会再出现
             if (!discardedId.isEmpty()) {
@@ -207,7 +211,7 @@ public class BlackRuleController {
     @Operation(summary = "新增黑名单分区id")
     @PostMapping("/tid")
     public R updateBlackTidSet(@RequestBody Set<String> blackTidSet) {
-        GlobalVariables.INSTANCE.addBlackTidSet(blackTidSet);
+        dictService.addBlackTidSet(blackTidSet);
         return R.ok();
     }
 
@@ -226,8 +230,8 @@ public class BlackRuleController {
         Set<String> collect = keywordList.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
 
         //与忽略的关键词进行过滤
-        collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
-        GlobalVariables.INSTANCE.addBlackKeyword(collect);
+        collect.removeAll(dictService.getIgnoreBlackKeyWordSet());
+        dictService.addBlackKeyword(collect);
 
         return R.ok();
     }
@@ -244,7 +248,7 @@ public class BlackRuleController {
     @Operation(summary = "修改黑名单用户id列表")
     @PostMapping("/user-id")
     public R updateBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
-        GlobalVariables.INSTANCE.addBlackUserIdSet(blackUserIdSet);
+        dictService.addBlackUserIdSet(blackUserIdSet);
 
         return R.ok();
     }
@@ -252,7 +256,7 @@ public class BlackRuleController {
     @Operation(summary = "修改黑名单用户id列表")
     @DeleteMapping("/user-id")
     public R deleteBlackUserIdSet(@RequestBody Set<String> blackUserIdSet) {
-        GlobalVariables.INSTANCE.delBlackUserIdSet(blackUserIdSet);
+        dictService.delBlackUserIdSet(blackUserIdSet);
 
         return R.ok();
     }
@@ -271,8 +275,8 @@ public class BlackRuleController {
 
         Set<String> collect = blackTagSet.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
         //与忽略的关键词进行过滤
-        collect.removeAll(GlobalVariables.getIgnoreBlackKeyWordSet());
-        GlobalVariables.INSTANCE.addBlackTagSet(collect);
+        collect.removeAll(dictService.getIgnoreBlackKeyWordSet());
+        dictService.addBlackTagSet(collect);
         return R.ok();
     }
 
@@ -294,7 +298,7 @@ public class BlackRuleController {
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
 
         Set<String> collect = ignoreKeyWordSet.stream().filter(StrUtil::isNotBlank).map(String::trim).collect(Collectors.toSet());
-        GlobalVariables.INSTANCE.addBlackIgnoreKeyword(collect);
+        dictService.addBlackIgnoreKeyword(collect);
 
         return R.ok();
     }

@@ -50,4 +50,10 @@ public class OverviewVo {
     //正在运行的任务列表
     private List<Task> taskList;
 
+    //历史点赞的视频数
+    private long likeVideoCount;
+
+    //历史点踩的视频数
+    private long hateVideoCount;
+
 }

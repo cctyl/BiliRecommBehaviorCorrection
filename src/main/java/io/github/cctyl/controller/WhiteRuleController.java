@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -76,13 +77,15 @@ public class WhiteRuleController {
         } else {
             return R.error().setMessage("参数缺失");
         }
+
+
         //白名单规则匹配
-        boolean whitelistRuleMatch = whiteRuleService.isWhitelistRuleMatch(videoDetail);
+        boolean whitelistRuleMatch = whiteRuleService.isWhitelistRuleMatch(videoDetail,whiteRuleService.getWhitelistRuleList());
         //up主id匹配
-        boolean midMatch = whiteRuleService.isUserIdMatch(videoDetail);
+        boolean midMatch = whiteRuleService.isUserIdMatch(videoDetail,dictService.getWhiteUserIdSet());
 
         //分区id匹配
-        boolean tidMatch = whiteRuleService.isTidMatch(videoDetail);
+        boolean tidMatch = whiteRuleService.isTidMatch(videoDetail,dictService.getWhiteTidSet());
 
         boolean total = whitelistRuleMatch || midMatch || tidMatch;
 
@@ -97,9 +100,6 @@ public class WhiteRuleController {
         return R.data(map);
 
     }
-
-
-
 
 
     /**
@@ -130,9 +130,9 @@ public class WhiteRuleController {
         boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             whiteRuleService.addTrain(id, finalTrainedAvidList, mid);
         });
-        if (b){
+        if (b) {
             return R.ok().setMessage("训练任务已开始");
-        }else {
+        } else {
             return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
         }
     }
@@ -162,15 +162,15 @@ public class WhiteRuleController {
 //        toUpdate.setTitleKeyWordList(whiteRuleService.filterIgnoreValue(toUpdate.getTitleKeyWordList()));
 //        toUpdate.setCoverKeyword(whiteRuleService.filterIgnoreValue(toUpdate.getCoverKeyword()));
 
-        WhiteListRule whiteListRule = GlobalVariables.INSTANCE.addOrUpdateWhitelitRule(toUpdate.transform());
+        WhiteListRule whiteListRule = whiteRuleService.addOrUpdateWhitelitRule(toUpdate.transform());
         return R.ok().setMessage("添加成功").setData(whiteListRule);
     }
 
 
     @Operation(summary = "添加搜索关键词")
     @PostMapping("/search")
-    public R addSearchKeyword(@RequestParam List<String> newSearchKeyword){
-        GlobalVariables.INSTANCE.addSearchKeyword(newSearchKeyword);
+    public R addSearchKeyword(@RequestParam List<String> newSearchKeyword) {
+        dictService.addSearchKeyword(newSearchKeyword);
         return R.ok();
     }
 
@@ -182,8 +182,8 @@ public class WhiteRuleController {
             @PathVariable("id") String id
     ) {
 
-        boolean result = GlobalVariables.INSTANCE.removeWhitelistRules(id);
-        return R.ok().setMessage("操作完成").setData("删除结果："+result);
+        boolean result = whiteRuleService.removeWhitelistRules(id);
+        return R.ok().setMessage("操作完成").setData("删除结果：" + result);
     }
 
 
@@ -191,18 +191,16 @@ public class WhiteRuleController {
     @GetMapping("/ignore")
     public R getIgnoreKeyWordSet() {
 
-        Set<String> keyWordSet = GlobalVariables.getIgnoreWhiteKeyWordSet();
+        Set<String> keyWordSet = dictService.getIgnoreWhiteKeyWordSet();
         return R.ok().setData(keyWordSet);
     }
 
     @Operation(summary = "添加到忽略关键词列表")
     @PostMapping("/ignore")
     public R addIgnoreKeyWordSet(@RequestBody Set<String> ignoreKeyWordSet) {
-        GlobalVariables.INSTANCE.addWhiteIgnoreKeyword(ignoreKeyWordSet);
+        whiteRuleService.addWhiteIgnoreKeyword(ignoreKeyWordSet);
         return R.ok();
     }
-
-
 
 
     /**
@@ -243,15 +241,15 @@ public class WhiteRuleController {
     @PostMapping("/thumb-up-all/{mid}")
     public R thumbUpUserAllVideo(
             @PathVariable("mid") String mid,
-            @RequestParam(value="page",defaultValue = "1") long page,
-            @RequestParam(value = "keyword",defaultValue = "") String keyword
+            @RequestParam(value = "page", defaultValue = "1") long page,
+            @RequestParam(value = "keyword", defaultValue = "") String keyword
     ) {
         boolean b = taskService.doTask(ReflectUtil.getCurrentMethodPath(), () -> {
             whiteRuleService.thumbUpUserAllVideo(mid, page, keyword);
         });
-        if (b){
+        if (b) {
             return R.ok().setMessage("点赞任务已开始");
-        }else {
+        } else {
             return R.error().setMessage("该任务正在被运行中，请等待上一个任务结束");
         }
 
