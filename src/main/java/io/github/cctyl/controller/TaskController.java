@@ -1,10 +1,12 @@
 package io.github.cctyl.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.R;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.domain.query.PageQuery;
+import io.github.cctyl.domain.vo.VideoVo;
 import io.github.cctyl.service.TaskService;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.service.impl.BiliService;
@@ -60,7 +62,7 @@ public class TaskController {
 
     @Operation(summary = "获取等待处理的数据")
     @GetMapping("/ready2handle")
-    public R getReady2HandleVideo(PageQuery pageQuery, HandleType handleType) {
+    public R<Page<VideoVo>> getReady2HandleVideo(PageQuery pageQuery, HandleType handleType) {
         return R.data(videoDetailService.findWithOwnerAndHandle(false, pageQuery, handleType));
     }
 

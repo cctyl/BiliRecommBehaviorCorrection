@@ -1,5 +1,6 @@
 package io.github.cctyl.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.VideoDetail;
@@ -39,7 +40,7 @@ public interface VideoDetailService extends IService<VideoDetail> {
      * @param pageQuery
      * @return
      */
-    List<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType);
+    Page<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType);
 
 
     void updateHandleInfoById(VideoDetail videoDetail);

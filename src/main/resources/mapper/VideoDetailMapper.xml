@@ -184,7 +184,7 @@
         from
         video_detail videoDetail
         left join owner t_owner on
-        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
+        t_owner.id = videoDetail.owner_id
         where videoDetail.handle is #{isHandle}
 
         and videoDetail.is_deleted = 0
@@ -198,7 +198,7 @@
         from
         video_detail videoDetail
         left join owner t_owner on
-        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
+        t_owner.id = videoDetail.owner_id
         where
 
         videoDetail.is_deleted = 0
@@ -228,7 +228,7 @@
         from
         video_detail videoDetail
         left join owner t_owner on
-        t_owner.id = videoDetail.owner_id and t_owner.is_deleted = 0
+        t_owner.id = videoDetail.owner_id
         where
 
         videoDetail.is_deleted = 0

@@ -56,9 +56,10 @@ public class BlackRuleService {
         List<String> tagNameProcess = new ArrayList<>();
 
         for (VideoDetail videoDetail : videoList) {
-            if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
-                dictService.addBlackUserId(videoDetail.getOwner().getMid());
-            }
+            // 视频被点踩不要把up主加入黑名单
+//            if (videoDetail.getOwner() != null && StrUtil.isNotBlank(videoDetail.getOwner().getMid())) {
+//                dictService.addBlackUserId(videoDetail.getOwner().getMid());
+//            }
             //1. 标题处理
             String title = videoDetail.getTitle();
             titleProcess.addAll(SegmenterUtil.process(title));
