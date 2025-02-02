@@ -27,7 +27,6 @@
 - [开发相关](#开发相关)
 - [后续开发计划](#后续开发计划)
 - [致谢](#致谢)
-- 
 # 前言
 
 [后端地址项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection)
