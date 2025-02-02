@@ -19,7 +19,7 @@
 # 前言
 
 [后端地址项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection)
-[web端地址项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection)
+[web端地址项目地址](https://github.com/cctyl/bili-rec-web)
 
 [android端项目地址（暂时废弃，等后续重构）](https://github.com/cctyl/BiliRecommBehaviorCorrectionAndroid)
 
@@ -80,8 +80,27 @@ bilibili就会减少搞笑分区的投稿。
 10. docker支持（开发中）
 11. 视频评论保存（查water表、训练等用途）
 
+# 界面概览
+![01-2.png](assets/img/example/01-2.png)
+![01.png](assets/img/example/01.png)
+![02-1.png](assets/img/example/02-1.png)
+![02-2.png](assets/img/example/02-2.png)
+![02-3.png](assets/img/example/02-3.png)
+![02-4.png](assets/img/example/02-4.png)
+![02-5.png](assets/img/example/02-5.png)
+![03.png](assets/img/example/03.png)
+![04.png](assets/img/example/04.png)
+![05.png](assets/img/example/05.png)
+![06-2.png](assets/img/example/06-2.png)
+![06.png](assets/img/example/06.png)
+![07-1.png](assets/img/example/07-1.png)
+![07-2.png](assets/img/example/07-2.png)
+![07-3.png](assets/img/example/07-3.png)
+![08.png](assets/img/example/08.png)
 
-    
+
+
+
 # 下载与运行
 [下载](https://github.com/cctyl/BiliRecommBehaviorCorrection/releases),解压，双击 运行.bat,
 浏览器打开 [http://127.0.0.1:9000](http://127.0.0.1:9000)即可。
