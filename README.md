@@ -113,10 +113,14 @@ bilibili就会减少搞笑分区的投稿。
 
 
 # 下载与运行
+## win用户
 [下载](https://github.com/cctyl/BiliRecommBehaviorCorrection/releases),解压，双击 运行.bat,
 浏览器打开 [http://127.0.0.1:9000](http://127.0.0.1:9000)即可。
 
 注：浏览器是可关闭的，但是黑窗口不要关闭
+
+## linux用户
+安装jdk21，然后执行 `java -jar -Xmx150m BiliRecommBehaviorCorrection-1.0-SNAPSHOT.jar` 即可
 
 # 快速开始
 ### 1.登陆
