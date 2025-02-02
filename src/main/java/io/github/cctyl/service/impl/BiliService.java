@@ -910,10 +910,10 @@ public class BiliService {
      */
     private void thirdProcess() {
 
-        List<String> dislikeIdList = prepareVideoService.pageFindId(1, 100, HandleType.DISLIKE);
-        List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 100, HandleType.THUMB_UP);
+        List<String> dislikeIdList = prepareVideoService.pageFindId(1, 40, HandleType.DISLIKE);
+        List<String> thumbUpIdList = prepareVideoService.pageFindId(1, 40, HandleType.THUMB_UP);
 
-        if (dislikeIdList.size() > 40) {
+        if (!dislikeIdList.isEmpty()) {
             log.debug("三次处理{}条黑名单数据", dislikeIdList.size());
             List<VideoDetail> blackTrainVideoList = new ArrayList<>(dislikeIdList.size());
             //执行点踩
@@ -953,7 +953,7 @@ public class BiliService {
         }
 
 
-        if (thumbUpIdList.size() > 20) {
+        if (!thumbUpIdList.isEmpty()) {
             log.debug("三次处理{}条白名单数据", thumbUpIdList.size());
             //执行点赞
             for (String id : thumbUpIdList) {
