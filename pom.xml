@@ -193,12 +193,10 @@
         </dependency>
 
         <!--数据库迁移支持-->
-<!--
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
--->
 
 
     </dependencies>
