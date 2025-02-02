@@ -9,6 +9,7 @@ import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.domain.vo.VideoVo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -57,4 +58,6 @@ public interface VideoDetailService extends IService<VideoDetail> {
     void updateProcessInfo(VideoDetail video);
 
     void fillOverviewInfo(OverviewVo overviewVo);
+
+    Page<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType, String search);
 }

@@ -3,12 +3,14 @@ package io.github.cctyl.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Opt;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.HandleType;
+import io.github.cctyl.domain.po.SimpleAuditingEntity;
 import io.github.cctyl.domain.query.PageQuery;
 import io.github.cctyl.domain.vo.OverviewVo;
 import io.github.cctyl.domain.vo.VideoVo;
@@ -189,6 +191,33 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
         return objectPage;
     }
+
+    @Override
+    public  Page<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType,
+                                                 String search
+                                                 ) {
+
+        Page<VideoDetail> page = this.lambdaQuery()
+                .like(StrUtil.isNotBlank(search),VideoDetail::getTitle,search)
+                .like(StrUtil.isNotBlank(search),VideoDetail::getDesc,search)
+                .eq(VideoDetail::isHandle, isHandle)
+                .eq(handleType!=null,VideoDetail::getHandleType, handleType)
+                .isNotNull(VideoDetail::getHandleType)
+                .orderByDesc(SimpleAuditingEntity::getCreatedDate)
+                .page(Page.of(pageQuery.getPage(), pageQuery.getSize()));
+        List<String> idCol = page.getRecords().stream().map(VideoDetail::getId).collect(Collectors.toList());
+
+        List<VideoVo> voWithOwnerByIdIn = baseMapper.findVoWithOwnerByIdIn(idCol);
+        voWithOwnerByIdIn.forEach(videoVo -> {
+            videoVo.setUpName(Opt.ofNullable(videoVo.getOwner()).map(Owner::getName).orElse(""));
+        });
+
+        Page<VideoVo> objectPage = Page.of(page.getCurrent(), page.getSize(), page.getTotal());
+        objectPage.setRecords(voWithOwnerByIdIn);
+
+        return objectPage;
+    }
+
 
     /**
      * 修改部分信息

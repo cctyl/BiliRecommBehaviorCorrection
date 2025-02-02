@@ -856,13 +856,13 @@ public class BiliService {
      * @param handleType
      */
     @Transactional(rollbackFor = ServerException.class)
-    public void secondProcessSingleVideo(String id, HandleType handleType, String reason) {
+    public void secondProcessSingleVideo(String id, HandleType handleType, String reason, boolean reHandle) {
         VideoDetail video = videoDetailService.getById(id);
         if (video == null) {
             throw new ServerException(400, "视频：" + id + "不存在");
         }
 
-        if (video.isHandle()) {
+        if ( !reHandle &&  video.isHandle()) {
             throw new ServerException(400, "视频：" + id + "已处理过");
         }
 
@@ -999,7 +999,7 @@ public class BiliService {
 
 
             for (VideoDetail record : records) {
-                this.secondProcessSingleVideo(record.getId(), record.getHandleType(), "默认处理");
+                this.secondProcessSingleVideo(record.getId(), record.getHandleType(), "默认处理",false);
             }
         }
 

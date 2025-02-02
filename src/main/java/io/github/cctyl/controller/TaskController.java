@@ -65,16 +65,25 @@ public class TaskController {
     public R<Page<VideoVo>> getReady2HandleVideo(PageQuery pageQuery, HandleType handleType) {
         return R.data(videoDetailService.findWithOwnerAndHandle(false, pageQuery, handleType));
     }
-
+    @Operation(summary = "获取历史处理过的数据")
+    @GetMapping("/already-handle")
+    public R<Page<VideoVo>> getAlreadyHandleVideo(PageQuery pageQuery, HandleType handleType,
+                                                  @RequestParam(required = false) String  search
+                                                  ) {
+        return R.data(videoDetailService.findWithOwnerAndHandle(true, pageQuery, handleType,search));
+    }
 
     @Operation(summary = "处理单条处理的数据（二次处理）")
     @PutMapping("/process")
     public R processSingleVideo(
             @RequestParam String id,
             @RequestParam HandleType handleType,
-            @RequestParam(defaultValue = "被用户反转了判断") String reason
+            @RequestParam(defaultValue = "被用户反转了判断") String reason,
+            @RequestParam(defaultValue = "false") boolean reHandle
+
+
     ) {
-        biliService.secondProcessSingleVideo(id, handleType, reason);
+        biliService.secondProcessSingleVideo(id, handleType, reason,reHandle);
         return R.ok();
     }
 

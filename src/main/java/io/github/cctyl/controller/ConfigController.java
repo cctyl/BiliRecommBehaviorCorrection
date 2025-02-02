@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
@@ -99,15 +100,21 @@ public class ConfigController {
             HttpServletResponse response
     ) throws IOException {
         // 使用 Hutool 从 URL 下载图片
-        InputStream inputStream = HttpUtil.createGet(url).execute().bodyStream();
+        try {
+            InputStream inputStream = HttpUtil.createGet(url).execute().bodyStream();
+            // 设置响应内容类型
+            response.setContentType("image/jpeg"); // 根据实际情况设置内容类型
 
-        // 设置响应内容类型
-        response.setContentType("image/jpeg"); // 根据实际情况设置内容类型
+            // 将图片流写入响应
+            IoUtil.copy(inputStream, response.getOutputStream());
+            response.flushBuffer();
+            IoUtil.close(inputStream);
+        }
+        catch (Exception e) {
+            response.sendError(500);
+        }
 
-        // 将图片流写入响应
-        IoUtil.copy(inputStream, response.getOutputStream());
-        response.flushBuffer();
-        IoUtil.close(inputStream);
+
 
     }
 
