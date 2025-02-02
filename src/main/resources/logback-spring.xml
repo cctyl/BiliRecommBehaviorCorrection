@@ -4,22 +4,22 @@
 <configuration scan="true">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <!-- 定义日志的根目录 -->
-    <property name="LOG_HOME" value="../logs/BiliRecommBehaviorCorrection" />
+    <property name="LOG_HOME" value="./logs" />
 
 
     <!--具体的输出到文件的 appender -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!--日志位置，保留时间-->
+<!--    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        &lt;!&ndash;日志位置，保留时间&ndash;&gt;
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_HOME}/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>90</maxHistory>
         </rollingPolicy>
-        <!--日志编码-->
+        &lt;!&ndash;日志编码&ndash;&gt;
         <encoder>
             <charset>utf-8</charset>
             <Pattern>%d %-5level [%thread] %logger{0} %M\(%F:%L\): %msg%n</Pattern>
         </encoder>
-    </appender>
+    </appender>-->
 
 
     <!-- 生成一个html格式的日志 -->
@@ -28,7 +28,7 @@
             <!--日志文件输出的文件名 -->
             <FileNamePattern>${LOG_HOME}/html/logFile-%d{yyyy-MM-dd}.%i.html</FileNamePattern>
             <!--日志文件保留天数 -->
-            <MaxHistory>90</MaxHistory>
+            <MaxHistory>10</MaxHistory>
             <MaxFileSize>10MB</MaxFileSize>
         </rollingPolicy>
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
@@ -57,22 +57,21 @@
     <!--异步的appender 里面关联了 多个appender，注意 ASYNC要放在被包含appender的下面，因为是按顺序读取的文件 -->
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>512</queueSize>
-        <appender-ref ref="FILE"/>
-
+        <!--只生成html格式的日志-->
+        <!--<appender-ref ref="FILE"/>-->
+        <appender-ref ref="FILE_HTML"/>
+        <appender-ref ref="ERR_HTML"/>
     </appender>
 
     <!--根日志记录器，默认情况下它的配置被其他日志记录器给继承
      root与logger是父子关系，没有特别定义则默认为root，任何一个类只会和一个logger对应，
     -->
-    <root level="info">
+    <root>
         <appender-ref ref="ASYNC"/>
-        <appender-ref ref="FILE_HTML"/>
-        <appender-ref ref="ERR_HTML"/>
-
     </root>
 
     <logger name="sun.rmi" level="info" />
-    <logger name="io.github.cctyl" level="debug" />
+    <logger name="io.github.cctyl" level="info" />
     <logger name="javax.management" level="info" />
     <logger name="io.lettuce.core" level="info" />
 
