@@ -80,10 +80,10 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
         }
 
         //2.2 播放数据 Stat
-        if(videoDetail.getStat()!=null){
-            videoDetail.getStat().setVideoId(videoDetail.getId());
-            statService.save(videoDetail.getStat());
-        }
+//        if(videoDetail.getStat()!=null){
+//            videoDetail.getStat().setVideoId(videoDetail.getId());
+//            statService.save(videoDetail.getStat());
+//        }
 
         //2.3 标签数据
         if(CollUtil.isNotEmpty(videoDetail.getTags())){
@@ -96,13 +96,14 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
 
 
         //2.4 relatedVideoList
-        if (CollUtil.isNotEmpty(videoDetail.getRelatedVideoList())){
-
-            //查询或保存
-            List<VideoDetail> relatedVideoList = this.saveIfNotExists(videoDetail.getRelatedVideoList());
-            //保存关联关系
-            videoRelateService.saveRelate(relatedVideoList,videoDetail);
-        }
+        // 关闭相关视频列表的保存
+//        if (CollUtil.isNotEmpty(videoDetail.getRelatedVideoList())){
+//
+//            //查询或保存
+//            List<VideoDetail> relatedVideoList = this.saveIfNotExists(videoDetail.getRelatedVideoList());
+//            //保存关联关系
+//            videoRelateService.saveRelate(relatedVideoList,videoDetail);
+//        }
 
         this.updateById(videoDetail);
 

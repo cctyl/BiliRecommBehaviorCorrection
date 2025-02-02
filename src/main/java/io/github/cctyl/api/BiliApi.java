@@ -1193,12 +1193,7 @@ public class BiliApi {
                     jsonObject, body
             );
 
-            JSONObject data = jsonObject.getJSONObject("data");
-            VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
-            videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
-            videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
-
-            return videoDetail;
+            return getVideoDetail(jsonObject);
         } catch (HttpException e) {
             throw new RuntimeException(e);
         }
@@ -1212,10 +1207,15 @@ public class BiliApi {
                 jsonObject, body
         );
 
+        return getVideoDetail(jsonObject);
+    }
+
+    private VideoDetail getVideoDetail(JSONObject jsonObject) {
         JSONObject data = jsonObject.getJSONObject("data");
         VideoDetail videoDetail = data.getJSONObject("View").to(VideoDetail.class);
         videoDetail.setTags(data.getJSONArray("Tags").toList(Tag.class));
-        videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
+        //关闭相关视频列表
+        //videoDetail.setRelatedVideoList(data.getJSONArray("Related").toList(VideoDetail.class));
 
         return videoDetail;
     }

@@ -11,25 +11,6 @@
         <result column="head_cover" property="headCover"/>
         <result column="content" property="content"/>
         <result column="short_content" property="shortContent"/>
-        <result column="type" property="type"/>
-        <result column="state" property="state"/>
-        <result column="ctime" property="ctime"/>
-        <result column="is_atten" property="isAtten"/>
-        <result column="likes" property="likes"/>
-        <result column="hates" property="hates"/>
-        <result column="attribute" property="attribute"/>
-        <result column="liked" property="liked"/>
-        <result column="hated" property="hated"/>
-        <result column="extra_attr" property="extraAttr"/>
-        <result column="music_id" property="musicId"/>
-        <result column="tag_type" property="tagType"/>
-        <result column="is_activity" property="isActivity"/>
-        <result column="color" property="color"/>
-        <result column="alpha" property="alpha"/>
-        <result column="is_season" property="isSeason"/>
-        <result column="subscribed_count" property="subscribedCount"/>
-        <result column="archive_count" property="archiveCount"/>
-        <result column="featured_count" property="featuredCount"/>
         <result column="jump_url" property="jumpUrl"/>
         <result column="created_date" property="createdDate"/>
         <result column="last_modified_date" property="lastModifiedDate"/>
