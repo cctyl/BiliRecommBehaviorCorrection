@@ -19,8 +19,9 @@
 # 前言
 
 [后端地址项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection)
+[web端地址项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrection)
 
-[android端项目地址](https://github.com/cctyl/BiliRecommBehaviorCorrectionAndroid)
+[android端项目地址（暂时废弃，等后续重构）](https://github.com/cctyl/BiliRecommBehaviorCorrectionAndroid)
 
 ***~~号养好了？~~* 不要推荐我不喜欢的东西了！**
 
@@ -49,10 +50,17 @@ bilibili就会减少搞笑分区的投稿。
 
 **谁说互联网没有记忆**
 把你希望关注的东西加入到搜索关键词当中
+
+# 核心原理
+一句话：抓取视频，根据黑白名单规则进行点赞、点踩，从而纠正bilibili的推荐算法
+流程图如下：
+![流程图.png](design/%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
+
+
 # 功能及特色
-1. 关键字主动搜索告知bilibili
-2. 支持热门排行榜处理
-3. 支持首页推荐视频处理
+1. 主动搜索设定的关键字，从而告知bilibili喜好
+2. 支持热门排行榜数据抓取
+3. 支持首页推荐视频数据抓取
 4. 多种视频识别方式
 - 标题关键字识别
 - 视频描述识别
@@ -60,32 +68,58 @@ bilibili就会减少搞笑分区的投稿。
 - 视频分区识别
 - up主id识别
 - 视频封面识别
-5. 黑白名单支持
+5. 支持黑白名单
 6. 训练模式
-
-    输入一个白名单规则，再输入一串你认为应当符合该规则的视频，会自动补充该规则，直到匹配大部分输入的数据
+   输入一个白名单规则，再输入一串你认为应当符合该规则的视频，会自动补充该规则，直到匹配大部分输入的数据
 7. 逻辑上扩充bilibili黑名单（开发中）
-   
+
    人为的增加bilibili黑名单，黑名单用户回复我的消息，全部自动删除。
 
 8. android客户端（开发中）
-9. web客户端（开发中）
+9. web客户端
 10. docker支持（开发中）
+11. 视频评论保存（查water表、训练等用途）
+
+
     
-# 食用
-## 待更新完毕页面后再更新这部分内容
+# 下载与运行
+[下载](https://github.com/cctyl/BiliRecommBehaviorCorrection/releases),解压，双击 运行.bat,
+浏览器打开 [http://127.0.0.1:9000](http://127.0.0.1:9000)即可。
 
-## ~~环境要求~~
-- jdk21
-- ~~redis~~
+# 快速开始
+### 1.登陆
+打开页面后，选择系统配置，在弹出的窗口中进行扫码登陆，手机上确认后，点击我已完成扫码，完成登陆。
+![howtologin.png](assets/img/howtologin.png)
 
-## ~~步骤~~
-1. 下载release压缩包
-2. 解压，得到 .jar结尾文件 以及 application.yml
-3. 浏览器打开bilibili，按下F12，找到网络栏。随便点击一个视频，查看发起的请求。直接复制请求头中的cookie字符串，填写到下一步的application.yml中
-4. 填写好application.yml 中的 诸如 defaultData ,百度的 clientId， redis地址
-5. java -jar xxxx.jar
-6. 挂机
+### 2.设置白名单关键词
+若视频匹配白名单规则，则会点赞、播放
+![whiterulesetting.png](assets/img/whiterulesetting.png)
+
+### 3.设置黑名单关键词
+若视频匹配黑名单规则，则会点踩
+![blacksetting.png](assets/img/blacksetting.png)
+
+### 4.设置搜索关键词
+这部分关键词会被主动搜索，也是三个数据来源之一。十分关键
+![searchkeywordsetting.png](assets/img/searchkeywordsetting.png)
+
+### 5.等待任务被定时运行即可
+![taskschdulesee.png](assets/img/taskschdulesee.png)
+
+
+# 开发相关
+### 后端技术栈
+- JDK 21
+- SpringBoot 3.1.2
+- mybatis-plus
+- sqlite
+- flyway
+- grpc
+- 结巴分词
+
+### 前端技术栈
+- vue2
+- echart
 
 # 后续开发计划
 功能    | 功能描述                                             |  开发进度 
@@ -101,5 +135,9 @@ android 客户端 | 提供总览、任务操作、日志查看、视频处理等
 web 客户端 | 提供总览、任务操作、日志查看、视频处理等功能                           | 尚未开始
 sqlite替换redis | 尽可能减轻过多的依赖，使用嵌入式的sqlite代替                        | 进行中
 黑名单用户回复我消息自动删除 | 逻辑上扩充bilibili黑名单                                 | 准备开始
-# API 集合
-部分API来自 [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect/)，感谢作者。
+
+# 致谢
+- [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect/) 提供了大部分的 Bilibili Api
+- [copilot](https://github.com/copilot) 80%的前端代码由copilot完成
+- [莫高设计](https://mastergo.com/) 前端ui均由莫高ai设计
+- [jetbrains](https://www.jetbrains.com/) jetbrains 公司提供了免费的IDE授权
