@@ -33,7 +33,9 @@ spring:
     virtual:
       enabled: true
 
-
+  web:
+    resources:
+      static-locations: classpath:/public/,file:./html/
 
 
 

@@ -243,7 +243,7 @@ public class BiliService {
 
                 )
         ) {
-            log.info("视频：{} 之前已处理过", avid);
+            log.debug("视频：{} 之前已处理过", avid);
             return;
         }
 
@@ -266,7 +266,7 @@ public class BiliService {
                 //加日志
                 thumbUpVideoList.add(videoDetail);
             } else {
-                log.info("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
+                log.debug("视频：{}-{} 不属于黑名单也并非白名单", videoDetail.getBvid(), videoDetail.getTitle());
                 recordHandleVideo(videoDetail, HandleType.OTHER);
             }
 
@@ -299,7 +299,7 @@ public class BiliService {
             VideoDetail byAid = videoDetailService.findByAid(videoDetail.getAid());
             try {
                 if (byAid != null && byAid.isHandle()) {
-                    log.info("视频：{} 之前已处理过", videoDetail.getAid());
+                    log.debug("视频：{} 之前已处理过", videoDetail.getAid());
                     continue;
                 }
 
@@ -398,7 +398,7 @@ public class BiliService {
             playTime = videoDuration;
         }
 
-        log.info("视频avid={} 预计观看时间：{}秒", aid, playTime);
+        log.debug("视频avid={} 预计观看时间：{}秒", aid, playTime);
 
         //当前已播放多少秒
         int nowPlayTime = 0;

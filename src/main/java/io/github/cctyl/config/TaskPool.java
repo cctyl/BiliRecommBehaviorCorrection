@@ -126,7 +126,7 @@ public class TaskPool {
                             &&
                             !futureTask.isDone()
             ) {
-                log.info("{}任务已存在，且尚未运行完成，无法新增该任务", enclosingMethodName);
+                log.debug("{}任务已存在，且尚未运行完成，无法新增该任务", enclosingMethodName);
                 return;
             }
         } finally {

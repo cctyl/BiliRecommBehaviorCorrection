@@ -216,7 +216,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                                             matchWordArr[1] = videoDetail.getTitle();
                                         });
 
-                                log.info("标题{} 匹配结果{}, 关键词：{}",
+                                log.debug("标题{} 匹配结果{}, 关键词：{}",
                                         videoDetail.getTitle(),
                                         titleMatch,
                                         matchWordArr[0]
@@ -255,7 +255,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
                                 }
 
-                                log.info("desc {},{} 匹配结果{}, 关键词:{}-{}",
+                                log.debug("desc {},{} 匹配结果{}, 关键词:{}-{}",
                                         videoDetail.getDesc(),
                                         videoDetail.getDescV2(),
                                         descMatch,
@@ -292,7 +292,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
                                 }
 
-                                log.info("tagName:{} 匹配结果{},具体匹配：{}，关键词{}",
+                                log.debug("tagName:{} 匹配结果{},具体匹配：{}，关键词{}",
                                         videoDetail.getTags()
                                                 .stream()
                                                 .map(Tag::getTagName)
@@ -531,7 +531,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         }
 
         if (CollUtil.isNotEmpty(trainedAvidList)) {
-            log.info("根据视频id进行训练");
+            log.debug("根据视频id进行训练");
             //从给定的视频列表进行训练
             whitelistRule = this.trainWhitelistRule(
                     whitelistRule,
@@ -540,7 +540,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         } else if (StrUtil.isNotBlank(mid)) {
             //从给定的up主的投稿视频进行训练
-            log.info("根据up主id进行训练");
+            log.debug("根据up主id进行训练");
             List<UserSubmissionVideo> allVideo = biliApi.searchUserAllSubmissionVideo(mid, 1, "");
             whitelistRule = this.trainWhitelistRule(
                     whitelistRule,
