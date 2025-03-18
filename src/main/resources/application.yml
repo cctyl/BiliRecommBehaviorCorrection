@@ -97,7 +97,7 @@ common:
   #是否需要执行初始化
   init: true
   #图像识别服务
-  imgService: baidu,
+#  imgService: baidu,
 
 
   ws:
