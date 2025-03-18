@@ -191,7 +191,7 @@ public class BiliService {
      */
     public void recordHandleVideo(VideoDetail videoDetail, HandleType handleType) {
         videoDetail.setHandleType(handleType);
-        videoDetail.setHandle(true);//TODO 这里也许应该为false
+        videoDetail.setHandle(false);
         if (videoDetail.getId() == null) {
             videoDetailService.saveVideoDetail(videoDetail);
         } else {
