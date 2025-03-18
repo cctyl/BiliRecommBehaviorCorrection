@@ -228,7 +228,7 @@ public class BiliService {
                              List<WhiteListRule> whitelistRuleList,
                              List<String> whiteUserIdList,
                              List<String> whiteTidList,
-                             WordTree blackTagTree,
+                             Set<String> blackTagSet,
                              WordTree blackKeywordTree,
                              List<String> blackTidSet
     ) {
@@ -254,7 +254,7 @@ public class BiliService {
             }
 
             //1. 如果是黑名单内的，直接执行点踩操作
-            if (blackRuleService.blackMatch(videoDetail,blackTagTree,blackKeywordTree,blackTidSet)) {
+            if (blackRuleService.blackMatch(videoDetail,blackTagSet,blackKeywordTree,blackTidSet)) {
                 //点踩
                 addReadyToHandleVideo(videoDetail, HandleType.DISLIKE);
                 //加日志
@@ -675,7 +675,7 @@ public class BiliService {
             List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
             List<String> whiteTidSet = dictService.getWhiteTidSet();
 
-            WordTree blackTagTree = dictService.getBlackTagTree();
+            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
             WordTree blackKeywordTree = dictService.getBlackKeywordTree();
             List<String> blackTidSet = dictService.getBlackTidSet();
 
@@ -704,7 +704,7 @@ public class BiliService {
                         //处理挑选结果
                         try {
                             this.firstProcess(thumbUpVideoList, dislikeVideoList, searchResult.getAid(),
-                                    whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
+                                    whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
                             );
                             ThreadUtil.sleep(5);
                         } catch (LogOutException e) {
@@ -742,7 +742,7 @@ public class BiliService {
             List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
             List<String> whiteTidSet = dictService.getWhiteTidSet();
 
-            WordTree blackTagTree = dictService.getBlackTagTree();
+            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
             WordTree blackKeywordTree = dictService.getBlackKeywordTree();
             List<String> blackTidSet = dictService.getBlackTidSet();
 
@@ -764,7 +764,7 @@ public class BiliService {
                                 thumbUpVideoList,
                                 dislikeVideoList,
                                 videoDetail.getAid()
-                                ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
+                                ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
                         );
                         ThreadUtil.sleep(5);
                     } catch (LogOutException e) {
@@ -803,7 +803,7 @@ public class BiliService {
             List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
             List<String> whiteTidSet = dictService.getWhiteTidSet();
 
-            WordTree blackTagTree = dictService.getBlackTagTree();
+            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
             WordTree blackKeywordTree = dictService.getBlackKeywordTree();
             List<String> blackTidSet = dictService.getBlackTidSet();
 
@@ -820,7 +820,7 @@ public class BiliService {
                                     thumbUpVideoList,
                                     dislikeVideoList,
                                     recommendCard.getArgs().getAid()
-                                    ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagTree, blackKeywordTree, blackTidSet
+                                    ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
                             );
                             ThreadUtil.sleep(5);
                         }

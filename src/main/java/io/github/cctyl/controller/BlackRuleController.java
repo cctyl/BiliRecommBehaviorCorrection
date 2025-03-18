@@ -62,14 +62,14 @@ public class BlackRuleController {
         } else {
             return R.error().setMessage("参数缺失");
         }
-        WordTree blackTagTree = dictService.getBlackTagTree();
+        Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
         WordTree blackKeywordTree = dictService.getBlackKeywordTree();
         List<String> blackTidSet = dictService.getBlackTidSet();
         boolean titleMatch = blackRuleService.isTitleMatch(videoDetail,blackKeywordTree);
         //1.2 简介是否触发黑名单关键词
         boolean descMatch = blackRuleService.isDescMatch(videoDetail,blackKeywordTree);
         //1.3 标签是否触发关键词,需要先获取标签
-        boolean tagMatch = blackRuleService.isTagMatch(videoDetail, blackTagTree);
+        boolean tagMatch = blackRuleService.isTagMatch(videoDetail, blackTagSet);
         //1.4 up主id是否在黑名单内
         boolean midMatch = blackRuleService.isMidMatch(videoDetail);
         //1.5 分区是否触发

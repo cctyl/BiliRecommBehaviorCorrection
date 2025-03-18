@@ -294,10 +294,10 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isTagMatch(VideoDetail videoDetail, WordTree blackTagTree) {
+    public boolean isTagMatch(VideoDetail videoDetail, Set<String> blackTagSet) {
         Tag matchTag = videoDetail.getTags()
                 .stream()
-                .filter(tag -> blackTagTree.isMatch(tag.getTagName()))
+                .filter(tag -> blackTagSet.contains(tag.getTagName()))
                 .findAny().orElse(null);
 
         boolean match = matchTag != null;
@@ -315,7 +315,7 @@ public class BlackRuleService {
                     String.format(REASON_FORMAT,
                             "Tag",
                             matchTag.getTagName(),
-                            blackTagTree.match(matchTag.getTagName())
+                            "true"
                     )
             );
             
@@ -329,12 +329,12 @@ public class BlackRuleService {
      * 黑名单判断
      *
      * @param videoDetail
-     * @param blackTagTree
+     * @param blackTagSet
      * @param blackKeywordTree
      * @return
      */
     public boolean blackMatch(VideoDetail videoDetail,
-                              WordTree blackTagTree,
+                              Set<String> blackTagSet,
                               WordTree blackKeywordTree,
                               List<String> blackTidSet
                               ) {
@@ -345,7 +345,7 @@ public class BlackRuleService {
                 isDescMatch(videoDetail,blackKeywordTree)
                 ||
                 //1.3 标签是否触发关键词,需要先获取标签
-                isTagMatch(videoDetail,blackTagTree)
+                isTagMatch(videoDetail,blackTagSet)
                 ||
                 //1.4 up主id是否在黑名单内
                 isMidMatch(videoDetail)
