@@ -3,6 +3,8 @@ package io.github.cctyl.controller;
 import io.github.cctyl.domain.dto.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.github.cctyl.domain.po.WatchedVideo;
+import io.github.cctyl.mapper.WatchedVideoMapper;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class VideoDetailController {
     @Autowired
     private VideoDetailService videoDetailService;
 
+    @Autowired
+    private WatchedVideoMapper watchedVideoMapper;
+
     /**
     * 根据id查询
     *
@@ -42,6 +47,14 @@ public class VideoDetailController {
         VideoDetail videoDetail = videoDetailService.getById(id);
         return R.data("data",videoDetail);
     }
+
+    @Operation(summary = "已观看视频")
+    @PostMapping("/watch/{aid}")
+    public R getById(@PathVariable("aid") Long aid) {
+        int insert = watchedVideoMapper.insert(new WatchedVideo().setAid(aid));
+        return R.data("data",insert);
+    }
+
 
     /**
     * 分页查询
