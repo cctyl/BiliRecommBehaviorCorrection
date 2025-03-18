@@ -15,6 +15,7 @@ import io.github.cctyl.service.ImageGenderDetectService;
 import io.github.cctyl.utils.SegmenterUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,6 +41,8 @@ public class BlackRuleService {
     @Autowired
     private ImageGenderDetectService imageGenderDetectService;
 
+    @Value("${common.imgOpen}")
+    private Boolean imgOpen;
     
     
     /**
@@ -135,6 +138,11 @@ public class BlackRuleService {
      * @return
      */
     public boolean isCoverMatch(VideoDetail videoDetail) {
+
+        if (!Boolean.TRUE.equals(imgOpen)){
+            return false;
+        }
+
         try {
             byte[] picByte = biliApi.getPicByte(videoDetail.getPic());
             boolean human = imageGenderDetectService.isHuman(picByte);

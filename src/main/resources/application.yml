@@ -96,8 +96,10 @@ server:
 common:
   #是否需要执行初始化
   init: true
+  # 是否开启图像识别
+  imgOpen: false
   #图像识别服务
-#  imgService: baidu,
+  imgService: baidu,
 
 
   ws:

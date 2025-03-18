@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-@ConditionalOnExpression("'${common.imgService}'==null || '${common.imgService}'.length()==0 ")
+@ConditionalOnExpression("!${common.imgOpen}")
 public class ImageGenderDetectServiceDefaultImpl implements ImageGenderDetectService {
 
     /**
