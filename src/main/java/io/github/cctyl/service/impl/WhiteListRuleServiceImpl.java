@@ -159,7 +159,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                     String.format(REASON_FORMAT,
                             "描述",
                             videoDetail.getTitle(),
-                            "成功"
+                            matchWord
                     )
             );
         }
@@ -182,7 +182,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                     String.format(REASON_FORMAT,
                             "标题",
                             videoDetail.getTitle(),
-                            "成功"
+                            matchWord
                     )
             );
         }
