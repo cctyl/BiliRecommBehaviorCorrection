@@ -2,25 +2,15 @@ package io.github.cctyl.service;
 
 import cn.hutool.dfa.WordTree;
 import com.baomidou.mybatisplus.extension.service.IService;
-import io.github.cctyl.config.GlobalVariables;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.WhiteListRule;
 import io.github.cctyl.domain.enumeration.AccessType;
 import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.vo.OverviewVo;
-import io.github.cctyl.exception.ServerException;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -136,7 +126,7 @@ public interface DictService extends IService<Dict> {
 
     void fillOverviewInfo(OverviewVo overviewVo);
 
-    Collection<String> getBlackUserIdSet();
+    List<String> getBlackUserIdSet();
 
     void addBlackUserId(String mid);
 
@@ -152,4 +142,9 @@ public interface DictService extends IService<Dict> {
 
     void addBlackKeyWordFromCache(List<String> keywordIdSet);
 
+    List<String> findValueByDictTypeAndAccessType(DictType dictType, AccessType accessType);
+
+    WordTree getWhiteTitleKeywordTree();
+
+    WordTree getWhiteDescKeywordTree();
 }

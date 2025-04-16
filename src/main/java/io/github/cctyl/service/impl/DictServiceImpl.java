@@ -675,6 +675,30 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
 
     }
 
+    @Override
+    public WordTree getWhiteTitleKeywordTree() {
+
+        WordTree wordTree = new WordTree();
+        wordTree.addWords(this.findValueByDictTypeAndAccessType(DictType.TITLE, AccessType.WHITE));
+        return wordTree;
+    }
+
+    @Override
+    public WordTree getWhiteDescKeywordTree() {
+        WordTree wordTree = new WordTree();
+        wordTree.addWords(this.findValueByDictTypeAndAccessType(DictType.DESC, AccessType.WHITE));
+        return wordTree;
+    }
+
+    public List<String> findValueByDictTypeAndAccessType(DictType dictType, AccessType accessType) {
+        return this.findByDictTypeAndAccessType(dictType, accessType)
+                .stream()
+                .map(Dict::getValue)
+                .distinct()
+                .collect(Collectors.toList())
+                ;
+    }
+
     public void addBlackKeywordAndRemoveIfExist(Collection<String> keywordCol) {
 
         this.removeAndAddDict(
@@ -712,7 +736,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Di
     }
 
     @Override
-    public Collection<String> getBlackUserIdSet() {
+    public List<String> getBlackUserIdSet() {
         return this
                 .findBlackUserId()
                 .stream()

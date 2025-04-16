@@ -7,12 +7,8 @@ import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.cctyl.api.BiliApi;
-import io.github.cctyl.config.GlobalVariables;
-import io.github.cctyl.config.TaskPool;
 import io.github.cctyl.domain.dto.*;
-import io.github.cctyl.domain.enumeration.TaskStatus;
 import io.github.cctyl.domain.po.Dict;
-import io.github.cctyl.domain.po.Task;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.enumeration.HandleType;
 import io.github.cctyl.domain.po.WhiteListRule;
@@ -224,13 +220,10 @@ public class BiliService {
      * @param dislikeVideoList
      * @param avid
      */
-    public void firstProcess(List<VideoDetail> thumbUpVideoList, List<VideoDetail> dislikeVideoList, Long avid,
-                             List<WhiteListRule> whitelistRuleList,
-                             List<String> whiteUserIdList,
-                             List<String> whiteTidList,
-                             Set<String> blackTagSet,
-                             WordTree blackKeywordTree,
-                             List<String> blackTidSet
+    public void firstProcess(List<VideoDetail> thumbUpVideoList,
+                             List<VideoDetail> dislikeVideoList,
+                             Long avid,
+                             FirstProcessData result
     ) {
 
         log.debug("处理视频avid={}", avid);
@@ -252,14 +245,30 @@ public class BiliService {
             if (videoDetail == null) {
                 videoDetail = biliApi.getVideoDetail(avid);
             }
-
             //1. 如果是黑名单内的，直接执行点踩操作
-            if (blackRuleService.blackMatch(videoDetail,blackTagSet,blackKeywordTree,blackTidSet)) {
+            if (
+                    blackRuleService.blackMatch(
+                            videoDetail,
+                            result.blackTagSet(),
+                            result.blackKeywordTree(),
+                            result.blackTidSet(),
+                            result.blackUserIdSet()
+                    )
+            ) {
                 //点踩
                 addReadyToHandleVideo(videoDetail, HandleType.DISLIKE);
                 //加日志
                 dislikeVideoList.add(videoDetail);
-            } else if (whiteRuleService.whiteMatch(videoDetail, whitelistRuleList, whiteUserIdList, whiteTidList)) {
+            } else if (
+                    whiteRuleService.whiteMatch(
+                            videoDetail,
+                            result.whitelistRuleList(),
+                            result.whiteUserIdSet(),
+                            result.whiteTidSet(),
+                            result.whiteTitleKeywordTree(),
+                            result.whiteDescKeywordTree()
+                    )
+            ) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
                 addReadyToHandleVideo(videoDetail, HandleType.THUMB_UP);
@@ -656,36 +665,35 @@ public class BiliService {
         return taskService.doTask(ReflectUtil.getCurrentMethodPath(), this::homeRecommendTask);
     }
 
+    public void commonFirstProcessHandle(TriConsumer<LinkedList<VideoDetail>,LinkedList<VideoDetail>,FirstProcessData> consumer){
+        reentrantLock.lock();
+        try {
+            before();
+            //0.初始化部分
+            //本次点赞视频列表
+            var thumbUpVideoList = new LinkedList<VideoDetail>();
+            //本次点踩视频列表
+            var dislikeVideoList = new LinkedList<VideoDetail>();
+            FirstProcessData result = getResult();
+            consumer.accept(thumbUpVideoList, dislikeVideoList, result);
+            videoLogOutput(thumbUpVideoList, dislikeVideoList);
+        } finally {
+            reentrantLock.unlock();
+        }
+    }
 
     /**
      * 关键词搜索任务 中午12点
      */
     private void searchTask() {
-        reentrantLock.lock();
-        try {
-
-            before();
-            //0.初始化部分
-            //本次点赞视频列表
-            var thumbUpVideoList = new LinkedList<VideoDetail>();
-
-            //本次点踩视频列表
-            var dislikeVideoList = new LinkedList<VideoDetail>();
-            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
-            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
-            List<String> whiteTidSet = dictService.getWhiteTidSet();
-
-            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
-            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
-            List<String> blackTidSet = dictService.getBlackTidSet();
-
+        commonFirstProcessHandle((thumbUpVideoList, dislikeVideoList, result) -> {
             //1.主动搜索，针对搜索视频进行处理
-        /*
-            一个关键字获取几条？肯定是每个关键字都需要搜索遍历的
-            根据关键词搜索后，不能按顺序点击，这是为了模拟用户真实操作
-            不能全部分页获取后，再进行点击，这样容易风控
-            一个关键词，从两页抽20条
-         */
+            /*
+                一个关键字获取几条？肯定是每个关键字都需要搜索遍历的
+                根据关键词搜索后，不能按顺序点击，这是为了模拟用户真实操作
+                不能全部分页获取后，再进行点击，这样容易风控
+                一个关键词，从两页抽20条
+             */
             log.info("==============开始处理关键词==================");
             for (String keyword : dictService.getSearchKeywordSet()) {
                 //不能一次获取完再执行操作，要最大限度模拟用户的行为
@@ -699,53 +707,44 @@ public class BiliService {
                         continue;
                     }
                     ThreadUtil.sleep(3);
-                    //随机挑选10个
-                    DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
-                        //处理挑选结果
-                        try {
-                            this.firstProcess(thumbUpVideoList, dislikeVideoList, searchResult.getAid(),
-                                    whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
-                            );
-                            ThreadUtil.sleep(5);
-                        } catch (LogOutException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                        }
-                    });
+                    randomHandle(SearchResult::getAid, searchRaw, thumbUpVideoList, dislikeVideoList, result);
                 }
                 ThreadUtil.sleep(3);
             }
-            videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        } finally {
-            reentrantLock.unlock();
-        }
+        });
+    }
 
+    private <T> void randomHandle(
+            Function<T, Long> getAid,
+            List<T> searchRaw,
+            LinkedList<VideoDetail> thumbUpVideoList,
+            LinkedList<VideoDetail> dislikeVideoList,
+            FirstProcessData result
+    ) {
+        //随机挑选10个
+        DataUtil.randomAccessList(searchRaw, 10, searchResult -> {
+            //处理挑选结果
+            try {
+                this.firstProcess(
+                        thumbUpVideoList,
+                        dislikeVideoList,
+                        getAid.apply(searchResult),
+                        result
+                );
+                ThreadUtil.sleep(5);
+            } catch (LogOutException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
     }
 
     /**
      * 热门排行榜任务
      */
     private void hotRankTask() {
-
-
-        reentrantLock.lock();
-        try {
-            before();
-            //0.初始化部分
-            //本次点赞视频列表
-            var thumbUpVideoList = new LinkedList<VideoDetail>();
-
-            //本次点踩视频列表
-            var dislikeVideoList = new LinkedList<VideoDetail>();
-            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
-            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
-            List<String> whiteTidSet = dictService.getWhiteTidSet();
-
-            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
-            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
-            List<String> blackTidSet = dictService.getBlackTidSet();
-
+        commonFirstProcessHandle((thumbUpVideoList, dislikeVideoList, result) -> {
             //2. 对排行榜数据进行处理，处理100条，即5页数据
             log.info("==============开始处理热门排行榜==================");
             for (int i = 1; i <= 10; i++) {
@@ -757,29 +756,10 @@ public class BiliService {
                     continue;
                 }
                 //20条中随机抽10条
-                DataUtil.randomAccessList(hotRankVideo, 10, videoDetail -> {
-                    try {
-                        //处理挑选结果
-                        this.firstProcess(
-                                thumbUpVideoList,
-                                dislikeVideoList,
-                                videoDetail.getAid()
-                                ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
-                        );
-                        ThreadUtil.sleep(5);
-                    } catch (LogOutException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        log.error(e.getMessage(), e);
-                    }
-                });
+                randomHandle(VideoDetail::getAid, hotRankVideo, thumbUpVideoList, dislikeVideoList, result);
                 ThreadUtil.sleep(7);
             }
-            videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        } finally {
-            reentrantLock.unlock();
-        }
-
+        });
 
     }
 
@@ -788,56 +768,49 @@ public class BiliService {
      * 首页推荐任务
      */
     private void homeRecommendTask() {
-
-        reentrantLock.lock();
-
-        try {
-            before();
-            //0.初始化部分
-            //本次点赞视频列表
-            var thumbUpVideoList = new LinkedList<VideoDetail>();
-
-            //本次点踩视频列表
-            var dislikeVideoList = new LinkedList<VideoDetail>();
-            List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
-            List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
-            List<String> whiteTidSet = dictService.getWhiteTidSet();
-
-            Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
-            WordTree blackKeywordTree = dictService.getBlackKeywordTree();
-            List<String> blackTidSet = dictService.getBlackTidSet();
-
+        commonFirstProcessHandle((thumbUpVideoList, dislikeVideoList, result) -> {
             //3. 对推荐视频进行处理
             log.info("==============开始处理首页推荐==================");
             for (int i = 0; i < 10; i++) {
                 List<RecommendCard> recommendVideo = biliApi.getRecommendVideo();
-                DataUtil.randomAccessList(recommendVideo, 10, recommendCard -> {
-
-                    try {
-                        if ("av".equals(recommendCard.getCardGoto())) {
-                            //处理挑选结果
-                            this.firstProcess(
-                                    thumbUpVideoList,
-                                    dislikeVideoList,
-                                    recommendCard.getArgs().getAid()
-                                    ,whitelistRuleList, whiteUserIdSet, whiteTidSet, blackTagSet, blackKeywordTree, blackTidSet
-                            );
-                            ThreadUtil.sleep(5);
-                        }
-                    } catch (LogOutException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        log.error(e.getMessage(), e);
-                    }
-                });
+                if (recommendVideo != null) {
+                    recommendVideo = recommendVideo
+                            .stream()
+                            .filter(recommendCard -> {
+                                return ("av".equals(recommendCard.getCardGoto()));
+                            })
+                            .collect(Collectors.toList());
+                }
+                randomHandle(recommendCard -> recommendCard.getArgs().getAid(), recommendVideo,
+                        thumbUpVideoList, dislikeVideoList, result);
                 ThreadUtil.sleep(7);
             }
-            videoLogOutput(thumbUpVideoList, dislikeVideoList);
-        } finally {
-            reentrantLock.unlock();
-        }
-
+        });
     }
+
+    private FirstProcessData getResult() {
+        List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
+        List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
+        List<String> whiteTidSet = dictService.getWhiteTidSet();
+        WordTree whiteTitleKeywordTree = dictService.getWhiteTitleKeywordTree();
+        WordTree whiteDescKeywordTree = dictService.getWhiteDescKeywordTree();
+
+
+        Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
+        WordTree blackKeywordTree = dictService.getBlackKeywordTree();
+        List<String> blackTidSet = dictService.getBlackTidSet();
+        List<String> blackUserIdSet = dictService.getBlackUserIdSet();
+        return new FirstProcessData(
+                whitelistRuleList, whiteUserIdSet,
+                whiteTidSet,
+                whiteTitleKeywordTree,
+                whiteDescKeywordTree,
+                blackTagSet, blackKeywordTree,
+                blackTidSet, blackUserIdSet
+                );
+    }
+
+
 
     /**
      * 执行完毕后输出日志

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.WordTree;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -67,10 +68,12 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean whiteMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList
-            , List<String> whiteUserIdList
-            , List<String> whiteTidList
-    ) {
+    public boolean whiteMatch(VideoDetail videoDetail,
+                              List<WhiteListRule> whitelistRuleList,
+                              List<String> whiteUserIdList,
+                              List<String> whiteTidList,
+                              WordTree whiteTitleKeywordTree,
+                              WordTree whiteDescKeywordTree) {
 
         /**
          * 假设，白名单使用一个专门的条件构造器，一个对象。里面包含 关键词 分区 up主id 等多个条件
@@ -100,17 +103,83 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
             //分区id匹配
             boolean tidMatch = isTidMatch(videoDetail,whiteTidList);
+
+            //标题关键词匹配
+            boolean titleMatch = isTitleMatch(videoDetail, whiteTitleKeywordTree);
+
+            //描述关键词匹配
+            boolean descMatch = isDescMatch(videoDetail, whiteDescKeywordTree);
+
             return
                     whitelistRuleMatch
                             ||
                             userIdMatch
                             ||
                             tidMatch
+                            ||
+                            titleMatch
+                            ||
+                            descMatch
                     ;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return false;
         }
+    }
+
+    private boolean isDescMatch(VideoDetail videoDetail, WordTree whiteKeywordTree) {
+
+        String matchWord = whiteKeywordTree.match(videoDetail.getDesc());
+        boolean match = matchWord != null;
+        String desc = videoDetail.getDesc() == null ? "" : videoDetail.getDesc();
+        if (CollUtil.isNotEmpty(videoDetail.getDescV2())) {
+            match = match || videoDetail.getDescV2()
+                    .stream()
+                    .map(DescV2::getRawText)
+                    .anyMatch(whiteKeywordTree ::isMatch);
+            desc = desc + "," + videoDetail.getDescV2().stream().map(DescV2::getRawText).collect(Collectors.joining(","));
+        }
+        log.debug("视频:{}-{}的 简介：{}，匹配结果：{},匹配到的关键词：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                desc,
+                match,
+                matchWord
+        );
+        if (match) {
+            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    String.format(REASON_FORMAT,
+                            "描述",
+                            videoDetail.getTid(),
+                            "成功"
+                    )
+            );
+        }
+        return match;
+    }
+
+    private boolean isTitleMatch(VideoDetail videoDetail, WordTree whiteKeywordTree) {
+        String matchWord = whiteKeywordTree.match(videoDetail.getTitle());
+        boolean match = matchWord != null;
+        log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
+                videoDetail.getBvid(),
+                videoDetail.getTitle(),
+                videoDetail.getTitle(),
+                match,
+                matchWord
+        );
+        if (match) {
+            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+                    String.format(REASON_FORMAT,
+                            "标题",
+                            videoDetail.getTid(),
+                            "成功"
+                    )
+            );
+        }
+        return match;
     }
 
     /**

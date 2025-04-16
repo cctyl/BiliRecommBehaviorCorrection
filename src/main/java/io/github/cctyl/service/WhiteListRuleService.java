@@ -1,23 +1,15 @@
 package io.github.cctyl.service;
 
-import cn.hutool.core.lang.Opt;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.dfa.WordTree;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
-import io.github.cctyl.domain.enumeration.AccessType;
-import io.github.cctyl.domain.enumeration.DictType;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
 import io.github.cctyl.domain.po.WhiteListRule;
-import io.github.cctyl.exception.ServerException;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -53,10 +45,12 @@ public interface WhiteListRuleService extends IService<WhiteListRule> {
 
     void removeWhiteCoverKeyword(Set<String> ignoreKeyWordSet);
 
-    boolean whiteMatch(VideoDetail videoDetail, List<WhiteListRule> whitelistRuleList
-            , List<String> whiteUserIdList
-            , List<String> whiteTidList
-    );
+    boolean whiteMatch(VideoDetail videoDetail,
+                       List<WhiteListRule> whitelistRuleList,
+                       List<String> whiteUserIdList,
+                       List<String> whiteTidList,
+                       WordTree whiteTitleKeywordTree,
+                       WordTree whiteDescKeywordTree);
 
     boolean isUserIdMatch(VideoDetail videoDetail, List<String> whiteUserIdList);
 

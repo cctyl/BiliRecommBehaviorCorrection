@@ -265,12 +265,12 @@ public class BlackRuleService {
      * @param videoDetail
      * @return
      */
-    public boolean isMidMatch(VideoDetail videoDetail) {
+    public boolean isMidMatch(VideoDetail videoDetail, Collection<String> blackUserIdSet) {
         if (videoDetail.getOwner() == null || videoDetail.getOwner().getMid() == null) {
             log.error("视频:{}缺少up主信息", videoDetail);
             return false;
         }
-        boolean match = dictService.getBlackUserIdSet()
+        boolean match = blackUserIdSet
                 .contains(videoDetail.getOwner().getMid());
 
         log.debug("视频:{}-{}的 up主：{}-{}，匹配结果：{}",
@@ -344,7 +344,8 @@ public class BlackRuleService {
     public boolean blackMatch(VideoDetail videoDetail,
                               Set<String> blackTagSet,
                               WordTree blackKeywordTree,
-                              List<String> blackTidSet
+                              List<String> blackTidSet,
+                              Collection<String> blackUserIdSet
                               ) {
         //1.1 标题是否触发黑名单关键词
         return isTitleMatch(videoDetail, blackKeywordTree)
@@ -356,11 +357,12 @@ public class BlackRuleService {
                 isTagMatch(videoDetail,blackTagSet)
                 ||
                 //1.4 up主id是否在黑名单内
-                isMidMatch(videoDetail)
+                isMidMatch(videoDetail,blackUserIdSet)
                 ||
                 //1.5 分区是否触发
                 isTidMatch(videoDetail,blackTidSet)
-                || //1.6 封面是否触发
-                isCoverMatch(videoDetail);
+//                || //1.6 封面是否触发
+//                isCoverMatch(videoDetail)
+                ;
     }
 }
