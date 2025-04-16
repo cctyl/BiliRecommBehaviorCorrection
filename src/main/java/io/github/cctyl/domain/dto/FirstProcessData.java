@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public record FirstProcessData(
+public record FirstProcessData (
         List<WhiteListRule> whitelistRuleList,
         List<String> whiteUserIdSet,
         List<String> whiteTidSet,

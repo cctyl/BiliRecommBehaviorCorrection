@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.domain.dto.CheckResult;
 import io.github.cctyl.domain.dto.WhiteListRuleAddUpdateDto;
 import io.github.cctyl.domain.po.Dict;
 import io.github.cctyl.domain.po.VideoDetail;
@@ -68,7 +69,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
      * @return
      */
     @Override
-    public boolean whiteMatch(VideoDetail videoDetail,
+    public CheckResult whiteMatch(VideoDetail videoDetail,
                               List<WhiteListRule> whitelistRuleList,
                               List<String> whiteUserIdList,
                               List<String> whiteTidList,
@@ -96,10 +97,10 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
 
         try {
             //白名单规则匹配
-            boolean whitelistRuleMatch = isWhitelistRuleMatch(videoDetail,whitelistRuleList);
+            boolean listRuleMatch = isWhitelistRuleMatch(videoDetail,whitelistRuleList);
 
             //up主id匹配
-            boolean userIdMatch = isUserIdMatch(videoDetail,whiteUserIdList);
+            boolean midMatch = isUserIdMatch(videoDetail,whiteUserIdList);
 
             //分区id匹配
             boolean tidMatch = isTidMatch(videoDetail,whiteTidList);
@@ -110,20 +111,26 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
             //描述关键词匹配
             boolean descMatch = isDescMatch(videoDetail, whiteDescKeywordTree);
 
-            return
-                    whitelistRuleMatch
-                            ||
-                            userIdMatch
-                            ||
-                            tidMatch
-                            ||
-                            titleMatch
-                            ||
-                            descMatch
-                    ;
+            //标签匹配
+            boolean tagMatch = false;
+
+            //封面匹配
+            boolean coverMatch = false;
+
+            boolean total = titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch || listRuleMatch;
+            return new CheckResult(
+                    total,
+                    titleMatch,
+                    descMatch,
+                    tagMatch,
+                    midMatch,
+                    tidMatch,
+                    coverMatch,
+                    listRuleMatch
+            );
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return false;
+            return  CheckResult.error();
         }
     }
 
@@ -147,11 +154,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 matchWord
         );
         if (match) {
-            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+            videoDetail.setThumbUpReason(
                     Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
                     String.format(REASON_FORMAT,
                             "描述",
-                            videoDetail.getTid(),
+                            videoDetail.getTitle(),
                             "成功"
                     )
             );
@@ -159,7 +166,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         return match;
     }
 
-    private boolean isTitleMatch(VideoDetail videoDetail, WordTree whiteKeywordTree) {
+    public boolean isTitleMatch(VideoDetail videoDetail, WordTree whiteKeywordTree) {
         String matchWord = whiteKeywordTree.match(videoDetail.getTitle());
         boolean match = matchWord != null;
         log.debug("视频:{}-{}的标题：{}，匹配结果：{} ,匹配到的关键词：{}",
@@ -170,11 +177,11 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 matchWord
         );
         if (match) {
-            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+            videoDetail.setThumbUpReason(
                     Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
                     String.format(REASON_FORMAT,
                             "标题",
-                            videoDetail.getTid(),
+                            videoDetail.getTitle(),
                             "成功"
                     )
             );
@@ -241,7 +248,7 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
                 match);
 
         if (match) {
-            videoDetail.setThumbUpReason(Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
+            videoDetail.setThumbUpReason(
                     Opt.ofNullable(videoDetail.getThumbUpReason()).orElse("") +
                     String.format(REASON_FORMAT,
                             "分区id",
@@ -388,10 +395,10 @@ public class WhiteListRuleServiceImpl extends ServiceImpl<WhiteListRuleMapper, W
         String matchDetail = "";
         if (match) {
             matchDetail =
-                    " \t 关键词：" + matchWordArr[0] + "\t 标题：" + matchWordArr[1] + "\n" +
-                            " \t 关键词：" + matchWordArr[2] + "\t desc：" + matchWordArr[3] + "\n" +
-                            " \t 关键词：" + matchWordArr[4] + "\t descV2：" + matchWordArr[5] + "\n" +
-                            " \t 关键词：" + matchWordArr[6] + "\t tagName：" + matchWordArr[7] + "\n"
+                    "  联合匹配 关键词：" + matchWordArr[0] + " 标题：" + matchWordArr[1] + "<br/>" +
+                            "  关键词：" + matchWordArr[2] + " desc：" + matchWordArr[3] + "<br/>" +
+                            "  关键词：" + matchWordArr[4] + " descV2：" + matchWordArr[5] + "<br/>" +
+                            "  关键词：" + matchWordArr[6] + " tagName：" + matchWordArr[7] + "<br/>"
             ;
 
             videoDetail.setThumbUpReason(

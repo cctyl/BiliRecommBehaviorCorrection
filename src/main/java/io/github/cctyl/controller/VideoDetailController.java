@@ -1,15 +1,28 @@
 package io.github.cctyl.controller;
 
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
+import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.domain.dto.CheckResult;
+import io.github.cctyl.domain.dto.FirstProcessData;
 import io.github.cctyl.domain.dto.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.github.cctyl.domain.dto.VideoCheckDetail;
 import io.github.cctyl.domain.po.WatchedVideo;
 import io.github.cctyl.mapper.WatchedVideoMapper;
+import io.github.cctyl.service.WhiteListRuleService;
+import io.github.cctyl.service.impl.BiliService;
+import io.github.cctyl.service.impl.BlackRuleService;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import io.github.cctyl.service.VideoDetailService;
 import io.github.cctyl.domain.po.VideoDetail;
@@ -34,6 +47,18 @@ public class VideoDetailController {
     @Autowired
     private WatchedVideoMapper watchedVideoMapper;
 
+    @Autowired
+    private BiliService biliService;
+
+    @Autowired
+    private WhiteListRuleService whiteListRuleService;
+
+    @Autowired
+    private BlackRuleService blackRuleService;
+
+    @Autowired
+    private BiliApi biliApi;
+
     /**
     * 根据id查询
     *
@@ -53,6 +78,63 @@ public class VideoDetailController {
     public R getById(@PathVariable("aid") Long aid) {
         int insert = watchedVideoMapper.insert(new WatchedVideo().setAid(aid));
         return R.data("data",insert);
+    }
+
+
+    @Operation(summary = "指定视频是否符合白名单")
+    @GetMapping("/check-video")
+    public R checkVideo(
+            @Parameter(name = "aid", description = "avid")
+            @RequestParam(required = false) Long aid,
+            @Parameter(name = "bvid", description = "bvid")
+            @RequestParam(required = false) String bvid
+    ) {
+
+        VideoDetail videoDetail ;
+        if (aid != null) {
+            videoDetail = videoDetailService.findWithDetailByAid(aid);
+            if (videoDetail==null){
+                videoDetail = biliApi.getVideoDetail(aid);
+            }
+        } else if (StrUtil.isNotBlank(bvid)) {
+
+            videoDetail = videoDetailService.findWithDetailByBvid(bvid);
+
+            if (videoDetail==null) {
+                videoDetail = biliApi.getVideoDetail(bvid);
+            }
+        } else {
+            return R.error().setMessage("参数缺失");
+        }
+        FirstProcessData result = biliService. getResult();
+
+        CheckResult whiteResult = whiteListRuleService.whiteMatch(
+                videoDetail,
+                result.whitelistRuleList(),
+                result.whiteUserIdSet(),
+                result.whiteTidSet(),
+                result.whiteTitleKeywordTree(),
+                result.whiteDescKeywordTree()
+        );
+
+        CheckResult blackResult = blackRuleService.blackMatch(
+                videoDetail,
+                result.blackTagSet(),
+                result.blackKeywordTree(),
+                result.blackTidSet(),
+                result.blackUserIdSet()
+        );
+
+
+        return R.data(  new VideoCheckDetail(
+                        whiteResult,
+                        blackResult,
+                        videoDetail.getThumbUpReason(),
+                        videoDetail.getBlackReason(),
+                        videoDetail
+                )
+        );
+
     }
 
 

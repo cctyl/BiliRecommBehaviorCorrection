@@ -5,6 +5,7 @@ import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.dfa.WordTree;
 import io.github.cctyl.api.BiliApi;
+import io.github.cctyl.domain.dto.CheckResult;
 import io.github.cctyl.domain.dto.DescV2;
 import io.github.cctyl.domain.dto.DislikeReason;
 import io.github.cctyl.domain.po.Tag;
@@ -244,7 +245,6 @@ public class BlackRuleService {
                 match);
 
         if (match) {
-            videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+"分区id:" + videoDetail.getTid() + "匹配成功");
 
             videoDetail.setBlackReason(Opt.ofNullable(videoDetail.getBlackReason()).orElse("")+
                     String.format(REASON_FORMAT,
@@ -341,28 +341,31 @@ public class BlackRuleService {
      * @param blackKeywordTree
      * @return
      */
-    public boolean blackMatch(VideoDetail videoDetail,
-                              Set<String> blackTagSet,
-                              WordTree blackKeywordTree,
-                              List<String> blackTidSet,
-                              Collection<String> blackUserIdSet
+    public CheckResult blackMatch(VideoDetail videoDetail,
+                                  Set<String> blackTagSet,
+                                  WordTree blackKeywordTree,
+                                  List<String> blackTidSet,
+                                  Collection<String> blackUserIdSet
                               ) {
-        //1.1 标题是否触发黑名单关键词
-        return isTitleMatch(videoDetail, blackKeywordTree)
-                ||
-                //1.2 简介是否触发黑名单关键词
-                isDescMatch(videoDetail,blackKeywordTree)
-                ||
-                //1.3 标签是否触发关键词,需要先获取标签
-                isTagMatch(videoDetail,blackTagSet)
-                ||
-                //1.4 up主id是否在黑名单内
-                isMidMatch(videoDetail,blackUserIdSet)
-                ||
-                //1.5 分区是否触发
-                isTidMatch(videoDetail,blackTidSet)
-//                || //1.6 封面是否触发
-//                isCoverMatch(videoDetail)
-                ;
+
+        boolean descMatch = isDescMatch(videoDetail, blackKeywordTree);
+        boolean tagMatch = isTagMatch(videoDetail, blackTagSet);
+        boolean midMatch = isMidMatch(videoDetail, blackUserIdSet);
+        boolean tidMatch = isTidMatch(videoDetail, blackTidSet);
+        boolean titleMatch = isTitleMatch(videoDetail, blackKeywordTree);
+        boolean coverMatch =  false; //  isCoverMatch(videoDetail);
+        boolean listRuleMatch = false;
+
+        boolean total = titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch || listRuleMatch;
+        return new CheckResult(
+                total,
+                titleMatch,
+                descMatch,
+                tagMatch,
+                midMatch,
+                tidMatch,
+                coverMatch,
+                listRuleMatch
+        );
     }
 }

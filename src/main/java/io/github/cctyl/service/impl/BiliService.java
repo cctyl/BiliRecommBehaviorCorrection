@@ -253,7 +253,7 @@ public class BiliService {
                             result.blackKeywordTree(),
                             result.blackTidSet(),
                             result.blackUserIdSet()
-                    )
+                    ).total()
             ) {
                 //点踩
                 addReadyToHandleVideo(videoDetail, HandleType.DISLIKE);
@@ -267,7 +267,7 @@ public class BiliService {
                             result.whiteTidSet(),
                             result.whiteTitleKeywordTree(),
                             result.whiteDescKeywordTree()
-                    )
+                    ).total()
             ) {
                 // 3.不是黑名单内的，就一定是我喜欢的吗？ 不一定,比如排行榜的数据，接下来再次判断
                 //播放并点赞
@@ -788,7 +788,7 @@ public class BiliService {
         });
     }
 
-    private FirstProcessData getResult() {
+    public FirstProcessData getResult() {
         List<WhiteListRule> whitelistRuleList = whiteRuleService.getWhitelistRuleList();
         List<String> whiteUserIdSet = dictService.getWhiteUserIdSet();
         List<String> whiteTidSet = dictService.getWhiteTidSet();

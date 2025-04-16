@@ -49,52 +49,6 @@ public class BlackRuleController {
     @Autowired
     private TaskService taskService;
 
-    @Operation(summary = "指定视频是否符合黑名单")
-    @GetMapping("/check-video")
-    public R checkVideo(@Parameter(name = "aid", description = "avid") @RequestParam(required = false) Long aid, @Parameter(name = "bvid", description = "bvid") @RequestParam(required = false) String bvid) {
-
-        VideoDetail videoDetail;
-        if (aid != null) {
-
-            videoDetail = biliApi.getVideoDetail(aid);
-        } else if (StrUtil.isNotBlank(bvid)) {
-            videoDetail = biliApi.getVideoDetail(bvid);
-        } else {
-            return R.error().setMessage("参数缺失");
-        }
-        Set<String> blackTagSet = new HashSet<>(dictService.getBlackTagSet());
-        WordTree blackKeywordTree = dictService.getBlackKeywordTree();
-        List<String> blackTidSet = dictService.getBlackTidSet();
-        Collection<String> blackUserIdSet = dictService.getBlackUserIdSet();
-        boolean titleMatch = blackRuleService.isTitleMatch(videoDetail,blackKeywordTree);
-        //1.2 简介是否触发黑名单关键词
-        boolean descMatch = blackRuleService.isDescMatch(videoDetail,blackKeywordTree);
-        //1.3 标签是否触发关键词,需要先获取标签
-        boolean tagMatch = blackRuleService.isTagMatch(videoDetail, blackTagSet);
-        //1.4 up主id是否在黑名单内
-        boolean midMatch = blackRuleService.isMidMatch(videoDetail,blackUserIdSet);
-        //1.5 分区是否触发
-        boolean tidMatch = blackRuleService.isTidMatch(videoDetail,blackTidSet);
-        //1.6 封面是否触发
-        boolean coverMatch = false;
-                //blackRuleService.isCoverMatch(videoDetail);
-        //总结
-        boolean total = titleMatch || descMatch || tagMatch || midMatch || tidMatch || coverMatch;
-
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("videoDetail", videoDetail);
-        map.put("total", total);
-        map.put("titleMatch", titleMatch);
-        map.put("descMatch", descMatch);
-        map.put("tagMatch", tagMatch);
-        map.put("midMatch", midMatch);
-        map.put("tidMatch", tidMatch);
-        map.put("coverMatch", coverMatch);
-        map.put("blackReason", videoDetail.getBlackReason());
-
-        return R.data(map);
-
-    }
 
     @Operation(summary = "对指定分区的 排行榜、热门视频进行点踩")
     @PostMapping("/disklike-by-tid")

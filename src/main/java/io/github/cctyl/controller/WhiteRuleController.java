@@ -59,47 +59,6 @@ public class WhiteRuleController {
     private TaskService taskService;
 
 
-    @Operation(summary = "指定视频是否符合白名单")
-    @GetMapping("/check-video")
-    public R checkVideo(
-            @Parameter(name = "aid", description = "avid")
-            @RequestParam(required = false) Long aid,
-            @Parameter(name = "bvid", description = "bvid")
-            @RequestParam(required = false) String bvid
-    ) {
-
-        VideoDetail videoDetail;
-        if (aid != null) {
-
-            videoDetail = biliApi.getVideoDetail(aid);
-        } else if (StrUtil.isNotBlank(bvid)) {
-            videoDetail = biliApi.getVideoDetail(bvid);
-        } else {
-            return R.error().setMessage("参数缺失");
-        }
-
-
-        //白名单规则匹配
-        boolean whitelistRuleMatch = whiteRuleService.isWhitelistRuleMatch(videoDetail,whiteRuleService.getWhitelistRuleList());
-        //up主id匹配
-        boolean midMatch = whiteRuleService.isUserIdMatch(videoDetail,dictService.getWhiteUserIdSet());
-
-        //分区id匹配
-        boolean tidMatch = whiteRuleService.isTidMatch(videoDetail,dictService.getWhiteTidSet());
-
-        boolean total = whitelistRuleMatch || midMatch || tidMatch;
-
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("videoDetail", videoDetail);
-        map.put("whitelistRuleMatch", whitelistRuleMatch);
-        map.put("midMatch", midMatch);
-        map.put("tidMatch", tidMatch);
-        map.put("total", total);
-        map.put("thumbUpReason", videoDetail.getThumbUpReason());
-
-        return R.data(map);
-
-    }
 
 
     /**

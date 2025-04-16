@@ -154,9 +154,14 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
      */
     @Override
     public VideoDetail findWithDetailByAid(Long avid) {
+        return this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>().eq(VideoDetail::getAid, avid));
+    }
 
-        return   this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
-                .eq(VideoDetail::getAid,avid));
+
+    @Override
+    public VideoDetail findWithDetailByBvid(String bvid) {
+        return this.findWithOwnerAndTag(new LambdaQueryWrapper<VideoDetail>()
+                .eq(VideoDetail::getBvid, bvid));
     }
 
     @Override
