@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,10 +45,10 @@ public class ReplyServiceImpl extends ServiceImpl<VideoReplyMapper, VideoReply> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveReply(long avid) {
-        log.info("保存视频:{} 评论开始",avid);
+        log.info("保存视频:{} 评论开始", avid);
 
         VideoDetail videoDetail = videoDetailService.findByAid(avid);
-        if (videoDetail==null){
+        if (videoDetail == null) {
             videoDetail = biliApi.getVideoDetail(avid);
             videoDetailService.saveVideoDetail(videoDetail);
         }
@@ -55,16 +56,26 @@ public class ReplyServiceImpl extends ServiceImpl<VideoReplyMapper, VideoReply> 
 
         VideoDetail finalVideoDetail = videoDetail;
         List<VideoReply> replyList = DataUtil.eachGetPageData(
-                1, 20, 5,
-                (pageNo, pageSize) -> biliApi.getReply(avid, pageNo, pageSize),
+                1, 20, null,
+                (pageNo, pageSize) -> {
+
+                    try {
+                        return biliApi.getReply(avid, pageNo, pageSize);
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        ThreadUtil.s10();
+                    }
+
+                    return new ArrayList<>();
+                },
                 videoReplies -> {
                     ThreadUtil.s10();
                 }
         );
-        this.lambdaUpdate().eq(VideoReply::getOid,avid);
+        this.lambdaUpdate().eq(VideoReply::getOid, avid);
         replyList.forEach(videoReply -> videoReply.setVideoId(finalVideoDetail.getId()));
         this.saveBatch(replyList);
 
-        log.info("保存视频:{} 评论结束",avid);
+        log.info("保存视频:{} 评论结束", avid);
     }
 }

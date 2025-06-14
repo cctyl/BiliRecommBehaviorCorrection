@@ -62,4 +62,6 @@ public interface VideoDetailService extends IService<VideoDetail> {
     Page<VideoVo> findWithOwnerAndHandle(boolean isHandle, PageQuery pageQuery, HandleType handleType, String search);
 
     VideoDetail findWithDetailByBvid(String bvid);
+
+    VideoDetail findByBvid(String bvid);
 }

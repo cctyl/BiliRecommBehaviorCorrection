@@ -459,20 +459,20 @@ public class BiliApi {
                     .setSex((String) replyJsonObject.getByPath("$.member.sex"));
 
             //如果有评论，则抓取评论树
-            if (
-                    replyJsonObject.getJSONArray("replies") != null
-                            &&
-                    !replyJsonObject.getJSONArray("replies").isEmpty())
-            {
-                List<VideoReply> childReply = DataUtil.eachGetPageData(
-                        1, 20, null,
-                        (pn, ps) -> this.getReplyReply(avid, pn, ps, videoReply.getRpid()),
-                        videoReplies -> {
-                            ThreadUtil.s10();
-                        }
-                );
-                result.addAll(childReply);
-            }
+//            if (
+//                    replyJsonObject.getJSONArray("replies") != null
+//                            &&
+//                    !replyJsonObject.getJSONArray("replies").isEmpty())
+//            {
+//                List<VideoReply> childReply = DataUtil.eachGetPageData(
+//                        1, 20, null,
+//                        (pn, ps) -> this.getReplyReply(avid, pn, ps, videoReply.getRpid()),
+//                        videoReplies -> {
+//                            ThreadUtil.s10();
+//                        }
+//                );
+//                result.addAll(childReply);
+//            }
             result.add(videoReply);
         }
         return result;

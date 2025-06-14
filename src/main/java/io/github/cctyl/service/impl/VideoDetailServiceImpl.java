@@ -170,6 +170,17 @@ public class VideoDetailServiceImpl extends ServiceImpl<VideoDetailMapper, Video
                 .eq(VideoDetail::getId,id));
     }
 
+
+    @Override
+    public VideoDetail findByBvid(String bvid) {
+
+        List<VideoDetail> list = this.lambdaQuery().eq(VideoDetail::getBvid, bvid).list();
+        if (list!=null && list.size()>0){
+            return list.get(0);
+        }
+        return null;
+    }
+
     /**
      * 根据 处理状态查询 视频列表
      *
