@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.cctyl.mapper.CookieHeaderDataMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="io.github.cctyl.domain.po.CookieHeaderData">
+        <id column="id" property="id"/>
+        <result column="url" property="url"/>
+        <result column="ckey" property="ckey"/>
+        <result column="cvalue" property="cvalue"/>
+
+    </resultMap>
+
+
+    <!--用于联表查询的，id做了别名处理-->
+    <resultMap id="BaseResultMapAssoc" type="io.github.cctyl.domain.po.CookieHeaderData">
+        <id column="cookieHeaderData_id" property="id"/>
+        <result column="cookieHeaderData_url" property="url"/>
+        <result column="cookieHeaderData_ckey" property="ckey"/>
+        <result column="cookieHeaderData_cvalue" property="cvalue"/>
+
+    </resultMap>
+
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, url, ckey, cvalue, type
+    </sql>
+
+
+    <!--联表查询使用的sql-->
+    <sql id="Base_Column_List_Assoc">
+
+        cookieHeaderData.id as cookieHeaderData_id,
+        cookieHeaderData.url as cookieHeaderData_url,
+        cookieHeaderData.ckey as cookieHeaderData_ckey,
+        cookieHeaderData.cvalue as cookieHeaderData_cvalue,
+        cookieHeaderData.type as cookieHeaderData_type,
+    </sql>
+    <update id="updateRefresh">
+
+        update
+            cookie_header_data
+        set
+            cvalue =
+        CASE  ckey
+
+        <foreach collection="cookieMap" index="key" item="value" >
+            WHEN #{key}
+            then #{value}
+        </foreach>
+
+        end
+        where
+        classify = 'COOKIE'
+        and media_type = 'TIMELY_UPDATE'
+        ;
+
+
+    </update>
+    <select id="findByType" resultType="io.github.cctyl.domain.po.CookieHeaderData">
+        select *
+        from cookie_header_data
+        where type = #{dataType}
+    </select>
+
+
+
+</mapper>

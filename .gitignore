@@ -40,8 +40,8 @@ local.properties
 .settings/
 .loadpath
 .factorypath
-/src/main/resources/rebel.xml
-/src/test/java/*
+/java/src/main/resources/rebel.xml
+/java/src/test/java/*
 # External tool builders
 .externalToolBuilders/**
 
@@ -158,3 +158,18 @@ Desktop.ini
 
 bili-recomm.db-journal
 application-dev.yml
+
+
+
+
+*.exe
+
+**/.idea
+
+
+debug
+
+
+target
+
+

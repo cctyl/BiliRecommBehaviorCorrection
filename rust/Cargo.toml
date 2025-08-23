@@ -1,0 +1,42 @@
+[package]
+name = "simple-backup"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+
+rbs = { version = "4.5"}
+rbatis = { version = "4.5",features = ["debug_mode"]}
+rbdc-sqlite = { version = "4.5" }
+fast_log = "1.6"
+# filetime = "0.2"
+
+
+
+log = "0.4.27"
+chrono = { version = "0.4.26", features = ["serde"] } #处理时间戳
+dotenvy = "0.15.7" #加载环境变量
+jsonwebtoken = "9.2.0" # JWT处理
+serde = { version = "1.0.183", features = ["derive"] }
+serde_json = "1.0.104"
+
+
+
+
+validator = { version = "0.20.0", features = ["derive"] }
+axum-valid = { version = "0.23.0", features = ["full_validator"] }
+axum = { version = "0.8.4", features = ["macros","multipart"] }
+# axum-extra = { version = "0.9.3", features = ["cookie"] }
+tokio = { version = "1.39.3", features = ["full"] }
+tower = { version = "0.5.0" }
+time = "0.3.20"
+tower-http = { version = "0.5.2", features = ["cors"] }
+thiserror = "2.0.12"
+anyhow = "1.0.98"
+bytesize = "2.0.1"
+idgenerator = "2.0.0"
+# md-5 = "0.11.0-rc.0"
+md5 = "0.8.0"
+qrcode = { version = "0.14.1"}
+image = "0.25.6"
