@@ -34,9 +34,8 @@ time = "0.3.20"
 tower-http = { version = "0.5.2", features = ["cors"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
-bytesize = "2.0.1"
 idgenerator = "2.0.0"
-# md-5 = "0.11.0-rc.0"
+reqwest ={version = "0.12.23",features = ["rustls-tls","cookies","json"]} 
 md5 = "0.8.0"
-qrcode = { version = "0.14.1"}
-image = "0.25.6"
+hex = "0.4"
+urlencoding = "2.1"

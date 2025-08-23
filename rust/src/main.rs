@@ -9,11 +9,11 @@ mod dao;
 mod entity;
 mod handler;
 mod utils;
+mod api;
 
 use crate::app::database::{self, CONTEXT};
 use app::config::Config;
 use axum::{Extension, Router, extract::DefaultBodyLimit};
-use bytesize::ByteSize;
 use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
 use tower_http::{
@@ -54,13 +54,12 @@ fn build_router() -> Router {
         .allow_headers(cors::Any)
         .allow_credentials(false)
         .max_age(Duration::from_secs(3600 * 12));
-    let body_limit = DefaultBodyLimit::max(ByteSize::mib(2048).as_u64() as usize);
 
 
 
     handler::create_router()
         .layer(cors)
-        .layer(body_limit)
+   
 
 
 }
