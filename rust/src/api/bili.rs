@@ -1,20 +1,66 @@
 use std::collections::HashMap;
+use std::sync::Mutex;
 
-use crate::app::constans;
 use crate::app::response::R;
+use crate::app::{constans, error::HttpError};
 use anyhow::Context;
 use hex;
+use log::{error, info};
 use std::collections::BTreeMap;
 use urlencoding::encode;
+
+static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
+
+fn check_resp(value: &serde_json::Value) -> R<()> {
+    let flag = value["code"]
+        .as_i64()
+        .ok_or(HttpError::Biz("Failed to get code".to_string()))?
+        == 0;
+
+    if !flag {
+        error!("响应异常: {:#?}", value["message"].as_str());
+
+        if let Some(code) = value["code"].as_i64() {
+            match code {
+                86090 => info!("已扫码未确认"),
+                10003 => info!("稿件不存在"),
+                86039 => info!("二维码尚未确认"),
+                65007 => info!("视频已踩过"),
+                -101 => {
+                    //TODO 登陆过期，清除accessKey
+                    //configService.updateAccessKey(null);
+                    info!("登录过期，清除accessKey");
+                    error!("body: {:#?}", value);
+                }
+                -404 => {
+                    info!("请求的资源不存在");
+                    error!("body: {:#?}", value);
+                }
+                _ => {
+                    info!("异常的code: {:#?}", code);
+                    error!("body: {:#?}", value);
+                }
+            }
+        } else {
+            error!("body: {:#?}", value);
+            error!("响应异常: code not found");
+        }
+
+        R::Err(HttpError::Biz(format!(
+            "检查响应失败:{:#?}",
+            value["message"].as_str()
+        )))
+    } else {
+        R::Ok(())
+    }
+}
 
 /**
  *  申请二维码（TV端）
  */
 pub async fn get_tv_login_qr_code() -> R<()> {
     let url = "https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code";
-
     let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
-
     params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
     params.insert("appsec", constans::THIRD_PART_APPSEC.to_string());
     params.insert("local_id", "0".to_string());
@@ -26,20 +72,30 @@ pub async fn get_tv_login_qr_code() -> R<()> {
         .post(url)
         .form(&signed_params)
         .send()
-        .await
-        .context("Failed to send request")?;
+        .await?;
 
-    let echo_json: serde_json::Value = res.json().await.context("Failed to send request")?;
-
-    println!("{echo_json:#?}");
+    let resp = res.json().await?;
+    check_resp(&resp)?;
+    let temp_tv_auth_code = resp["data"]["auth_code"]
+        .as_str()
+        .ok_or(HttpError::Biz("Failed to get auth_code".to_string()))?;
+    let mut auth_code_guard = TEMP_TV_AUTH_CODE.lock().unwrap();
+    auth_code_guard.clear();
+    auth_code_guard.push_str(temp_tv_auth_code);
+    info!("{temp_tv_auth_code:#?}");
     R::Ok(())
 }
 
 #[tokio::test]
 async fn test_tv_login_qr_code() {
-    get_tv_login_qr_code().await.unwrap();
+    crate::utils::log::init_log();
+    println!("开始获取二维码");
+    let get_tv_login_qr_code = get_tv_login_qr_code().await;
+    match get_tv_login_qr_code {
+        Ok(_) => println!("获取二维码成功"),
+        Err(e) => println!("获取二维码失败: {:?}", e),
+    }
 }
-
 
 use std::time::{SystemTime, UNIX_EPOCH};
 

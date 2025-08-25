@@ -83,6 +83,12 @@ pub enum HttpError {
     OtherError(#[from] anyhow::Error),
 }
 
+
+impl From<reqwest::Error> for HttpError {
+    fn from(e: reqwest::Error) -> Self {
+        HttpError::ServerError(format!("请求错误:{}", e.to_string()))
+    }
+}
 impl From<JoinError> for HttpError {
     fn from(e: JoinError) -> Self {
         HttpError::OtherError(anyhow::Error::from(e))
