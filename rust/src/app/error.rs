@@ -145,7 +145,7 @@ impl IntoResponse for HttpError {
 
         
         let json = Json(Resp::<()> {
-            status: status_code.as_u16(),
+            code: status_code.as_u16(),
             message: self.to_string(),
             data: None,
         });

@@ -8,7 +8,7 @@ pub type RR<T> = R<Resp<T>>;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Resp<T> 
 {
-    pub status: u16,
+    pub code: u16,
     pub message: String,
     pub data: Option<T>,
 }
@@ -37,7 +37,7 @@ impl OkMsgExt for RR<()> {
     fn msg(msg:&str)->RR<()>{
 
         Ok(Resp {
-            status: 200,
+            code: 200,
             message:msg.to_string(),
             data:None,
         })
@@ -55,7 +55,7 @@ pub trait BizRespExt<T> {
 impl<T> OkRespExt<T> for RR<T> {
     fn success(data: T) -> RR<T> {
         Ok(Resp {
-            status: 200,
+            code: 200,
             message: "success".to_string(),
             data: Some(data),
         })
