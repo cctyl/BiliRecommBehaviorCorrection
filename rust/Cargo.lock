@@ -433,7 +433,6 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
- "serde",
  "wasm-bindgen",
  "windows-link",
 ]
@@ -2747,7 +2746,6 @@ dependencies = [
  "anyhow",
  "axum",
  "axum-valid",
- "chrono",
  "dotenvy",
  "fast_log",
  "hex",

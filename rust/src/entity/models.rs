@@ -1,30 +1,270 @@
+use crate::app::database::bool_or_int;
+use crate::app::database::bool_or_int_opt;
+use rbatis::crud;
+use rbatis::impl_select_page;
+use rbatis::rbdc::types::DateTime;
+use rbatis::PageRequest;
+use serde::{Deserialize, Serialize};
 
+use crate::app::database::CONTEXT;
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Config {
+    pub id: String,
+    pub name: String,
+    pub value: Option<String>,
+    pub expire_second: Option<i32>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+}
+crud!(Config {}, "config");
 
-use std::fmt::Debug;
-use rbatis::rbatis_codegen::IntoSql;
-use rbatis::rbdc::datetime::DateTime;
-use chrono::prelude::*;
-use rbatis::{crud, impl_select};
-use serde::{Deserialize, Deserializer, Serialize};
+#[tokio::test]
+async fn test_config() {
+    _ = fast_log::init(
+        fast_log::Config::new()
+            .console()
+            .level(log::LevelFilter::Debug),
+    );
+    CONTEXT.init().await;
 
-pub fn deserde_from_int<'de, D>(deserializer: D) -> Result<bool, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let i = u32::deserialize(deserializer)?;
-    Ok(i == 1)
+    let select_by_map = Config::select_by_map(&CONTEXT.rb, rbs::Value::Null)
+        .await
+        .unwrap();
+    println!("{:#?}", select_by_map);
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct File{
-    pub id:i64,
-    pub name:String,
-    pub doc_id:String,
-    pub relative_path:String,
-     #[serde(deserialize_with = "deserde_from_int")]
-    pub is_directory:bool,
-    pub md5:String,
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CookieHeaderData {
+    pub id: String,
+    pub url: Option<String>,
+    pub ckey: String,
+    pub cvalue: String,
+    pub classify: Option<String>,
+    pub media_type: Option<String>,
 }
-crud!(File {});
-impl_select!(File{select_all_by_relative_path_in(relative_path:&[&str]) -> Vec => "`where relative_path in ${relative_path.sql()}`"});
+crud!(CookieHeaderData {}, "cookie_header_data");
+impl_select_page!(CookieHeaderData{select_page() => ""});
+#[tokio::test]
+async fn test_cookie_header_data() {
+    _ = fast_log::init(
+        fast_log::Config::new()
+            .console()
+            .level(log::LevelFilter::Debug),
+    );
+    CONTEXT.init().await;
+
+    let select_by_map = CookieHeaderData::select_page(&CONTEXT.rb,& PageRequest::new(1, 10))
+        .await
+        .unwrap();
+    println!("{:#?}", select_by_map);
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Dict {
+    pub id: String,
+    pub value: String,
+    pub access_type: Option<String>,
+    pub dict_type: Option<String>,
+    pub outer_id: Option<String>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+    #[serde(rename = "desc")]
+    pub desc_field: Option<String>,
+}
+crud!(Dict {}, "dict");
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Owner {
+    pub id: String,
+    pub mid: String,
+    pub name: String,
+    pub face: Option<String>,
+}
+crud!(Owner {}, "owner");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PrepareVideo {
+    pub id: String,
+    pub video_id: String,
+    pub handle_type: String,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+}
+crud!(PrepareVideo {}, "prepare_video");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Stat {
+    pub id: String,
+    pub aid: i32,
+    pub view: Option<i32>,
+    pub danmaku: Option<i32>,
+    pub reply: Option<i32>,
+    pub favorite: Option<i32>,
+    pub coin: Option<i32>,
+    pub share: Option<i32>,
+    pub now_rank: Option<i32>,
+    pub his_rank: Option<i32>,
+    pub like: Option<i32>,
+    pub dislike: Option<i32>,
+    pub video_id: Option<String>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+}
+crud!(Stat {}, "stat");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Tag {
+    pub id: String,
+    pub tag_id: i32,
+    pub tag_name: String,
+    pub content: Option<String>,
+}
+crud!(Tag {}, "tag");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Task {
+    pub id: String,
+    pub last_run_time: Option<DateTime>,
+    pub current_run_status: Option<String>,
+    pub total_run_count: Option<i32>,
+    pub last_run_duration: Option<i32>,
+    pub task_name: Option<String>,
+    pub scheduled_hour: Option<i32>,
+    pub is_enabled: Option<i32>,
+    pub class_method_name: Option<String>,
+    pub description: Option<String>,
+    pub img: Option<String>,
+}
+crud!(Task {}, "task");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoDetail {
+    pub id: String,
+    pub aid: i32,
+    pub videos: Option<i32>,
+    pub tid: Option<i32>,
+    pub tname: Option<String>,
+    pub copyright: Option<i32>,
+    pub pic: Option<String>,
+    pub title: Option<String>,
+    pub pubdate: Option<i32>,
+    pub ctime: Option<i32>,
+    #[serde(rename = "desc")]
+    pub desc_field: Option<String>,
+    pub state: Option<i32>,
+    pub duration: Option<i32>,
+    pub dynamic: Option<String>,
+    pub cid: Option<i32>,
+    pub season_id: Option<i32>,
+    pub first_frame: Option<String>,
+    pub pub_location: Option<String>,
+    pub bvid: String,
+    pub owner_id: Option<String>,
+    #[serde(deserialize_with = "bool_or_int_opt")]
+    pub handle: Option<bool>,
+    pub black_reason: Option<String>,
+    pub thumb_up_reason: Option<String>,
+    #[serde(deserialize_with = "bool_or_int_opt")]
+    pub no_cache: Option<bool>,
+    pub up_from_v2: Option<i32>,
+    pub rcmd_reason: Option<String>,
+    pub handle_type: Option<String>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+    #[serde(deserialize_with = "bool_or_int_opt")]
+    pub is_deleted: Option<bool>,
+}
+crud!(VideoDetail {}, "video_detail");
+//如果不需要参数，=> 传空
+//与名字没有关系
+impl_select_page!(VideoDetail{select_page() => ""});
+
+#[tokio::test]
+async fn test_video_detail() {
+    _ = fast_log::init(
+        fast_log::Config::new()
+            .console()
+            .level(log::LevelFilter::Debug),
+    );
+    CONTEXT.init().await;
+
+    let page_request = PageRequest::new(1, 10); // 第一页，每页10条
+    let result = VideoDetail::select_page(&CONTEXT.rb, &page_request).await.unwrap();
+    println!("{:#?}", result);
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoRelate {
+    pub id: String,
+    pub master_video_id: String,
+    pub related_video_id: String,
+}
+crud!(VideoRelate {}, "video_relate");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoReply {
+    pub id: String,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+    pub video_id: String,
+    pub rpid: i64,
+    pub oid: i64,
+    pub mid: String,
+    pub root: i64,
+    pub parent: i64,
+    pub dialog: i64,
+    pub ctime: i32,
+    pub current_level: i32,
+    pub vip_type: i32,
+    pub message: String,
+    pub sex: Option<String>,
+}
+crud!(VideoReply {}, "video_reply");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoTag {
+    pub id: String,
+    pub tag_id: String,
+    pub video_id: String,
+    pub created_date: Option<DateTime>,
+}
+crud!(VideoTag {}, "video_tag");
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WatchedVideo {
+    pub aid: i32,
+}
+crud!(WatchedVideo {}, "watched_video");
+
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WhiteListRule {
+    pub id: String,
+    pub info: Option<String>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+    #[serde(deserialize_with = "bool_or_int_opt")]
+    pub is_deleted: Option<bool>,
+    pub version: Option<i32>,
+}
+crud!(WhiteListRule {}, "white_list_rule");
+
+#[tokio::test]
+async fn test_white_list_rule() {
+    _ = fast_log::init(
+        fast_log::Config::new()
+            .console()
+            .level(log::LevelFilter::Debug),
+    );
+    CONTEXT.init().await;
+
+    let select_by_map = WhiteListRule::select_by_map(&CONTEXT.rb, rbs::Value::Null)
+        .await
+        .unwrap();
+    println!("{:#?}", select_by_map);
+}

@@ -15,7 +15,6 @@ fast_log = "1.6"
 
 
 log = "0.4.27"
-chrono = { version = "0.4.26", features = ["serde"] } #处理时间戳
 dotenvy = "0.15.7" #加载环境变量
 jsonwebtoken = "9.2.0" # JWT处理
 serde = { version = "1.0.183", features = ["derive"] }
