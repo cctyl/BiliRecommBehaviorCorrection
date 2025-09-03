@@ -17,7 +17,7 @@ const CURRENT_VERSION: u32 = 1;
 /**
  * 执行迁移
  */
-async fn start_migration() -> R<()> {
+pub async fn start_migration() -> R<()> {
     // 首先获取迁移文件路径
     let migration_paths: HashMap<u32, String> = load_migrations()?;
 

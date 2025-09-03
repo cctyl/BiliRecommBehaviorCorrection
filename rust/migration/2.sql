@@ -1,12 +1,12 @@
-create table video_test
-(
-    id                 char(30) not null
-        constraint pk_video_tag
-            primary key,
-    tag_id             char(30) not null,
-    video_id           char(30) not null,
-    created_date       DATE,
-    last_modified_date DATE,
-    is_deleted         tinyint(1) default 0,
-    version            int        default 1
-);
+-- create table video_test
+-- (
+--     id                 char(30) not null
+--         constraint pk_video_tag
+--             primary key,
+--     tag_id             char(30) not null,
+--     video_id           char(30) not null,
+--     created_date       DATE,
+--     last_modified_date DATE,
+--     is_deleted         tinyint(1) default 0,
+--     version            int        default 1
+-- );

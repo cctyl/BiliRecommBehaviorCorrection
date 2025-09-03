@@ -13,6 +13,7 @@ mod utils;
 use crate::app::database::{self, CONTEXT};
 use crate::app::error::HttpError;
 use crate::app::response::R;
+use crate::utils::migration::start_migration;
 
 use app::config::Config;
 use axum::{Extension, Router, extract::DefaultBodyLimit};
@@ -39,6 +40,9 @@ pub async fn main() {
     );
     CONTEXT.init().await;
     let port = CONTEXT.config.port;
+
+    start_migration().await.expect("数据库迁移失败");
+
     info!(
         "{}",
         format!("🚀 Server is running on http://localhost:{}", port)
