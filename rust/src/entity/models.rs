@@ -1,9 +1,14 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
-use rbatis::crud;
-use rbatis::impl_select_page;
-use rbatis::rbdc::types::DateTime;
 use rbatis::PageRequest;
+use rbatis::RBatis;
+use rbatis::crud;
+use rbatis::impl_select;
+use rbatis::impl_select_page;
+use rbatis::impl_update;
+use rbatis::impled;
+use rbatis::rbdc::types::DateTime;
+use rbatis::sql;
 use serde::{Deserialize, Serialize};
 
 use crate::app::database::CONTEXT;
@@ -54,7 +59,7 @@ async fn test_cookie_header_data() {
     );
     CONTEXT.init().await;
 
-    let select_by_map = CookieHeaderData::select_page(&CONTEXT.rb,& PageRequest::new(1, 10))
+    let select_by_map = CookieHeaderData::select_page(&CONTEXT.rb, &PageRequest::new(1, 10))
         .await
         .unwrap();
     println!("{:#?}", select_by_map);
@@ -73,7 +78,6 @@ pub struct Dict {
     pub desc_field: Option<String>,
 }
 crud!(Dict {}, "dict");
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {
@@ -142,22 +146,23 @@ crud!(Task {}, "task");
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetail {
     pub id: String,
-    pub aid: i32,
+    #[serde(default)]
+    pub aid: i64,
     pub videos: Option<i32>,
-    pub tid: Option<i32>,
+    pub tid: Option<i64>,
     pub tname: Option<String>,
     pub copyright: Option<i32>,
     pub pic: Option<String>,
     pub title: Option<String>,
-    pub pubdate: Option<i32>,
-    pub ctime: Option<i32>,
+    pub pubdate: Option<i64>,
+    pub ctime: Option<i64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
     pub state: Option<i32>,
     pub duration: Option<i32>,
     pub dynamic: Option<String>,
-    pub cid: Option<i32>,
-    pub season_id: Option<i32>,
+    pub cid: Option<i64>,
+    pub season_id: Option<i64>,
     pub first_frame: Option<String>,
     pub pub_location: Option<String>,
     pub bvid: String,
@@ -166,20 +171,27 @@ pub struct VideoDetail {
     pub handle: Option<bool>,
     pub black_reason: Option<String>,
     pub thumb_up_reason: Option<String>,
-    #[serde(deserialize_with = "bool_or_int_opt")]
+    #[serde(deserialize_with = "bool_or_int_opt", default)]
     pub no_cache: Option<bool>,
     pub up_from_v2: Option<i32>,
     pub rcmd_reason: Option<String>,
     pub handle_type: Option<String>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
-    #[serde(deserialize_with = "bool_or_int_opt")]
+    #[serde(deserialize_with = "bool_or_int_opt", default)]
     pub is_deleted: Option<bool>,
 }
 crud!(VideoDetail {}, "video_detail");
 //如果不需要参数，=> 传空
 //与名字没有关系
-impl_select_page!(VideoDetail{select_page() => ""});
+impl_select_page!(VideoDetail{select_page() => "`order by created_date desc`"});
+impl_select_page!(VideoDetail{select_page_by_name(tname:&str) =>"
+     if tname != null && tname != '':
+       `where tname like #{tname}`
+"});
+
+impl_select!(VideoDetail{select_by_id(id:i64) => "`where id = #{id} limit 1`"});
+impl_select!(VideoDetail{select_id_tname(id:i64,table_column:&str) => "`where id = #{id} limit 1`"});
 
 #[tokio::test]
 async fn test_video_detail() {
@@ -191,10 +203,20 @@ async fn test_video_detail() {
     CONTEXT.init().await;
 
     let page_request = PageRequest::new(1, 10); // 第一页，每页10条
-    let result = VideoDetail::select_page(&CONTEXT.rb, &page_request).await.unwrap();
+    //let result = VideoDetail::select_page(&CONTEXT.rb, &page_request).await.unwrap();
+    // let result = VideoDetail::select_page_by_name(&CONTEXT.rb, &page_request,"单机游戏").await.unwrap();
+
+    // let result = VideoDetail::select_by_id(&CONTEXT.rb, 1729314424889581570).await.unwrap();
+    let result = VideoDetail::select_id_tname(
+        &CONTEXT.rb,
+        1729314424889581570,
+        "id,tname,aid,bvid,handle,no_cache",
+    )
+    .await
+    .unwrap();
+
     println!("{:#?}", result);
 }
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoRelate {
@@ -239,9 +261,6 @@ pub struct WatchedVideo {
 }
 crud!(WatchedVideo {}, "watched_video");
 
-
-
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WhiteListRule {
     pub id: String,
@@ -253,7 +272,6 @@ pub struct WhiteListRule {
     pub version: Option<i32>,
 }
 crud!(WhiteListRule {}, "white_list_rule");
-
 #[tokio::test]
 async fn test_white_list_rule() {
     _ = fast_log::init(
@@ -267,4 +285,27 @@ async fn test_white_list_rule() {
         .await
         .unwrap();
     println!("{:#?}", select_by_map);
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Migration {
+    pub id: Option<u32>,
+    pub version: u32,
+    pub created_time: DateTime,
+}
+crud!(Migration {});
+
+#[sql("select max(version) from migration")]
+pub async fn get_max_version(rb: &RBatis) -> Result<Option<u32>, rbatis::error::Error> {
+    impled!()
+}
+
+#[sql( "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration'")]
+pub async fn migration_exist(rb: &RBatis) ->Result<Option<String>, rbatis::error::Error>{
+    impled!()
+}
+
+#[sql( "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'config'")]
+pub async fn config_exist(rb: &RBatis) ->Result<Option<String>, rbatis::error::Error>{
+    impled!()
 }

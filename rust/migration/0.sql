@@ -1,3 +1,6 @@
+
+
+
 create table config
 (
     id                 char(30)    not null

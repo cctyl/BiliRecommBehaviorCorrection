@@ -83,7 +83,11 @@ pub enum HttpError {
     OtherError(#[from] anyhow::Error),
 }
 
-
+impl From<sqlparser::parser::ParserError> for HttpError {
+    fn from(e: sqlparser::parser::ParserError) -> Self {
+        HttpError::ServerError(format!("迁移失败！SQL解析错误：{}",e.to_string()))
+    }
+}
 impl From<reqwest::Error> for HttpError {
     fn from(e: reqwest::Error) -> Self {
         HttpError::ServerError(format!("请求错误:{}", e.to_string()))

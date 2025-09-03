@@ -5,27 +5,33 @@
 
 mod app;
 
+mod api;
 mod entity;
 mod handler;
-mod utils;
-mod api;
 mod service;
+mod utils;
 use crate::app::database::{self, CONTEXT};
+use crate::app::error::HttpError;
+use crate::app::response::R;
+
 use app::config::Config;
 use axum::{Extension, Router, extract::DefaultBodyLimit};
+use log::{error, info};
+use rbatis::rbdc::DateTime;
+use rbatis::{RBatis, sql};
+
+use rbatis::impled;
 use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
-use tower_http::{
-    cors::{self, CorsLayer},
-};
+use tower_http::cors::{self, CorsLayer};
 
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 
 
 #[tokio::main]
 pub async fn main() {
-  
-
-
     _ = fast_log::init(
         fast_log::Config::new()
             .console()
@@ -33,7 +39,7 @@ pub async fn main() {
     );
     CONTEXT.init().await;
     let port = CONTEXT.config.port;
-    println!(
+    info!(
         "{}",
         format!("🚀 Server is running on http://localhost:{}", port)
     );
@@ -46,7 +52,6 @@ pub async fn main() {
 }
 
 fn build_router() -> Router {
-
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)
         .allow_methods(cors::Any)
@@ -54,11 +59,6 @@ fn build_router() -> Router {
         .allow_credentials(false)
         .max_age(Duration::from_secs(3600 * 12));
 
-
-
-    handler::create_router()
-        .layer(cors)
-   
-
-
+    handler::create_router().layer(cors)
 }
+

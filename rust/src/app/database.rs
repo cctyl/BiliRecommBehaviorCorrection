@@ -1,4 +1,7 @@
-use std::sync::{LazyLock, OnceLock};
+use std::{
+    sync::{LazyLock, OnceLock},
+    time::Duration,
+};
 
 use crate::app::config::Config;
 use rbatis::RBatis;
@@ -18,14 +21,24 @@ pub static CONTEXT: LazyLock<AppContext> = LazyLock::new(|| AppContext {
 
 impl AppContext {
     pub async fn init(&self) {
-        &self
+
+        self
             .rb
             .link(SqliteDriver {}, &self.config.db_url)
             .await
-            .unwrap();
+            .expect("[abs_admin] rbatis pool init fail!");
+
+        let pool = self.rb.get_pool().unwrap();
+        //max connections
+        pool.set_max_open_conns(1).await;
+        //max timeout
+        pool.set_timeout(Some(Duration::from_secs(20))).await;
+        log::info!(
+            "[abs_admin] rbatis pool init success! pool state = {}",
+            self.rb.get_pool().expect("pool not init!").state().await
+        );
     }
 }
-
 
 pub fn bool_or_int<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
@@ -124,7 +137,7 @@ where
         {
             Ok(None)
         }
-        
+
         fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
         where
             D: Deserializer<'de>,

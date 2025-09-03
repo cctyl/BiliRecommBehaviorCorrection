@@ -38,3 +38,5 @@ reqwest ={version = "0.12.23",features = ["rustls-tls","cookies","json"]}
 md5 = "0.8.0"
 hex = "0.4"
 urlencoding = "2.1"
+regex = "1"
+sqlparser = "0.58.0"

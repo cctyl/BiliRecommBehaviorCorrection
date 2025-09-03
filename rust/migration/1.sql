@@ -1,6 +1,6 @@
-ALTER TABLE "main"."config" RENAME TO "_config_old_20250827";
+ALTER TABLE "config" RENAME TO "_config_old_20250827";
 
-CREATE TABLE "main"."config" (
+CREATE TABLE "config" (
   "id" char(30) NOT NULL,
   "name" varchar(50) NOT NULL,
   "value" varchar(200),
@@ -10,16 +10,16 @@ CREATE TABLE "main"."config" (
   CONSTRAINT "pk_config" PRIMARY KEY ("id")
 );
 
-INSERT INTO "main"."config" ("id", "name", "value", "expire_second", "created_date", "last_modified_date") SELECT "id", "name", "value", "expire_second", "created_date", "last_modified_date" FROM "main"."_config_old_20250827";
+INSERT INTO "config" ("id", "name", "value", "expire_second", "created_date", "last_modified_date") SELECT "id", "name", "value", "expire_second", "created_date", "last_modified_date" FROM "_config_old_20250827";
 
 
 
 --- -------------------------
 
 
-ALTER TABLE "main"."dict" RENAME TO "_dict_old_20250827";
+ALTER TABLE "dict" RENAME TO "_dict_old_20250827";
 
-CREATE TABLE "main"."dict" (
+CREATE TABLE "dict" (
   "id" char(30) NOT NULL,
   "value" VARCHAR(255) NOT NULL,
   "access_type" varchar(50),
@@ -31,13 +31,13 @@ CREATE TABLE "main"."dict" (
   CONSTRAINT "pk_dict" PRIMARY KEY ("id")
 );
 
-INSERT INTO "main"."dict" ("id", "value", "access_type", "dict_type", "outer_id", "created_date", "last_modified_date", "desc") SELECT "id", "value", "access_type", "dict_type", "outer_id", "created_date", "last_modified_date", "desc" FROM "main"."_dict_old_20250827";
+INSERT INTO "dict" ("id", "value", "access_type", "dict_type", "outer_id", "created_date", "last_modified_date", "desc") SELECT "id", "value", "access_type", "dict_type", "outer_id", "created_date", "last_modified_date", "desc" FROM "_dict_old_20250827";
 
 ---------------------------------------------
 
-ALTER TABLE "main"."prepare_video" RENAME TO "_prepare_video_old_20250827";
+ALTER TABLE "prepare_video" RENAME TO "_prepare_video_old_20250827";
 
-CREATE TABLE "main"."prepare_video" (
+CREATE TABLE "prepare_video" (
   "id" char(30) NOT NULL,
   "video_id" char(30) NOT NULL,
   "handle_type" varchar(30) NOT NULL,
@@ -46,14 +46,14 @@ CREATE TABLE "main"."prepare_video" (
   CONSTRAINT "pk_prepare_video" PRIMARY KEY ("id")
 );
 
-INSERT INTO "main"."prepare_video" ("id", "video_id", "handle_type", "created_date", "last_modified_date") SELECT "id", "video_id", "handle_type", "created_date", "last_modified_date" FROM "main"."_prepare_video_old_20250827";
+INSERT INTO "prepare_video" ("id", "video_id", "handle_type", "created_date", "last_modified_date") SELECT "id", "video_id", "handle_type", "created_date", "last_modified_date" FROM "_prepare_video_old_20250827";
 
 
 
 
-ALTER TABLE "main"."tag" RENAME TO "_tag_old_20250827";
+ALTER TABLE "tag" RENAME TO "_tag_old_20250827";
 
-CREATE TABLE "main"."tag" (
+CREATE TABLE "tag" (
   "id" char(30) NOT NULL,
   "tag_id" int NOT NULL,
   "tag_name" varchar(255) NOT NULL,
@@ -62,12 +62,12 @@ CREATE TABLE "main"."tag" (
   UNIQUE ("tag_id" ASC, "tag_name" ASC)
 );
 
-INSERT INTO "main"."tag" ("id", "tag_id", "tag_name", "content") SELECT "id", "tag_id", "tag_name", "content" FROM "main"."_tag_old_20250827";
+INSERT INTO "tag" ("id", "tag_id", "tag_name", "content") SELECT "id", "tag_id", "tag_name", "content" FROM "_tag_old_20250827";
 
 
-ALTER TABLE "main"."owner" RENAME TO "_owner_old_20250828";
+ALTER TABLE "owner" RENAME TO "_owner_old_20250828";
 
-CREATE TABLE "main"."owner" (
+CREATE TABLE "owner" (
   "id" char(30),
   "mid" VARCHAR(100) NOT NULL,
   "name" VARCHAR(100) NOT NULL,
@@ -76,12 +76,12 @@ CREATE TABLE "main"."owner" (
   UNIQUE ("mid" ASC)
 );
 
-INSERT INTO "main"."owner" ("id", "mid", "name", "face") SELECT "id", "mid", "name", "face" FROM "main"."_owner_old_20250828";
+INSERT INTO "owner" ("id", "mid", "name", "face") SELECT "id", "mid", "name", "face" FROM "_owner_old_20250828";
 
 
-ALTER TABLE "main"."stat" RENAME TO "_stat_old_20250828";
+ALTER TABLE "stat" RENAME TO "_stat_old_20250828";
 
-CREATE TABLE "main"."stat" (
+CREATE TABLE "stat" (
   "id" char(30) NOT NULL,
   "aid" INT NOT NULL,
   "view" INT,
@@ -100,18 +100,18 @@ CREATE TABLE "main"."stat" (
   CONSTRAINT "pk_stat" PRIMARY KEY ("id")
 );
 
-INSERT INTO "main"."stat" ("id", "aid", "view", "danmaku", "reply", "favorite", "coin", "share", "now_rank", "his_rank", "like", "dislike", "video_id", "created_date", "last_modified_date") SELECT "id", "aid", "view", "danmaku", "reply", "favorite", "coin", "share", "now_rank", "his_rank", "like", "dislike", "video_id", "created_date", "last_modified_date" FROM "main"."_stat_old_20250828";
+INSERT INTO "stat" ("id", "aid", "view", "danmaku", "reply", "favorite", "coin", "share", "now_rank", "his_rank", "like", "dislike", "video_id", "created_date", "last_modified_date") SELECT "id", "aid", "view", "danmaku", "reply", "favorite", "coin", "share", "now_rank", "his_rank", "like", "dislike", "video_id", "created_date", "last_modified_date" FROM "_stat_old_20250828";
 
 
 
 
-DROP INDEX "main"."idx_aid";
+DROP INDEX "idx_aid";
 
-DROP INDEX "main"."idx_video_detail_handle_type";
+DROP INDEX "idx_video_detail_handle_type";
 
-ALTER TABLE "main"."video_detail" RENAME TO "_video_detail_old_20250828";
+ALTER TABLE "video_detail" RENAME TO "_video_detail_old_20250828";
 
-CREATE TABLE "main"."video_detail" (
+CREATE TABLE "video_detail" (
   "id" CHAR(30) NOT NULL,
   "aid" INT NOT NULL,
   "videos" INT,
@@ -148,26 +148,26 @@ CREATE TABLE "main"."video_detail" (
   UNIQUE ("bvid" ASC)
 );
 
-INSERT INTO "main"."video_detail" ("id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "teenage_mode", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted") SELECT "id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "teenage_mode", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted" FROM "main"."_video_detail_old_20250828";
+INSERT INTO "video_detail" ("id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "teenage_mode", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted") SELECT "id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "teenage_mode", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted" FROM "_video_detail_old_20250828";
 
-CREATE INDEX "main"."idx_aid"
+CREATE INDEX "idx_aid"
 ON "video_detail" (
   "aid" ASC
 );
 
-CREATE INDEX "main"."idx_video_detail_handle_type"
+CREATE INDEX "idx_video_detail_handle_type"
 ON "video_detail" (
   "handle_type" ASC
 );
 
 
-DROP INDEX "main"."idx_aid";
+DROP INDEX "idx_aid";
 
-DROP INDEX "main"."idx_video_detail_handle_type";
+DROP INDEX "idx_video_detail_handle_type";
 
-ALTER TABLE "main"."video_detail" RENAME TO "_video_detail_old_20250828_1";
+ALTER TABLE "video_detail" RENAME TO "_video_detail_old_20250828_1";
 
-CREATE TABLE "main"."video_detail" (
+CREATE TABLE "video_detail" (
   "id" CHAR(30) NOT NULL,
   "aid" INT NOT NULL,
   "videos" INT,
@@ -203,22 +203,22 @@ CREATE TABLE "main"."video_detail" (
   UNIQUE ("bvid" ASC)
 );
 
-INSERT INTO "main"."video_detail" ("id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted") SELECT "id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted" FROM "main"."_video_detail_old_20250828_1";
+INSERT INTO "video_detail" ("id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted") SELECT "id", "aid", "videos", "tid", "tname", "copyright", "pic", "title", "pubdate", "ctime", "desc", "state", "duration", "dynamic", "cid", "season_id", "first_frame", "pub_location", "bvid", "owner_id", "handle", "black_reason", "thumb_up_reason", "no_cache", "up_from_v2", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "is_deleted" FROM "_video_detail_old_20250828_1";
 
-CREATE INDEX "main"."idx_aid"
+CREATE INDEX "idx_aid"
 ON "video_detail" (
   "aid" ASC
 );
 
-CREATE INDEX "main"."idx_video_detail_handle_type"
+CREATE INDEX "idx_video_detail_handle_type"
 ON "video_detail" (
   "handle_type" ASC
 );
 
 
-ALTER TABLE "main"."video_tag" RENAME TO "_video_tag_old_20250828";
+ALTER TABLE "video_tag" RENAME TO "_video_tag_old_20250828";
 
-CREATE TABLE "main"."video_tag" (
+CREATE TABLE "video_tag" (
   "id" char(30) NOT NULL,
   "tag_id" char(30) NOT NULL,
   "video_id" char(30) NOT NULL,
@@ -226,7 +226,7 @@ CREATE TABLE "main"."video_tag" (
   CONSTRAINT "pk_video_tag" PRIMARY KEY ("id")
 );
 
-INSERT INTO "main"."video_tag" ("id", "tag_id", "video_id", "created_date") SELECT "id", "tag_id", "video_id", "created_date" FROM "main"."_video_tag_old_20250828";
+INSERT INTO "video_tag" ("id", "tag_id", "video_id", "created_date") SELECT "id", "tag_id", "video_id", "created_date" FROM "_video_tag_old_20250828";
 
 
 drop table _config_old_20250827;
@@ -239,5 +239,11 @@ drop table _video_detail_old_20250828;
 drop table _video_detail_old_20250828_1;
 drop table _video_tag_old_20250828;
 
-VACUUM;
-PRAGMA journal_mode=DELETE;
+
+
+
+CREATE TABLE if not exists "migration" (
+  "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "version" integer NOT NULL,
+  "created_time" DATE NOT NULL
+);
