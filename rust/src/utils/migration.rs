@@ -1,4 +1,27 @@
-use crate::entity::models::{Migration, config_exist, get_max_version, migration_exist};
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Migration {
+    pub id: Option<u32>,
+    pub version: u32,
+    pub created_time: DateTime,
+}
+crud!(Migration {});
+
+#[sql("select max(version) from migration")]
+pub async fn get_max_version(rb: &RBatis) -> Result<Option<u32>, rbatis::error::Error> {
+    impled!()
+}
+
+#[sql( "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration'")]
+pub async fn migration_exist(rb: &RBatis) ->Result<Option<String>, rbatis::error::Error>{
+    impled!()
+}
+
+#[sql( "SELECT count(1) FROM sqlite_master WHERE type = 'table' ")]
+pub async fn table_num(rb: &RBatis) ->Result<u32, rbatis::error::Error>{
+    impled!()
+}
 
 #[tokio::test]
 async fn test_init() {
@@ -22,7 +45,7 @@ pub async fn start_migration() -> R<()> {
     let migration_paths: HashMap<u32, String> = load_migrations()?;
 
     let migration_exist = migration_exist(&CONTEXT.rb).await?;
-    let config_exist = config_exist(&CONTEXT.rb).await?;
+    let table_num = table_num(&CONTEXT.rb).await?;
 
     //migration存在
     //已经升级过，正常升级即可
@@ -58,7 +81,7 @@ pub async fn start_migration() -> R<()> {
         info!("表 migration_exist 不存在");
 
         let mut start;
-        if config_exist.is_some() {
+        if table_num >0 {
             //旧的数据库 config一定存在
             //从1.sql开始执行
             start = 1;
@@ -156,7 +179,9 @@ fn load_migrations() -> std::io::Result<HashMap<u32, String>> {
 use std::collections::HashMap;
 
 use log::info;
+use rbatis::{crud, impled, sql, RBatis};
 use rbatis::rbdc::DateTime;
+use serde::{Deserialize, Serialize};
 use sqlparser::dialect::SQLiteDialect;
 use sqlparser::parser::Parser;
 

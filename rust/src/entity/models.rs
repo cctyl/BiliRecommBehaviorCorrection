@@ -287,25 +287,3 @@ async fn test_white_list_rule() {
     println!("{:#?}", select_by_map);
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Migration {
-    pub id: Option<u32>,
-    pub version: u32,
-    pub created_time: DateTime,
-}
-crud!(Migration {});
-
-#[sql("select max(version) from migration")]
-pub async fn get_max_version(rb: &RBatis) -> Result<Option<u32>, rbatis::error::Error> {
-    impled!()
-}
-
-#[sql( "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'migration'")]
-pub async fn migration_exist(rb: &RBatis) ->Result<Option<String>, rbatis::error::Error>{
-    impled!()
-}
-
-#[sql( "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'config'")]
-pub async fn config_exist(rb: &RBatis) ->Result<Option<String>, rbatis::error::Error>{
-    impled!()
-}

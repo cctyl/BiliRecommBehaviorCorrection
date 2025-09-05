@@ -279,3 +279,130 @@ pub async fn common_post_form(
 
     R::Ok(json)
 }
+
+/**
+ * 携带header和cookie的通用get请求
+ */
+pub async fn common_get(
+    url: &str,
+    param_map: BTreeMap<&'static str, String>,
+) -> R<serde_json::Value> {
+    let mut req = CLIENT.get(url);
+
+    //TODO 读取数据库中的header
+    let hash_map: HashMap<String, String> = HashMap::new();
+    for (k, v) in &hash_map {
+        req = req.header(k, v);
+    }
+
+    //TODO 读取数据库中的cookie
+    let cookie_jar: HashMap<String, String> = HashMap::new();
+    let cookie_str: String = cookie_jar
+        .iter()
+        .map(|(k, v)| format!("{}={}", k, v))
+        .collect::<Vec<String>>()
+        .join("; ");
+
+    let response = req
+        .timeout(Duration::from_secs(10))
+        .header(header::COOKIE, cookie_str)
+        .query(&param_map)
+        .send()
+        .await?;
+
+    //TODO 保存cookie
+    response.cookies().for_each(|c| {
+        info!("cookie: {:#?}", c);
+    });
+
+    let json = response.json().await?;
+
+    R::Ok(json)
+}
+
+/**
+ * 获取accessKey
+ * 若不存在，则抛出异常，提示重新登陆
+ */
+pub async fn get_access_key(refresh: bool) -> R<String> {
+    use crate::entity::models::Config;
+    use crate::app::database::CONTEXT;
+    use rbs::value::map::ValueMap;
+    
+    // 如果需要刷新，或者缓存中不存在，则更新一次
+    // 否则从缓存中取出
+    let mut where_map = ValueMap::new();
+    where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::BILI_ACCESS_KEY.to_string()));
+    let config_result = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+    
+    if refresh || config_result.is_empty() {
+        // 记录登陆状态
+        // 新版本不再支持通过cookie获取
+        // 提示让用户扫码登陆
+        return Err(HttpError::Biz("登录已过期，请重新扫码登录".to_string()));
+    } else {
+        let access_key = config_result[0].value.as_ref()
+            .ok_or(HttpError::Biz("access_key 为空，请重新登录".to_string()))?;
+        info!("缓存中得到了accessKey={}", access_key);
+        Ok(access_key.clone())
+    }
+}
+
+/**
+ * 获取当前用户信息
+ */
+pub async fn get_user_info() -> R<serde_json::Value> {
+    let url = "https://app.bilibili.com/x/v2/account/myinfo";
+    
+    let access_key = get_access_key(false).await?;
+    
+    let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
+    params.insert("access_key", access_key);
+    params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
+    params.insert("ts", get_ts().to_string());
+    
+    let signed_params = get_app_sign(params);
+    let response = common_get(url, signed_params).await?;
+    
+    check_resp(&response)?;
+    
+    // 更新mid到配置中
+    if let Some(mid) = response["data"]["mid"].as_str() {
+        use crate::entity::models::Config;
+        use crate::app::database::CONTEXT;
+        use crate::utils::id::generate_id;
+        use rbs::value::map::ValueMap;
+        
+        // 查找是否已存在mid配置
+        let mut where_map = ValueMap::new();
+        where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
+        let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+        
+        if existing_config.is_empty() {
+            // 创建新的mid配置
+            let new_config = Config {
+                id: generate_id(),
+                name: constans::MID_KEY.to_string(),
+                value: Some(mid.to_string()),
+                expire_second: None,
+                created_date: Some(rbatis::rbdc::types::DateTime::now()),
+                last_modified_date: Some(rbatis::rbdc::types::DateTime::now()),
+            };
+            Config::insert(&CONTEXT.rb, &new_config).await?;
+        } else {
+            // 更新现有的mid配置
+            let mut config = existing_config[0].clone();
+            config.value = Some(mid.to_string());
+            config.last_modified_date = Some(rbatis::rbdc::types::DateTime::now());
+            
+            // 使用 update_by_map 方法
+            let mut update_where = ValueMap::new();
+            update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
+            Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
+        }
+        
+        info!("更新mid: {}", mid);
+    }
+    
+    Ok(response)
+}

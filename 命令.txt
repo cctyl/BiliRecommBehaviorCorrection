@@ -1,0 +1,13 @@
+接下来使用中文沟通，基本上这是一个基于sqlite的web服务，
+包含对数据库的增删改查功能，以及对bilibili网站的数据请求和解析。
+该项目有两个核心目录，rust目录是新版本程序，java目录是旧版本程序，使用java编写，用于新的rust项目的参考。
+
+观察rust/下的文件，
+观察这个项目，这是一个用rbatis和axum编写的web服务，
+现在观察rust\src\handler\config.rs，以及 java/src/main/java/io/github/cctyl/controller/ConfigController.java.
+我需要你参考java/src/main/java/io/github/cctyl/controller/ConfigController.java的check-accesskey接口，然后到rust\src\handler\config.rs中进行相同的实现，
+要保证在rust里实现的check-accesskey接口和java的check-accesskey接口功能完全一样。
+注意，不允许改动java模块的内容，只能改rust模块的内容。
+
+
+

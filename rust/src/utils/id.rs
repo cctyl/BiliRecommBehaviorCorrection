@@ -16,3 +16,7 @@ pub fn init() -> anyhow::Result<()> {
 pub fn next_id() -> i64 {
     IdInstance::next_id()
 }
+
+pub fn generate_id() -> String {
+    next_id().to_string()
+}

@@ -16,6 +16,7 @@ pub fn create_router() -> Router {
             axum::routing::get(get_tv_qr_code_scan_result),
         )
         .route("/get_config_list", axum::routing::get(get_config_list))
+        .route("/check-accesskey", axum::routing::get(check_accesskey))
 }
 
 #[debug_handler]
@@ -34,4 +35,15 @@ async fn get_config_list() -> RR<Vec<Config>> {
 #[debug_handler]
 async fn get_tv_qr_code_scan_result() -> RR<serde_json::Value> {
     RR::success(crate::api::bili::get_tv_qr_code_scan_result().await?)
+}
+
+#[debug_handler]
+async fn check_accesskey() -> RR<serde_json::Value> {
+    match crate::api::bili::get_user_info().await {
+        Ok(info) => RR::success(info),
+        Err(e) => {
+            use crate::app::response::FailRespExt;
+            RR::fail(e)
+        }
+    }
 }
