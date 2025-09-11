@@ -47,6 +47,7 @@ pub async fn start_migration() -> R<()> {
     let migration_exist = migration_exist(&CONTEXT.rb).await?;
     let table_num = table_num(&CONTEXT.rb).await?;
 
+    let  mut update = true;
     //migration存在
     //已经升级过，正常升级即可
     if migration_exist.is_some() {
@@ -75,6 +76,7 @@ pub async fn start_migration() -> R<()> {
             .await?;
         } else {
             info!("=========无需升级=======");
+            update = false;
         }
     } else {
         //migration 不存在
@@ -114,11 +116,14 @@ pub async fn start_migration() -> R<()> {
         .await?;
     }
 
-    let end_sql = vec![" VACUUM;", "PRAGMA journal_mode=DELETE;"];
+    if update{
+        let end_sql = vec![" VACUUM;", "PRAGMA journal_mode=DELETE;"];
 
-    for sql in end_sql {
-        CONTEXT.rb.exec(sql, vec![]).await?;
+        for sql in end_sql {
+            CONTEXT.rb.exec(sql, vec![]).await?;
+        }
     }
+   
 
     Ok(())
 }
