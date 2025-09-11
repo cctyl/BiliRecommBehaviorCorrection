@@ -35,7 +35,7 @@ async fn test_init() {
 }
 
 /// 当前版本
-const CURRENT_VERSION: u32 = 1;
+const CURRENT_VERSION: u32 = 2;
 
 /**
  * 执行迁移

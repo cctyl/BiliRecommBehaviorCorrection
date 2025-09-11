@@ -1,5 +1,7 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
+use crate::utils::id::generate_id;
+use rbatis::rbdc::Timestamp;
 use rbatis::PageRequest;
 use rbatis::RBatis;
 use rbatis::crud;
@@ -19,10 +21,26 @@ pub struct Config {
     pub name: String,
     pub value: Option<String>,
     pub expire_second: Option<i32>,
-    pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
+    pub created_date: Option<Timestamp>,
+    pub last_modified_date: Option<Timestamp>,
 }
 crud!(Config {}, "config");
+impl_select!(Config{
+    select_by_name(table_column:&str,name:&str) -> Option    =>" ` where name = #{name} limit 1 ` "
+});
+
+impl Config{
+    pub fn default() -> Self {
+        Config {
+            id: generate_id(),
+            name: String::new(),
+            value: Some(String::new()),
+            expire_second: None,
+            created_date: Some( Timestamp::now()),
+            last_modified_date: Some( Timestamp::now()),
+        }
+    }
+}
 
 #[tokio::test]
 async fn test_config() {

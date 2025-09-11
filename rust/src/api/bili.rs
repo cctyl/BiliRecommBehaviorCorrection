@@ -4,13 +4,18 @@ use std::sync::{LazyLock, Mutex};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
 use crate::utils::http::CLIENT;
-use anyhow::Context;
+use anyhow::{Context};
 use hex;
 use log::{error, info};
+use rbs::value;
 use reqwest::header;
 use serde_json::json;
 use std::collections::BTreeMap;
 use urlencoding::encode;
+use crate::entity::models::Config;
+use crate::app::database::CONTEXT;
+use crate::utils::id::generate_id;
+use rbs::value::map::ValueMap;
 //扫码登陆的code
 static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
 
@@ -325,27 +330,42 @@ pub async fn common_get(
  * 若不存在，则抛出异常，提示重新登陆
  */
 pub async fn get_access_key(refresh: bool) -> R<String> {
-    use crate::entity::models::Config;
-    use crate::app::database::CONTEXT;
-    use rbs::value::map::ValueMap;
+
     
     // 如果需要刷新，或者缓存中不存在，则更新一次
     // 否则从缓存中取出
-    let mut where_map = ValueMap::new();
-    where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::BILI_ACCESS_KEY.to_string()));
-    let config_result = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+    // let mut where_map = ValueMap::new();
+    // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::BILI_ACCESS_KEY.to_string()));
+    // let config_result = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+    let mut config_result: Vec<Config> = Config::select_by_map(&CONTEXT.rb, 
+        value!{"name":constans::BILI_ACCESS_KEY.to_string()}
+    ).await?;
     
-    if refresh || config_result.is_empty() {
+    if refresh {
         // 记录登陆状态
         // 新版本不再支持通过cookie获取
         // 提示让用户扫码登陆
         return Err(HttpError::Biz("登录已过期，请重新扫码登录".to_string()));
     } else {
-        let access_key = config_result[0].value.as_ref()
-            .ok_or(HttpError::Biz("access_key 为空，请重新登录".to_string()))?;
-        info!("缓存中得到了accessKey={}", access_key);
-        Ok(access_key.clone())
+
+        let c = config_result.pop().ok_or(  HttpError::Biz("登录已过期，请重新扫码登录".to_string()))?;
+        match c.value{
+            Some(access_key) => R::Ok(access_key),
+            None =>Err(HttpError::Biz("access_key 为空，请重新登录".to_string())) ,
+        }
+
+
     }
+}
+
+
+#[tokio::test]
+async fn test_get_access_key() {
+
+    crate::init().await;
+
+    let access_key = get_access_key(false).await;
+    println!("access_key={:#?}", access_key);
 }
 
 /**
@@ -368,15 +388,12 @@ pub async fn get_user_info() -> R<serde_json::Value> {
     
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_str() {
-        use crate::entity::models::Config;
-        use crate::app::database::CONTEXT;
-        use crate::utils::id::generate_id;
-        use rbs::value::map::ValueMap;
         
         // 查找是否已存在mid配置
-        let mut where_map = ValueMap::new();
-        where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
-        let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+        // let mut where_map = ValueMap::new();
+        // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
+        // let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
+        let mut existing_config = Config::select_by_map(&CONTEXT.rb, value!{"name":constans::MID_KEY.to_string()}).await?;
         
         if existing_config.is_empty() {
             // 创建新的mid配置
@@ -385,24 +402,35 @@ pub async fn get_user_info() -> R<serde_json::Value> {
                 name: constans::MID_KEY.to_string(),
                 value: Some(mid.to_string()),
                 expire_second: None,
-                created_date: Some(rbatis::rbdc::types::DateTime::now()),
-                last_modified_date: Some(rbatis::rbdc::types::DateTime::now()),
+                created_date: Some(rbatis::rbdc::types::Timestamp::now()),
+                last_modified_date: Some(rbatis::rbdc::types::Timestamp::now()),
             };
             Config::insert(&CONTEXT.rb, &new_config).await?;
         } else {
             // 更新现有的mid配置
-            let mut config = existing_config[0].clone();
+            let mut config = existing_config.pop().unwrap();
             config.value = Some(mid.to_string());
-            config.last_modified_date = Some(rbatis::rbdc::types::DateTime::now());
+            config.last_modified_date = Some(rbatis::rbdc::types::Timestamp::now());
             
             // 使用 update_by_map 方法
-            let mut update_where = ValueMap::new();
-            update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
-            Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
+            // let mut update_where = ValueMap::new();
+            // update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
+            // Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
+            Config::update_by_map(&CONTEXT.rb, &config, value!{"name":constans::MID_KEY.to_string()}).await?;
+            info!("更新mid: {}", mid);
         }
         
-        info!("更新mid: {}", mid);
+       
     }
     
     Ok(response)
+}
+
+
+//测试get_user_info
+#[tokio::test]
+async fn test_get_user_info() {
+    crate::init().await;
+    let result = get_user_info().await;
+    println!("result={:#?}", result);
 }

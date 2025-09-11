@@ -31,16 +31,24 @@ use std::fs;
 use std::path::Path;
 
 
-#[tokio::main]
-pub async fn main() {
-    _ = fast_log::init(
-        fast_log::Config::new()
-            .console()
-            .level(log::LevelFilter::Debug),
-    );
+
+/**
+ * 初始化数据库和日志
+ */
+pub async fn init()->u16{
+
+    crate::utils::log::init_log();
     CONTEXT.init().await;
     let port = CONTEXT.config.port;
 
+    port
+}
+
+
+#[tokio::main]
+pub async fn main() {
+   
+    let port = init().await;
     start_migration().await.expect("数据库迁移失败");
 
     info!(
@@ -54,6 +62,9 @@ pub async fn main() {
     let app = build_router();
     axum::serve(listener, app).await.unwrap();
 }
+
+
+
 
 fn build_router() -> Router {
     let cors = CorsLayer::new()
