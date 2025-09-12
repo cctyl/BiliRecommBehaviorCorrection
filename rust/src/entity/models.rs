@@ -1,5 +1,7 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
+use crate::entity::enumeration::Classify;
+use crate::entity::enumeration::MediaType;
 use crate::utils::id::generate_id;
 use rbatis::rbdc::Timestamp;
 use rbatis::PageRequest;
@@ -63,8 +65,8 @@ pub struct CookieHeaderData {
     pub url: Option<String>,
     pub ckey: String,
     pub cvalue: String,
-    pub classify: Option<String>,
-    pub media_type: Option<String>,
+    pub classify: Option<Classify>,
+    pub media_type: Option<MediaType>,
 }
 crud!(CookieHeaderData {}, "cookie_header_data");
 impl_select_page!(CookieHeaderData{select_page() => ""});

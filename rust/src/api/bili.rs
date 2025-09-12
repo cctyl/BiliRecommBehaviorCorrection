@@ -285,6 +285,20 @@ pub async fn common_post_form(
     R::Ok(json)
 }
 
+
+
+pub async fn get_header(url:&str)->R<HashMap<String, String>>{
+    let header_map: HashMap<String, String> = HashMap::new();
+
+
+    R::Ok(header_map)
+}
+
+
+
+
+
+
 /**
  * 携带header和cookie的通用get请求
  */
@@ -295,8 +309,8 @@ pub async fn common_get(
     let mut req = CLIENT.get(url);
 
     //TODO 读取数据库中的header
-    let hash_map: HashMap<String, String> = HashMap::new();
-    for (k, v) in &hash_map {
+    let header_map: HashMap<String, String> = HashMap::new();
+    for (k, v) in &header_map {
         req = req.header(k, v);
     }
 
@@ -416,7 +430,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             // let mut update_where = ValueMap::new();
             // update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
             // Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
-            Config::update_by_map(&CONTEXT.rb, &config, value!{"name":constans::MID_KEY.to_string()}).await?;
+            Config::update_by_map(&CONTEXT.rb, &config, value!{"id":&config.id}).await?;
             info!("更新mid: {}", mid);
         }
         
