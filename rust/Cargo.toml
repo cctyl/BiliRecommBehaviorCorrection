@@ -6,9 +6,9 @@ edition = "2024"
 [dependencies]
 
 
-rbs = { version = "4.5"}
-rbatis = { version = "4.5",features = ["debug_mode"]}
-rbdc-sqlite = { version = "4.5" }
+rbs = { version = "4.6"}
+rbatis = { version = "4.6",features = ["debug_mode"]}
+rbdc-sqlite = { version = "4.6" }
 fast_log = "1.6"
 # filetime = "0.2"
 
