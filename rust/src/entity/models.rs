@@ -21,8 +21,8 @@ pub struct Config {
     pub name: String,
     pub value: Option<String>,
     pub expire_second: Option<i32>,
-    pub created_date: Option<Timestamp>,
-    pub last_modified_date: Option<Timestamp>,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
 }
 crud!(Config {}, "config");
 impl_select!(Config{
@@ -36,8 +36,8 @@ impl Config{
             name: String::new(),
             value: Some(String::new()),
             expire_second: None,
-            created_date: Some( Timestamp::now()),
-            last_modified_date: Some( Timestamp::now()),
+            created_date: Some( DateTime::now()),
+            last_modified_date: Some( DateTime::now()),
         }
     }
 }

@@ -51,7 +51,7 @@ pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
         if expire_second > 0 {
             if let Some(last_modified_date) = config.last_modified_date.clone() {
                 info!("最后修改时间：{}", last_modified_date);
-                let r = (Timestamp::utc().0 - last_modified_date.0) /1000  > expire_second;
+                let r = (DateTime::now() - last_modified_date) .as_secs()as i64  > expire_second;
                 //超时，删除这个配置之
                 if r {
                     info!("已超时，删除配置：{}", config.name);

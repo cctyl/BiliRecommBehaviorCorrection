@@ -402,15 +402,15 @@ pub async fn get_user_info() -> R<serde_json::Value> {
                 name: constans::MID_KEY.to_string(),
                 value: Some(mid.to_string()),
                 expire_second: None,
-                created_date: Some(rbatis::rbdc::types::Timestamp::now()),
-                last_modified_date: Some(rbatis::rbdc::types::Timestamp::now()),
+                created_date: Some(rbatis::rbdc::types::DateTime::now()),
+                last_modified_date: Some(rbatis::rbdc::types::DateTime::now()),
             };
             Config::insert(&CONTEXT.rb, &new_config).await?;
         } else {
             // 更新现有的mid配置
             let mut config = existing_config.pop().unwrap();
             config.value = Some(mid.to_string());
-            config.last_modified_date = Some(rbatis::rbdc::types::Timestamp::now());
+            config.last_modified_date = Some(rbatis::rbdc::types::DateTime::now());
             
             // 使用 update_by_map 方法
             // let mut update_where = ValueMap::new();
