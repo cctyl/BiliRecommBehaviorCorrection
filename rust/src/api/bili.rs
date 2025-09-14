@@ -1,23 +1,23 @@
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
+use crate::app::database::CONTEXT;
 use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
+use crate::entity::models::Config;
 use crate::service::cookie_header_data;
 use crate::utils::http::CLIENT;
-use anyhow::{Context};
+use crate::utils::id::generate_id;
+use anyhow::Context;
 use hex;
 use log::{error, info};
 use rbs::value;
+use rbs::value::map::ValueMap;
 use reqwest::header;
 use serde_json::json;
 use std::collections::BTreeMap;
 use urlencoding::encode;
-use crate::entity::models::Config;
-use crate::app::database::CONTEXT;
-use crate::utils::id::generate_id;
-use rbs::value::map::ValueMap;
 //扫码登陆的code
 static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
 
@@ -28,7 +28,6 @@ fn check_resp(value: &serde_json::Value) -> R<()> {
         == 0;
 
     if !flag {
-
         if let Some(code) = value["code"].as_i64() {
             match code {
                 86090 => info!("已扫码未确认"),
@@ -84,11 +83,10 @@ pub async fn get_tv_login_qr_code() -> R<String> {
     let mut auth_code_guard = TEMP_TV_AUTH_CODE.lock().unwrap();
     auth_code_guard.clear();
     auth_code_guard.push_str(temp_tv_auth_code);
-   
 
     let url = resp["data"]["url"]
-    .as_str()
-    .ok_or(HttpError::Biz("Failed to get auth_code".to_string()))?;
+        .as_str()
+        .ok_or(HttpError::Biz("Failed to get auth_code".to_string()))?;
     info!("get_tv_login_qr_code: {}", url);
     R::Ok(url.to_string())
 }
@@ -221,26 +219,26 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
             // cookieHeaderDataService.replaceRefreshCookie(cookieMap);
 
             json!(format!("登陆成功！ accessKey={:#?}", access_token))
-        },
-        86038=>{
+        }
+        86038 => {
             TEMP_TV_AUTH_CODE.lock().unwrap().clear();
             json!("二维码失效，请重新扫描")
-        },
-        86039=>{
+        }
+        86039 => {
             json!("二维码尚未确认")
-        },
-        86090=>{
+        }
+        86090 => {
             json!("请在手机端确认")
-        },
-        -404=>{
+        }
+        -404 => {
             json!("啥都木有")
-        },
-        -400=>{
+        }
+        -400 => {
             json!("请求错误")
-        },
-        -3=>{
+        }
+        -3 => {
             json!("API校验密匙错误")
-        },
+        }
         _ => response,
     };
 
@@ -287,21 +285,19 @@ pub async fn common_post_form(
     R::Ok(json)
 }
 
-
-
-pub async fn get_header(url:&str)->R<HashMap<&String, &String>>{
-    let mut  header_map: HashMap<&String, &String> = HashMap::new();
-    for ele in &GLOBAL_STATE.lock().unwrap().common_header_map {
-       header_map.insert( ele.0,  ele.1);
-    }
-
-    R::Ok(header_map)
+pub async fn get_header<T, F>(url: &str, func: T) -> R<serde_json::Value>
+where
+    T: FnOnce(&'static HashMap<String, String>) -> F,
+    F: Future<Output = R<serde_json::Value>>,
+{
+    cookie_header_data::get_common_header_map(|header_map| {
+        let mut result: HashMap<String, String> = HashMap::new();
+        //TODO
+        result.insert("Host".to_string(), "".to_string());
+        func(&result)
+    })
+    .await
 }
-
-
-
-
-
 
 /**
  * 携带header和cookie的通用get请求
@@ -313,34 +309,36 @@ pub async fn common_get(
     let mut req = CLIENT.get(url);
 
     //TODO 读取数据库中的header
-    let header_map: HashMap<String, String> = HashMap::new();
-    for (k, v) in &header_map {
-        req = req.header(k, v);
-    }
+    get_header(url, |result| async move {
+        for (k, v) in result {
+            req = req.header(k, v);
+        }
 
-    //TODO 读取数据库中的cookie
-    let cookie_jar: HashMap<String, String> = HashMap::new();
-    let cookie_str: String = cookie_jar
-        .iter()
-        .map(|(k, v)| format!("{}={}", k, v))
-        .collect::<Vec<String>>()
-        .join("; ");
+        //TODO 读取数据库中的cookie
+        let cookie_jar: HashMap<String, String> = HashMap::new();
+        let cookie_str: String = cookie_jar
+            .iter()
+            .map(|(k, v)| format!("{}={}", k, v))
+            .collect::<Vec<String>>()
+            .join("; ");
 
-    let response = req
-        .timeout(Duration::from_secs(10))
-        .header(header::COOKIE, cookie_str)
-        .query(&param_map)
-        .send()
-        .await?;
+        let response = req
+            .timeout(Duration::from_secs(10))
+            .header(header::COOKIE, cookie_str)
+            .query(&param_map)
+            .send()
+            .await?;
 
-    //TODO 保存cookie
-    response.cookies().for_each(|c| {
-        info!("cookie: {:#?}", c);
-    });
+        //TODO 保存cookie
+        response.cookies().for_each(|c| {
+            info!("cookie: {:#?}", c);
+        });
 
-    let json = response.json().await?;
+        let json = response.json().await?;
 
-    R::Ok(json)
+        R::Ok(json)
+    })
+    .await
 }
 
 /**
@@ -348,38 +346,35 @@ pub async fn common_get(
  * 若不存在，则抛出异常，提示重新登陆
  */
 pub async fn get_access_key(refresh: bool) -> R<String> {
-
-    
     // 如果需要刷新，或者缓存中不存在，则更新一次
     // 否则从缓存中取出
     // let mut where_map = ValueMap::new();
     // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::BILI_ACCESS_KEY.to_string()));
     // let config_result = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
-    let mut config_result: Vec<Config> = Config::select_by_map(&CONTEXT.rb, 
-        value!{"name":constans::BILI_ACCESS_KEY.to_string()}
-    ).await?;
-    
+    let mut config_result: Vec<Config> = Config::select_by_map(
+        &CONTEXT.rb,
+        value! {"name":constans::BILI_ACCESS_KEY.to_string()},
+    )
+    .await?;
+
     if refresh {
         // 记录登陆状态
         // 新版本不再支持通过cookie获取
         // 提示让用户扫码登陆
         return Err(HttpError::Biz("登录已过期，请重新扫码登录".to_string()));
     } else {
-
-        let c = config_result.pop().ok_or(  HttpError::Biz("登录已过期，请重新扫码登录".to_string()))?;
-        match c.value{
+        let c = config_result
+            .pop()
+            .ok_or(HttpError::Biz("登录已过期，请重新扫码登录".to_string()))?;
+        match c.value {
             Some(access_key) => R::Ok(access_key),
-            None =>Err(HttpError::Biz("access_key 为空，请重新登录".to_string())) ,
+            None => Err(HttpError::Biz("access_key 为空，请重新登录".to_string())),
         }
-
-
     }
 }
 
-
 #[tokio::test]
 async fn test_get_access_key() {
-
     crate::init().await;
 
     let access_key = get_access_key(false).await;
@@ -391,28 +386,29 @@ async fn test_get_access_key() {
  */
 pub async fn get_user_info() -> R<serde_json::Value> {
     let url = "https://app.bilibili.com/x/v2/account/myinfo";
-    
+
     let access_key = get_access_key(false).await?;
-    
+
     let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
     params.insert("access_key", access_key);
     params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
     params.insert("ts", get_ts().to_string());
-    
+
     let signed_params = get_app_sign(params);
     let response = common_get(url, signed_params).await?;
-    
+
     check_resp(&response)?;
-    
+
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_str() {
-        
         // 查找是否已存在mid配置
         // let mut where_map = ValueMap::new();
         // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
         // let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
-        let mut existing_config = Config::select_by_map(&CONTEXT.rb, value!{"name":constans::MID_KEY.to_string()}).await?;
-        
+        let mut existing_config =
+            Config::select_by_map(&CONTEXT.rb, value! {"name":constans::MID_KEY.to_string()})
+                .await?;
+
         if existing_config.is_empty() {
             // 创建新的mid配置
             let new_config = Config {
@@ -429,21 +425,18 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             let mut config = existing_config.pop().unwrap();
             config.value = Some(mid.to_string());
             config.last_modified_date = Some(rbatis::rbdc::types::DateTime::now());
-            
+
             // 使用 update_by_map 方法
             // let mut update_where = ValueMap::new();
             // update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
             // Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
-            Config::update_by_map(&CONTEXT.rb, &config, value!{"id":&config.id}).await?;
+            Config::update_by_map(&CONTEXT.rb, &config, value! {"id":&config.id}).await?;
             info!("更新mid: {}", mid);
         }
-        
-       
     }
-    
+
     Ok(response)
 }
-
 
 //测试get_user_info
 #[tokio::test]

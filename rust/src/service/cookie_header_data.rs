@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use log::info;
 use rbs::value;
+use reqwest::header;
 
 use crate::{
     app::{database::CONTEXT, global::GLOBAL_STATE, response::R},
@@ -11,8 +12,20 @@ use crate::{
     },
 };
 
+pub async fn get_common_header_map<T, F>(func: T) -> R<serde_json::Value>
+where
+    T: FnOnce(&'static HashMap<String, String>) -> F,
+    F: Future<Output = R<serde_json::Value>>,
+{
+    let mut mutex_guard = GLOBAL_STATE.lock().unwrap();
+    if mutex_guard.common_header_map.is_empty() {
+        mutex_guard.common_header_map =
+            get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
+                .await?;
+    }
 
-
+    func(&mutex_guard.common_header_map).await
+}
 
 /**
  * 根据分类和用途查询数据
