@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
+use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
+use crate::service::cookie_header_data;
 use crate::utils::http::CLIENT;
 use anyhow::{Context};
 use hex;
@@ -287,9 +289,11 @@ pub async fn common_post_form(
 
 
 
-pub async fn get_header(url:&str)->R<HashMap<String, String>>{
-    let header_map: HashMap<String, String> = HashMap::new();
-
+pub async fn get_header(url:&str)->R<HashMap<&String, &String>>{
+    let mut  header_map: HashMap<&String, &String> = HashMap::new();
+    for ele in &GLOBAL_STATE.lock().unwrap().common_header_map {
+       header_map.insert( ele.0,  ele.1);
+    }
 
     R::Ok(header_map)
 }

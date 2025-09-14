@@ -12,7 +12,9 @@ mod service;
 mod utils;
 use crate::app::database::{self, CONTEXT};
 use crate::app::error::HttpError;
+use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
+use crate::entity::enumeration::{Classify, MediaType};
 use crate::utils::migration::start_migration;
 
 use app::config::Config;
@@ -26,28 +28,32 @@ use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
 use tower_http::cors::{self, CorsLayer};
 
+use crate::service::cookie_header_data::{self, get_map_by_classify_and_media_type};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-
-
+pub async fn global_init() {
+    GLOBAL_STATE.lock().unwrap().common_header_map =
+        get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
+            .await
+            .unwrap();
+}
 /**
  * 初始化数据库和日志
  */
-pub async fn init()->u16{
-
+pub async fn init() -> u16 {
     crate::utils::log::init_log();
     CONTEXT.init().await;
+
+    global_init().await;
     let port = CONTEXT.config.port;
 
     port
 }
 
-
 #[tokio::main]
 pub async fn main() {
-   
     let port = init().await;
     start_migration().await.expect("数据库迁移失败");
 
@@ -63,9 +69,6 @@ pub async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-
-
-
 fn build_router() -> Router {
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)
@@ -76,4 +79,3 @@ fn build_router() -> Router {
 
     handler::create_router().layer(cors)
 }
-

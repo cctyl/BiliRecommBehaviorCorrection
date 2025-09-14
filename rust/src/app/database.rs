@@ -1,10 +1,9 @@
 use std::{
-    sync::{LazyLock, OnceLock},
-    time::Duration,
+    collections::HashMap, sync::{LazyLock, OnceLock}, time::Duration
 };
 
 use crate::app::config::Config;
-use rbatis::RBatis;
+use rbatis::{dark_std::errors::new, RBatis};
 use rbdc_sqlite::Driver;
 use rbdc_sqlite::driver::SqliteDriver;
 use serde::{Deserialize, Deserializer, de};
@@ -13,10 +12,12 @@ use tokio::runtime::Runtime;
 pub struct AppContext {
     pub rb: RBatis,
     pub config: Config,
+   
 }
 pub static CONTEXT: LazyLock<AppContext> = LazyLock::new(|| AppContext {
     rb: RBatis::new(),
     config: Config::new(),
+ 
 });
 
 impl AppContext {
