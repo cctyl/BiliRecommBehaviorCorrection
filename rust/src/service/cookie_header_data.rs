@@ -5,26 +5,32 @@ use rbs::value;
 use reqwest::header;
 
 use crate::{
-    app::{database::CONTEXT, global::GLOBAL_STATE, response::R},
+    app::{
+        database::CONTEXT,
+        global::{GLOBAL_STATE, GlobalState, GlobalStateHandler},
+        response::R,
+    },
     entity::{
         enumeration::{Classify, MediaType},
         models::CookieHeaderData,
     },
 };
 
-pub async fn get_common_header_map<T, F>(func: T) -> R<serde_json::Value>
-where
-    T: FnOnce(&'static HashMap<String, String>) -> F,
-    F: Future<Output = R<serde_json::Value>>,
-{
-    let mut mutex_guard = GLOBAL_STATE.lock().unwrap();
-    if mutex_guard.common_header_map.is_empty() {
-        mutex_guard.common_header_map =
-            get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
-                .await?;
-    }
+pub struct CookieHeaderDataService;
 
-    func(&mutex_guard.common_header_map).await
+pub static CookieHeaderDataServiceImpl: CookieHeaderDataService = CookieHeaderDataService;
+
+impl GlobalStateHandler for CookieHeaderDataService {
+    async fn handle(&self, state: &mut GlobalState) {
+        state.common_header_map =
+            get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
+                .await
+                .unwrap();
+    }
+}
+
+pub async fn get_common_header_map() {
+    CookieHeaderDataServiceImpl.process().await;
 }
 
 /**
