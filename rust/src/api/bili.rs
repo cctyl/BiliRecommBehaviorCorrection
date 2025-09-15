@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 use crate::app::database::CONTEXT;
-use crate::app::global::GLOBAL_STATE;
+use crate::app::global::{GlobalStateHandler, GLOBAL_STATE};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::entity::models::Config;
-use crate::service::cookie_header_data;
+use crate::entity::models::{Config, CookieHeaderData};
+use crate::service::cookie_header_data::{self, init_common_header_map, init_header};
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
 use anyhow::Context;
@@ -254,14 +254,12 @@ pub async fn common_post_form(
 ) -> R<serde_json::Value> {
     let mut req = CLIENT.post(url);
 
-    //TODO 读取数据库中的header
-    let hash_map: HashMap<String, String> = HashMap::new();
-    for (k, v) in &hash_map {
-        req = req.header(k, v);
-    }
+    init_common_header_map().await?;
+    req = init_header.processr((url,req)).await?;
 
-    //TODO 读取数据库中的cookie
-    let cookie_jar: HashMap<String, String> = HashMap::new();
+  
+    // 读取数据库中的cookie
+    let mut cookie_jar: HashMap<String, String> = cookie_header_data::get_refresh_cookie_map().await?;
     let cookie_str: String = cookie_jar
         .iter()
         .map(|(k, v)| format!("{}={}", k, v))
@@ -275,29 +273,19 @@ pub async fn common_post_form(
         .send()
         .await?;
 
-    //TODO 保存cookie
-    response.cookies().for_each(|c| {
+     //保存cookie
+     response.cookies().for_each(|c| {
         info!("cookie: {:#?}", c);
+        cookie_jar.insert(c.name().to_string(),c.value().to_string());
     });
 
+    cookie_header_data::replace_refresh_cookie(cookie_jar).await?;
     let json = response.json().await?;
 
     R::Ok(json)
 }
 
-pub async fn get_header<T, F>(url: &str, func: T) -> R<serde_json::Value>
-where
-    T: FnOnce(&'static HashMap<String, String>) -> F,
-    F: Future<Output = R<serde_json::Value>>,
-{
-    cookie_header_data::get_common_header_map(|header_map| {
-        let mut result: HashMap<String, String> = HashMap::new();
-        //TODO
-        result.insert("Host".to_string(), "".to_string());
-        func(&result)
-    })
-    .await
-}
+
 
 /**
  * 携带header和cookie的通用get请求
@@ -308,37 +296,40 @@ pub async fn common_get(
 ) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
-    //TODO 读取数据库中的header
-    get_header(url, |result| async move {
-        for (k, v) in result {
-            req = req.header(k, v);
-        }
+    init_common_header_map().await?;
+    req = init_header.processr((url,req)).await?;
 
-        //TODO 读取数据库中的cookie
-        let cookie_jar: HashMap<String, String> = HashMap::new();
-        let cookie_str: String = cookie_jar
-            .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
-            .collect::<Vec<String>>()
-            .join("; ");
+  
+    // 读取数据库中的cookie
+    let mut cookie_jar: HashMap<String, String> = cookie_header_data::get_refresh_cookie_map().await?;
+    let cookie_str: String = cookie_jar
+        .iter()
+        .map(|(k, v)| format!("{}={}", k, v))
+        .collect::<Vec<String>>()
+        .join("; ");
 
-        let response = req
-            .timeout(Duration::from_secs(10))
-            .header(header::COOKIE, cookie_str)
-            .query(&param_map)
-            .send()
-            .await?;
+    let response = req
+        .timeout(Duration::from_secs(10))
+        .header(header::COOKIE, cookie_str)
+        .query(&param_map)
+        .send()
+        .await?;
 
-        //TODO 保存cookie
-        response.cookies().for_each(|c| {
-            info!("cookie: {:#?}", c);
-        });
+    //保存cookie
+    response.cookies().for_each(|c| {
+        info!("cookie: {:#?}", c);
+        cookie_jar.insert(c.name().to_string(),c.value().to_string());
+    });
 
-        let json = response.json().await?;
+    cookie_header_data::replace_refresh_cookie(cookie_jar).await?;
 
-        R::Ok(json)
-    })
-    .await
+
+
+    let json = response.json().await?;
+
+    R::Ok(json)
+   
+   
 }
 
 /**

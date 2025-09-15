@@ -33,12 +33,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-pub async fn global_init() {
-    GLOBAL_STATE.lock().unwrap().common_header_map =
-        get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
-            .await
-            .unwrap();
-}
 /**
  * 初始化数据库和日志
  */
@@ -46,7 +40,6 @@ pub async fn init() -> u16 {
     crate::utils::log::init_log();
     CONTEXT.init().await;
 
-    global_init().await;
     let port = CONTEXT.config.port;
 
     port
