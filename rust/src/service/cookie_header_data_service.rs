@@ -18,7 +18,7 @@ use crate::{
     }, entity::{
         enumeration::{Classify, MediaType},
         models::CookieHeaderData,
-    }, service::cookie_header_data, utils::{data_util, id::generate_id}
+    }, service::cookie_header_data_service, utils::{data_util, id::generate_id}
 };
 
 pub async fn remove_by_classify_and_media_type(

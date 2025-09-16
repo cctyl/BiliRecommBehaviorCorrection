@@ -59,7 +59,7 @@ async fn test_config() {
     println!("{:#?}", select_by_map);
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize,Default)]
 pub struct CookieHeaderData {
     pub id: String,
     pub url: Option<String>,

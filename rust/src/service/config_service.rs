@@ -3,9 +3,24 @@ use rbatis::rbdc::{DateTime, Timestamp};
 use rbs::value;
 
 use crate::{
-    app::{database::CONTEXT, response::R},
+    app::{constans, database::CONTEXT, response::R},
     entity::models::Config,
 };
+
+
+
+/**
+ * 修改用户id
+ */
+pub async fn update_mid(mid:&str)->R<()>{
+
+    add_or_update_config(constans::MID_KEY, mid).await?;
+
+    R::Ok(())
+
+}
+
+
 
 pub async fn add_or_update_config(config_name: &str, config_value: &str) -> R<Config> {
     let find_config_by_name = find_config_by_name(config_name).await?;
@@ -70,3 +85,7 @@ async fn test_find_config_by_name() {
     let r = find_config_by_name("test").await.unwrap();
     println!("{:#?}", r);
 }
+
+
+
+

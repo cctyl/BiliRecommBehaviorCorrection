@@ -6,7 +6,7 @@ use crate::app::global::{GlobalStateHandler, GLOBAL_STATE};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
 use crate::entity::models::{Config, CookieHeaderData};
-use crate::service::cookie_header_data::{self, init_common_header_map, init_header};
+use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
 use anyhow::Context;
@@ -259,7 +259,7 @@ pub async fn common_post_form(
 
   
     // 读取数据库中的cookie
-    let mut cookie_jar: HashMap<String, String> = cookie_header_data::get_refresh_cookie_map().await?;
+    let mut cookie_jar: HashMap<String, String> = cookie_header_data_service::get_refresh_cookie_map().await?;
     let cookie_str: String = cookie_jar
         .iter()
         .map(|(k, v)| format!("{}={}", k, v))
@@ -279,7 +279,7 @@ pub async fn common_post_form(
         cookie_jar.insert(c.name().to_string(),c.value().to_string());
     });
 
-    cookie_header_data::replace_refresh_cookie(cookie_jar).await?;
+    cookie_header_data_service::replace_refresh_cookie(cookie_jar).await?;
     let json = response.json().await?;
 
     R::Ok(json)
@@ -301,7 +301,7 @@ pub async fn common_get(
 
   
     // 读取数据库中的cookie
-    let mut cookie_jar: HashMap<String, String> = cookie_header_data::get_refresh_cookie_map().await?;
+    let mut cookie_jar: HashMap<String, String> = cookie_header_data_service::get_refresh_cookie_map().await?;
     let cookie_str: String = cookie_jar
         .iter()
         .map(|(k, v)| format!("{}={}", k, v))
@@ -321,7 +321,7 @@ pub async fn common_get(
         cookie_jar.insert(c.name().to_string(),c.value().to_string());
     });
 
-    cookie_header_data::replace_refresh_cookie(cookie_jar).await?;
+    cookie_header_data_service::replace_refresh_cookie(cookie_jar).await?;
 
 
 
