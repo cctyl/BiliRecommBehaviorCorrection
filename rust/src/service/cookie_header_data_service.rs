@@ -36,11 +36,16 @@ pub async fn remove_by_classify_and_media_type(
 }
 
 //replaceRefreshCookie
-pub async fn replace_refresh_cookie(
-    map: HashMap<String, String>,
-) -> R<()> {
+pub async fn replace_refresh_cookie<K, V>(map: HashMap<K, V>) -> R<()>
+where
+    K: Into<String>,
+    V: Into<String>,
+{
 
-
+    let map: HashMap<String, String> = map
+    .into_iter()
+    .map(|(k, v)| (k.into(), v.into()))
+    .collect();
     remove_all_refresh_cookie().await?;
     save_refresh_cookie_map(map).await?;
 
@@ -127,7 +132,7 @@ impl GlobalStateHandler<(&str, reqwest::RequestBuilder), reqwest::RequestBuilder
         for (k, v) in hash_map {
             req = req.header(k, v);
         }
-        //TODO 键值对都有问题
+        // 键值对都有问题
         req = req.header(String::from("Host"), data_util::get_host(url));
         R::Ok(req)
     }

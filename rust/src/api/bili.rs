@@ -2,10 +2,11 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 use crate::app::database::CONTEXT;
-use crate::app::global::{GlobalStateHandler, GLOBAL_STATE};
+use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
 use crate::entity::models::{Config, CookieHeaderData};
+use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
@@ -21,7 +22,7 @@ use urlencoding::encode;
 //扫码登陆的code
 static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
 
-fn check_resp(value: &serde_json::Value) -> R<()> {
+async fn check_resp(value: &serde_json::Value) -> R<()> {
     let flag = value["code"]
         .as_i64()
         .ok_or(HttpError::Biz("Failed to get code".to_string()))?
@@ -35,8 +36,8 @@ fn check_resp(value: &serde_json::Value) -> R<()> {
                 86039 => info!("二维码尚未确认"),
                 65007 => info!("视频已踩过"),
                 -101 => {
-                    //TODO 登陆过期，清除accessKey
-                    //configService.updateAccessKey(null);
+                    // 登陆过期，清除accessKey
+                    config_service::del_by_name(constans::BILI_ACCESS_KEY).await?;
                     info!("登录过期，清除accessKey");
                     error!("body: {:#?}", value);
                 }
@@ -76,7 +77,7 @@ pub async fn get_tv_login_qr_code() -> R<String> {
     let signed_params = get_app_sign(params);
     let res: reqwest::Response = CLIENT.post(url).form(&signed_params).send().await?;
     let resp = res.json().await?;
-    check_resp(&resp)?;
+    check_resp(&resp).await?;
     let temp_tv_auth_code = resp["data"]["auth_code"]
         .as_str()
         .ok_or(HttpError::Biz("Failed to get auth_code".to_string()))?;
@@ -187,7 +188,7 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
     params.insert("ts", get_ts().to_string());
     let response = common_post_form(url, get_app_sign(params)).await?;
 
-    check_resp(&response)?;
+    check_resp(&response).await?;
 
     let code = response["code"]
         .as_i64()
@@ -212,11 +213,11 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
 
             TEMP_TV_AUTH_CODE.lock().unwrap().clear();
 
-            //TODO 存储数据
-            // configService.updateMid(mid);
-            // configService.updateAccessKey(accessToken);
+            // 存储数据
+            config_service::update_mid(mid).await?;
+            config_service::update_access_key(access_token).await?;
             //立即持久化一次cookie
-            // cookieHeaderDataService.replaceRefreshCookie(cookieMap);
+            cookie_header_data_service::replace_refresh_cookie(cookie_map).await?;
 
             json!(format!("登陆成功！ accessKey={:#?}", access_token))
         }
@@ -255,11 +256,11 @@ pub async fn common_post_form(
     let mut req = CLIENT.post(url);
 
     init_common_header_map().await?;
-    req = init_header.processr((url,req)).await?;
+    req = init_header.processr((url, req)).await?;
 
-  
     // 读取数据库中的cookie
-    let mut cookie_jar: HashMap<String, String> = cookie_header_data_service::get_refresh_cookie_map().await?;
+    let mut cookie_jar: HashMap<String, String> =
+        cookie_header_data_service::get_refresh_cookie_map().await?;
     let cookie_str: String = cookie_jar
         .iter()
         .map(|(k, v)| format!("{}={}", k, v))
@@ -273,10 +274,10 @@ pub async fn common_post_form(
         .send()
         .await?;
 
-     //保存cookie
-     response.cookies().for_each(|c| {
+    //保存cookie
+    response.cookies().for_each(|c| {
         info!("cookie: {:#?}", c);
-        cookie_jar.insert(c.name().to_string(),c.value().to_string());
+        cookie_jar.insert(c.name().to_string(), c.value().to_string());
     });
 
     cookie_header_data_service::replace_refresh_cookie(cookie_jar).await?;
@@ -285,7 +286,21 @@ pub async fn common_post_form(
     R::Ok(json)
 }
 
+/**
+ * 获取cookie字符串
+ */
+pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
+    // 读取数据库中的cookie
+    let mut cookie_jar: HashMap<String, String> =
+        cookie_header_data_service::get_refresh_cookie_map().await?;
+    let cookie_str: String = cookie_jar
+        .iter()
+        .map(|(k, v)| format!("{}={}", k, v))
+        .collect::<Vec<String>>()
+        .join("; ");
 
+    R::Ok((cookie_jar, cookie_str))
+}
 
 /**
  * 携带header和cookie的通用get请求
@@ -297,18 +312,12 @@ pub async fn common_get(
     let mut req = CLIENT.get(url);
 
     init_common_header_map().await?;
-    req = init_header.processr((url,req)).await?;
+    req = init_header.processr((url, req)).await?;
 
-  
-    // 读取数据库中的cookie
-    let mut cookie_jar: HashMap<String, String> = cookie_header_data_service::get_refresh_cookie_map().await?;
-    let cookie_str: String = cookie_jar
-        .iter()
-        .map(|(k, v)| format!("{}={}", k, v))
-        .collect::<Vec<String>>()
-        .join("; ");
+    //读取cookie
+    let (cookie_jar, cookie_str) = get_cookie_str().await?;
 
-    let response = req
+    let response: reqwest::Response = req
         .timeout(Duration::from_secs(10))
         .header(header::COOKIE, cookie_str)
         .query(&param_map)
@@ -316,20 +325,28 @@ pub async fn common_get(
         .await?;
 
     //保存cookie
-    response.cookies().for_each(|c| {
-        info!("cookie: {:#?}", c);
-        cookie_jar.insert(c.name().to_string(),c.value().to_string());
-    });
-
-    cookie_header_data_service::replace_refresh_cookie(cookie_jar).await?;
-
-
+    update_cookie(&response, cookie_jar).await?;
 
     let json = response.json().await?;
 
     R::Ok(json)
-   
-   
+}
+
+/**
+ * 更新cookie
+ */
+
+pub async fn update_cookie(
+    response: &reqwest::Response,
+    mut cookie_jar: HashMap<String, String>,
+) -> R<()> {
+    //保存cookie
+    response.cookies().for_each(|c| {
+        info!("cookie: {:#?}", c);
+        cookie_jar.insert(c.name().to_string(), c.value().to_string());
+    });
+
+    cookie_header_data_service::replace_refresh_cookie(cookie_jar).await
 }
 
 /**
@@ -388,7 +405,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
     let signed_params = get_app_sign(params);
     let response = common_get(url, signed_params).await?;
 
-    check_resp(&response)?;
+    check_resp(&response).await?;
 
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_str() {
