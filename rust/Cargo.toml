@@ -7,7 +7,7 @@ edition = "2024"
 
 
 rbs = { version = "4.6"}
-rbatis = { version = "4.6",features = ["debug_mode"]}
+rbatis = { version = "4.6.8",features = ["debug_mode"]}
 rbdc-sqlite = { version = "4.6" }
 fast_log = "1.6"
 # filetime = "0.2"
@@ -34,7 +34,7 @@ tower-http = { version = "0.5.2", features = ["cors"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 idgenerator = "2.0.0"
-reqwest ={version = "0.12.23",features = ["rustls-tls","cookies","json"]} 
+reqwest ={version = "0.12.23",features = ["rustls-tls","cookies","json","stream"]} 
 md5 = "0.8.0"
 hex = "0.4"
 urlencoding = "2.1"
@@ -42,3 +42,4 @@ regex = "1"
 sqlparser = "0.58.0"
 rand = "0.9.2"
 url = "2.5.7"
+tokio-stream = "0.1.17"

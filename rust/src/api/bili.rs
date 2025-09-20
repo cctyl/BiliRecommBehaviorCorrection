@@ -453,3 +453,14 @@ async fn test_get_user_info() {
     let result = get_user_info().await;
     println!("result={:#?}", result);
 }
+
+/**
+ * 
+ * 查询观看历史
+ */
+pub async fn get_history() -> R<serde_json::Value> {
+    
+    let url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
+    common_get(url, BTreeMap::new()).await
+
+}

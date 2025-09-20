@@ -4,7 +4,7 @@ use rbs::value;
 
 use crate::{
     app::{constans, database::CONTEXT, response::R},
-    entity::models::Config,
+    entity::{dtos::ConfigAddUpdateDTO, models::Config},
 };
 
 /**
@@ -96,6 +96,46 @@ pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
 
     Ok(config)
 }
+/**
+ * 更新配置项列表
+ * 此方法用于批量更新配置项，通过接收一个配置对象列表来实现配置的批量修改或添加
+ * 主要用途是当有一批新的配置需要应用或者现有配置发生变更时，通过调用此方法来更新系统内的配置信息
+ *
+ * @param configList 一个包含多个Config对象的列表，用于更新系统配置
+ */
+pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
+    
+    
+    for config in payload.into_iter(){
+
+        if config.id.is_none() {
+            
+            //新增
+            let mut config_db = Config::default();
+            config_db.name = config.name;
+            config_db.value = Some(config.value);
+            Config::insert(&CONTEXT.rb, &config_db).await?;
+        }else {
+            let config_db = Config{
+                id: config.id.unwrap(),
+                name: config.name,
+                value: Some(config.value),
+                expire_second: None,
+                last_modified_date: Some( DateTime::now()),
+                created_date: None,
+            };
+
+            //修改
+            Config::update_by_map(&CONTEXT.rb,&config_db , value! {"id":&config_db.id}).await?;
+
+        }
+
+    }
+
+
+    R::Ok(())
+
+}
 
 //=====================================测试==========================================
 #[cfg(test)]
@@ -147,5 +187,27 @@ mod tests{
     }
 
 
+    //update_config_list
+    #[tokio::test]
+    async fn test_update_config_list() {
+        crate::init().await;
+       
+
+
+        update_config_list(vec![
+            ConfigAddUpdateDTO{
+                // id: Some("111".to_string()),
+                id: None,
+                name: "newww".to_string(),
+                value: "test2222".to_string(),
+            }
+        ]).await.unwrap();
+
+
+
+        log::logger().flush();
+    }
+
     
 }
+

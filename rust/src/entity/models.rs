@@ -26,7 +26,9 @@ pub struct Config {
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
 }
-crud!(Config {}, "config");
+
+// crud!(Config {}, "config");
+crud!(Config {});  
 impl_select!(Config{
     select_by_name(table_column:&str,name:&str) -> Option    =>" ` where name = #{name} limit 1 ` "
 });

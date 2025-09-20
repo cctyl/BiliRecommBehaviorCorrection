@@ -24,3 +24,12 @@ fn testnow() {
     let subsec_millis: u128 = duration.as_millis();
     println!("过去了：{subsec_millis}毫秒");
 }
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ConfigAddUpdateDTO {
+    pub id: Option<String>,
+    pub name: String,
+    pub value: String
+    
+}
