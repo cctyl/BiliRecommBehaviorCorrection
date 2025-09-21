@@ -6,6 +6,7 @@ use std::{
 };
 
 use log::{error, info};
+use rbatis::PageRequest;
 use rbs::value;
 use reqwest::header;
 use tokio::time::sleep;
@@ -16,8 +17,7 @@ use crate::{
         global::{GlobalState, GlobalStateHandler, GLOBAL_STATE},
         response::R,
     }, entity::{
-        enumeration::{Classify, MediaType},
-        models::CookieHeaderData,
+        dtos::PageDTO, enumeration::{Classify, MediaType}, models::CookieHeaderData
     }, service::cookie_header_data_service, utils::{data_util, id::generate_id}
 };
 
@@ -191,4 +191,38 @@ async fn test_get_map_by_classify_and_media_type() {
     info!("aaa ->>{:#?}", map);
 
     log::logger().flush();
+}
+
+/**
+ * 获取刷新cookie
+
+ */
+pub async fn get_refresh_cookie() -> R<HashMap<String, String>> {
+   get_map_by_classify_and_media_type(&Classify::COOKIE, &MediaType::TIMELY_UPDATE).await
+}
+
+/**
+ * 更新刷新cookie
+ */
+pub async fn update_refresh_cookie(cookie_str:String) ->  R<HashMap<String, String>> {
+    let split_cookie = data_util::split_cookie(&cookie_str);
+    
+    let mut hash_map = get_refresh_cookie().await?;
+    hash_map.extend(split_cookie);
+
+    replace_refresh_cookie(hash_map.clone()).await?;
+
+    R::Ok(hash_map)
+}
+
+
+/**
+ * 分页查询
+ */
+pub(crate) async fn page_list(page: u64, limit: u64) -> R<PageDTO<CookieHeaderData>> {
+    
+    let page = CookieHeaderData::select_page(&CONTEXT.rb, &PageRequest::new(page, limit)).await?;
+
+    R::Ok(page.into())
+
 }

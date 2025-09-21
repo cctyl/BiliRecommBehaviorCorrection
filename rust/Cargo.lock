@@ -304,6 +304,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "bili-recomm-behavior-correction"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-valid",
+ "dotenvy",
+ "fast_log",
+ "hex",
+ "idgenerator",
+ "jsonwebtoken",
+ "log",
+ "md5",
+ "rand 0.9.2",
+ "rbatis",
+ "rbdc-sqlite",
+ "rbs",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlparser",
+ "thiserror 2.0.12",
+ "time",
+ "tokio",
+ "tokio-stream",
+ "tower",
+ "tower-http 0.5.2",
+ "url",
+ "urlencoding",
+ "validator",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2770,40 +2804,6 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
-
-[[package]]
-name = "simple-backup"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "axum-valid",
- "dotenvy",
- "fast_log",
- "hex",
- "idgenerator",
- "jsonwebtoken",
- "log",
- "md5",
- "rand 0.9.2",
- "rbatis",
- "rbdc-sqlite",
- "rbs",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "sqlparser",
- "thiserror 2.0.12",
- "time",
- "tokio",
- "tokio-stream",
- "tower",
- "tower-http 0.5.2",
- "url",
- "urlencoding",
- "validator",
-]
 
 [[package]]
 name = "simple_asn1"
