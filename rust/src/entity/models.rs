@@ -1,6 +1,8 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
+use crate::entity::enumeration::AccessType;
 use crate::entity::enumeration::Classify;
+use crate::entity::enumeration::DictType;
 use crate::entity::enumeration::MediaType;
 use crate::utils::id::generate_id;
 use rbatis::rbdc::Timestamp;
@@ -91,8 +93,8 @@ async fn test_cookie_header_data() {
 pub struct Dict {
     pub id: String,
     pub value: String,
-    pub access_type: Option<String>,
-    pub dict_type: Option<String>,
+    pub access_type: Option<AccessType>,
+    pub dict_type: Option<DictType>,
     pub outer_id: Option<String>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
@@ -100,6 +102,7 @@ pub struct Dict {
     pub desc_field: Option<String>,
 }
 crud!(Dict {}, "dict");
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {

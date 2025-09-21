@@ -81,6 +81,9 @@ pub enum HttpError {
 
     #[error(transparent)]
     OtherError(#[from] anyhow::Error),
+
+    #[error("数据库错误:{0}")]
+    DataBaseError(#[from] rbatis::Error),
 }
 
 impl From<sqlparser::parser::ParserError> for HttpError {
@@ -122,11 +125,6 @@ impl From<ValidationErrors> for HttpError {
     }
 }
 
-impl From<rbs::Error> for HttpError{
-    fn from(e: rbs::Error) -> Self {
-        HttpError::ServerError(format!("database error:{}",e.to_string()))
-    }
-}
 
 
 impl HttpError {
@@ -138,6 +136,7 @@ impl HttpError {
             HttpError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             HttpError::Biz(_) => StatusCode::OK,
             HttpError::Custom(code, _) => StatusCode::from_u16(*code).unwrap(),
+            HttpError::DataBaseError(error) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

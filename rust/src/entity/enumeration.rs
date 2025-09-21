@@ -38,13 +38,95 @@ pub enum MediaType{
      */
     TIMELY_UPDATE,
 }
-// impl fmt::Display for MediaType {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        
-//         match self {
-//             MediaType::General => write!(f, "GENERAL"),
-//             MediaType::UrlMatching => write!(f, "URL_MATCHING"),
-//             MediaType::TimelyUpdate => write!(f, "TIMELY_UPDATE"),
-//         }
-//     }
-// }
+
+/**
+ * 字典类型
+ */
+#[derive(Debug,Clone,Serialize,Deserialize)]
+pub enum DictType {
+
+
+    /**
+     * 标签类型
+     */
+    TAG,
+
+    /**
+     * 描述
+     */
+    DESC,
+
+    /**
+     * 标题
+     */
+    TITLE,
+
+    /**
+     * 封面
+     */
+    COVER,
+
+    /**
+     * up主id
+     */
+    MID,
+
+    /**
+     * 分区id
+     */
+    TID,
+
+    /**
+     * 搜索词
+     */
+    SEARCH_KEYWORD,
+
+    /**
+     * 通用的关键词，对于没有细分是标题还是封面还是描述的关键词等使用的类型
+     */
+    KEYWORD,
+
+    /**
+     * 需要忽略的关键词
+     */
+    IGNORE_KEYWORD,
+
+    /**
+     *  需要忽略的标签
+     */
+    IGNORE_TAG,
+
+    /**
+     * 停顿词
+     */
+    STOP_WORDS,
+
+
+}
+
+/**
+ * 访问类型
+ */
+#[derive(Debug,Clone,Serialize,Deserialize)]
+pub enum  AccessType  {
+    /**
+     * 黑名单
+     */
+    BLACK,
+    /**
+     * 白名单
+     */
+    WHITE,
+
+    OTHER,
+
+    /**
+     * 黑名单未处理缓存
+     */
+    BLACK_CACHE,
+    /**
+     * 白名单未处理缓存
+     */
+    WHITE_CACHE,
+
+}
