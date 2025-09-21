@@ -1,3 +1,5 @@
+use std::{collections::HashMap, hash::Hash};
+
 use axum::{debug_handler, extract::Query, Json, Router};
 use fast_log::config;
 use serde::Deserialize;
@@ -6,7 +8,7 @@ use crate::{
     api::bili, app::{
         database::CONTEXT,
         response::{OkRespExt, RR, *},
-    }, entity::{dtos::ConfigAddUpdateDTO, models::Config}, service::config_service
+    }, entity::{dtos::ConfigAddUpdateDTO, models::Config}, service::{config_service, cookie_header_data_service}
 };
 
 
@@ -22,9 +24,8 @@ pub fn create_router() -> Router {
         .route("/check-accesskey", axum::routing::get(check_accesskey))
         .route("/getPic", axum::routing::get(stream_image_from_url))
         .route("/check-cookie", axum::routing::get(check_accesskey))
-        .route("/standard", axum::routing::get(get_standard_config_info).post(update_standard_config_info)
-    
-    )
+        .route("/standard", axum::routing::get(get_standard_config_info).post(update_standard_config_info))
+        .route("/refresh-cookie", axum::routing::get(get_refresh_cookie).put(update_refresh_cookie) )
 }
 
 use axum::{http::header, response::IntoResponse, http::StatusCode, body::Body};  
@@ -32,7 +33,34 @@ use reqwest::{self};
 use tokio_stream::StreamExt;  
   
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateRefreshCookieParams {
 
+    cookie_str: String
+}
+/**
+ * 更新 及时更新的cookie
+ */
+#[debug_handler]
+async fn update_refresh_cookie(Query(UpdateRefreshCookieParams{ cookie_str}): Query<UpdateRefreshCookieParams>) -> RR<HashMap<String, String>>{  
+
+    if cookie_str.is_empty() {
+        return RR::fail("cookie_str 不能为空");
+    }
+
+    let get_refresh_cookie = cookie_header_data_service::update_refresh_cookie(cookie_str).await?;
+    RR::success(get_refresh_cookie)
+}
+
+/**
+ * 获取 及时更新的cookie
+ */
+#[debug_handler]
+async fn get_refresh_cookie() -> RR<HashMap<String, String>>{  
+    let get_refresh_cookie = cookie_header_data_service::get_refresh_cookie().await?;
+    RR::success(get_refresh_cookie)
+}
 /**
  * 查询基本配置信息
  */
