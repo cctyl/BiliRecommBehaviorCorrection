@@ -218,6 +218,12 @@ impl_select_page!(VideoDetail{select_page_by_name(tname:&str) =>"
 impl_select!(VideoDetail{select_by_id(id:i64) => "`where id = #{id} limit 1`"});
 impl_select!(VideoDetail{select_id_tname(id:i64,table_column:&str) => "`where id = #{id} limit 1`"});
 
+impl_select!(
+    VideoDetail{
+    select_by_title_like(name: &str) -> Vec => 
+    "`where title like #{name} limit 1`"
+});
+
 #[tokio::test]
 async fn test_video_detail() {
     _ = fast_log::init(
@@ -232,13 +238,18 @@ async fn test_video_detail() {
     // let result = VideoDetail::select_page_by_name(&CONTEXT.rb, &page_request,"单机游戏").await.unwrap();
 
     // let result = VideoDetail::select_by_id(&CONTEXT.rb, 1729314424889581570).await.unwrap();
-    let result = VideoDetail::select_id_tname(
-        &CONTEXT.rb,
-        1729314424889581570,
-        "id,tname,aid,bvid,handle,no_cache",
-    )
-    .await
-    .unwrap();
+    // let result = VideoDetail::select_id_tname(
+    //     &CONTEXT.rb,
+    //     1729314424889581570,
+    //     "id,tname,aid,bvid,handle,no_cache",
+    // )
+    // .await
+    // .unwrap();
+
+
+    let result = VideoDetail::select_by_title_like(&CONTEXT.rb, "%不要%").await.unwrap();
+
+   
 
     println!("{:#?}", result);
 }

@@ -9,7 +9,9 @@ use crate::{
     entity::{
         enumeration::{AccessType, DictType},
         models::Dict,
-    }, utils::id::generate_id,
+    },
+    handler::dict_handler::DictDto,
+    utils::id::generate_id,
 };
 use rbatis::rbatis_codegen::IntoSql;
 // impl_select!(Dict{find_by_dict_type_and_access_type_and_value_in(access_type: AccessType, dict_type: DictType, values:&[String]) => r#"
@@ -39,25 +41,20 @@ pub(crate) async fn add_stop_word(v: Vec<String>) -> R<()> {
             "value":&v,
              "access_type":AccessType::OTHER,
              "dict_type":DictType::STOP_WORDS,
-        }
+        },
     )
     .await?
     .into_iter()
     .map(|f| f.value)
     .collect::<Vec<String>>();
 
-
     dicts.extend(v);
-    let mut words:HashSet<String> = dicts.into_iter().collect();
+    let mut words: HashSet<String> = dicts.into_iter().collect();
     let unique_words: Vec<String> = words.into_iter().collect();
-    let keyword_to_dict = keyword_to_dict(unique_words,  DictType::STOP_WORDS, AccessType::OTHER,None);
-    Dict::insert_batch(
-        &CONTEXT.rb,
-        &keyword_to_dict,
-        100
-    ).await?;
+    let keyword_to_dict =
+        keyword_to_dict(unique_words, DictType::STOP_WORDS, AccessType::OTHER, None);
+    Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
     R::Ok(())
- 
 }
 pub fn keyword_to_dict(
     value_collection: Vec<String>,
@@ -72,11 +69,52 @@ pub fn keyword_to_dict(
             dict_type: Some(dict_type.clone()),
             outer_id: outer_id.clone(),
             value: s,
-            id:generate_id(),
-            last_modified_date:Some(DateTime::now()),
-            created_date:Some(DateTime::now()),
-            desc_field:None,
-            
+            id: generate_id(),
+            last_modified_date: Some(DateTime::now()),
+            created_date: Some(DateTime::now()),
+            desc_field: None,
         })
         .collect()
+}
+
+/// 根据access_type 和 dict_type 删除数据
+pub async fn remove_by_access_type_and_dict_type(
+    access_type: AccessType,
+    dict_type: DictType,
+) -> R<()> {
+    Dict::delete_by_map(
+        &CONTEXT.rb,
+        value! {
+            "access_type":access_type,
+            "dict_type":dict_type,
+        },
+    )
+    .await?;
+
+    R::Ok(())
+}
+
+/// 批量删除后新增词典
+pub(crate) async fn batch_remove_and_update(
+    dict_type: DictType,
+    access_type: AccessType,
+    mut dto: Vec<DictDto>,
+) -> R<Vec<DictDto>> {
+    remove_by_access_type_and_dict_type(access_type, dict_type).await?;
+
+    for d in &mut dto {
+        d.access_type = Some(access_type);
+        d.dict_type = Some(dict_type);
+        d.id = Some(generate_id());
+    }
+
+    let collect = dto
+        .clone()
+        .into_iter()
+        .map(|mut d| d.into())
+        .collect::<Vec<Dict>>();
+
+    Dict::insert_batch(&CONTEXT.rb, &collect, 100).await?;
+
+    R::Ok(dto)
 }

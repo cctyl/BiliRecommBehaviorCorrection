@@ -4,7 +4,7 @@ use axum::extract::Path;
 use axum::{Json, Router, debug_handler, extract::Query};
 use log::info;
 use rbatis::Page;
-use rbatis::rbdc::DateTime;
+use rbatis::rbdc::{Date, DateTime};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
@@ -29,8 +29,12 @@ pub fn create_router() -> Router {
             axum::routing::get(get_list_by_dict_type_and_access_type),
         )
         .route("/{id}", axum::routing::get(get_by_id).delete(del))
-    .route("/", axum::routing::post(add).put(update))
-    .route("/add-stopword", axum::routing::post(add_stop_word))
+        .route("/", axum::routing::post(add).put(update))
+        .route("/add-stopword", axum::routing::post(add_stop_word))
+        .route(
+            "/batchRemoveAndUpdate",
+            axum::routing::post(batch_remove_and_update),
+        )
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -69,23 +73,42 @@ impl From<DictDto> for Dict {
             access_type: dto.access_type,
             dict_type: dto.dict_type,
             outer_id: dto.outer_id,
-            created_date: dto.created_date,
-            last_modified_date: dto.last_modified_date,
+            created_date: dto.created_date.or (Some(DateTime::now())),
+            last_modified_date: dto.last_modified_date.or (Some(DateTime::now())),
             desc_field: dto.desc,
         }
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchRemoveAndUpdateParam {
+    access_type: AccessType,
+    dict_type: DictType,
+}
+/// 批量删除后新增词典
+#[debug_handler]
+pub async fn batch_remove_and_update(
+    Query(BatchRemoveAndUpdateParam {
+        dict_type,
+        access_type,
+    }): Query<BatchRemoveAndUpdateParam>,
+    Json(dto): Json<Vec<DictDto>>,
+) -> RR<Vec<DictDto>> {
+
+    
+    let result = dict_service::batch_remove_and_update(dict_type, access_type, dto).await?;
+
+    RR::success(result)
+}
 
 ///添加停顿词
 #[debug_handler]
 pub async fn add_stop_word(Json(v): Json<Vec<String>>) -> RR<()> {
-
     dict_service::add_stop_word(v).await?;
 
     RR::success(())
 }
-
 
 /// 修改数据
 #[debug_handler]
@@ -98,7 +121,6 @@ pub async fn update(Json(dto): Json<DictDto>) -> RR<()> {
         RR::success(())
     }
 }
-
 
 /// 新增数据
 #[debug_handler]
