@@ -93,8 +93,8 @@ async fn test_cookie_header_data() {
 pub struct Dict {
     pub id: String,
     pub value: String,
-    pub access_type: Option<AccessType>,
-    pub dict_type: Option<DictType>,
+    pub access_type: AccessType,
+    pub dict_type: DictType,
     pub outer_id: Option<String>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,

@@ -1,6 +1,6 @@
 
 
-#[derive(Debug,Clone,Copy,Serialize,Deserialize)]
+#[derive(Debug,Clone,PartialEq,Copy,Serialize,Deserialize)]
 pub  enum Classify{
     COOKIE,
     REQUEST_HEADER,
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 // }
 
 
-#[derive(Debug,Clone,Copy,Serialize,Deserialize)]
+#[derive(Debug,Clone,Copy,PartialEq,Serialize,Deserialize)]
 pub enum MediaType{
   /**
      * 通用类型
@@ -42,7 +42,7 @@ pub enum MediaType{
 /**
  * 字典类型
  */
-#[derive(Debug,Clone,Copy,Serialize,Deserialize)]
+#[derive(Debug,Clone,Copy,Serialize,Deserialize,PartialEq)]
 pub enum DictType {
 
 
@@ -107,7 +107,7 @@ pub enum DictType {
 /**
  * 访问类型
  */
-#[derive(Debug,Clone, Copy, Serialize,Deserialize)]
+#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize)]
 pub enum  AccessType  {
     /**
      * 黑名单

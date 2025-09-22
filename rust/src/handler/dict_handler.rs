@@ -8,7 +8,7 @@ use rbatis::rbdc::{Date, DateTime};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
-use crate::entity::dtos::PageDTO;
+use crate::entity::dtos::{self, PageDTO};
 use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
 use crate::entity::models::{CookieHeaderData, Dict};
 use crate::service::dict_service;
@@ -42,8 +42,8 @@ pub fn create_router() -> Router {
 pub struct DictDto {
     pub id: Option<String>,
     pub value: String,
-    pub access_type: Option<AccessType>,
-    pub dict_type: Option<DictType>,
+    pub access_type: AccessType,
+    pub dict_type: DictType,
     pub outer_id: Option<String>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
@@ -124,14 +124,10 @@ pub async fn update(Json(dto): Json<DictDto>) -> RR<()> {
 
 /// 新增数据
 #[debug_handler]
-pub async fn add(Json(dto): Json<DictDto>) -> RR<DictDto> {
+pub async fn add(Json(dto): Json<DictDto>) -> RR<bool> {
     let table: Dict = dto.into();
 
-    info!("{:#?}", table);
-
-    Dict::insert(&CONTEXT.rb, &table).await?;
-
-    RR::success(table.into())
+    RR::success(dict_service::add_dict(table).await?)
 }
 
 /// 删除数据
