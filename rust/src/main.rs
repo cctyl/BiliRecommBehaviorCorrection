@@ -37,11 +37,18 @@ use std::path::Path;
  * 初始化数据库和日志
  */
 pub async fn init() -> u16 {
+    //日志
     crate::utils::log::init_log();
+
+    //全局变量的初始化
     CONTEXT.init().await;
 
+
+    //端口
     let port = CONTEXT.config.port;
 
+
+    
     port
 }
 

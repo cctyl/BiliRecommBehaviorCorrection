@@ -1,8 +1,9 @@
 use std::collections::HashSet;
 
 use anyhow::Context;
-use rbatis::{impl_select, rbdc::DateTime};
+use rbatis::{impl_select, impl_update, py_sql, rbdc::{db::ExecResult, DateTime}, RBatis};
 use rbs::value;
+use tokio::sync::mpsc;
 
 use crate::{
     app::{database::CONTEXT, error::HttpError, response::R},
@@ -27,7 +28,7 @@ mod tests{
         app::{database::CONTEXT, error::HttpError, response::R}, entity::{
             enumeration::{AccessType, DictType},
             models::Dict,
-        }, handler::dict_handler::DictDto, service::dict_service::{check_is_need_save, exist_by_access_type_and_dict_type_and_value}, utils::id::generate_id
+        }, handler::dict_handler::DictDto, service::dict_service::{check_is_need_save, exist_by_access_type_and_dict_type_and_value, update_access_type_and_dict_type_by_ids, update_dict_access_type_by_ids}, utils::id::generate_id
     };
     use rbatis::rbatis_codegen::IntoSql;
     
@@ -65,6 +66,39 @@ mod tests{
 
 
         log::logger().flush();
+    }
+
+    //测试update_dict_access_type_by_ids
+    #[tokio::test]
+    async fn test_update_dict_access_type_by_ids() {
+        crate::init().await;
+       
+        
+        let r = update_dict_access_type_by_ids(&CONTEXT.rb,AccessType::BLACK,&vec![
+
+            String::from("1"),
+            String::from("2")
+        ]).await.unwrap();
+
+
+
+
+
+        log::logger().flush();
+    }
+
+    // 测试 update_access_type_and_dict_type_by_ids
+    #[tokio::test]
+    async fn test_update_access_type_and_dict_type_by_ids() {
+        crate::init().await;
+       
+        
+        let r = update_access_type_and_dict_type_by_ids(&CONTEXT.rb,AccessType::BLACK,DictType::IGNORE_KEYWORD,&vec![
+
+            String::from("1"),
+            String::from("2")
+        ]).await.unwrap();
+       log::logger().flush();
     }
 
 
@@ -186,6 +220,9 @@ pub async fn exist_by_access_type_and_dict_type_and_value(
     R::Ok(!dicts.is_empty())
 }
 
+
+
+
 /// 如果不在忽略的名单内则保存，否则不报存
 pub async fn check_is_need_save(
 
@@ -228,5 +265,39 @@ pub(crate) async fn add_dict(table: Dict) -> R<bool> {
    R::Ok(check_is_need_save)
 
 }
+
+
+#[py_sql("`update dict set access_type=#{access_type} where id in (`
+    trim ',': for _,item in ids:
+        #{item},
+    `)`")]
+async fn update_dict_access_type_by_ids(
+    rb: &RBatis,
+    access_type: AccessType,
+    ids: &[String]
+) -> Result<ExecResult, rbatis::Error> {
+    impled!()
+}
+#[py_sql("`update dict set access_type=#{access_type} , dict_type= #{dict_type} where id in (`
+    trim ',': for _,item in ids:
+        #{item},
+    `)`")]
+async fn update_access_type_and_dict_type_by_ids(
+    rb: &RBatis,
+    access_type: AccessType,
+    dict_type: DictType,
+    ids: &[String]
+) -> Result<ExecResult, rbatis::Error> {
+    impled!()
+}
+
+
+/// 从训练的缓存中添加黑名单关键词
+pub(crate) async fn add_balck_dict_from_cache_by_id(selected_id: Vec<String>) -> R<()> {
+    update_dict_access_type_by_ids(&CONTEXT.rb, AccessType::BLACK, &selected_id).await?;
+    R::Ok(())
+}
+
+
 
 
