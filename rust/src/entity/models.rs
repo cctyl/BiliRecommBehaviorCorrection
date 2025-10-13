@@ -4,6 +4,7 @@ use crate::entity::enumeration::AccessType;
 use crate::entity::enumeration::Classify;
 use crate::entity::enumeration::DictType;
 use crate::entity::enumeration::MediaType;
+use crate::entity::enumeration::TaskStatus;
 use crate::utils::id::generate_id;
 use rbatis::rbdc::Timestamp;
 use rbatis::PageRequest;
@@ -156,17 +157,37 @@ crud!(Tag {}, "tag");
 pub struct Task {
     pub id: String,
     pub last_run_time: Option<DateTime>,
-    pub current_run_status: Option<String>,
+    pub current_run_status: Option<TaskStatus>,
     pub total_run_count: Option<i32>,
     pub last_run_duration: Option<i32>,
     pub task_name: Option<String>,
     pub scheduled_hour: Option<i32>,
-    pub is_enabled: Option<i32>,
+    #[serde(deserialize_with = "bool_or_int_opt")]
+    pub is_enabled: Option<bool>,
     pub class_method_name: Option<String>,
     pub description: Option<String>,
     pub img: Option<String>,
 }
 crud!(Task {}, "task");
+
+impl Task{
+    pub fn default() -> Self {
+        Task {
+            id: generate_id(),
+            last_run_time: None,
+            current_run_status: None,
+            total_run_count: None,
+            last_run_duration: None,
+            task_name: None,
+            scheduled_hour: None,
+            is_enabled: None,
+            class_method_name: None,
+            description: None,
+            img: None,
+            
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetail {

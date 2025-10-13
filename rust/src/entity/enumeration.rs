@@ -130,3 +130,10 @@ pub enum  AccessType  {
     WHITE_CACHE,
 
 }
+
+#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize)]
+pub enum TaskStatus {
+    RUNNING,
+    STOPPED,
+    WAITING,
+}

@@ -8,10 +8,12 @@ use rbatis::rbdc::{Date, DateTime};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
+use crate::app::constans::DISLIKE_BY_USER_ID_TASK;
+use crate::app::task_pool::{self, TASK_POOL};
 use crate::entity::dtos::{self, PageDTO};
 use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
-use crate::entity::models::{CookieHeaderData, Dict};
-use crate::service::dict_service;
+use crate::entity::models::{CookieHeaderData, Dict, Task};
+use crate::service::{dict_service, task_service};
 use crate::utils::id::generate_id;
 use crate::{
     api::bili,
@@ -23,11 +25,12 @@ use crate::{
 };
 
 pub fn create_router() -> Router {
-    Router::new().route(
+    Router::new()
+    .route(
         "/cache-train-result/{type}",
         axum::routing::put(put_cache_train_result),
     )
-    // .route("/{id}", axum::routing::get(get_by_id).delete(del))
+    .route("/disklike-by-uid", axum::routing::post(dislike_by_user_id))
     // .route("/", axum::routing::post(add).put(update))
 }
 
@@ -95,5 +98,13 @@ pub async fn dislike_by_user_id(
     Json(user_id_list): Json<Vec<String>>,
 ) -> RR<String> {
 
-    todo!()
+   
+   task_service::do_task(DISLIKE_BY_USER_ID_TASK.to_string(),async move || {
+
+
+        //TODO  具体的点踩代码
+
+
+   }).await?;
+   RR::success(String::from("添加任务成功"))
 }

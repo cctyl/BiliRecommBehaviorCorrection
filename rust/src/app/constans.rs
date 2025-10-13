@@ -29,3 +29,7 @@ pub const REASON_FORMAT: &str = "%s=%s,匹配:%s, <br/> ";
 
 // 整数常量（显式指定类型）
 pub const PIC_MAX_SIZE: usize = 2097152; // 或 u32
+
+
+// 点踩任务 
+pub const DISLIKE_BY_USER_ID_TASK: &str = "dislike_by_user_id";
