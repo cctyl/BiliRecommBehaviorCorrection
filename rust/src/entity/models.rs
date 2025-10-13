@@ -159,7 +159,7 @@ pub struct Task {
     pub last_run_time: Option<DateTime>,
     pub current_run_status: Option<TaskStatus>,
     pub total_run_count: Option<i32>,
-    pub last_run_duration: Option<i32>,
+    pub last_run_duration: Option<u32>,
     pub task_name: Option<String>,
     pub scheduled_hour: Option<i32>,
     #[serde(deserialize_with = "bool_or_int_opt")]
