@@ -5,6 +5,8 @@ use crate::entity::enumeration::Classify;
 use crate::entity::enumeration::DictType;
 use crate::entity::enumeration::MediaType;
 use crate::entity::enumeration::TaskStatus;
+use crate::impl_select_one_by_condition;
+use crate::plus;
 use crate::utils::id::generate_id;
 use rbatis::rbdc::Timestamp;
 use rbatis::PageRequest;
@@ -104,6 +106,28 @@ pub struct Dict {
 }
 crud!(Dict {}, "dict");
 
+impl Dict{
+    pub fn new(
+        value: String,
+        access_type: AccessType,
+        dict_type: DictType,
+        outer_id: Option<String>,
+        desc_field: Option<String>,
+    ) -> Self {
+        Dict {
+            id: generate_id(),
+            value,
+            access_type,
+            dict_type,
+            outer_id,
+            desc_field,
+            created_date: Some( DateTime::now()),
+            last_modified_date: Some( DateTime::now()),
+        }
+    }
+}
+
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {
@@ -169,6 +193,7 @@ pub struct Task {
     pub img: Option<String>,
 }
 crud!(Task {}, "task");
+plus!(Task{});
 
 impl Task{
     pub fn default() -> Self {

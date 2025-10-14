@@ -92,3 +92,76 @@ impl<T : Send + Sync> From<Page<T>> for PageDTO<T> {
 }
 
 
+/// 分页数据结构体
+#[derive(Debug, Clone)]
+pub struct PageBean<T> {
+    pub data: Vec<T>,
+    pub total: u64,
+    pub page_size: u64,
+    pub page_num: u64,
+}
+
+impl<T> PageBean<T> {
+    /// 判断是否还有更多数据
+    pub fn has_more(&self) -> bool {
+        self.total / self.page_size > self.page_num
+    }
+
+    /// 创建一个新的空 PageBean 实例
+    pub fn new() -> Self {
+        Self {
+            data: Vec::new(),
+            total: 0,
+            page_size: 0,
+            page_num: 0,
+        }
+    }
+
+    /// 创建一个带有初始值的 PageBean 实例
+    pub fn with_data(data: Vec<T>, total: u64, page_size: u64, page_num: u64) -> Self {
+        Self {
+            data,
+            total,
+            page_size,
+            page_num,
+        }
+    }
+}
+
+impl<T> Default for PageBean<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSubmissionVideo {
+    pub comment: Option<i32>,
+    pub typeid: Option<i64>,
+    pub play: Option<String>,
+    pub pic: Option<String>,
+    pub subtitle: Option<String>,
+    pub description: Option<String>,
+    pub copyright: Option<String>,
+    pub title: Option<String>,
+    pub review: Option<i32>,
+    pub author: Option<String>,
+    pub mid: Option<i64>,
+    pub created: Option<i32>,
+    pub length: Option<String>,
+    pub video_review: Option<i32>,
+    pub aid: Option<i64>,
+    pub bvid: Option<String>,
+    pub hide_click: Option<bool>,
+    pub is_pay: Option<i32>,
+    pub is_union_video: Option<i32>,
+    pub is_steins_gate: Option<i32>,
+    pub is_live_playback: Option<i32>,
+    pub meta: Option<serde_json::Value>,
+    pub is_avoided: Option<i32>,
+    pub attribute: Option<i32>,
+    pub is_charging_arc: Option<bool>,
+    pub vt: Option<i32>,
+    pub enable_vt: Option<i32>,
+}

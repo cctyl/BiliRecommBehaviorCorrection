@@ -21,6 +21,7 @@ mod tests{
     use std::collections::HashSet;
 
     use anyhow::Context;
+    use log::info;
     use rbatis::{impl_select, rbdc::DateTime};
     use rbs::value;
     
@@ -28,7 +29,7 @@ mod tests{
         app::{database::CONTEXT, error::HttpError, response::R}, entity::{
             enumeration::{AccessType, DictType},
             models::Dict,
-        }, handler::dict_handler::DictDto, service::dict_service::{check_is_need_save, exist_by_access_type_and_dict_type_and_value, update_access_type_and_dict_type_by_ids, update_dict_access_type_by_ids}, utils::id::generate_id
+        }, handler::dict_handler::DictDto, service::dict_service::{add_black_user_id, check_is_need_save, exist_by_access_type_and_dict_type_and_value, find_black_user_id, get_black_user_id_set, update_access_type_and_dict_type_by_ids, update_dict_access_type_by_ids}, utils::id::generate_id
     };
     use rbatis::rbatis_codegen::IntoSql;
     
@@ -102,13 +103,113 @@ mod tests{
     }
 
 
+    #[tokio::test]
+    async fn example() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //TODO 在这中间编写测试代码
+
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+
+    #[tokio::test]
+    async fn test_find_black_user_id() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //TODO 在这中间编写测试代码
+        let find_black_user_id = find_black_user_id().await.unwrap();
+      
+        //长度是746
+        assert_eq!(find_black_user_id.len(), 746);
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    // 测试get_black_user_id_set
+    #[tokio::test]
+    async fn test_get_black_user_id_set() {
+        //第一句必须是这个
+        crate::init().await;
+    
+        //获取黑名单用户ID集合
+        let black_user_id_set = get_black_user_id_set().await.unwrap();
+        
+        //验证返回结果不为空
+        assert!(!black_user_id_set.is_empty());
+        
+        //验证数量与find_black_user_id一致
+        let all_black_users = find_black_user_id().await.unwrap();
+        let unique_count = all_black_users
+            .iter()
+            .map(|d| &d.value)
+            .collect::<std::collections::HashSet<_>>()
+            .len();
+        assert_eq!(black_user_id_set.len(), unique_count);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+
+
+    #[tokio::test]
+    async fn test_add_black_user_id() {
+        //第一句必须是这个
+        crate::init().await;
+        
+        //准备测试数据
+        let test_user_id = "test_user_123456";
+        
+        //先确保该用户ID不在黑名单中
+        let initial_black_list = get_black_user_id_set().await.unwrap();
+        let initial_count = initial_black_list.len();
+        
+        //添加黑名单用户ID
+        let result = add_black_user_id(test_user_id).await;
+        assert!(result.is_ok());
+        
+        //验证添加成功
+        let updated_black_list = get_black_user_id_set().await.unwrap();
+        assert!(updated_black_list.contains(&test_user_id.to_string()));
+        assert_eq!(updated_black_list.len(), initial_count + 1);
+        
+        //再次添加相同用户ID，应该不会重复添加
+        let result_again = add_black_user_id(test_user_id).await;
+        assert!(result_again.is_ok());
+        
+        let final_black_list = get_black_user_id_set().await.unwrap();
+        assert_eq!(final_black_list.len(), updated_black_list.len());
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+
 }
 /**
  * 根据DictType 和 AccessType 获取Dict列表
  */
 pub(crate) async fn get_list_by_dict_type_and_access_type(
-    access_type: String,
-    dict_type: String,
+    access_type: AccessType,
+    dict_type: DictType,
 ) -> R<Vec<Dict>> {
     Dict::select_by_map(
         &CONTEXT.rb,
@@ -296,6 +397,54 @@ async fn update_access_type_and_dict_type_by_ids(
 pub(crate) async fn add_balck_dict_from_cache_by_id(selected_id: Vec<String>) -> R<()> {
     update_dict_access_type_by_ids(&CONTEXT.rb, AccessType::BLACK, &selected_id).await?;
     R::Ok(())
+}
+
+/// 添加一个黑名单用户id
+pub(crate) async fn add_black_user_id(user_id: &str) -> R<()> {
+   
+
+   let balck_user_id_set = get_black_user_id_set().await?;
+
+   let mid = user_id.to_string();
+   if !balck_user_id_set.contains(&mid) {
+       
+        let dict = Dict::new(mid, AccessType::BLACK, 
+            DictType::MID, 
+            None, None
+        );
+        Dict::insert( &CONTEXT.rb, &dict).await?;
+
+   }
+
+    R::Ok(())
+
+}
+
+/// 获取黑名单用户id
+/// 返回值：Vec<String>
+async fn get_black_user_id_set() -> R<Vec<String>> {
+    
+    let v:Vec<String> =  
+        find_black_user_id().await?
+        .into_iter()
+        .map(|d| d.value)
+        .collect::<std::collections::HashSet<String>>()
+        .into_iter()
+        .collect();
+
+    R::Ok(v)
+    
+}
+
+/// 查找黑名单用户id Dict
+/// 返回值：Vec<Dict>
+async fn find_black_user_id() -> R<Vec<Dict>> {
+    
+    get_list_by_dict_type_and_access_type(
+        AccessType::BLACK,
+        DictType::MID
+    ).await
+
 }
 
 

@@ -132,7 +132,6 @@ impl GlobalStateHandler<(&str, reqwest::RequestBuilder), reqwest::RequestBuilder
         for (k, v) in hash_map {
             req = req.header(k, v);
         }
-        // 键值对都有问题
         req = req.header(String::from("Host"), data_util::get_host(url));
         R::Ok(req)
     }

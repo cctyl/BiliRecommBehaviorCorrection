@@ -5,9 +5,11 @@ use crate::app::database::CONTEXT;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
+use crate::entity::dtos::{PageBean, UserSubmissionVideo};
 use crate::entity::models::{Config, CookieHeaderData};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
+use crate::utils::data_util;
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
 use anyhow::Context;
@@ -103,7 +105,7 @@ async fn test_tv_login_qr_code() {
     }
 }
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub fn get_ts() -> u64 {
     SystemTime::now()
@@ -332,10 +334,46 @@ pub async fn common_get(
     R::Ok(json)
 }
 
-/**
- * 更新cookie
- */
+/// 封装通用的get
+/// 携带cookie、ua、参数的url编码
+/// 记忆cookie
+/// 添加额外的请求头
+pub async fn common_get_other_header(
+    url: &str,
+    param_map: BTreeMap<String, String>,
+    other_map: HashMap<&'static str, String>
+) -> R<serde_json::Value> {
+    let mut req = CLIENT.get(url);
 
+    init_common_header_map().await?;
+    req = init_header.processr((url, req)).await?;
+
+    //额外新增的header
+    for (k, v) in other_map.into_iter() {
+        req = req.header(k, v);
+    }
+
+    //读取cookie
+    let (cookie_jar, cookie_str) = get_cookie_str().await?;
+
+    let response: reqwest::Response = req
+        .timeout(Duration::from_secs(10))
+        .header(header::COOKIE, cookie_str)
+        .query(&param_map)
+        .send()
+        .await?;
+
+    //保存cookie
+    update_cookie(&response, cookie_jar).await?;
+
+    let json = response.json().await?;
+
+    R::Ok(json)
+}
+
+
+
+/// 更新cookie
 pub async fn update_cookie(
     response: &reqwest::Response,
     mut cookie_jar: HashMap<String, String>,
@@ -349,10 +387,9 @@ pub async fn update_cookie(
     cookie_header_data_service::replace_refresh_cookie(cookie_jar).await
 }
 
-/**
- * 获取accessKey
- * 若不存在，则抛出异常，提示重新登陆
- */
+
+/// 获取accessKey
+/// 若不存在，则抛出异常，提示重新登陆
 pub async fn get_access_key(refresh: bool) -> R<String> {
     // 如果需要刷新，或者缓存中不存在，则更新一次
     // 否则从缓存中取出
@@ -465,3 +502,181 @@ pub async fn get_history() -> R<serde_json::Value> {
 
 }
 
+
+/// 查询用户投稿的视频
+///
+/// # 参数
+/// * `mid` - 用户id
+/// * `pageNumber` - 页码 1开始
+/// * `keyword` - 搜索关键词
+pub(crate) async fn search_user_submission_video(user_id: &str, page_num: i32, keyword: &str) -> R<PageBean<UserSubmissionVideo>> {
+    
+    let url = "https://api.bilibili.com/x/space/wbi/arc/search";
+
+    let pn = &page_num.to_string();
+    let wbi_map :HashMap<&'static str, &str> = [
+        ("mid", user_id),
+        ("ps", "30"),
+        ("tid", "0"),
+        ("pn", pn),
+        ("keyword", keyword),
+        ("order", "pubdate"),
+        ("platform", "web"),
+        ("web_location", "1550101"),
+        ("order_avoided", "true"),
+    ]
+    .into_iter()
+    .collect();
+
+    let other_map :HashMap<&'static str, String> = [
+        ("Referer", format!("https://space.bilibili.com/{user_id}/video")),
+        ("Origin", "https://space.bilibili.com".to_string()),
+    ]
+    .into_iter()
+    .collect();
+
+    common_get_other_header(
+        url, 
+        get_wbi(false,wbi_map).await?,
+        other_map
+    ).await?;
+
+
+    todo!()
+
+}
+
+
+/// 获取wbi签名的字符串，返回一个拼接好的urlQuery: wts=xxxx&w_rid=xxxx
+/// 返回值：BTreeMap<&'static str, String>
+async fn get_wbi(refresh: bool, wbi_map: HashMap<&'static str, &str>) -> R<BTreeMap<String, String>> {
+
+
+    let mut  img_key: Option<String> =  config_service::get_img_key().await?;
+    let mut sub_key: Option<String> =  config_service::get_sub_key().await?;
+    if(
+        refresh
+        || img_key.is_none()
+        || sub_key.is_none()
+    ){
+        let url =  "https://api.bilibili.com/x/web-interface/nav";
+        let response = common_get(url, BTreeMap::new()).await?;
+        check_resp(&response).await?;
+
+        let value = &response["data"]["wbi_img"];
+
+
+        if let Some(img_url) = value["img_url"].as_str(){
+            let img_url = img_url.split("/").last().unwrap_or("").replace(".png", "");
+            img_key = Some(img_url);
+        }else {
+            error!("img_url is none");
+        }
+
+
+        
+       
+        if let Some(sub_url) = value["sub_url"].as_str(){
+            let sub_url = sub_url.split("/").last().unwrap_or("").replace(".png", "");
+            sub_key = Some(sub_url.to_string());
+        }else {
+            error!("sub_url is none");
+        }
+
+        config_service::update_wbi(&img_key,&sub_key).await?;
+    }
+
+
+
+    let mixin_key = get_mixin_key(&img_key.expect("必须有img key"), &sub_key.expect("必须有sub key"));
+
+    let mut result_map: BTreeMap<String, String> = BTreeMap::new();
+    result_map.extend(wbi_map.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+    result_map.insert("wts".to_string(), data_util::get_ts().to_string());
+
+
+    // 排序并拼接字符串（BTreeMap 已经是有序的）
+    let param_string: String = result_map
+    .iter()
+    .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
+    .collect::<Vec<String>>()
+    .join("&");
+    
+    let combined = format!("{}{}", param_string, mixin_key);
+    let wbi_sign = generate_md5(&combined);
+    result_map.insert("w_rid".to_string(), combined);
+
+
+    R::Ok(result_map)
+}
+
+const MIXIN_KEY_ENC_TAB: [usize; 64] = [
+    46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
+    33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
+    61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
+    36, 20, 34, 44, 52
+];
+
+fn get_mixin_key(img_key: &str, sub_key: &str) -> String {
+    let combined = format!("{}{}", img_key, sub_key);
+    let mut mixin_key = String::with_capacity(32);
+    
+    for &index in MIXIN_KEY_ENC_TAB.iter().take(32) {
+        if let Some(ch) = combined.chars().nth(index) {
+            mixin_key.push(ch);
+        }
+    }
+    
+    mixin_key
+}
+
+
+#[cfg(test)]
+mod tests{
+    use crate::api::bili::{generate_md5, get_mixin_key};
+
+
+
+    #[tokio::test]
+    async fn example() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //TODO 在这中间编写测试代码
+
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    #[tokio::test]
+    async fn test_get_mixin_key() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+        let img_key = "7cd084941338484aae1ad9425b84077c";
+        let sub_key = "4932caff0ff746eab6f01bf08b70ac45";
+
+        let mixin_key = get_mixin_key(img_key, sub_key);
+
+        println!("mixin_key={}", mixin_key);
+        assert_eq!(mixin_key,"ea1db124af3c7062474693fa704f4ff8");
+    
+
+
+        let combined = format!("{}{}", "aaa", mixin_key);
+        let wbi_sign = generate_md5(&combined);
+
+        println!("wbi_sign={}", wbi_sign);
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+}

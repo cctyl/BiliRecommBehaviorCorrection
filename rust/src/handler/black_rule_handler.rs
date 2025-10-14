@@ -13,8 +13,9 @@ use crate::app::task_pool::{self, TASK_POOL};
 use crate::entity::dtos::{self, PageDTO};
 use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
 use crate::entity::models::{CookieHeaderData, Dict, Task};
-use crate::service::{dict_service, task_service};
+use crate::service::{bili_service, dict_service, task_service};
 use crate::utils::id::generate_id;
+use crate::utils::thread_util::ThreadUtil;
 use crate::{
     api::bili,
     app::{
@@ -100,12 +101,19 @@ pub async fn dislike_by_user_id(
 
    
    task_service::do_task(DISLIKE_BY_USER_ID_TASK.to_string(),async move || {
+        //  具体的点踩代码
+        let mut disklike_num = 0;
+        for user_id in &user_id_list {
+            
+            disklike_num+= bili_service::disklike_by_user_id(user_id,train).await?;
 
+            info!("完成对{}用户的点踩",{user_id});
 
-        //TODO  具体的点踩代码
-
+            //休眠20秒
+            ThreadUtil::s20().await;
+        }
+        info!("本次共对{}个用户{:#?}进行点踩，共点踩：{}个视频",user_id_list.len(),user_id_list,disklike_num);
         R::Ok(())
-
    }).await?;
    RR::success(String::from("添加任务成功"))
 }

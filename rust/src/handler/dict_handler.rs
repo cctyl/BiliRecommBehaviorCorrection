@@ -155,8 +155,8 @@ pub async fn get_by_id(Path(id): Path<String>) -> RR<DictDto> {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DictListQueryParam {
-    pub dict_type: String,
-    pub access_type: String,
+    pub dict_type: DictType,
+    pub access_type: AccessType,
 }
 
 /**

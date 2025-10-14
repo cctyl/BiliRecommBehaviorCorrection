@@ -80,8 +80,9 @@ async fn select_one_by_condition(
     impled!()
 }
 
-/// 执行任务并记录任务信息
 
+
+/// 执行任务并记录任务信息
 pub async fn do_task<F, Fut>(method_name: String, task: F) -> R<bool>
 where
     F: FnOnce() -> Fut + Send + 'static,
@@ -107,21 +108,29 @@ where
             t.total_run_count = Some(t.total_run_count.unwrap_or(0) + 1);
             t.last_run_duration = Some(millis as u32);
             t.current_run_status = Some(TaskStatus::STOPPED);
-            Task::update_by_map(&CONTEXT.rb, &t, value! {"id":&t.id}).await?;
+            Task::update_by_id(&CONTEXT.rb, &t).await?;
         }
 
         R::Ok(())
     }))
 }
 
+
+
+
+
+
+
+
+
+
 #[cfg(test)]
 mod tests {
+    use rbatis::rbdc::DateTime;
     use rbs::value;
 
     use crate::{
-        app::{database::CONTEXT, response::R},
-        entity::{enumeration::TaskStatus, models::Task},
-        service::task_service::update_task_status,
+        app::{database::CONTEXT, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
     };
 
     #[tokio::test]
@@ -134,6 +143,79 @@ mod tests {
         //最后一句必须是这个
         log::logger().flush();
     }
+    
+
+    #[tokio::test]
+    async fn test_impl_delete_by_id() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //TODO 在这中间编写测试代码
+
+        Task::delete_by_id(&CONTEXT.rb, "11679171886120965").await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+    
+
+
+    #[tokio::test]
+    async fn test_impl_update_by_id() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //TODO 在这中间编写测试代码
+        let id = "11679233969684485";
+        let mut t: Task = Task::select_by_id(&CONTEXT.rb, id).await.unwrap().unwrap();
+
+        t.last_run_time = Some(DateTime::now());
+        t.total_run_count = Some( 2001);
+        t.class_method_name = Some( String::from("111222测试的类方法名啊") );
+        t.task_name = Some( String::from("111222测试的名称啊"));
+
+        Task::update_by_id(&CONTEXT.rb,&t).await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+    
+    #[tokio::test]
+    async fn test_impl_select_by_id() {
+        //第一句必须是这个
+        crate::init().await;
+        
+        //TODO 在这中间编写测试代码
+        let task = Task::select_by_id(&CONTEXT.rb, "5")
+            .await
+            .unwrap();
+
+        println!("task: {:?}", task);
+
+
+        
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+
+    //测试 impl_select_one_by_condition
+    #[tokio::test]
+    async fn test_impl_select_one_by_condition() {
+        //第一句必须是这个
+        crate::init().await;
+
+       let select_one_by_condition = Task::select_one_by_condition(&CONTEXT.rb, value!{"id":"1883877101111631873"}).await.unwrap();
+
+        println!("select_one_by_condition: {:?}", select_one_by_condition);
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
 
     //测试 add_if_not_exist
     #[tokio::test]

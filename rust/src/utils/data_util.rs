@@ -4,6 +4,17 @@ use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
+
+
+
+pub fn get_ts() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs()
+}
+
+
 /// AV号转换为BV号
 pub fn aid_to_bvid(aid: i64) -> String {
     AVBVConverter::av2bv(aid)
