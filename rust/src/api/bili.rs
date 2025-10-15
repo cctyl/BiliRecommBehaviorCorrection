@@ -338,12 +338,17 @@ pub async fn common_get(
 /// 携带cookie、ua、参数的url编码
 /// 记忆cookie
 /// 添加额外的请求头
-pub async fn common_get_other_header(
+pub async fn common_get_form_other_header(
     url: &str,
     param_map: BTreeMap<String, String>,
-    other_map: HashMap<&'static str, String>
+    other_map: HashMap<&'static str, String>,
 ) -> R<serde_json::Value> {
+
+
+    
+
     let mut req = CLIENT.get(url);
+    
 
     init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
@@ -356,7 +361,24 @@ pub async fn common_get_other_header(
     //读取cookie
     let (cookie_jar, cookie_str) = get_cookie_str().await?;
 
-    let response: reqwest::Response = req
+    println!("cookie_str: {:#?}", cookie_str);
+
+    // let request = req
+    //     .timeout(Duration::from_secs(10))
+    //     .header(header::COOKIE, cookie_str.clone())
+    //     .form(&param_map).build()?;
+    // // 打印整个请求  
+    // println!("{:?}", request);  
+    
+    // // 或者分别打印各个部分  
+    // println!("Method: {:?}", request.method());  
+    // println!("URL: {:?}", request.url());  
+    // println!("Headers: {:?}", request.headers());
+
+
+    //TODO 记得打开
+    let response: reqwest::Response = 
+        req
         .timeout(Duration::from_secs(10))
         .header(header::COOKIE, cookie_str)
         .query(&param_map)
@@ -367,11 +389,10 @@ pub async fn common_get_other_header(
     update_cookie(&response, cookie_jar).await?;
 
     let json = response.json().await?;
+    // let json = serde_json::Value::Null;
 
     R::Ok(json)
 }
-
-
 
 /// 更新cookie
 pub async fn update_cookie(
@@ -386,7 +407,6 @@ pub async fn update_cookie(
 
     cookie_header_data_service::replace_refresh_cookie(cookie_jar).await
 }
-
 
 /// 获取accessKey
 /// 若不存在，则抛出异常，提示重新登陆
@@ -492,16 +512,13 @@ async fn test_get_user_info() {
 }
 
 /**
- * 
+ *
  * 查询观看历史
  */
 pub async fn get_history() -> R<serde_json::Value> {
-    
     let url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
     common_get(url, BTreeMap::new()).await
-
 }
-
 
 /// 查询用户投稿的视频
 ///
@@ -509,12 +526,16 @@ pub async fn get_history() -> R<serde_json::Value> {
 /// * `mid` - 用户id
 /// * `pageNumber` - 页码 1开始
 /// * `keyword` - 搜索关键词
-pub(crate) async fn search_user_submission_video(user_id: &str, page_num: i32, keyword: &str) -> R<PageBean<UserSubmissionVideo>> {
-    
-    let url = "https://api.bilibili.com/x/space/wbi/arc/search";
+pub(crate) async fn search_user_submission_video(
+    user_id: &str,
+    page_num: i32,
+    keyword: &str,
+) -> R<PageBean<UserSubmissionVideo>> {
+    info!("开始发请求1");
+    let url = "https://api.bilibili.com/x/space/wbi/arc/search?dm_cover_img_str=QU5HTEUgKEludGVsLCBJbnRlbChSKSBIRCBHcmFwaGljcyBEaXJlY3QzRDExIHZzXzVfMCBwc181XzApR29vZ2xlIEluYy4gKEludGVsKQ";
 
     let pn = &page_num.to_string();
-    let wbi_map :HashMap<&'static str, &str> = [
+    let wbi_map: HashMap<&'static str, &str> = [
         ("mid", user_id),
         ("ps", "30"),
         ("tid", "0"),
@@ -527,139 +548,154 @@ pub(crate) async fn search_user_submission_video(user_id: &str, page_num: i32, k
     ]
     .into_iter()
     .collect();
-
-    let other_map :HashMap<&'static str, String> = [
-        ("Referer", format!("https://space.bilibili.com/{user_id}/video")),
+    info!("开始发请求2");
+    let other_map: HashMap<&'static str, String> = [
+        (
+            "Referer",
+            format!("https://space.bilibili.com/{user_id}/video"),
+        ),
         ("Origin", "https://space.bilibili.com".to_string()),
     ]
     .into_iter()
     .collect();
 
-    common_get_other_header(
-        url, 
-        get_wbi(false,wbi_map).await?,
-        other_map
-    ).await?;
 
+    info!("other_map={:#?}",other_map);
+    
+    info!("开始发请求3");
+    let wbi_result_map = get_wbi(false, wbi_map).await?;
+    info!("wbi_result_map={:#?}", wbi_result_map);
 
-    todo!()
+    let response = common_get_form_other_header(url, wbi_result_map, other_map).await?;
 
+    
+    info!("开始发请求4");
+    info!("response={:#?}", response);
+    check_resp(&response).await?;
+
+    let value = &response["data"]["list"]["vlist"];
+
+    // 假设 value 是你的 serde_json::Value
+    let video_list: Vec<UserSubmissionVideo> =
+        serde_json::from_value(value.clone()).map_err(|e| {
+            error!("解析视频列表失败: {}", e);
+            HttpError::Biz("解析视频列表失败".to_string())
+        })?;
+
+    info!("video_list={:#?}", video_list);
+
+    // 创建 PageBean 实例
+    let page_bean = PageBean::with_data(
+        video_list,
+        response["data"]["page"]["count"].as_u64().unwrap_or(0),
+        30, // 每页大小
+        page_num as u64,
+    );
+
+    info!("page_bean={:#?}", page_bean);
+    R::Ok(page_bean)
 }
-
 
 /// 获取wbi签名的字符串，返回一个拼接好的urlQuery: wts=xxxx&w_rid=xxxx
 /// 返回值：BTreeMap<&'static str, String>
-async fn get_wbi(refresh: bool, wbi_map: HashMap<&'static str, &str>) -> R<BTreeMap<String, String>> {
-
-
-    let mut  img_key: Option<String> =  config_service::get_img_key().await?;
-    let mut sub_key: Option<String> =  config_service::get_sub_key().await?;
-    if(
-        refresh
-        || img_key.is_none()
-        || sub_key.is_none()
-    ){
-        let url =  "https://api.bilibili.com/x/web-interface/nav";
+async fn get_wbi(
+    refresh: bool,
+    wbi_map: HashMap<&'static str, &str>,
+) -> R<BTreeMap<String, String>> {
+    let mut img_key: Option<String> = config_service::get_img_key().await?;
+    let mut sub_key: Option<String> = config_service::get_sub_key().await?;
+    if (refresh || img_key.is_none() || sub_key.is_none()) {
+        let url = "https://api.bilibili.com/x/web-interface/nav";
         let response = common_get(url, BTreeMap::new()).await?;
         check_resp(&response).await?;
 
         let value = &response["data"]["wbi_img"];
 
-
-        if let Some(img_url) = value["img_url"].as_str(){
+        if let Some(img_url) = value["img_url"].as_str() {
             let img_url = img_url.split("/").last().unwrap_or("").replace(".png", "");
             img_key = Some(img_url);
-        }else {
+        } else {
             error!("img_url is none");
         }
 
-
-        
-       
-        if let Some(sub_url) = value["sub_url"].as_str(){
+        if let Some(sub_url) = value["sub_url"].as_str() {
             let sub_url = sub_url.split("/").last().unwrap_or("").replace(".png", "");
             sub_key = Some(sub_url.to_string());
-        }else {
+        } else {
             error!("sub_url is none");
         }
 
-        config_service::update_wbi(&img_key,&sub_key).await?;
+        config_service::update_wbi(&img_key, &sub_key).await?;
     }
 
-
-
-    let mixin_key = get_mixin_key(&img_key.expect("必须有img key"), &sub_key.expect("必须有sub key"));
+    let mixin_key = get_mixin_key(
+        &img_key.expect("必须有img key"),
+        &sub_key.expect("必须有sub key"),
+    );
 
     let mut result_map: BTreeMap<String, String> = BTreeMap::new();
-    result_map.extend(wbi_map.into_iter().map(|(k, v)| (k.to_string(), v.to_string())));
+    result_map.extend(
+        wbi_map
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string())),
+    );
+    //TO DO 
     result_map.insert("wts".to_string(), data_util::get_ts().to_string());
-
+    // result_map.insert("wts".to_string(), "1760508326".to_string());
 
     // 排序并拼接字符串（BTreeMap 已经是有序的）
     let param_string: String = result_map
-    .iter()
-    .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
-    .collect::<Vec<String>>()
-    .join("&");
-    
+        .iter()
+        .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
+        .collect::<Vec<String>>()
+        .join("&");
+
     let combined = format!("{}{}", param_string, mixin_key);
     let wbi_sign = generate_md5(&combined);
-    result_map.insert("w_rid".to_string(), combined);
-
+    info!("wbi_sign={}", wbi_sign);
+    result_map.insert("w_rid".to_string(), wbi_sign);
 
     R::Ok(result_map)
 }
 
 const MIXIN_KEY_ENC_TAB: [usize; 64] = [
-    46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
-    33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
-    61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
-    36, 20, 34, 44, 52
+    46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49, 33, 9, 42, 19, 29,
+    28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25,
+    54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52,
 ];
 
 fn get_mixin_key(img_key: &str, sub_key: &str) -> String {
     let combined = format!("{}{}", img_key, sub_key);
     let mut mixin_key = String::with_capacity(32);
-    
+
     for &index in MIXIN_KEY_ENC_TAB.iter().take(32) {
         if let Some(ch) = combined.chars().nth(index) {
             mixin_key.push(ch);
         }
     }
-    
+
     mixin_key
 }
 
-
 #[cfg(test)]
-mod tests{
+mod tests {
     use crate::api::bili::{generate_md5, get_mixin_key};
-
-
 
     #[tokio::test]
     async fn example() {
         //第一句必须是这个
         crate::init().await;
-       
-
-
 
         //TODO 在这中间编写测试代码
-
-
 
         //最后一句必须是这个
         log::logger().flush();
     }
 
-
     #[tokio::test]
     async fn test_get_mixin_key() {
         //第一句必须是这个
         crate::init().await;
-       
-
 
         let img_key = "7cd084941338484aae1ad9425b84077c";
         let sub_key = "4932caff0ff746eab6f01bf08b70ac45";
@@ -667,9 +703,7 @@ mod tests{
         let mixin_key = get_mixin_key(img_key, sub_key);
 
         println!("mixin_key={}", mixin_key);
-        assert_eq!(mixin_key,"ea1db124af3c7062474693fa704f4ff8");
-    
-
+        assert_eq!(mixin_key, "ea1db124af3c7062474693fa704f4ff8");
 
         let combined = format!("{}{}", "aaa", mixin_key);
         let wbi_sign = generate_md5(&combined);
@@ -679,4 +713,14 @@ mod tests{
         log::logger().flush();
     }
 
+    //测试search_user_submission_video
+    #[tokio::test]
+    async fn test_search_user_submission_video() {
+        crate::init().await;
+
+        log::info!("开始测试search_user_submission_video");
+        let result = super::search_user_submission_video("414702734", 1, "").await;
+
+        log::logger().flush();
+    }
 }
