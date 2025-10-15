@@ -14,7 +14,7 @@ npm-debug.log.*
 /.awcache/*
 /.cache-loader/*
 /logs
-
+java/logs/*
 /temp
 ######################
 # SASS
