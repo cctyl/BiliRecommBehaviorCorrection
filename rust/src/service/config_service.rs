@@ -85,10 +85,12 @@ pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
             if let Some(last_modified_date) = config.last_modified_date.clone() {
                 info!("最后修改时间：{}", last_modified_date);
                 let r = (DateTime::now() - last_modified_date).as_secs() as i64 > expire_second;
-                //超时，删除这个配置之
+                //超时，删除这个配置
                 if r {
                     info!("已超时，删除配置：{}", config.name);
                     Config::delete_by_map(&CONTEXT.rb, value! {"id":&config.id}).await?;
+
+                    return R::Ok(None);
                 }
             }
         }
@@ -134,6 +136,7 @@ pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
 mod tests {
     use rbs::value;
 
+    use crate::app::constans::BILI_ACCESS_KEY;
     use crate::{app::database::CONTEXT, entity::models::Config};
 
     use crate::service::config_service::*;
@@ -160,17 +163,11 @@ mod tests {
     #[tokio::test]
     async fn test_add_or_update_config() {
         crate::init().await;
-        let r = add_or_update_config("test", "test2", None).await.unwrap();
+        let r = add_or_update_config(BILI_ACCESS_KEY, "bbbb", None).await.unwrap();
         println!("{:#?}", r);
 
-        // 根据id查询config 11497000394031109
-        let select_by_map = Config::select_by_map(
-            &CONTEXT.rb,
-            value! {"id":"7e3c1d95002e5e873ad318eeb9eef70a"},
-        )
-        .await
-        .unwrap();
-        println!("{:#?}", select_by_map);
+
+        log::logger().flush();
     }
 
     #[tokio::test]

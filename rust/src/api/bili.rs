@@ -261,7 +261,7 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
 pub async fn common_post_form(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.post(url);
 
-    init_common_header_map().await?;
+    // init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
 
     // 读取数据库中的cookie
@@ -314,7 +314,7 @@ pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
 pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
-    init_common_header_map().await?;
+    // init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
 
     //读取cookie
@@ -346,7 +346,7 @@ pub async fn common_get_other_header(
 ) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
-    init_common_header_map().await?;
+    // init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
 
     //额外新增的header

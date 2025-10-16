@@ -29,7 +29,7 @@ use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
 use tower_http::cors::{self, CorsLayer};
 
-use crate::service::cookie_header_data_service::{self, get_map_by_classify_and_media_type};
+use crate::service::cookie_header_data_service::{self, get_map_by_classify_and_media_type, init_common_header_map};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -47,6 +47,7 @@ pub async fn init() -> u16 {
     //端口
     let port = CONTEXT.config.port;
 
+    init_common_header_map().await.unwrap();
     port
 }
 
