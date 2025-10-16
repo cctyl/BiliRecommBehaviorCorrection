@@ -146,12 +146,14 @@ public class BiliApi {
      */
     private HttpResponse commonGet(String url, Map<String, Object> paramMap,
                                    Map<String, String> otherHeader) {
+        String cookieStr = getCookieStr();
+        log.info("cookieStr={}", cookieStr);
         HttpRequest request = HttpRequest.get(url)
                 .clearHeaders()
                 .header(getHeader(url),true)
                 .form(paramMap)
                 .timeout(10000)
-                .cookie(getCookieStr());
+                .cookie(cookieStr);
 
         otherHeader.forEach(request::header);
         HttpResponse response = request
@@ -1061,6 +1063,7 @@ public class BiliApi {
 
         String mixinKey = getMixinKey(imgKey, subKey);
         resultMap.put("wts", System.currentTimeMillis() / 1000);
+        log.info("wts: {}", resultMap.get("wts"));
         StringJoiner param = new StringJoiner("&");
         //排序 + 拼接字符串
         resultMap.entrySet().stream()
@@ -1068,6 +1071,7 @@ public class BiliApi {
                 .forEach(entry -> param.add(entry.getKey() + "=" + URLUtil.encode(entry.getValue().toString())));
         String wbiSign = SecureUtil.md5(param + mixinKey);
         resultMap.put("w_rid", wbiSign);
+        log.info("w_rid: {}", wbiSign);
 
         return resultMap;
     }

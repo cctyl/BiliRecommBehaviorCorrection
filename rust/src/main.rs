@@ -9,6 +9,7 @@ mod api;
 mod entity;
 mod handler;
 mod service;
+mod single_test;
 mod utils;
 use crate::app::database::{self, CONTEXT};
 use crate::app::error::HttpError;
@@ -43,12 +44,9 @@ pub async fn init() -> u16 {
     //全局变量的初始化
     CONTEXT.init().await;
 
-
     //端口
     let port = CONTEXT.config.port;
 
-
-    
     port
 }
 

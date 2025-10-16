@@ -114,7 +114,7 @@ pub async fn init_common_header_map() -> R<()> {
         info!("init_common_header_map");
         let mut write = GLOBAL_STATE.write().await;
         write.common_header_map =
-            get_map_by_classify_and_media_type(&Classify::COOKIE, &MediaType::GENERAL).await?;
+            get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL).await?;
     }
 
     R::Ok(())
@@ -130,6 +130,7 @@ impl GlobalStateHandler<(&str, reqwest::RequestBuilder), reqwest::RequestBuilder
         let (url, mut req) = args;
         let mut hash_map = state.common_header_map.clone();
         for (k, v) in hash_map {
+            info!("init_common_header_map:{}={}", k, v);
             req = req.header(k, v);
         }
         req = req.header(String::from("Host"), data_util::get_host(url));
@@ -183,9 +184,10 @@ pub async fn get_map_by_classify_and_media_type(
 #[tokio::test]
 async fn test_get_map_by_classify_and_media_type() {
     crate::init().await;
-    let map = get_map_by_classify_and_media_type(&Classify::COOKIE, &MediaType::TIMELY_UPDATE)
+    let map = get_map_by_classify_and_media_type(&Classify::REQUEST_HEADER, &MediaType::GENERAL)
         .await
         .unwrap();
+    info!("map={:?}", map);
     info!("map length={}", map.len());
     info!("aaa ->>{:#?}", map);
 

@@ -71,11 +71,18 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
  */
 pub async fn get_tv_login_qr_code() -> R<String> {
     let url = "https://passport.bilibili.com/x/passport-tv-login/qrcode/auth_code";
-    let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
-    params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
-    params.insert("appsec", constans::THIRD_PART_APPSEC.to_string());
-    params.insert("local_id", "0".to_string());
-    params.insert("ts", get_ts().to_string());
+    let mut params: Vec<(String, String)> = vec![
+        (
+            "appkey".to_string(),
+            constans::THIRD_PART_APPKEY.to_string(),
+        ),
+        (
+            "appsec".to_string(),
+            constans::THIRD_PART_APPSEC.to_string(),
+        ),
+        ("local_id".to_string(), "0".to_string()),
+        ("ts".to_string(), get_ts().to_string()),
+    ];
     let signed_params = get_app_sign(params);
     let res: reqwest::Response = CLIENT.post(url).form(&signed_params).send().await?;
     let resp = res.json().await?;
@@ -117,10 +124,12 @@ pub fn get_ts() -> u64 {
 /**
  * 获取签名后的参数，返回一个包含签名的map
  */
-pub fn get_app_sign(mut params: BTreeMap<&'static str, String>) -> BTreeMap<&'static str, String> {
+pub fn get_app_sign(mut params: Vec<(String, String)>) -> Vec<(String, String)> {
+    let input = params.clone();
+    let mut params: BTreeMap<String, String> = params.into_iter().collect();
     // 插入默认 appkey
     params
-        .entry("appkey")
+        .entry("appkey".to_string())
         .or_insert(constans::THIRD_PART_APPKEY.to_string());
 
     // 序列化参数
@@ -140,9 +149,9 @@ pub fn get_app_sign(mut params: BTreeMap<&'static str, String>) -> BTreeMap<&'st
     let sign = generate_md5(&(query_string + &appsec));
 
     // 插入 sign
-    params.insert("sign", sign);
+    params.insert("sign".to_string(), sign);
 
-    params
+    params.into_iter().collect()
 }
 
 /**
@@ -160,19 +169,6 @@ fn test_md5() {
     println!("MD5 hash of '{}': {}", input, md5_hash);
 }
 
-#[test]
-fn test_appsign() {
-    let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
-
-    params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
-    params.insert("appsec", constans::THIRD_PART_APPSEC.to_string());
-    params.insert("local_id", "0".to_string());
-    params.insert("ts", "1755956745".to_string());
-    let signed_params = get_app_sign(params);
-
-    println!("{:?}", signed_params);
-}
-
 /**
  * 获得tv端 扫码登陆的结果
  */
@@ -182,12 +178,23 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
     }
     let url = "https://passport.bilibili.com/x/passport-tv-login/qrcode/poll";
 
-    let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
-    params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
-    params.insert("appsec", constans::THIRD_PART_APPSEC.to_string());
-    params.insert("auth_code", TEMP_TV_AUTH_CODE.lock().unwrap().to_string());
-    params.insert("local_id", "0".to_string());
-    params.insert("ts", get_ts().to_string());
+    let mut params = vec![
+        (
+            "appkey".to_string(),
+            constans::THIRD_PART_APPKEY.to_string(),
+        ),
+        (
+            "appsec".to_string(),
+            constans::THIRD_PART_APPSEC.to_string(),
+        ),
+        (
+            "auth_code".to_string(),
+            TEMP_TV_AUTH_CODE.lock().unwrap().to_string(),
+        ),
+        ("local_id".to_string(), "0".to_string()),
+        ("ts".to_string(), get_ts().to_string()),
+    ];
+
     let response = common_post_form(url, get_app_sign(params)).await?;
 
     check_resp(&response).await?;
@@ -251,10 +258,7 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
 /**
  * 携带header和cookie的通用post表单请求
  */
-pub async fn common_post_form(
-    url: &str,
-    param_map: BTreeMap<&'static str, String>,
-) -> R<serde_json::Value> {
+pub async fn common_post_form(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.post(url);
 
     init_common_header_map().await?;
@@ -307,10 +311,7 @@ pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
 /**
  * 携带header和cookie的通用get请求
  */
-pub async fn common_get(
-    url: &str,
-    param_map: BTreeMap<&'static str, String>,
-) -> R<serde_json::Value> {
+pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
     init_common_header_map().await?;
@@ -338,17 +339,12 @@ pub async fn common_get(
 /// 携带cookie、ua、参数的url编码
 /// 记忆cookie
 /// 添加额外的请求头
-pub async fn common_get_form_other_header(
+pub async fn common_get_other_header(
     url: &str,
-    param_map: BTreeMap<String, String>,
-    other_map: HashMap<&'static str, String>,
+    param_map: Vec<(&str, String)>,
+    other_map: Vec<(&str, String)>,
 ) -> R<serde_json::Value> {
-
-
-    
-
     let mut req = CLIENT.get(url);
-    
 
     init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
@@ -361,24 +357,8 @@ pub async fn common_get_form_other_header(
     //读取cookie
     let (cookie_jar, cookie_str) = get_cookie_str().await?;
 
-    println!("cookie_str: {:#?}", cookie_str);
-
-    // let request = req
-    //     .timeout(Duration::from_secs(10))
-    //     .header(header::COOKIE, cookie_str.clone())
-    //     .form(&param_map).build()?;
-    // // 打印整个请求  
-    // println!("{:?}", request);  
-    
-    // // 或者分别打印各个部分  
-    // println!("Method: {:?}", request.method());  
-    // println!("URL: {:?}", request.url());  
-    // println!("Headers: {:?}", request.headers());
-
-
     //TODO 记得打开
-    let response: reqwest::Response = 
-        req
+    let response: reqwest::Response = req
         .timeout(Duration::from_secs(10))
         .header(header::COOKIE, cookie_str)
         .query(&param_map)
@@ -389,7 +369,6 @@ pub async fn common_get_form_other_header(
     update_cookie(&response, cookie_jar).await?;
 
     let json = response.json().await?;
-    // let json = serde_json::Value::Null;
 
     R::Ok(json)
 }
@@ -454,13 +433,16 @@ pub async fn get_user_info() -> R<serde_json::Value> {
 
     let access_key = get_access_key(false).await?;
 
-    let mut params: BTreeMap<&'static str, String> = BTreeMap::new();
-    params.insert("access_key", access_key);
-    params.insert("appkey", constans::THIRD_PART_APPKEY.to_string());
-    params.insert("ts", get_ts().to_string());
+    let mut params = vec![
+        ("access_key".to_string(), access_key),
+        (
+            "appkey".to_string(),
+            constans::THIRD_PART_APPKEY.to_string(),
+        ),
+        ("ts".to_string(), get_ts().to_string()),
+    ];
 
-    let signed_params = get_app_sign(params);
-    let response = common_get(url, signed_params).await?;
+    let response = common_get(url, get_app_sign(params)).await?;
 
     check_resp(&response).await?;
 
@@ -517,7 +499,7 @@ async fn test_get_user_info() {
  */
 pub async fn get_history() -> R<serde_json::Value> {
     let url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
-    common_get(url, BTreeMap::new()).await
+    common_get(url, vec![]).await
 }
 
 /// 查询用户投稿的视频
@@ -532,44 +514,35 @@ pub(crate) async fn search_user_submission_video(
     keyword: &str,
 ) -> R<PageBean<UserSubmissionVideo>> {
     info!("开始发请求1");
-    let url = "https://api.bilibili.com/x/space/wbi/arc/search?dm_cover_img_str=QU5HTEUgKEludGVsLCBJbnRlbChSKSBIRCBHcmFwaGljcyBEaXJlY3QzRDExIHZzXzVfMCBwc181XzApR29vZ2xlIEluYy4gKEludGVsKQ";
+    let url = "https://api.bilibili.com/x/space/wbi/arc/search";
 
-    let pn = &page_num.to_string();
-    let wbi_map: HashMap<&'static str, &str> = [
-        ("mid", user_id),
-        ("ps", "30"),
-        ("tid", "0"),
-        ("pn", pn),
-        ("keyword", keyword),
-        ("order", "pubdate"),
-        ("platform", "web"),
-        ("web_location", "1550101"),
-        ("order_avoided", "true"),
-    ]
-    .into_iter()
-    .collect();
+    let wbi_map = vec![
+        ("mid", user_id.to_string()),
+        ("ps", "30".to_string()),
+        ("tid", "0".to_string()),
+        ("pn", page_num.to_string()),
+        ("keyword", keyword.to_string()),
+        ("order", "pubdate".to_string()),
+        ("platform", "web".to_string()),
+        ("web_location", "1550101".to_string()),
+        ("order_avoided", "true".to_string()),
+    ];
     info!("开始发请求2");
-    let other_map: HashMap<&'static str, String> = [
+    let other_map = vec![
         (
             "Referer",
             format!("https://space.bilibili.com/{user_id}/video"),
         ),
         ("Origin", "https://space.bilibili.com".to_string()),
-    ]
-    .into_iter()
-    .collect();
+    ];
 
-
-    info!("other_map={:#?}",other_map);
-    
     info!("开始发请求3");
     let wbi_result_map = get_wbi(false, wbi_map).await?;
     info!("wbi_result_map={:#?}", wbi_result_map);
 
-    let response = common_get_form_other_header(url, wbi_result_map, other_map).await?;
+    let response = common_get_other_header(url, wbi_result_map, other_map).await?;
 
-    
-    info!("开始发请求4");
+    //=====================================================
     info!("response={:#?}", response);
     check_resp(&response).await?;
 
@@ -596,17 +569,65 @@ pub(crate) async fn search_user_submission_video(
     R::Ok(page_bean)
 }
 
+// 为请求参数进行 wbi 签名
+fn encode_wbi(
+    params: Vec<(&str, String)>,
+    (img_key, sub_key): (String, String),
+) -> (String, String) {
+    let cur_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(t) => t.as_secs(),
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+    };
+    _encode_wbi(params, (img_key, sub_key), cur_time)
+}
+
+fn _encode_wbi(
+    mut params: Vec<(&str, String)>,
+    (img_key, sub_key): (String, String),
+    timestamp: u64,
+) -> (String, String) {
+    let mixin_key = get_mixin_key((img_key + &sub_key).as_bytes());
+    // 添加当前时间戳
+    params.push(("wts", timestamp.to_string()));
+    // 重新排序
+    params.sort_by(|a, b| a.0.cmp(b.0));
+    // 拼接参数
+    let query = params
+        .iter()
+        .map(|(k, v)| format!("{}={}", get_url_encoded(k), get_url_encoded(v)))
+        .collect::<Vec<_>>()
+        .join("&");
+    // 计算签名
+    let web_sign = format!("{:?}", md5::compute(query + &mixin_key));
+    (web_sign, timestamp.to_string())
+}
+fn get_url_encoded(s: &str) -> String {
+    s.chars()
+        .filter_map(|c| match c.is_ascii_alphanumeric() || "-_.~".contains(c) {
+            true => Some(c.to_string()),
+            false => {
+                // 过滤 value 中的 "!'()*" 字符
+                if "!'()*".contains(c) {
+                    return None;
+                }
+                let encoded = c
+                    .encode_utf8(&mut [0; 4])
+                    .bytes()
+                    .fold("".to_string(), |acc, b| acc + &format!("%{:02X}", b));
+                Some(encoded)
+            }
+        })
+        .collect::<String>()
+}
+
 /// 获取wbi签名的字符串，返回一个拼接好的urlQuery: wts=xxxx&w_rid=xxxx
 /// 返回值：BTreeMap<&'static str, String>
-async fn get_wbi(
-    refresh: bool,
-    wbi_map: HashMap<&'static str, &str>,
-) -> R<BTreeMap<String, String>> {
+async fn get_wbi(refresh: bool, mut params: Vec<(&str, String)>) -> R<Vec<(&str, String)>> {
     let mut img_key: Option<String> = config_service::get_img_key().await?;
     let mut sub_key: Option<String> = config_service::get_sub_key().await?;
     if (refresh || img_key.is_none() || sub_key.is_none()) {
         let url = "https://api.bilibili.com/x/web-interface/nav";
-        let response = common_get(url, BTreeMap::new()).await?;
+        let response = common_get(url, vec![]).await?;
         check_resp(&response).await?;
 
         let value = &response["data"]["wbi_img"];
@@ -628,34 +649,18 @@ async fn get_wbi(
         config_service::update_wbi(&img_key, &sub_key).await?;
     }
 
-    let mixin_key = get_mixin_key(
-        &img_key.expect("必须有img key"),
-        &sub_key.expect("必须有sub key"),
+    let (w_rid, wts) = encode_wbi(
+        params.clone(),
+        (
+            img_key.expect("img_key is none"),
+            sub_key.expect("sub_key is none"),
+        ),
     );
 
-    let mut result_map: BTreeMap<String, String> = BTreeMap::new();
-    result_map.extend(
-        wbi_map
-            .into_iter()
-            .map(|(k, v)| (k.to_string(), v.to_string())),
-    );
-    //TO DO 
-    result_map.insert("wts".to_string(), data_util::get_ts().to_string());
-    // result_map.insert("wts".to_string(), "1760508326".to_string());
+    params.push(("w_rid", w_rid));
+    params.push(("wts", wts));
 
-    // 排序并拼接字符串（BTreeMap 已经是有序的）
-    let param_string: String = result_map
-        .iter()
-        .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
-        .collect::<Vec<String>>()
-        .join("&");
-
-    let combined = format!("{}{}", param_string, mixin_key);
-    let wbi_sign = generate_md5(&combined);
-    info!("wbi_sign={}", wbi_sign);
-    result_map.insert("w_rid".to_string(), wbi_sign);
-
-    R::Ok(result_map)
+    R::Ok(params)
 }
 
 const MIXIN_KEY_ENC_TAB: [usize; 64] = [
@@ -664,21 +669,23 @@ const MIXIN_KEY_ENC_TAB: [usize; 64] = [
     54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52,
 ];
 
-fn get_mixin_key(img_key: &str, sub_key: &str) -> String {
-    let combined = format!("{}{}", img_key, sub_key);
-    let mut mixin_key = String::with_capacity(32);
-
-    for &index in MIXIN_KEY_ENC_TAB.iter().take(32) {
-        if let Some(ch) = combined.chars().nth(index) {
-            mixin_key.push(ch);
-        }
-    }
-
-    mixin_key
+// 对 imgKey 和 subKey 进行字符顺序打乱编码
+fn get_mixin_key(orig: &[u8]) -> String {
+    MIXIN_KEY_ENC_TAB
+        .iter()
+        .take(32)
+        .map(|&i| orig[i] as char)
+        .collect::<String>()
 }
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        any::Any,
+        collections::{BTreeMap, HashMap},
+        hash::Hash,
+    };
+
     use crate::api::bili::{generate_md5, get_mixin_key};
 
     #[tokio::test]
@@ -700,7 +707,7 @@ mod tests {
         let img_key = "7cd084941338484aae1ad9425b84077c";
         let sub_key = "4932caff0ff746eab6f01bf08b70ac45";
 
-        let mixin_key = get_mixin_key(img_key, sub_key);
+        let mixin_key = get_mixin_key((img_key.to_string() + sub_key).as_bytes());
 
         println!("mixin_key={}", mixin_key);
         assert_eq!(mixin_key, "ea1db124af3c7062474693fa704f4ff8");
@@ -719,7 +726,7 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试search_user_submission_video");
-        let result = super::search_user_submission_video("414702734", 1, "").await;
+        let result = super::search_user_submission_video("414702734", 1, "1").await;
 
         log::logger().flush();
     }

@@ -10,7 +10,7 @@ spring:
     driver-class-name: org.sqlite.JDBC
     username:
     password:
-    url: jdbc:sqlite:./db/bili-recomm.db
+    url: jdbc:sqlite:D:\project\tempProject\bili-recomm1015.db
     hikari:
       connection-test-query: SELECT 1
       connection-timeout: 120000

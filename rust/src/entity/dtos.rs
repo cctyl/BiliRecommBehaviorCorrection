@@ -139,7 +139,7 @@ impl<T> Default for PageBean<T> {
 pub struct UserSubmissionVideo {
     pub comment: Option<i32>,
     pub typeid: Option<i64>,
-    pub play: Option<String>,
+    // pub play: Option<String>,
     pub pic: Option<String>,
     pub subtitle: Option<String>,
     pub description: Option<String>,
