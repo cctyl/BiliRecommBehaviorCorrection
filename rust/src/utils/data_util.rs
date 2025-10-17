@@ -51,22 +51,25 @@ pub fn get_random_set(size: usize, start: i32, end: i32) -> HashSet<i32> {
 pub trait Consumer {
     
     type T;
+    type Arg;
+    type Output;
 
 
     /// 随机访问列表中的元素
-    async fn random_access_list(source: &[Self::T], size: usize) -> R<()>
+    async fn random_access_list(source: &[Self::T], size: usize, mut arg: Self::Arg,  mut output: Self::Output) 
+    -> R<Self::Output>
     {
         let actual_size = std::cmp::min(size, source.len());
         let indices = get_random_set(actual_size, 0, (actual_size - 1) as i32);
 
         for &index in &indices {
-            Self::accept(&source[index as usize]).await?;
+            Self::accept(&source[index as usize], &mut arg, &mut output).await?;
         }
-        R::Ok(())
+        R::Ok(output)
     }
 
 
-    async fn accept(t:&Self::T)->R<()>;
+    async fn accept(t:&Self::T,arg:&mut Self::Arg,  output: &mut Self::Output)->R<()>;
 
 }
 

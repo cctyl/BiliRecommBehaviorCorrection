@@ -513,7 +513,6 @@ pub(crate) async fn search_user_submission_video(
     page_num: i32,
     keyword: &str,
 ) -> R<PageBean<UserSubmissionVideo>> {
-    info!("开始发请求1");
     let url = "https://api.bilibili.com/x/space/wbi/arc/search";
 
     let wbi_map = vec![
@@ -527,7 +526,6 @@ pub(crate) async fn search_user_submission_video(
         ("web_location", "1550101".to_string()),
         ("order_avoided", "true".to_string()),
     ];
-    info!("开始发请求2");
     let other_map = vec![
         (
             "Referer",
@@ -536,14 +534,10 @@ pub(crate) async fn search_user_submission_video(
         ("Origin", "https://space.bilibili.com".to_string()),
     ];
 
-    info!("开始发请求3");
     let wbi_result_map = get_wbi(false, wbi_map).await?;
-    info!("wbi_result_map={:#?}", wbi_result_map);
 
     let response = common_get_other_header(url, wbi_result_map, other_map).await?;
 
-    //=====================================================
-    info!("response={:#?}", response);
     check_resp(&response).await?;
 
     let value = &response["data"]["list"]["vlist"];
@@ -565,7 +559,6 @@ pub(crate) async fn search_user_submission_video(
         page_num as u64,
     );
 
-    info!("page_bean={:#?}", page_bean);
     R::Ok(page_bean)
 }
 

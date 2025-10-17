@@ -1,33 +1,35 @@
-use crate::{api::bili, app::response::R, entity::{dtos::UserSubmissionVideo, models::VideoDetail}, service::dict_service, utils::{data_util::{self}, thread_util::ThreadUtil}};
+use std::sync::Arc;
+
+use crate::{api::bili, app::response::R, entity::{dtos::UserSubmissionVideo, models::VideoDetail}, handler::black_rule_handler, service::{black_rule_service, dict_service}, utils::{data_util::{self}, thread_util::ThreadUtil}};
 
 use data_util::Consumer;
 use serde::de;
+use tokio::sync::Mutex;
 
 
 pub struct VideoHandler;
 impl Consumer for VideoHandler  {
     
     type T = UserSubmissionVideo;
+    type Arg = bool;
+    type Output = Vec<VideoDetail>;
     
-    async fn accept(t:&Self::T)->R<()> {
+    async fn accept(v:&Self::T,arg:&mut Self::Arg,  video_detail_list: &mut Self::Output)->R<()> {
+        let train= arg;
+        //获取视频详情并加入
+        let detail:VideoDetail =   bili::get_video_detail(v.aid).await?;
+        let aid = detail.aid;
+        video_detail_list.push(detail);
+        ThreadUtil::s2().await;
 
+        //点踩
+        bili::dislike(aid).await?;
+        ThreadUtil::s20().await;
 
-
-        let detail:VideoDetail =   bili::get_video_detail(t.aid).await?;
-
-        todo!()
-    }
-    
-    async fn random_access_list(source: &[Self::T], size: usize) -> R<()>
-    {
-        let actual_size = std::cmp::min(size, source.len());
-        let indices = data_util::get_random_set(actual_size, 0, (actual_size - 1) as i32);
-    
-        for &index in &indices {
-            Self::accept(&source[index as usize]).await?;
-        }
         R::Ok(())
     }
+    
+    
 
 }
 
@@ -39,7 +41,7 @@ impl Consumer for VideoHandler  {
 /// - `train`: 是否训练模式
 /// 
 /// 返回点踩的视频数量
-pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<i32> {
+pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<u32> {
     
 
     //该用户会被加入黑名单
@@ -67,30 +69,19 @@ pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<i32> {
     }
 
    
-    // VideoHandler::random_access_list(
-    //     &all_video, all_video.len()
-    // ).await?;
-
-    data_util::random_access_list(&all_video, all_video.len(),
-        async|v| {
-            
-            //获取视频详情并加入
-            let detail:VideoDetail =   bili::get_video_detail(v.aid).await?;
-            let aid = detail.aid;
-            video_detail_list.push(detail);
-            ThreadUtil::s2().await;
-
-
-            //点踩
-            bili::dislike(aid).await?;
-            ThreadUtil::s20().await;
-
-
-            R::Ok(())
-        }
+    video_detail_list = VideoHandler::random_access_list(
+    &all_video, 
+    all_video.len(),
+        train,
+        video_detail_list
     ).await?;
 
+    
+    if train {
+        //保存数据
+        black_rule_service::trainBlacklistByVideoList(&video_detail_list).await?;
+    }
 
-    todo!()
+    R::Ok(video_detail_list.len() as u32)
 
 }
