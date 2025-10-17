@@ -749,3 +749,7 @@ mod tests {
 pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetail> {
     todo!()
 }
+
+pub(crate) async fn dislike(aid: i64) -> R<()> {
+    todo!()
+}

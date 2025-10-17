@@ -1,6 +1,7 @@
 use crate::{api::bili, app::response::R, entity::{dtos::UserSubmissionVideo, models::VideoDetail}, service::dict_service, utils::{data_util::{self}, thread_util::ThreadUtil}};
 
 use data_util::Consumer;
+use serde::de;
 
 
 pub struct VideoHandler;
@@ -45,7 +46,7 @@ pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<i32> {
     dict_service::add_black_user_id(user_id).await?;
 
     //视频详情
-    let video_detail_list:Vec<VideoDetail> = Vec::new();
+    let mut video_detail_list:Vec<VideoDetail> = Vec::new();
 
     //获取该用户的所有投稿视频
     let mut all_video = Vec::new();
@@ -66,21 +67,28 @@ pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<i32> {
     }
 
    
-    VideoHandler::random_access_list(
-        &all_video, all_video.len()
-    ).await?;
-
-    // data_util::random_access_list(&all_video, all_video.len(),
-    //     async|v| {
-
-
-    //         let detail:VideoDetail =   bili::get_video_detail(v.aid).await?;
-
-
-    //         R::Ok(())
-    //     }
-
+    // VideoHandler::random_access_list(
+    //     &all_video, all_video.len()
     // ).await?;
+
+    data_util::random_access_list(&all_video, all_video.len(),
+        async|v| {
+            
+            //获取视频详情并加入
+            let detail:VideoDetail =   bili::get_video_detail(v.aid).await?;
+            let aid = detail.aid;
+            video_detail_list.push(detail);
+            ThreadUtil::s2().await;
+
+
+            //点踩
+            bili::dislike(aid).await?;
+            ThreadUtil::s20().await;
+
+
+            R::Ok(())
+        }
+    ).await?;
 
 
     todo!()

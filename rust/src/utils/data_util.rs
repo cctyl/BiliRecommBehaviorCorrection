@@ -71,6 +71,19 @@ pub trait Consumer {
 }
 
 
+/// 随机访问列表中的元素
+pub async fn random_access_list<T, F>(source: &[T], size: usize, mut consumer: F) -> R<()>
+where
+    F: AsyncFnMut(&T) -> R<()>,
+{
+    let actual_size = std::cmp::min(size, source.len());
+    let indices = get_random_set(actual_size, 0, (actual_size - 1) as i32);
+
+    for &index in &indices {
+        consumer(&source[index as usize]).await?;
+    }
+    R::Ok(())
+}
 
 
 
