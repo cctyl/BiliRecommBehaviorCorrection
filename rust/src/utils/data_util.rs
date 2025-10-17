@@ -1,8 +1,11 @@
+use log::info;
 use md5;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
+
+use crate::app::response::R;
 
 
 
@@ -43,18 +46,33 @@ pub fn get_random_set(size: usize, start: i32, end: i32) -> HashSet<i32> {
     num_set
 }
 
-/// 随机访问列表中的元素
-pub fn random_access_list<T, F>(source: &[T], size: usize, mut consumer: F)
-where
-    F: FnMut(&T),
-{
-    let actual_size = std::cmp::min(size, source.len());
-    let indices = get_random_set(actual_size, 0, (actual_size - 1) as i32);
 
-    for &index in &indices {
-        consumer(&source[index as usize]);
+
+pub trait Consumer {
+    
+    type T;
+
+
+    /// 随机访问列表中的元素
+    async fn random_access_list(source: &[Self::T], size: usize) -> R<()>
+    {
+        let actual_size = std::cmp::min(size, source.len());
+        let indices = get_random_set(actual_size, 0, (actual_size - 1) as i32);
+
+        for &index in &indices {
+            Self::accept(&source[index as usize]).await?;
+        }
+        R::Ok(())
     }
+
+
+    async fn accept(t:&Self::T)->R<()>;
+
 }
+
+
+
+
 
 /// 获取指定范围内的随机数
 pub fn get_random(start: i32, end: i32) -> i32 {

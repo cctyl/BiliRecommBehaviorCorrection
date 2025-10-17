@@ -6,7 +6,7 @@ use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
 use crate::entity::dtos::{PageBean, UserSubmissionVideo};
-use crate::entity::models::{Config, CookieHeaderData};
+use crate::entity::models::{Config, CookieHeaderData, VideoDetail};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::data_util;
@@ -555,7 +555,7 @@ pub(crate) async fn search_user_submission_video(
             HttpError::Biz("解析视频列表失败".to_string())
         })?;
 
-    info!("video_list={:#?}", video_list);
+    info!("video_list={}", video_list.len());
 
     // 创建 PageBean 实例
     let page_bean = PageBean::with_data(
@@ -726,8 +726,26 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试search_user_submission_video");
-        let result = super::search_user_submission_video("414702734", 1, "1").await;
+        let result = super::search_user_submission_video("414702734", 1, "").await.unwrap();
 
+
+        let has_more = result.has_more();
+        log::info!("has_more={}", has_more);
         log::logger().flush();
     }
+}
+
+
+/**
+ * 获取视频非常详细的信息
+ * view 视频基本信息
+ * Card UP主信息
+ * Tags 视频的标签信息
+ * Reply 视频热评信息
+ * Related 相关视频列表
+ *
+ * @param avid 视频id
+ */
+pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetail> {
+    todo!()
 }
