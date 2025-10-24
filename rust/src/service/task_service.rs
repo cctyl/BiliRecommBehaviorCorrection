@@ -138,7 +138,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        //TODO 在这中间编写测试代码
+        //在这中间编写测试代码
 
         //最后一句必须是这个
         log::logger().flush();
@@ -150,7 +150,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        //TODO 在这中间编写测试代码
+        //在这中间编写测试代码
 
         Task::delete_by_id(&CONTEXT.rb, "11679171886120965").await.unwrap();
 
@@ -165,7 +165,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        //TODO 在这中间编写测试代码
+        //在这中间编写测试代码
         let id = "11679233969684485";
         let mut t: Task = Task::select_by_id(&CONTEXT.rb, id).await.unwrap().unwrap();
 
@@ -185,7 +185,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
         
-        //TODO 在这中间编写测试代码
+        //在这中间编写测试代码
         let task = Task::select_by_id(&CONTEXT.rb, "5")
             .await
             .unwrap();

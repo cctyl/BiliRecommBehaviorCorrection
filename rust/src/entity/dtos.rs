@@ -6,6 +6,8 @@ use std::{
 };
 use validator::Validate;
 use rbatis::{rbdc::datetime::DateTime, Page};
+
+use crate::entity::models::{Tag, VideoDetail};
 #[test]
 fn testnow() {
 
@@ -164,4 +166,24 @@ pub struct UserSubmissionVideo {
     pub is_charging_arc: Option<bool>,
     pub vt: Option<i32>,
     pub enable_vt: Option<i32>,
+}
+
+
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoDetailTagDTO {
+    #[serde(flatten)]
+    pub video_detail:VideoDetail,
+    pub tags:Option<Vec<Tag>>,
+    pub desc_v2:Option<Vec<Tag>>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DescV2{
+   
+    pub raw_text:Option<String>,
+    pub type_:Option<i32>,
+    pub biz_id:Option<i32>,
 }

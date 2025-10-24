@@ -84,6 +84,10 @@ pub enum HttpError {
 
     #[error("数据库错误:{0}")]
     DataBaseError(#[from] rbatis::Error),
+
+
+    #[error("{0}")]
+    JsonError(#[from] serde_json::Error),
 }
 
 impl From<sqlparser::parser::ParserError> for HttpError {
@@ -137,6 +141,7 @@ impl HttpError {
             HttpError::Biz(_) => StatusCode::OK,
             HttpError::Custom(code, _) => StatusCode::from_u16(*code).unwrap(),
             HttpError::DataBaseError(error) => StatusCode::INTERNAL_SERVER_ERROR,
+            HttpError::JsonError(error) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

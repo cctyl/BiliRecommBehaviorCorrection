@@ -170,7 +170,7 @@ crud!(Stat {}, "stat");
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Tag {
-    pub id: String,
+    pub id: Option<String>,
     pub tag_id: i32,
     pub tag_name: String,
     pub content: Option<String>,
@@ -214,9 +214,12 @@ impl Task{
     }
 }
 
+
+
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetail {
-    pub id: String,
+    pub id: Option<String>,
     #[serde(default)]
     pub aid: i64,
     pub videos: Option<i32>,
@@ -238,7 +241,7 @@ pub struct VideoDetail {
     pub pub_location: Option<String>,
     pub bvid: String,
     pub owner_id: Option<String>,
-    #[serde(deserialize_with = "bool_or_int_opt")]
+    #[serde(deserialize_with = "bool_or_int_opt", default)]
     pub handle: Option<bool>,
     pub black_reason: Option<String>,
     pub thumb_up_reason: Option<String>,

@@ -5,14 +5,15 @@ use crate::app::database::CONTEXT;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::entity::dtos::{PageBean, UserSubmissionVideo};
-use crate::entity::models::{Config, CookieHeaderData, VideoDetail};
+use crate::entity::dtos::{PageBean, UserSubmissionVideo, VideoDetailTagDTO};
+use crate::entity::models::{Config, CookieHeaderData, Tag, VideoDetail};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::data_util;
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
 use anyhow::Context;
+use axum::body;
 use hex;
 use log::{error, info};
 use rbs::value;
@@ -197,8 +198,6 @@ pub async fn get_tv_qr_code_scan_result() -> R<serde_json::Value> {
 
     let response = common_post_form(url, get_app_sign(params)).await?;
 
-    check_resp(&response).await?;
-
     let code = response["code"]
         .as_i64()
         .ok_or(HttpError::Biz("Failed to get code".to_string()))?;
@@ -288,7 +287,7 @@ pub async fn common_post_form(url: &str, param_map: Vec<(String, String)>) -> R<
 
     cookie_header_data_service::replace_refresh_cookie(cookie_jar).await?;
     let json = response.json().await?;
-
+    check_resp(&json).await?;
     R::Ok(json)
 }
 
@@ -314,7 +313,6 @@ pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
 pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
-    // init_common_header_map().await?;
     req = init_header.processr((url, req)).await?;
 
     //读取cookie
@@ -331,6 +329,8 @@ pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_
     update_cookie(&response, cookie_jar).await?;
 
     let json = response.json().await?;
+
+    check_resp(&json).await?;
 
     R::Ok(json)
 }
@@ -357,7 +357,7 @@ pub async fn common_get_other_header(
     //读取cookie
     let (cookie_jar, cookie_str) = get_cookie_str().await?;
 
-    //TODO 记得打开
+
     let response: reqwest::Response = req
         .timeout(Duration::from_secs(10))
         .header(header::COOKIE, cookie_str)
@@ -369,7 +369,7 @@ pub async fn common_get_other_header(
     update_cookie(&response, cookie_jar).await?;
 
     let json = response.json().await?;
-
+    check_resp(&json).await?;
     R::Ok(json)
 }
 
@@ -443,8 +443,6 @@ pub async fn get_user_info() -> R<serde_json::Value> {
     ];
 
     let response = common_get(url, get_app_sign(params)).await?;
-
-    check_resp(&response).await?;
 
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_str() {
@@ -538,8 +536,6 @@ pub(crate) async fn search_user_submission_video(
 
     let response = common_get_other_header(url, wbi_result_map, other_map).await?;
 
-    check_resp(&response).await?;
-
     let value = &response["data"]["list"]["vlist"];
 
     // 假设 value 是你的 serde_json::Value
@@ -621,7 +617,6 @@ async fn get_wbi(refresh: bool, mut params: Vec<(&str, String)>) -> R<Vec<(&str,
     if (refresh || img_key.is_none() || sub_key.is_none()) {
         let url = "https://api.bilibili.com/x/web-interface/nav";
         let response = common_get(url, vec![]).await?;
-        check_resp(&response).await?;
 
         let value = &response["data"]["wbi_img"];
 
@@ -679,14 +674,17 @@ mod tests {
         hash::Hash,
     };
 
-    use crate::api::bili::{generate_md5, get_mixin_key};
+    use crate::{
+        api::bili::{generate_md5, get_mixin_key},
+        utils::data_util,
+    };
 
     #[tokio::test]
     async fn example() {
         //第一句必须是这个
         crate::init().await;
 
-        //TODO 在这中间编写测试代码
+        //在这中间编写测试代码
 
         //最后一句必须是这个
         log::logger().flush();
@@ -719,15 +717,42 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试search_user_submission_video");
-        let result = super::search_user_submission_video("414702734", 1, "").await.unwrap();
-
+        let result = super::search_user_submission_video("414702734", 1, "")
+            .await
+            .unwrap();
 
         let has_more = result.has_more();
         log::info!("has_more={}", has_more);
         log::logger().flush();
     }
-}
 
+    //测试 get_video_detail
+    #[tokio::test]
+    async fn test_get_video_detail() {
+        crate::init().await;
+
+        log::info!("开始测试get_video_detail");
+        let result = super::get_video_detail(data_util::bvid_to_aid("BV1XgsqzqEtr")).await;
+
+        log::info!("result={:?}", result);
+        log::logger().flush();
+    }
+
+
+
+    //测试 dislike
+    #[tokio::test]
+    async fn test_dislike() {
+        crate::init().await;
+
+        log::info!("开始测试dislike");
+        let result = super::dislike(data_util::bvid_to_aid("BV1QM4mziEch")).await;
+
+        log::info!("result={:?}", result);
+        log::logger().flush();
+    }
+
+}
 
 /**
  * 获取视频非常详细的信息
@@ -739,10 +764,40 @@ mod tests {
  *
  * @param avid 视频id
  */
-pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetail> {
-    todo!()
+pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetailTagDTO> {
+    let url = "https://api.bilibili.com/x/web-interface/view/detail";
+    let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
+
+    trans2_video_detail(body)
 }
 
+/// json结构转换为VideoDetail
+pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailTagDTO> {
+    let mut data = body["data"].take();
+    println!("data=={:#?}", data);
+    let video_detail: VideoDetail = serde_json::from_value(data["View"].take())?;
+    let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
+
+    R::Ok(VideoDetailTagDTO {
+        video_detail,
+        tags: Some(tags),
+    })
+}
+
+/// 对视频点踩
 pub(crate) async fn dislike(aid: i64) -> R<()> {
-    todo!()
+    let url = "https://app.biliapi.net/x/v2/view/dislike";
+    let body = common_post_form(
+        url,
+        vec![
+            ("aid".to_string(), aid.to_string()),
+            ("access_key".to_string(), get_access_key(false).await?),
+            ("dislike".to_string(), "0".to_string()),
+        ],
+    )
+    .await?;
+
+    println!("body=={:#?}", body);
+
+    R::Ok(())
 }

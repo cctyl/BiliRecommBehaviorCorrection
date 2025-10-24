@@ -30,7 +30,7 @@ pub fn create_router() -> Router {
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct CookieHeaderDataAddDTO {
     pub id: Option<String>,
     pub url: Option<String>,
@@ -98,7 +98,7 @@ pub async fn del(Path(param):Path<String>)->RR<()>{
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct CookieHeaderDataListDTO {
     pub id: String,
     pub url: Option<String>,

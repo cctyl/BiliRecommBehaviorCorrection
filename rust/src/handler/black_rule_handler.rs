@@ -37,7 +37,7 @@ pub fn create_router() -> Router {
 
 // CacheTrainResultDTO 有两个字段，discardedId，selectedId，类型都是Vec<String>
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct CacheTrainResultDTO {
     pub discarded_id: Vec<String>,
     pub selected_id: Vec<String>,

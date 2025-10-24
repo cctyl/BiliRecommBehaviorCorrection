@@ -31,7 +31,7 @@
 //         .route("/test", axum::routing::get(test))
 // }
 // #[derive(Debug, Clone, Serialize, Deserialize)]
-// #[serde(rename_all = "camelCase")]
+// 
 // pub struct FileDto {
 //     pub id: i64,
 //     pub name: String,

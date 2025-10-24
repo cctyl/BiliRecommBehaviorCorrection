@@ -34,7 +34,7 @@ use tokio_stream::StreamExt;
   
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 struct UpdateRefreshCookieParams {
 
     cookie_str: String

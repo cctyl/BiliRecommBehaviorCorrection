@@ -38,7 +38,7 @@ pub fn create_router() -> Router {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct DictDto {
     pub id: Option<String>,
     pub value: String,
@@ -81,7 +81,7 @@ impl From<DictDto> for Dict {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct BatchRemoveAndUpdateParam {
     access_type: AccessType,
     dict_type: DictType,
@@ -153,7 +153,7 @@ pub async fn get_by_id(Path(id): Path<String>) -> RR<DictDto> {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+
 pub struct DictListQueryParam {
     pub dict_type: DictType,
     pub access_type: AccessType,

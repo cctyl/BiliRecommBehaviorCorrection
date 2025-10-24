@@ -48,15 +48,15 @@ pub fn get_random_set(size: usize, start: i32, end: i32) -> HashSet<i32> {
 
 
 
-pub trait Consumer {
+pub trait RandomAccessListConsumer {
     
     type T;
-    type Arg;
+    type Input;
     type Output;
 
 
     /// 随机访问列表中的元素
-    async fn random_access_list(source: &[Self::T], size: usize, mut arg: Self::Arg,  mut output: Self::Output) 
+    async fn random_access_list(source: &[Self::T], size: usize, mut arg: Self::Input,  mut output: Self::Output) 
     -> R<Self::Output>
     {
         let actual_size = std::cmp::min(size, source.len());
@@ -69,7 +69,7 @@ pub trait Consumer {
     }
 
 
-    async fn accept(t:&Self::T,arg:&mut Self::Arg,  output: &mut Self::Output)->R<()>;
+    async fn accept(t:&Self::T,arg:&mut Self::Input,  output: &mut Self::Output)->R<()>;
 
 }
 
