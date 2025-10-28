@@ -1,5 +1,4 @@
 use idgenerator::{IdGeneratorOptions, IdInstance};
-use time::Date;
 
 pub fn init() -> anyhow::Result<()> {
     let option = IdGeneratorOptions::new()

@@ -29,7 +29,7 @@ axum = { version = "0.8.4", features = ["macros","multipart"] }
 # axum-extra = { version = "0.9.3", features = ["cookie"] }
 tokio = { version = "1.39.3", features = ["full"] }
 tower = { version = "0.5.0" }
-time = "0.3.20"
+chrono = "0.4.42"
 tower-http = { version = "0.5.2", features = ["cors"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"

@@ -1,24 +1,39 @@
 use std::sync::Arc;
 
-use crate::{api::bili, app::response::R, entity::{dtos::{UserSubmissionVideo, VideoDetailTagDTO}, models::VideoDetail}, handler::black_rule_handler, service::{black_rule_service, dict_service}, utils::{data_util::{self}, thread_util::ThreadUtil}};
+use crate::{
+    api::bili,
+    app::response::R,
+    entity::{
+        dtos::{UserSubmissionVideo, VideoDetailTagDTO},
+        models::VideoDetail,
+    },
+    handler::black_rule_handler,
+    service::{black_rule_service, dict_service},
+    utils::{
+        data_util::{self},
+        thread_util::ThreadUtil,
+    },
+};
 
 use data_util::RandomAccessListConsumer;
+use log::info;
 use serde::de;
 use tokio::sync::Mutex;
 
-
 pub struct VideoHandler;
-impl RandomAccessListConsumer for VideoHandler  {
-    
+impl RandomAccessListConsumer for VideoHandler {
     type T = UserSubmissionVideo;
-    type Input = bool;
+    type Input = ();
     type Output = Vec<VideoDetailTagDTO>;
-    
-    async fn accept(v:&Self::T,arg:&mut Self::Input,  video_detail_list: &mut Self::Output)->R<()> {
-        let train= arg;
+
+    async fn accept(
+        v: &Self::T,
+        arg: &mut Self::Input,
+        video_detail_list: &mut Self::Output,
+    ) -> R<()> {
         //获取视频详情并加入
-        let detail =   bili::get_video_detail(v.aid).await?;
-        let aid =detail.video_detail.aid;
+        let detail = bili::get_video_detail(v.aid).await?;
+        let aid = detail.video_detail.aid;
         video_detail_list.push(detail);
         ThreadUtil::s2().await;
 
@@ -28,60 +43,92 @@ impl RandomAccessListConsumer for VideoHandler  {
 
         R::Ok(())
     }
-    
-    
-
 }
 
-
 /// 根据用户id进行点踩
-/// 
+///
 /// 参数:
 /// - `user_id`: 用户ID
 /// - `train`: 是否训练模式
-/// 
+///
 /// 返回点踩的视频数量
 pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<u32> {
-    
-
     //该用户会被加入黑名单
-    dict_service::add_black_user_id(user_id).await?;
+    dict_service::add_black_user_id(user_id,None).await?;
+    info!("用户已经被加入黑名单：{}",user_id);
 
     //视频详情
-    let mut video_detail_list:Vec<VideoDetailTagDTO> = Vec::new();
+    let mut video_detail_list: Vec<VideoDetailTagDTO> = Vec::new();
 
     //获取该用户的所有投稿视频
     let mut all_video = Vec::new();
 
     let mut page_num = 1;
     loop {
-
         //searchUserSubmissionVideo
-        let page_bean =    
-            bili::search_user_submission_video(user_id, page_num,"").await?;
+        info!("获取用户投稿视频，页码：{}", page_num) ;
+        let page_bean = bili::search_user_submission_video(user_id, page_num, "").await?;
         let has_more = page_bean.has_more();
+        //TO DO 
+        // let has_more =false;
         all_video.extend(page_bean.data);
         page_num += 1;
         ThreadUtil::s20().await;
-        if has_more {
+        if !has_more {
             break;
         }
     }
-
-   
-    video_detail_list = VideoHandler::random_access_list(
-    &all_video, 
-    all_video.len(),
-        train,
-        video_detail_list
-    ).await?;
-
+    info!("获取用户投稿视频完成，共{}个视频", all_video.len()) ;
+    video_detail_list =
+        VideoHandler::random_access_list(&all_video, all_video.len(), (), video_detail_list)
+            .await?;
+    info!("全部点踩完成！");
     let len = video_detail_list.len();
     if train {
+        info!("开始进行训练...");
         //保存数据
         black_rule_service::train_blacklist_by_video_list(video_detail_list).await?;
     }
 
     R::Ok(len as u32)
+}
+
+
+
+#[cfg(test)]
+mod tests{
+
+
+    #[tokio::test]
+    async fn example() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //在这中间编写测试代码
+
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+    #[tokio::test]
+    async fn test_disklike_by_user_id() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //在这中间编写测试代码
+        let res = super::disklike_by_user_id("3493076265863553", true).await.unwrap();
+        println!("res:{}",res);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
 
 }

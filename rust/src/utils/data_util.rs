@@ -35,11 +35,11 @@ pub fn get_random_set(size: usize, start: i32, end: i32) -> HashSet<i32> {
         panic!("参数异常");
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut num_set = HashSet::new();
 
     while num_set.len() < size {
-        let random_number = rand::Rng::gen_range(&mut rng, start..=end);
+        let random_number = rand::Rng::random_range(&mut rng, start..=end);
         num_set.insert(random_number);
     }
 
@@ -92,8 +92,8 @@ where
 
 /// 获取指定范围内的随机数
 pub fn get_random(start: i32, end: i32) -> i32 {
-    let mut rng = rand::thread_rng();
-    rand::Rng::gen_range(&mut rng, start..=end)
+    let mut rng = rand::rng();
+    rand::Rng::random_range(&mut rng, start..=end)
 }
 
 /// 获取URL中的查询参数

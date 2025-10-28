@@ -1,3 +1,4 @@
+use log::{error, info};
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, RwLock};
@@ -73,8 +74,12 @@ impl TaskPool {
         // 添加新任务
         {
             let mut map = self.method_name_task_map.write().unwrap();
+            let method_name_clone = method_name.clone();
             let handle = self.runtime_handle.spawn(async move {
-                task().await;
+                match task().await {
+                    Ok(_) => info!("任务执行成功: {}", method_name_clone),
+                    Err(e) => error!("任务执行失败: {},错误:{:#?}", method_name_clone,e),
+                }
             });
             map.insert(method_name, handle);
         }
@@ -225,10 +230,9 @@ mod tests {
 
         // 启动多个并发任务，每个任务运行不同时长
         for (i, name) in task_names.iter().enumerate() {
-            let duration =Duration::from_millis(((i + 1) * 50).try_into().unwrap()); // 不同时长: 50ms, 100ms, 150ms, 200ms, 250ms
+            let duration = Duration::from_millis(((i + 1) * 50).try_into().unwrap()); // 不同时长: 50ms, 100ms, 150ms, 200ms, 250ms
 
-
-            println!("Starting task: {}, time:{}", name,duration.as_millis());
+            println!("Starting task: {}, time:{}", name, duration.as_millis());
 
             let name = name.clone();
             task_pool.put_if_absent(name.clone(), move || async move {

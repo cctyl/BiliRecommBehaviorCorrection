@@ -1,5 +1,6 @@
 // src/utils/thread_util.rs
 
+use log::info;
 use tokio::time::{sleep, Duration};
 
 /// 线程工具类，提供各种休眠方法
@@ -11,6 +12,7 @@ impl ThreadUtil {
     /// # Arguments
     /// * `seconds` - 休眠的秒数
     pub async fn sleep(seconds: u64) {
+        info!("线程休眠 {} 秒", seconds);
         sleep(Duration::from_secs(seconds)).await;
     }
 

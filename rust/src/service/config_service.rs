@@ -4,7 +4,7 @@ use rbs::value;
 
 use crate::{
     app::{
-        constans::{self, IMG_KEY, SUB_KEY},
+        constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
         database::CONTEXT,
         response::R,
     },
@@ -224,6 +224,20 @@ mod tests {
         // 最后一句必须是这个
         log::logger().flush();
     }
+
+
+
+    //测试 is_first_use
+    #[tokio::test]
+    async fn test_is_first_use() {
+        crate::init().await;
+
+        let r = is_first_use().await.unwrap();
+        println!("{:#?}", r);
+
+        log::logger().flush();
+    }
+
 }
 
 /// 获取img_key
@@ -247,4 +261,26 @@ pub(crate) async fn update_wbi(img_key: &Option<String>, sub_key: &Option<String
     }
 
     R::Ok(())
+}
+
+/// 是否是第一次使用
+pub(crate) async fn is_first_use() -> R<bool> {
+
+
+    let config: Option<Config> = find_config_by_name(FIRST_USE).await?;
+    //这个配置不存在，我直接默认为是第一次使用
+    if config.is_none(){
+
+        let mut config = Config::default();
+        config.name = FIRST_USE.to_string();
+        config.value = Some("false".to_string());
+        Config::insert(&CONTEXT.rb, &config).await?;
+
+        return R::Ok(true)
+    }else{
+        //存在则认为肯定初始化过
+        R::Ok(false)
+    }
+
+ 
 }

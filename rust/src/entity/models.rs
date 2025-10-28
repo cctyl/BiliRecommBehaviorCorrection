@@ -131,8 +131,8 @@ impl Dict{
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {
-    pub id: String,
-    pub mid: String,
+    pub id: Option<String>,
+    pub mid: u64,
     pub name: String,
     pub face: Option<String>,
 }
@@ -240,7 +240,7 @@ pub struct VideoDetail {
     pub first_frame: Option<String>,
     pub pub_location: Option<String>,
     pub bvid: String,
-    pub owner_id: Option<String>,
+    pub owner_id: Option<u64>,
     #[serde(deserialize_with = "bool_or_int_opt", default)]
     pub handle: Option<bool>,
     pub black_reason: Option<String>,

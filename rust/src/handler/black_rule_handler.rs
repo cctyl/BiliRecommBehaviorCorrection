@@ -105,6 +105,7 @@ pub async fn dislike_by_user_id(
         let mut disklike_num = 0;
         for user_id in &user_id_list {
             
+            info!("开始对{}用户的点踩",{user_id});
             disklike_num+= bili_service::disklike_by_user_id(user_id,train).await?;
 
             info!("完成对{}用户的点踩",{user_id});

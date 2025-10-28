@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::Write;
 use std::sync::{LazyLock, Mutex};
 
 use crate::app::database::CONTEXT;
@@ -33,6 +35,7 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
 
     if !flag {
         if let Some(code) = value["code"].as_i64() {
+            let mut throw = false;
             match code {
                 86090 => info!("已扫码未确认"),
                 10003 => info!("稿件不存在"),
@@ -43,25 +46,39 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
                     config_service::del_by_name(constans::BILI_ACCESS_KEY).await?;
                     info!("登录过期，清除accessKey");
                     error!("body: {:#?}", value);
+                    throw = true;
                 }
                 -404 => {
                     info!("请求的资源不存在");
                     error!("body: {:#?}", value);
+                    throw = true;
                 }
                 _ => {
                     info!("异常的code: {:#?}", code);
                     error!("body: {:#?}", value);
+                    throw = true;
                 }
             }
+
+            if throw {
+                R::Err(HttpError::Biz(format!(
+                    "检查响应失败:{:#?}",
+                    value["message"].as_str().unwrap_or("")
+                )))
+            }else {
+                R::Ok(())
+            }
+
         } else {
             error!("body: {:#?}", value);
             error!("响应异常: code not found");
+            R::Err(HttpError::Biz(format!(
+                "检查响应失败:{:#?}",
+                value["message"].as_str().unwrap_or("")
+            )))
         }
 
-        R::Err(HttpError::Biz(format!(
-            "检查响应失败:{:#?}",
-            value["message"].as_str().unwrap_or("")
-        )))
+        
     } else {
         R::Ok(())
     }
@@ -614,7 +631,7 @@ fn get_url_encoded(s: &str) -> String {
 async fn get_wbi(refresh: bool, mut params: Vec<(&str, String)>) -> R<Vec<(&str, String)>> {
     let mut img_key: Option<String> = config_service::get_img_key().await?;
     let mut sub_key: Option<String> = config_service::get_sub_key().await?;
-    if (refresh || img_key.is_none() || sub_key.is_none()) {
+    if refresh || img_key.is_none() || sub_key.is_none() {
         let url = "https://api.bilibili.com/x/web-interface/nav";
         let response = common_get(url, vec![]).await?;
 
@@ -732,9 +749,12 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试get_video_detail");
-        let result = super::get_video_detail(data_util::bvid_to_aid("BV1XgsqzqEtr")).await;
+        let result = super::get_video_detail(data_util::bvid_to_aid("BV1XgsqzqEtr")).await.unwrap();
 
-        log::info!("result={:?}", result);
+
+        let owner = result.owner;
+        log::info!("owner={:?}", owner);
+
         log::logger().flush();
     }
 
@@ -765,7 +785,8 @@ mod tests {
  * @param avid 视频id
  */
 pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetailTagDTO> {
-    let url = "https://api.bilibili.com/x/web-interface/view/detail";
+    info!("正在获取视频详情aid={}", aid);
+    let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
     let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
 
     trans2_video_detail(body)
@@ -773,19 +794,29 @@ pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetailTagDTO> {
 
 /// json结构转换为VideoDetail
 pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailTagDTO> {
-    let mut data = body["data"].take();
-    println!("data=={:#?}", data);
-    let video_detail: VideoDetail = serde_json::from_value(data["View"].take())?;
-    let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
+    // let json_string = serde_json::to_string_pretty(&body)?;
+    // let mut file = File::create("video_detail_raw.json")?;
+    // file.write_all(json_string.as_bytes())?;
 
-    R::Ok(VideoDetailTagDTO {
-        video_detail,
-        tags: Some(tags),
-    })
+    let mut data = body["data"].take();
+
+
+   
+    let mut r :VideoDetailTagDTO =  serde_json::from_value(data["View"].take())?;
+    if let Some(o)  =&r.owner{
+        r.video_detail.owner_id = Some(o.mid);
+    }
+    let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
+    r.tags = Some(tags);
+    R::Ok(r)
+
+ 
+
 }
 
 /// 对视频点踩
 pub(crate) async fn dislike(aid: i64) -> R<()> {
+    info!("正在对视频点踩aid={}", aid);
     let url = "https://app.biliapi.net/x/v2/view/dislike";
     let body = common_post_form(
         url,
@@ -797,7 +828,7 @@ pub(crate) async fn dislike(aid: i64) -> R<()> {
     )
     .await?;
 
-    println!("body=={:#?}", body);
+    check_resp(&body).await?;
 
     R::Ok(())
 }

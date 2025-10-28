@@ -27,7 +27,7 @@ impl AppContext {
             .rb
             .link(SqliteDriver {}, &self.config.db_url)
             .await
-            .expect("[abs_admin] rbatis pool init fail!");
+            .expect("[bili-rust] rbatis pool init fail!");
 
         let pool = self.rb.get_pool().unwrap();
         //max connections
@@ -35,7 +35,7 @@ impl AppContext {
         //max timeout
         pool.set_timeout(Some(Duration::from_secs(20))).await;
         log::info!(
-            "[abs_admin] rbatis pool init success! pool state = {}",
+            "[bili-rust] rbatis pool init success! pool state = {}",
             self.rb.get_pool().expect("pool not init!").state().await
         );
     }

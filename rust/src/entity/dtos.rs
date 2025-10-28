@@ -7,7 +7,7 @@ use std::{
 use validator::Validate;
 use rbatis::{rbdc::datetime::DateTime, Page};
 
-use crate::entity::models::{Tag, VideoDetail};
+use crate::entity::models::{Owner, Tag, VideoDetail};
 #[test]
 fn testnow() {
 
@@ -177,7 +177,8 @@ pub struct VideoDetailTagDTO {
     #[serde(flatten)]
     pub video_detail:VideoDetail,
     pub tags:Option<Vec<Tag>>,
-    pub desc_v2:Option<Vec<Tag>>,
+    pub owner:Option<Owner>,
+    pub desc_v2:Option<Vec<DescV2>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
