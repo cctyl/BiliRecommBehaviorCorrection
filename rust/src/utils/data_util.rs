@@ -2,8 +2,10 @@ use log::info;
 use md5;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
+use std::fs::File;
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
+use std::io::prelude::*;
 
 use crate::app::response::R;
 
@@ -204,4 +206,13 @@ impl AVBVConverter {
     fn swap(array: &mut [char], i: usize, j: usize) {
         array.swap(i, j);
     }
+}
+
+
+/// 下载JSON响应,会阻塞程序，因为不是异步api
+pub fn download_json_response(body:&serde_json::Value, file_name:&str)->R<()>{
+    let json_string = serde_json::to_string_pretty(&body)?;
+    let mut file = File::create(file_name)?;
+    file.write_all(json_string.as_bytes())?;
+    R::Ok(())
 }

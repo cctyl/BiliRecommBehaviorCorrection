@@ -177,7 +177,7 @@ mod tests {
         let initial_count = initial_black_list.len();
 
         //添加黑名单用户ID
-        let result = add_black_user_id(test_user_id).await;
+        let result = add_black_user_id(test_user_id,None).await;
         assert!(result.is_ok());
 
         //验证添加成功
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(updated_black_list.len(), initial_count + 1);
 
         //再次添加相同用户ID，应该不会重复添加
-        let result_again = add_black_user_id(test_user_id).await;
+        let result_again = add_black_user_id(test_user_id,None).await;
         assert!(result_again.is_ok());
 
         let final_black_list = get_black_user_id_set().await.unwrap();

@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::sync::{LazyLock, Mutex};
 
+use crate::api::bili;
 use crate::app::database::CONTEXT;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
@@ -11,7 +12,7 @@ use crate::entity::dtos::{PageBean, UserSubmissionVideo, VideoDetailTagDTO};
 use crate::entity::models::{Config, CookieHeaderData, Tag, VideoDetail};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
-use crate::utils::data_util;
+use crate::utils::data_util::{self, download_json_response};
 use crate::utils::http::CLIENT;
 use crate::utils::id::generate_id;
 use anyhow::Context;
@@ -41,6 +42,7 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
                 10003 => info!("稿件不存在"),
                 86039 => info!("二维码尚未确认"),
                 65007 => info!("视频已踩过"),
+                65010 => info!("对方在您的黑名单中噢~"),
                 -101 => {
                     // 登陆过期，清除accessKey
                     config_service::del_by_name(constans::BILI_ACCESS_KEY).await?;
@@ -829,6 +831,7 @@ pub(crate) async fn dislike(aid: i64) -> R<()> {
     .await?;
 
     check_resp(&body).await?;
+
 
     R::Ok(())
 }
