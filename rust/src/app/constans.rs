@@ -33,3 +33,4 @@ pub const PIC_MAX_SIZE: usize = 2097152; // 或 u32
 
 // 点踩任务 
 pub const DISLIKE_BY_USER_ID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByUserId";
+pub const DISLIKE_BY_TID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByTid";

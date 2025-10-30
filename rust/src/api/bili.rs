@@ -8,7 +8,7 @@ use crate::app::database::CONTEXT;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::entity::dtos::{PageBean, UserSubmissionVideo, VideoDetailTagDTO};
+use crate::entity::dtos::{PageBean, UserSubmissionVideo, VideoDetailDTO};
 use crate::entity::models::{Config, CookieHeaderData, Tag, VideoDetail};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
@@ -22,8 +22,9 @@ use log::{error, info};
 use rbs::value;
 use rbs::value::map::ValueMap;
 use reqwest::header;
-use serde_json::json;
+use serde_json::{json, Value};
 use std::collections::BTreeMap;
+use std::num::ParseIntError;
 use urlencoding::encode;
 //扫码登陆的code
 static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
@@ -67,10 +68,9 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
                     "检查响应失败:{:#?}",
                     value["message"].as_str().unwrap_or("")
                 )))
-            }else {
+            } else {
                 R::Ok(())
             }
-
         } else {
             error!("body: {:#?}", value);
             error!("响应异常: code not found");
@@ -79,8 +79,6 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
                 value["message"].as_str().unwrap_or("")
             )))
         }
-
-        
     } else {
         R::Ok(())
     }
@@ -375,7 +373,6 @@ pub async fn common_get_other_header(
 
     //读取cookie
     let (cookie_jar, cookie_str) = get_cookie_str().await?;
-
 
     let response: reqwest::Response = req
         .timeout(Duration::from_secs(10))
@@ -751,16 +748,15 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试get_video_detail");
-        let result = super::get_video_detail(data_util::bvid_to_aid("BV1XgsqzqEtr")).await.unwrap();
-
+        let result = super::get_video_detail(data_util::bvid_to_aid("BV1XgsqzqEtr"))
+            .await
+            .unwrap();
 
         let owner = result.owner;
         log::info!("owner={:?}", owner);
 
         log::logger().flush();
     }
-
-
 
     //测试 dislike
     #[tokio::test]
@@ -774,6 +770,28 @@ mod tests {
         log::logger().flush();
     }
 
+    //测试 get_rank_by_tid
+    #[tokio::test]
+    async fn test_get_rank_by_tid() {
+        crate::init().await;
+
+        log::info!("开始测试get_rank_by_tid");
+        let result = super::get_rank_by_tid(4).await.unwrap();
+
+        log::logger().flush();
+    }
+
+
+    //测试  get_region_lastest_video
+    #[tokio::test]
+    async fn test_get_region_lastest_video() {
+            
+        crate::init().await;
+        log::info!("开始测试get_region_lastest_video");
+        let result = super::get_region_lastest_video(1,4).await.unwrap();
+        log::info!("result={:?}", result);
+        log::logger().flush();
+    }
 }
 
 /**
@@ -786,7 +804,7 @@ mod tests {
  *
  * @param avid 视频id
  */
-pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetailTagDTO> {
+pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
     info!("正在获取视频详情aid={}", aid);
     let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
     let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
@@ -795,29 +813,17 @@ pub(crate) async fn get_video_detail(aid: i64) -> R<VideoDetailTagDTO> {
 }
 
 /// json结构转换为VideoDetail
-pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailTagDTO> {
-    // let json_string = serde_json::to_string_pretty(&body)?;
-    // let mut file = File::create("video_detail_raw.json")?;
-    // file.write_all(json_string.as_bytes())?;
+pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailDTO> {
 
     let mut data = body["data"].take();
-
-
-   
-    let mut r :VideoDetailTagDTO =  serde_json::from_value(data["View"].take())?;
-    if let Some(o)  =&r.owner{
-        r.video_detail.owner_id = Some(o.mid);
-    }
+    let mut r: VideoDetailDTO = serde_json::from_value(data["View"].take())?;
     let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
     r.tags = Some(tags);
     R::Ok(r)
-
- 
-
 }
 
 /// 对视频点踩
-pub(crate) async fn dislike(aid: i64) -> R<()> {
+pub(crate) async fn dislike(aid: u64) -> R<()> {
     info!("正在对视频点踩aid={}", aid);
     let url = "https://app.biliapi.net/x/v2/view/dislike";
     let body = common_post_form(
@@ -832,6 +838,43 @@ pub(crate) async fn dislike(aid: i64) -> R<()> {
 
     check_resp(&body).await?;
 
-
     R::Ok(())
+}
+/// 获取指定分区的视频排行榜数据
+/// 注意: 该接口不支持 主分区下的子分区,比如游戏分区下的单机分区17，无法访问，提示请求错误。但是游戏主分区4可以访问
+pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
+    info!("请求分区排行榜数据，tid={}", tid);
+    let url = "https://api.bilibili.com/x/web-interface/ranking/v2";
+    let mut body = common_get(
+        url,
+        vec![
+            ("rid".to_string(), tid.to_string()),
+            ("type".to_string(), "all".to_string()),
+        ],
+    )
+    .await?;
+
+    let list = body["data"]["list"].take();
+    data_util::download_json_response(&list,"get_rank_by_tid.json")?;
+
+
+    R::Ok(serde_json::from_value(list)?)
+}
+
+///获取指定分区内的最新视频
+/// * tid 分区id
+/// * page_num 页码
+pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<VideoDetailDTO>> {
+
+
+    let url = "https://api.bilibili.com/x/web-interface/dynamic/region";
+    let mut body = common_get(url, vec![
+        ("rid".to_string(), tid.to_string()),
+        ("ps".to_string(), "20".to_string()),
+        ("pn".to_string(), page_num.to_string()),
+    ]).await.context("get_region_lastest_video 请求失败")?;
+
+    download_json_response(&mut body, "get_region_lastest_video.json")?;
+    let value = body["data"]["archives"].take();
+    R::Ok(serde_json::from_value(value).context("get_region_lastest_video json 解析失败")?)
 }

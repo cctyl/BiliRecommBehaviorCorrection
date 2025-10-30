@@ -26,8 +26,8 @@ pub fn aid_to_bvid(aid: i64) -> String {
 }
 
 /// BV号转换为AV号
-pub fn bvid_to_aid(bvid: &str) -> i64 {
-    AVBVConverter::bv2av(bvid) as i64
+pub fn bvid_to_aid(bvid: &str) -> u64 {
+    AVBVConverter::bv2av(bvid) 
 }
 
 /// 获取指定范围内的随机数集合

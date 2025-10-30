@@ -69,6 +69,7 @@ public class VideoDetail extends SimpleAuditingEntity implements Serializable {
     @JSONField(name = "pubdate")
     private Integer pubdate;
 
+    //用户投稿时间戳-秒
     @JSONField(name = "ctime")
     private Integer ctime;
 

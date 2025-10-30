@@ -1,4 +1,7 @@
 
+/// 当前版本
+const CURRENT_VERSION: u32 = 2;
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Migration {
@@ -34,8 +37,6 @@ async fn test_init() {
     start_migration().await.unwrap();
 }
 
-/// 当前版本
-const CURRENT_VERSION: u32 = 2;
 
 /**
  * 执行迁移

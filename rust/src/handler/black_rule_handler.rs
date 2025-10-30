@@ -8,7 +8,7 @@ use rbatis::rbdc::{Date, DateTime};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
-use crate::app::constans::DISLIKE_BY_USER_ID_TASK;
+use crate::app::constans::{DISLIKE_BY_TID_TASK, DISLIKE_BY_USER_ID_TASK};
 use crate::app::task_pool::{self, TASK_POOL};
 use crate::entity::dtos::{self, PageDTO};
 use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
@@ -32,6 +32,7 @@ pub fn create_router() -> Router {
         axum::routing::put(put_cache_train_result),
     )
     .route("/disklike-by-uid", axum::routing::post(dislike_by_user_id))
+    .route("/disklike-by-tid", axum::routing::post(dislike_by_tid))
     // .route("/", axum::routing::post(add).put(update))
 }
 
@@ -93,6 +94,8 @@ pub async fn put_cache_train_result(
 pub struct DislikeDTO {
     pub train: bool,
 }
+
+/// 对指定用户的视频进行点踩
 #[debug_handler]
 pub async fn dislike_by_user_id(
     Query(DislikeDTO { train }): Query<DislikeDTO>,
@@ -117,4 +120,35 @@ pub async fn dislike_by_user_id(
         R::Ok(())
    }).await?;
    RR::success(String::from("添加任务成功"))
+}
+
+
+/// 对指定分区的 排行榜、热门视频进行点踩
+#[debug_handler]
+pub async fn dislike_by_tid(
+    Json(tid_list):Json<Vec<u32>>
+)->RR<String>{
+
+
+
+
+    task_service::do_task(DISLIKE_BY_TID_TASK.to_string(), async move ||{
+        let mut disk_like_num:u32 = 0;
+
+        let len = tid_list.len();
+        for tid in tid_list{
+            info!("开始对{}分区进行点踩",{tid});
+            disk_like_num+=bili_service::disklike_by_tid(tid).await?;
+            info!("完成对{}分区进行点踩",{tid});
+
+            //休眠20秒
+            ThreadUtil::s5().await;
+        }
+        info!("本次共对{}个分区进行点踩，共点踩：{}个视频",len,disk_like_num);
+
+        R::Ok(())
+    }).await?;
+
+
+    RR::success(String::from("添加任务成功"))
 }

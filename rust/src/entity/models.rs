@@ -1,6 +1,6 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
-use crate::entity::enumeration::AccessType;
+use crate::entity::enumeration::{AccessType, HandleType};
 use crate::entity::enumeration::Classify;
 use crate::entity::enumeration::DictType;
 use crate::entity::enumeration::MediaType;
@@ -137,6 +137,7 @@ pub struct Owner {
     pub face: Option<String>,
 }
 crud!(Owner {}, "owner");
+plus!(Owner{});
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PrepareVideo {
@@ -221,41 +222,33 @@ impl Task{
 pub struct VideoDetail {
     pub id: Option<String>,
     #[serde(default)]
-    pub aid: i64,
-    pub videos: Option<i32>,
+    pub aid: u64,
     pub tid: Option<i64>,
     pub tname: Option<String>,
-    pub copyright: Option<i32>,
     pub pic: Option<String>,
     pub title: Option<String>,
     pub pubdate: Option<i64>,
     pub ctime: Option<i64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
-    pub state: Option<i32>,
     pub duration: Option<i32>,
     pub dynamic: Option<String>,
-    pub cid: Option<i64>,
-    pub season_id: Option<i64>,
     pub first_frame: Option<String>,
     pub pub_location: Option<String>,
     pub bvid: String,
-    pub owner_id: Option<u64>,
+    pub owner_id: Option<String>,
     #[serde(deserialize_with = "bool_or_int_opt", default)]
     pub handle: Option<bool>,
-    pub black_reason: Option<String>,
-    pub thumb_up_reason: Option<String>,
-    #[serde(deserialize_with = "bool_or_int_opt", default)]
-    pub no_cache: Option<bool>,
-    pub up_from_v2: Option<i32>,
+    pub handle_reason: Option<String>,
     pub rcmd_reason: Option<String>,
-    pub handle_type: Option<String>,
+    pub handle_type: Option<HandleType>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
-    #[serde(deserialize_with = "bool_or_int_opt", default)]
-    pub is_deleted: Option<bool>,
+    pub tag_ids: Option<String>,
+
 }
 crud!(VideoDetail {}, "video_detail");
+plus!(VideoDetail{});
 //如果不需要参数，=> 传空
 //与名字没有关系
 impl_select_page!(VideoDetail{select_page() => "`order by created_date desc`"});
@@ -264,7 +257,6 @@ impl_select_page!(VideoDetail{select_page_by_name(tname:&str) =>"
        `where tname like #{tname}`
 "});
 
-impl_select!(VideoDetail{select_by_id(id:i64) => "`where id = #{id} limit 1`"});
 impl_select!(VideoDetail{select_id_tname(id:i64,table_column:&str) => "`where id = #{id} limit 1`"});
 
 impl_select!(

@@ -4,13 +4,13 @@ use crate::entity::enumeration::{AccessType, DictType};
 use crate::utils::segmenter_util;
 use crate::{
     app::response::R,
-    entity::{dtos::VideoDetailTagDTO, models::VideoDetail},
+    entity::{dtos::VideoDetailDTO, models::VideoDetail},
     service::dict_service,
 };
 
 /// 根据视频列表训练黑名单
 pub(crate) async fn train_blacklist_by_video_list(
-    video_detail_list: Vec<VideoDetailTagDTO>,
+    video_detail_list: Vec<VideoDetailDTO>,
 ) -> R<()> {
     let mut title_process = vec![];
     let mut desc_processs = vec![];

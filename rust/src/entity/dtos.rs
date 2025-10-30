@@ -153,7 +153,7 @@ pub struct UserSubmissionVideo {
     pub created: Option<i32>,
     pub length: Option<String>,
     pub video_review: Option<i32>,
-    pub aid: i64,
+    pub aid: u64,
     pub bvid: String,
     pub hide_click: Option<bool>,
     pub is_pay: Option<i32>,
@@ -173,7 +173,7 @@ pub struct UserSubmissionVideo {
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct VideoDetailTagDTO {
+pub struct VideoDetailDTO {
     #[serde(flatten)]
     pub video_detail:VideoDetail,
     pub tags:Option<Vec<Tag>>,

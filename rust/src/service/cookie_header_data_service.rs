@@ -130,7 +130,6 @@ impl GlobalStateHandler<(&str, reqwest::RequestBuilder), reqwest::RequestBuilder
         let (url, mut req) = args;
         let mut hash_map = state.common_header_map.clone();
         for (k, v) in hash_map {
-            info!("init_common_header_map:{}={}", k, v);
             req = req.header(k, v);
         }
         req = req.header(String::from("Host"), data_util::get_host(url));
