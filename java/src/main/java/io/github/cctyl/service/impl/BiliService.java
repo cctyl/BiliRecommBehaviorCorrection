@@ -473,7 +473,7 @@ public class BiliService {
         log.info("开始分区最新视频点踩");
         List<VideoDetail> regionLatestVideo = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
-            List<VideoDetail> curList = biliApi.getRegionLatestVideo(1, tid);
+            List<VideoDetail> curList = biliApi.getRegionLatestVideo(i, tid);
             regionLatestVideo.addAll(curList);
             dislike(regionLatestVideo);
         }
