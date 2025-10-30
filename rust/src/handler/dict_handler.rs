@@ -9,7 +9,7 @@ use rbs::value;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::dtos::{self, PageDTO};
-use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
+use crate::entity::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
 use crate::entity::models::{CookieHeaderData, Dict};
 use crate::service::dict_service;
 use crate::utils::id::generate_id;
@@ -48,6 +48,7 @@ pub struct DictDto {
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
     pub desc: Option<String>,
+    status: DictStatus,
 }
 // dictVo from Dict
 impl From<Dict> for DictDto {
@@ -61,6 +62,7 @@ impl From<Dict> for DictDto {
             created_date: dict.created_date,
             last_modified_date: dict.last_modified_date,
             desc: dict.desc_field,
+           status:dict.status
         }
     }
 }
@@ -76,6 +78,7 @@ impl From<DictDto> for Dict {
             created_date: dto.created_date.or (Some(DateTime::now())),
             last_modified_date: dto.last_modified_date.or (Some(DateTime::now())),
             desc_field: dto.desc,
+            status:dto.status,
         }
     }
 }

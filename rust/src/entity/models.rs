@@ -1,6 +1,6 @@
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
-use crate::entity::enumeration::{AccessType, HandleType};
+use crate::entity::enumeration::{AccessType, DictStatus, HandleType};
 use crate::entity::enumeration::Classify;
 use crate::entity::enumeration::DictType;
 use crate::entity::enumeration::MediaType;
@@ -103,8 +103,11 @@ pub struct Dict {
     pub last_modified_date: Option<DateTime>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
+    pub status:DictStatus
+
 }
 crud!(Dict {}, "dict");
+plus!(Dict {});
 
 impl Dict{
     pub fn new(
@@ -113,6 +116,7 @@ impl Dict{
         dict_type: DictType,
         outer_id: Option<String>,
         desc_field: Option<String>,
+        status: DictStatus,
     ) -> Self {
         Dict {
             id: generate_id(),
@@ -123,6 +127,7 @@ impl Dict{
             desc_field,
             created_date: Some( DateTime::now()),
             last_modified_date: Some( DateTime::now()),
+            status
         }
     }
 }

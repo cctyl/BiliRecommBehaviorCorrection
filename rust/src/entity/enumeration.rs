@@ -86,15 +86,7 @@ pub enum DictType {
      */
     KEYWORD,
 
-    /**
-     * 需要忽略的关键词
-     */
-    IGNORE_KEYWORD,
 
-    /**
-     *  需要忽略的标签
-     */
-    IGNORE_TAG,
 
     /**
      * 停顿词
@@ -120,14 +112,7 @@ pub enum  AccessType  {
 
     OTHER,
 
-    /**
-     * 黑名单未处理缓存
-     */
-    BLACK_CACHE,
-    /**
-     * 白名单未处理缓存
-     */
-    WHITE_CACHE,
+
 
 }
 
@@ -156,4 +141,13 @@ pub enum  HandleType  {
      */
     OTHER
 
+}
+#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize)]
+pub enum  DictStatus  {
+    /// 缓存状态，还没有被正式使用
+    CACHE,
+    /// 忽略状态，这个状态的关键词不能被用来判断视频
+    IGNORE,
+    /// 正常状态，正常用来判断视频信息
+    NORMAL
 }

@@ -1,6 +1,6 @@
 use log::info;
 
-use crate::entity::enumeration::{AccessType, DictType};
+use crate::entity::enumeration::{AccessType, DictStatus, DictType};
 use crate::utils::segmenter_util;
 use crate::{
     app::response::R,
@@ -67,12 +67,12 @@ pub(crate) async fn train_blacklist_by_video_list(
 
 
     //获取需要忽略的黑名单关键词
-    let ignore_keyword = dict_service::find_value_by_dict_type_and_access_type(DictType::IGNORE_KEYWORD, AccessType::BLACK).await?;
-    let ignore_tag_keyword = dict_service::find_value_by_dict_type_and_access_type(DictType::IGNORE_TAG, AccessType::BLACK).await?;
+    let ignore_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(DictType::KEYWORD, AccessType::BLACK).await?;
+    let ignore_tag_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(DictType::TAG, AccessType::BLACK).await?;
 
     //已有的关键词
-    let exist_keyword = dict_service::find_value_by_dict_type_and_access_type(DictType::KEYWORD, AccessType::BLACK).await?;
-    let exist_tag_keyword = dict_service::find_value_by_dict_type_and_access_type(DictType::TAG, AccessType::BLACK).await?;
+    let exist_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(DictType::KEYWORD, AccessType::BLACK).await?;
+    let exist_tag_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(DictType::TAG, AccessType::BLACK).await?;
 
     top_title_word.retain(|s|
         !(ignore_keyword.contains(s) 
@@ -86,7 +86,8 @@ pub(crate) async fn train_blacklist_by_video_list(
         dict_service::batch_add_dict_from_value(
             top_title_word,
             DictType::KEYWORD,
-            AccessType::BLACK_CACHE
+            AccessType::BLACK,
+            DictStatus::CACHE
         ).await?;
 
     }
@@ -103,7 +104,8 @@ pub(crate) async fn train_blacklist_by_video_list(
         dict_service::batch_add_dict_from_value(
             top_desc_word,
             DictType::KEYWORD,
-            AccessType::BLACK_CACHE
+            AccessType::BLACK,
+            DictStatus::CACHE
         ).await?;
 
     }
@@ -120,7 +122,8 @@ pub(crate) async fn train_blacklist_by_video_list(
         dict_service::batch_add_dict_from_value(
             top_tag_name_word,
             DictType::TAG,
-            AccessType::BLACK_CACHE
+            AccessType::BLACK,
+            DictStatus::CACHE
         ).await?;
     }
    

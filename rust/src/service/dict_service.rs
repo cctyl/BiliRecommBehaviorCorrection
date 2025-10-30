@@ -9,6 +9,7 @@ use std::collections::HashSet;
 use tokio::sync::mpsc;
 use tokio::{fs::File, io::AsyncReadExt};
 
+use crate::entity::enumeration::DictStatus;
 use crate::{
     app::{database::CONTEXT, error::HttpError, response::R},
     entity::{
@@ -33,6 +34,7 @@ mod tests {
     use rbatis::{impl_select, rbdc::DateTime};
     use rbs::value;
 
+    use crate::entity::enumeration::DictStatus;
     use crate::{
         app::{database::CONTEXT, error::HttpError, response::R},
         entity::{
@@ -41,7 +43,10 @@ mod tests {
         },
         handler::dict_handler::DictDto,
         service::dict_service::{
-            add_black_user_id, check_is_need_save, exist_by_access_type_and_dict_type_and_value, find_black_user_id, find_by_dict_type_and_access_type, get_black_user_id_set, get_stop_word_list, read_stop_word, update_access_type_and_dict_type_by_ids, update_dict_access_type_by_ids
+            add_black_user_id, check_is_need_save, exist_by_access_type_and_dict_type_and_value,
+            find_black_user_id, find_by_dict_type_and_access_type, get_black_user_id_set,
+            get_stop_word_list, read_stop_word, update_access_type_and_dict_type_by_ids,
+            update_dict_access_type_by_ids,
         },
         utils::id::generate_id,
     };
@@ -54,7 +59,8 @@ mod tests {
         let exist_by_access_type_and_dict_type_and_value =
             exist_by_access_type_and_dict_type_and_value(
                 AccessType::BLACK,
-                DictType::IGNORE_KEYWORD,
+                DictType::KEYWORD,
+                DictStatus::IGNORE,
                 "泰国",
             )
             .await
@@ -102,11 +108,13 @@ mod tests {
     async fn test_update_access_type_and_dict_type_by_ids() {
         crate::init().await;
 
-        let r = update_access_type_and_dict_type_by_ids(
+        let r = super::update_status_by_ids(
             &CONTEXT.rb,
-            AccessType::BLACK,
-            DictType::IGNORE_KEYWORD,
-            &vec![String::from("1"), String::from("2")],
+            DictStatus::IGNORE,
+            &vec![
+                String::from("1892076683722792962"),
+                String::from("1887365665629224962"),
+            ],
         )
         .await
         .unwrap();
@@ -177,7 +185,7 @@ mod tests {
         let initial_count = initial_black_list.len();
 
         //添加黑名单用户ID
-        let result = add_black_user_id(test_user_id,None).await;
+        let result = add_black_user_id(test_user_id, None).await;
         assert!(result.is_ok());
 
         //验证添加成功
@@ -186,7 +194,7 @@ mod tests {
         assert_eq!(updated_black_list.len(), initial_count + 1);
 
         //再次添加相同用户ID，应该不会重复添加
-        let result_again = add_black_user_id(test_user_id,None).await;
+        let result_again = add_black_user_id(test_user_id, None).await;
         assert!(result_again.is_ok());
 
         let final_black_list = get_black_user_id_set().await.unwrap();
@@ -231,7 +239,6 @@ mod tests {
         log::logger().flush();
     }
 
-
     //测试 find_by_dict_type_and_access_type
     #[tokio::test]
     async fn test_find_by_dict_type_and_access_type() {
@@ -242,10 +249,25 @@ mod tests {
             .unwrap();
 
         println!("find_by_dict_type_and_access_type: {:?}", r.len());
-        
+
         log::logger().flush();
     }
 
+    //测试 find_by_dict_type_and_access_type_and_value
+    #[tokio::test]
+    async fn test_new() {
+        crate::init().await;
+        let option = Dict::select_by_id(&CONTEXT.rb, "1887365665629224962".to_string())
+            .await
+            .unwrap();
+
+        println!("new: {:?}", option);
+
+        let string = serde_json::to_string(&option).unwrap();
+        println!("new: {:?}", string);
+
+        log::logger().flush();
+    }
 }
 /**
  * 根据DictType 和 AccessType 获取Dict列表
@@ -280,8 +302,13 @@ pub(crate) async fn add_stop_word(v: Vec<String>) -> R<()> {
     dicts.extend(v);
     let mut words: HashSet<String> = dicts.into_iter().collect();
     let unique_words: Vec<String> = words.into_iter().collect();
-    let keyword_to_dict =
-        keyword_to_dict(unique_words, DictType::STOP_WORDS, AccessType::OTHER, None);
+    let keyword_to_dict = keyword_to_dict(
+        unique_words,
+        DictType::STOP_WORDS,
+        AccessType::OTHER,
+        None,
+        DictStatus::NORMAL,
+    );
     Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
     R::Ok(())
 }
@@ -290,35 +317,35 @@ pub fn keyword_to_dict(
     dict_type: DictType,
     access_type: AccessType,
     outer_id: Option<String>,
+    status: DictStatus,
 ) -> Vec<Dict> {
     value_collection
         .into_iter()
         .map(|s| Dict {
-            access_type: access_type,
-            dict_type: dict_type,
+            access_type,
+            dict_type,
             outer_id: outer_id.clone(),
             value: s,
             id: generate_id(),
             last_modified_date: Some(DateTime::now()),
             created_date: Some(DateTime::now()),
             desc_field: None,
+            status,
         })
         .collect()
 }
 
-
 /// 批量添加词典，输入的是字符串
-pub async fn batch_add_dict_from_value( value_collection: Vec<String>,
+pub async fn batch_add_dict_from_value(
+    value_collection: Vec<String>,
     dict_type: DictType,
     access_type: AccessType,
-)->R<()>{ 
-
-
-
-    let keyword_to_dict = keyword_to_dict(value_collection, dict_type, access_type, None);
+    status: DictStatus,
+) -> R<()> {
+    let keyword_to_dict = keyword_to_dict(value_collection, dict_type, access_type, None, status);
     Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
 
-   R::Ok(())
+    R::Ok(())
 }
 
 /// 根据access_type 和 dict_type 删除数据
@@ -367,14 +394,16 @@ pub(crate) async fn batch_remove_and_update(
 pub async fn exist_by_access_type_and_dict_type_and_value(
     access_type: AccessType,
     dict_type: DictType,
+    status: DictStatus,
     value: &str,
 ) -> R<bool> {
     let dicts = Dict::select_by_map(
         &CONTEXT.rb,
         value! {
-            "dict_type":DictType::IGNORE_KEYWORD,
+            "dict_type":dict_type,
             "access_type":AccessType::BLACK,
-            "value":value
+            "value":value,
+            "status":status
         },
     )
     .await?;
@@ -388,39 +417,15 @@ pub async fn check_is_need_save(
     dict_type: DictType,
     value: &str,
 ) -> R<bool> {
-    let result = if access_type == AccessType::BLACK && dict_type == DictType::KEYWORD {
+    R::Ok(
         exist_by_access_type_and_dict_type_and_value(
-            AccessType::BLACK,
-            DictType::IGNORE_KEYWORD,
+            access_type,
+            dict_type,
+            DictStatus::IGNORE,
             value,
         )
-        .await?
-    } else if access_type == AccessType::BLACK && dict_type == DictType::TAG {
-        exist_by_access_type_and_dict_type_and_value(
-            AccessType::BLACK,
-            DictType::IGNORE_KEYWORD,
-            value,
-        )
-        .await?
-    } else if access_type == AccessType::WHITE && dict_type == DictType::KEYWORD {
-        exist_by_access_type_and_dict_type_and_value(
-            AccessType::WHITE,
-            DictType::IGNORE_KEYWORD,
-            value,
-        )
-        .await?
-    } else if access_type == AccessType::WHITE && dict_type == DictType::TAG {
-        exist_by_access_type_and_dict_type_and_value(
-            AccessType::WHITE,
-            DictType::IGNORE_KEYWORD,
-            value,
-        )
-        .await?
-    } else {
-        true
-    };
-
-    R::Ok(result)
+        .await?,
+    )
 }
 
 /// 新增字典，如果不在忽略名单内则新增
@@ -449,7 +454,7 @@ async fn update_dict_access_type_by_ids(
     impled!()
 }
 #[py_sql(
-    "`update dict set access_type=#{access_type} , dict_type= #{dict_type} where id in (`
+    "`update dict set access_type=#{access_type} , dict_type= #{dict_type}   where id in (`
     trim ',': for _,item in ids:
         #{item},
     `)`"
@@ -463,6 +468,20 @@ async fn update_access_type_and_dict_type_by_ids(
     impled!()
 }
 
+#[py_sql(
+    "`update dict set status=#{status}  where id in (`
+    trim ',': for _,item in ids:
+        #{item},
+    `)`"
+)]
+async fn update_status_by_ids(
+    rb: &RBatis,
+    status: DictStatus,
+    ids: &[String],
+) -> Result<ExecResult, rbatis::Error> {
+    impled!()
+}
+
 /// 从训练的缓存中添加黑名单关键词
 pub(crate) async fn add_balck_dict_from_cache_by_id(selected_id: Vec<String>) -> R<()> {
     update_dict_access_type_by_ids(&CONTEXT.rb, AccessType::BLACK, &selected_id).await?;
@@ -470,15 +489,22 @@ pub(crate) async fn add_balck_dict_from_cache_by_id(selected_id: Vec<String>) ->
 }
 
 /// 添加一个黑名单用户id
-pub(crate) async fn add_black_user_id(user_id: &str,desc:Option<String>) -> R<()> {
+pub(crate) async fn add_black_user_id(user_id: &str, desc: Option<String>) -> R<()> {
     let balck_user_id_set = get_black_user_id_set().await?;
 
     let mid = user_id.to_string();
     if !balck_user_id_set.contains(&mid) {
-        let dict = Dict::new(mid, AccessType::BLACK, DictType::MID, None, desc);
+        let dict = Dict::new(
+            mid,
+            AccessType::BLACK,
+            DictType::MID,
+            None,
+            desc,
+            DictStatus::NORMAL,
+        );
         Dict::insert(&CONTEXT.rb, &dict).await?;
-    }else {
-        info!("用户{}已经在黑名单中",user_id);
+    } else {
+        info!("用户{}已经在黑名单中", user_id);
     }
 
     R::Ok(())
@@ -521,17 +547,19 @@ pub async fn find_by_dict_type_and_access_type(
     )
 }
 
-/// 根据dict_type 和 access_type 查询字典值
-pub async fn find_value_by_dict_type_and_access_type(
+/// 根据dict_type 和 access_type 和 status 查询字典值
+pub async fn find_value_by_dict_type_and_access_type_and_status(
     dict_type: DictType,
     access_type: AccessType,
+    status: DictStatus,
 ) -> R<Vec<String>> {
     R::Ok(
         Dict::select_by_map(
             &CONTEXT.rb,
             value! {
                     "dict_type":dict_type,
-                    "access_type":access_type
+                    "access_type":access_type,
+                    "status":status
             },
         )
         .await?
@@ -541,8 +569,35 @@ pub async fn find_value_by_dict_type_and_access_type(
     )
 }
 
+/// 根据dict_type 和 access_type 查询字典值
+pub async fn find_normal_value_by_dict_type_and_access_type(
+    dict_type: DictType,
+    access_type: AccessType,
+) -> R<Vec<String>> {
+    R::Ok(
+        find_value_by_dict_type_and_access_type_and_status(
+            dict_type,
+            access_type,
+            DictStatus::NORMAL,
+        )
+        .await?,
+    )
+}
 
-
+/// 根据dict_type 和 access_type 查询忽略字典值
+pub async fn find_ignore_value_by_dict_type_and_access_type(
+    dict_type: DictType,
+    access_type: AccessType,
+) -> R<Vec<String>> {
+    R::Ok(
+        find_value_by_dict_type_and_access_type_and_status(
+            dict_type,
+            access_type,
+            DictStatus::NORMAL,
+        )
+        .await?,
+    )
+}
 
 /// 查询停顿词列表
 pub(crate) async fn get_stop_word_list() -> R<Vec<String>> {
@@ -552,13 +607,11 @@ pub(crate) async fn get_stop_word_list() -> R<Vec<String>> {
         items = read_stop_word().await?;
         save_stop_word(items.clone()).await?;
     } else {
-        items =  find_by_dict_type_and_access_type(
-            DictType::STOP_WORDS,
-            AccessType::OTHER,
-        ).await?
-        .into_iter()
-        .map(|d| d.value)
-        .collect();
+        items = find_by_dict_type_and_access_type(DictType::STOP_WORDS, AccessType::OTHER)
+            .await?
+            .into_iter()
+            .map(|d| d.value)
+            .collect();
     }
 
     R::Ok(items)
@@ -579,9 +632,6 @@ pub async fn save_stop_word(items: Vec<String>) -> R<()> {
     .map(|d| d.value)
     .collect::<HashSet<String>>();
 
-    println!("传入的items:{}", items.len());
-    println!("已存在的：{}", exists_word.len());
-
     let collect: Vec<String> = items
         .into_iter()
         .filter(|i| !exists_word.contains(i))
@@ -592,8 +642,13 @@ pub async fn save_stop_word(items: Vec<String>) -> R<()> {
     println!("过滤后的：{}", collect.len());
 
     if !collect.is_empty() {
-        let keyword_to_dict =
-            keyword_to_dict(collect, DictType::STOP_WORDS, AccessType::OTHER, None);
+        let keyword_to_dict = keyword_to_dict(
+            collect,
+            DictType::STOP_WORDS,
+            AccessType::OTHER,
+            None,
+            DictStatus::NORMAL,
+        );
         Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
     }
 

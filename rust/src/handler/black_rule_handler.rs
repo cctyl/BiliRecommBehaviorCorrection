@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::app::constans::{DISLIKE_BY_TID_TASK, DISLIKE_BY_USER_ID_TASK};
 use crate::app::task_pool::{self, TASK_POOL};
 use crate::entity::dtos::{self, PageDTO};
-use crate::entity::enumeration::{AccessType, Classify, DictType, MediaType};
+use crate::entity::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
 use crate::entity::models::{CookieHeaderData, Dict, Task};
 use crate::service::{bili_service, dict_service, task_service};
 use crate::utils::id::generate_id;
@@ -61,10 +61,9 @@ pub async fn put_cache_train_result(
 
         if !discarded_id.is_empty() {
             //把缓存改为忽略的关键词
-            dict_service::update_access_type_and_dict_type_by_ids(
+            dict_service::update_status_by_ids(
                 &CONTEXT.rb,
-                AccessType::BLACK,
-                DictType::IGNORE_KEYWORD,
+                DictStatus::IGNORE,
                 &discarded_id,
             )
             .await?;
@@ -77,10 +76,9 @@ pub async fn put_cache_train_result(
 
         if !discarded_id.is_empty() {
             //把缓存改为忽略的关键词
-            dict_service::update_access_type_and_dict_type_by_ids(
+            dict_service::update_status_by_ids(
                 &CONTEXT.rb,
-                AccessType::BLACK,
-                DictType::IGNORE_TAG,
+                DictStatus::IGNORE,
                 &discarded_id,
             )
             .await?;

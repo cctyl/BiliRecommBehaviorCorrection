@@ -146,3 +146,58 @@ CREATE INDEX "main"."idx_video_detail_handle_type"
 
 
 drop table _video_detail_old_20251029;
+
+
+
+
+
+
+
+
+-- 重命名旧表
+ALTER TABLE "dict" RENAME TO "_dict_old_20251030";
+
+-- 创建新表，status 字段设为 NOT NULL
+CREATE TABLE "dict" (
+                        "id" CHAR(30) NOT NULL,
+                        "value" VARCHAR(255) NOT NULL,
+                        "access_type" VARCHAR(50) NOT NULL,
+                        "dict_type" VARCHAR(50) NOT NULL,
+                        "outer_id" VARCHAR(60),
+                        "created_date" DATE,
+                        "last_modified_date" DATE,
+                        "desc" VARCHAR(50),
+                        "status" TEXT NOT NULL,  -- 明确设置为非空
+                        CONSTRAINT "pk_dict" PRIMARY KEY ("id")
+);
+
+-- 插入数据，并按规则转换字段
+INSERT INTO "dict" (
+    "id", "value", "access_type", "dict_type", "outer_id",
+    "created_date", "last_modified_date", "desc", "status"
+)
+SELECT
+    "id",
+    "value",
+    CASE
+        WHEN "access_type" = 'BLACK_CACHE' THEN 'BLACK'
+        WHEN "access_type" = 'WHITE_CACHE' THEN 'WHITE'
+        ELSE "access_type"
+        END AS "access_type",
+    CASE
+        WHEN "dict_type" = 'IGNORE_KEYWORD' THEN 'KEYWORD'
+        WHEN "dict_type" = 'IGNORE_TAG' THEN 'TAG'
+        ELSE "dict_type"
+        END AS "dict_type",
+    "outer_id",
+    "created_date",
+    "last_modified_date",
+    "desc",
+    CASE
+        WHEN "access_type" IN ('BLACK_CACHE', 'WHITE_CACHE') THEN 'CACHE'
+        WHEN "dict_type" IN ('IGNORE_KEYWORD', 'IGNORE_TAG') THEN 'IGNORE'
+        ELSE 'NORMAL'
+        END AS "status"
+FROM "_dict_old_20251030";
+
+drop table "_dict_old_20251030";
