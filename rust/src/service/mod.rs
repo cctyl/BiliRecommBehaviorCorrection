@@ -7,3 +7,4 @@ pub mod black_rule_service;
 pub mod video_detail_service;
 pub mod owner_service;
 pub mod tag_service;
+pub mod associate_rule_service;

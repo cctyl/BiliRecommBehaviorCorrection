@@ -201,3 +201,21 @@ SELECT
 FROM "_dict_old_20251030";
 
 drop table "_dict_old_20251030";
+
+
+
+
+CREATE TABLE "associate_rule" (
+                                  "id" char(30) NOT NULL,
+                                  "info" varchar(100),
+                                  "created_date" DATE,
+                                  "last_modified_date" DATE,
+                                  "access_type" TEXT NOT NULL,
+                                  CONSTRAINT "pk_relate_rule" PRIMARY KEY ("id")
+);
+
+
+INSERT INTO "associate_rule" ("id", "info", "created_date", "last_modified_date", "access_type")
+SELECT "id", "info", "created_date", "last_modified_date", 'WHITE'
+FROM "white_list_rule"
+WHERE "is_deleted" = 0;

@@ -22,6 +22,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::database::CONTEXT;
 
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssociateRule {
+    pub id: String,
+    pub created_date: Option<DateTime>,
+    pub last_modified_date: Option<DateTime>,
+    pub access_type : AccessType
+}
+plus!(AssociateRule{});
+crud!(AssociateRule{});
+
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub id: String,
