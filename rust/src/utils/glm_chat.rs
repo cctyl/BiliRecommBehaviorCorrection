@@ -150,6 +150,27 @@ impl ChatGlm {
         Ok(Self::new(config))
     }
 
+    /// 从核心配置文件中读取数据
+    pub fn from_env_var() -> Result<Self, Box<dyn std::error::Error>> {
+        let mut config = Config::default();
+
+        config.api_key = std::env::var("api_key").expect("必须提供智谱AI API密钥");
+        config.base_url = std::env::var("base_url")
+            .unwrap_or("https://open.bigmodel.cn/api/paas/v4/chat/completions".to_string());
+        config.model = std::env::var("model").unwrap_or("glm-4-flash".to_string());
+        config.temperature = std::env::var("temperature")
+            .map(|s| s.parse().unwrap_or(0.7))
+            .unwrap_or(0.7);
+        config.max_tokens = std::env::var("max_tokens")
+            .map(|s| s.parse().unwrap_or(4096))
+            .unwrap_or(4096);
+        config.system_prompt = std::env::var("system_prompt").unwrap_or(
+            "你是一个专业、友好、 helpful的AI助手。请用简洁明了的语言回答用户问题。".to_string(),
+        );
+
+        Ok(Self::new(config))
+    }
+
     /// 发送聊天消息并获取回复
     pub async fn chat(&self, question: &str) -> Result<String, Box<dyn std::error::Error>> {
         let messages = vec![
@@ -336,5 +357,41 @@ mod tests {
         println!("💡 记得在config.txt中设置你的实际API密钥");
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_from_std_var() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        match ChatGlm::from_env_var() {
+            Ok(chat_glm) => {
+                let question = r#"
+                【塞尔达旷野之息】
+                "#;
+
+                println!("\n❓ 问题: {}", question);
+                println!("🤔 AI思考中...");
+
+                match chat_glm.chat(question).await {
+                    Ok(response) => {
+                        println!("🤖 AI回复: {}", response);
+                    }
+                    Err(e) => {
+                        println!("❌ 错误: {}", e);
+                    }
+                }
+                println!("---");
+            }
+            Err(e) => {
+                println!("❌ 无法加载配置文件: {}", e);
+                println!("💡 提示: 请确保config.txt文件存在且格式正确");
+            }
+        }
+
+        //最后一句必须是这个
+        log::logger().flush();
     }
 }

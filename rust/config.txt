@@ -22,9 +22,8 @@ SECRET=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9s
 # 必须设置：你的智谱AI API密钥
 api_key=xxxxxxxxxxxxxxxxx
 
-# 可选配置项
 base_url=https://open.bigmodel.cn/api/paas/v4/chat/completions
 model=glm-4-flash
 temperature=0.7
 max_tokens=4096
-system_prompt=你是一个专业、友好、有帮助的AI助手。请用简洁明了的语言回答用户的问题。
+system_prompt=判断我提供的文字是否符合黑名单或白名单规则，如果符合黑名单，则返回“拒绝”，如果符合白名单，则返回“通过”，如果既不符合黑名单，也不符合白名单，则返回“无法判断”
