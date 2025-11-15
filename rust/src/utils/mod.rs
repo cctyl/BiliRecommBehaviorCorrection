@@ -7,3 +7,4 @@ pub mod data_util;
 mod test_example;
 pub mod thread_util;
 pub mod segmenter_util;
+pub mod glm_chat;

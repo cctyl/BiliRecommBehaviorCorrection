@@ -179,3 +179,4 @@ target
 *.db
 *.db-shm
 *.db-wal
+config.dev.txt

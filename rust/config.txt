@@ -15,3 +15,16 @@ PORT=9000
 SECRET=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9s
 
 
+
+
+###################################glm Ai对话 相关配置############################################ 
+
+# 必须设置：你的智谱AI API密钥
+api_key=xxxxxxxxxxxxxxxxx
+
+# 可选配置项
+base_url=https://open.bigmodel.cn/api/paas/v4/chat/completions
+model=glm-4-flash
+temperature=0.7
+max_tokens=4096
+system_prompt=你是一个专业、友好、有帮助的AI助手。请用简洁明了的语言回答用户的问题。
