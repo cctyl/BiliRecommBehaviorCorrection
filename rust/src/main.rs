@@ -12,14 +12,14 @@ mod handler;
 mod service;
 mod single_test;
 mod utils;
-use crate::app::database::{self, CONTEXT};
+use crate::app::database::{self, CC};
 use crate::app::error::HttpError;
 use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
 use crate::entity::enumeration::{Classify, MediaType};
 use crate::utils::migration::start_migration;
 
-use app::config::Config;
+use app::config::ServerConfig;
 use axum::{Extension, Router, extract::DefaultBodyLimit};
 use log::{error, info};
 use rbatis::rbdc::DateTime;
@@ -43,10 +43,12 @@ pub async fn init() -> u16 {
     crate::utils::log::init_log();
 
     //全局变量的初始化
-    CONTEXT.init().await;
+    CC.init().await 
+        .expect("全局变量初始化失败!");
+  
 
     //端口
-    let port = CONTEXT.config.port;
+    let port = CC.config.port;
 
     init_common_header_map().await.unwrap();
     port

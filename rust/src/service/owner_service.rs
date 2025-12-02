@@ -1,4 +1,4 @@
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 use crate::app::response::R;
 use crate::entity::models::Owner;
 use crate::utils::id;
@@ -53,12 +53,12 @@ mod tests{
 }
 /// 通过mid查找或创建up主信息，不存在则创建一个
 pub(crate) async fn find_or_create_by_mid(mut owner:  Owner) -> R<Owner> {
-    let option = Owner::select_one_by_condition(&CONTEXT.rb, value! {"mid":&owner.mid}).await?;
+    let option = Owner::select_one_by_condition(&CC.rb, value! {"mid":&owner.mid}).await?;
 
     let o = match option {
         None => {
             owner.id = Some(id::generate_id());
-            Owner::insert(&CONTEXT.rb, &owner).await?;
+            Owner::insert(&CC.rb, &owner).await?;
             owner
         }
         Some(o) => o,

@@ -1,7 +1,7 @@
 use log::{error, info};
 use serde::Serialize;
 #[derive(Debug, Clone)]
-pub struct Config {
+pub struct ServerConfig {
     pub secret: String,
     pub port: u16,
     pub db_url: String,
@@ -13,8 +13,8 @@ pub struct QrCodeDto {
     pub addr: String,
 }
 
-impl Config {
-    pub fn new() -> Config {
+impl ServerConfig {
+    pub fn new() -> ServerConfig {
 
 
         // 先尝试加载开发配置，如果不存在则加载默认配置
@@ -31,7 +31,7 @@ impl Config {
         let db_url = std::env::var("DB_URL").expect("必须提供数据库链接");
         
       
-        Config {
+        ServerConfig {
             secret,
             port,
             db_url,

@@ -1,4 +1,4 @@
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 use crate::app::response::R;
 use crate::entity::dtos::VideoDetailDTO;
 use crate::entity::enumeration::HandleType;
@@ -83,7 +83,7 @@ mod tests {
 /// 根据aid查询
 pub(crate) async fn find_by_aid(aid: u64) -> R<Option<VideoDetail>> {
     let v = VideoDetail::select_one_by_condition(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "aid":aid
         },
@@ -105,7 +105,7 @@ pub(crate) async fn record_handle_video(
     if video.video_detail.id.is_none() {
         save_video_detail(video).await?;
     } else {
-        VideoDetail::update_by_id(&CONTEXT.rb, &video.video_detail).await?;
+        VideoDetail::update_by_id(&CC.rb, &video.video_detail).await?;
     }
 
     R::Ok(())
@@ -114,7 +114,7 @@ pub(crate) async fn record_handle_video(
 ///保存视频详情，包括关联数据
 async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
     let exist = VideoDetail::select_one_by_condition(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "aid": dto.video_detail.aid
         },
@@ -122,7 +122,7 @@ async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
     .await?;
     if let Some(db) = exist {
         dto.video_detail.id = db.id;
-        VideoDetail::update_by_id(&CONTEXT.rb, &dto.video_detail).await?;
+        VideoDetail::update_by_id(&CC.rb, &dto.video_detail).await?;
         info!("aid={}的视频已存在，只更新视频信息", dto.video_detail.aid);
         return R::Ok(());
     }
@@ -152,7 +152,7 @@ async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
 
     //1.保存本体
     dto.video_detail.id = Some(id::generate_id());
-    VideoDetail::insert(&CONTEXT.rb, &dto.video_detail)
+    VideoDetail::insert(&CC.rb, &dto.video_detail)
         .await
         .context("保存本体出错")?;
 

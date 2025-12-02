@@ -11,7 +11,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::entity::enumeration::DictStatus;
 use crate::{
-    app::{database::CONTEXT, error::HttpError, response::R},
+    app::{database::CC, error::HttpError, response::R},
     entity::{
         enumeration::{AccessType, DictType},
         models::Dict,
@@ -36,7 +36,7 @@ mod tests {
 
     use crate::entity::enumeration::DictStatus;
     use crate::{
-        app::{database::CONTEXT, error::HttpError, response::R},
+        app::{database::CC, error::HttpError, response::R},
         entity::{
             enumeration::{AccessType, DictType},
             models::Dict,
@@ -93,7 +93,7 @@ mod tests {
         crate::init().await;
 
         let r = update_dict_access_type_by_ids(
-            &CONTEXT.rb,
+            &CC.rb,
             AccessType::BLACK,
             &vec![String::from("1"), String::from("2")],
         )
@@ -109,7 +109,7 @@ mod tests {
         crate::init().await;
 
         let r = super::update_status_by_ids(
-            &CONTEXT.rb,
+            &CC.rb,
             DictStatus::IGNORE,
             &vec![
                 String::from("1892076683722792962"),
@@ -257,7 +257,7 @@ mod tests {
     #[tokio::test]
     async fn test_new() {
         crate::init().await;
-        let option = Dict::select_by_id(&CONTEXT.rb, "1887365665629224962".to_string())
+        let option = Dict::select_by_id(&CC.rb, "1887365665629224962".to_string())
             .await
             .unwrap();
 
@@ -277,7 +277,7 @@ pub(crate) async fn get_list_by_dict_type_and_access_type(
     dict_type: DictType,
 ) -> R<Vec<Dict>> {
     Dict::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {"dict_type":dict_type,"access_type":access_type},
     )
     .await
@@ -287,7 +287,7 @@ pub(crate) async fn get_list_by_dict_type_and_access_type(
 /// 添加停顿词
 pub(crate) async fn add_stop_word(v: Vec<String>) -> R<()> {
     let mut dicts = Dict::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "value":&v,
              "access_type":AccessType::OTHER,
@@ -309,7 +309,7 @@ pub(crate) async fn add_stop_word(v: Vec<String>) -> R<()> {
         None,
         DictStatus::NORMAL,
     );
-    Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
+    Dict::insert_batch(&CC.rb, &keyword_to_dict, 100).await?;
     R::Ok(())
 }
 pub fn keyword_to_dict(
@@ -343,7 +343,7 @@ pub async fn batch_add_dict_from_value(
     status: DictStatus,
 ) -> R<()> {
     let keyword_to_dict = keyword_to_dict(value_collection, dict_type, access_type, None, status);
-    Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
+    Dict::insert_batch(&CC.rb, &keyword_to_dict, 100).await?;
 
     R::Ok(())
 }
@@ -354,7 +354,7 @@ pub async fn remove_by_access_type_and_dict_type(
     dict_type: DictType,
 ) -> R<()> {
     Dict::delete_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "access_type":access_type,
             "dict_type":dict_type,
@@ -385,7 +385,7 @@ pub(crate) async fn batch_remove_and_update(
         .map(|mut d| d.into())
         .collect::<Vec<Dict>>();
 
-    Dict::insert_batch(&CONTEXT.rb, &collect, 100).await?;
+    Dict::insert_batch(&CC.rb, &collect, 100).await?;
 
     R::Ok(dto)
 }
@@ -398,7 +398,7 @@ pub async fn exist_by_access_type_and_dict_type_and_value(
     value: &str,
 ) -> R<bool> {
     let dicts = Dict::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "dict_type":dict_type,
             "access_type":AccessType::BLACK,
@@ -435,7 +435,7 @@ pub(crate) async fn add_dict(table: Dict) -> R<bool> {
 
     let check_is_need_save = check_is_need_save(access_type, dict_type, &table.value).await?;
     if check_is_need_save {
-        Dict::insert(&CONTEXT.rb, &table).await?;
+        Dict::insert(&CC.rb, &table).await?;
     }
     R::Ok(check_is_need_save)
 }
@@ -484,7 +484,7 @@ async fn update_status_by_ids(
 
 /// 从训练的缓存中添加黑名单关键词
 pub(crate) async fn add_balck_dict_from_cache_by_id(selected_id: Vec<String>) -> R<()> {
-    update_dict_access_type_by_ids(&CONTEXT.rb, AccessType::BLACK, &selected_id).await?;
+    update_dict_access_type_by_ids(&CC.rb, AccessType::BLACK, &selected_id).await?;
     R::Ok(())
 }
 
@@ -502,7 +502,7 @@ pub(crate) async fn add_black_user_id(user_id: &str, desc: Option<String>) -> R<
             desc,
             DictStatus::NORMAL,
         );
-        Dict::insert(&CONTEXT.rb, &dict).await?;
+        Dict::insert(&CC.rb, &dict).await?;
     } else {
         info!("用户{}已经在黑名单中", user_id);
     }
@@ -537,7 +537,7 @@ pub async fn find_by_dict_type_and_access_type(
 ) -> R<Vec<Dict>> {
     R::Ok(
         Dict::select_by_map(
-            &CONTEXT.rb,
+            &CC.rb,
             value! {
                     "dict_type":dict_type,
                     "access_type":access_type
@@ -555,7 +555,7 @@ pub async fn find_value_by_dict_type_and_access_type_and_status(
 ) -> R<Vec<String>> {
     R::Ok(
         Dict::select_by_map(
-            &CONTEXT.rb,
+            &CC.rb,
             value! {
                     "dict_type":dict_type,
                     "access_type":access_type,
@@ -620,7 +620,7 @@ pub(crate) async fn get_stop_word_list() -> R<Vec<String>> {
 /// 保存停顿词,去重
 pub async fn save_stop_word(items: Vec<String>) -> R<()> {
     let exists_word = Dict::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
             "dict_type":DictType::STOP_WORDS,
             "access_type":AccessType::OTHER,
@@ -649,7 +649,7 @@ pub async fn save_stop_word(items: Vec<String>) -> R<()> {
             None,
             DictStatus::NORMAL,
         );
-        Dict::insert_batch(&CONTEXT.rb, &keyword_to_dict, 100).await?;
+        Dict::insert_batch(&CC.rb, &keyword_to_dict, 100).await?;
     }
 
     R::Ok(())

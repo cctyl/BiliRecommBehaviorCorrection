@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests{
-    use crate::app::database::CONTEXT;
+    use crate::app::database::CC;
     use crate::entity::models::AssociateRule;
 
     #[tokio::test]
@@ -30,7 +30,7 @@ mod tests{
 
 
         //在这中间编写测试代码
-        let vec = AssociateRule::select_all(&CONTEXT.rb).await.unwrap();
+        let vec = AssociateRule::select_all(&CC.rb).await.unwrap();
 
         println!("{:#?}", vec);
 

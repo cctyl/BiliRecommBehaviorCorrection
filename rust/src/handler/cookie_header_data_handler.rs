@@ -13,7 +13,7 @@ use crate::entity::models::CookieHeaderData;
 use crate::utils::id::generate_id;
 use crate::{
     api::bili, app::{
-        database::CONTEXT,
+        database::CC,
         response::{OkRespExt, RR, *},
     }, service::{ cookie_header_data_service}
 };
@@ -61,7 +61,7 @@ impl From<CookieHeaderDataAddDTO> for CookieHeaderData {
 pub async fn update(Json(param):Json<CookieHeaderDataAddDTO>)->RR<CookieHeaderData>{
     let table: CookieHeaderData = param.into();
 
-    let result = CookieHeaderData::update_by_map(&CONTEXT.rb, &table, value! {"id":table.id.clone()}).await?;
+    let result = CookieHeaderData::update_by_map(&CC.rb, &table, value! {"id":table.id.clone()}).await?;
     
     RR::success(table)
 }
@@ -75,7 +75,7 @@ pub async fn add(Json(param):Json<CookieHeaderDataAddDTO>)->RR<CookieHeaderData>
 
     let table: CookieHeaderData = param.into();
 
-    let result = CookieHeaderData::insert(&CONTEXT.rb, &table).await?;
+    let result = CookieHeaderData::insert(&CC.rb, &table).await?;
     
     RR::success(table)
 }
@@ -91,7 +91,7 @@ pub async fn del(Path(param):Path<String>)->RR<()>{
     if  param.is_empty() {
         RR::fail("id 不能为空")
     }else {
-        CookieHeaderData::delete_by_map( &CONTEXT.rb, value!{"id":param}).await?;
+        CookieHeaderData::delete_by_map( &CC.rb, value!{"id":param}).await?;
         RR::success(())
     }
 
@@ -131,7 +131,7 @@ pub async fn get_list(Path((page,limit)):Path<(u64,u64)>)->RR<PageDTO<CookieHead
 #[debug_handler]
 pub async fn get_by_id(Path(id):Path<String>)->RR<CookieHeaderDataListDTO>{
 
-    let cookie_header_data = CookieHeaderData::select_by_map(&CONTEXT.rb, value!{"id":id}).await?.pop();
+    let cookie_header_data = CookieHeaderData::select_by_map(&CC.rb, value!{"id":id}).await?.pop();
     if cookie_header_data.is_none(){
         return RR::fail("数据不存在");
     }else {

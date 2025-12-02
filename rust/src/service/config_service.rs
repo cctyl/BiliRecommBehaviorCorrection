@@ -5,7 +5,7 @@ use rbs::value;
 use crate::{
     app::{
         constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
-        database::CONTEXT,
+        database::CC,
         response::R,
     },
     entity::{dtos::ConfigAddUpdateDTO, models::Config},
@@ -15,7 +15,7 @@ use crate::{
  * 删除配置项
  */
 pub async fn del_by_name(name: &str) -> R<()> {
-    Config::delete_by_map(&CONTEXT.rb, value! {"name":name}).await?;
+    Config::delete_by_map(&CC.rb, value! {"name":name}).await?;
     R::Ok(())
 }
 
@@ -57,7 +57,7 @@ pub async fn add_or_update_config(
         if let Some(expire_second) = expire_second {
             r.expire_second = Some(expire_second);
         }
-        Config::update_by_map(&CONTEXT.rb, &r, value! {"id":&r.id}).await?;
+        Config::update_by_map(&CC.rb, &r, value! {"id":&r.id}).await?;
     } else {
         r = Config::default();
         r.name = config_name.to_string();
@@ -65,7 +65,7 @@ pub async fn add_or_update_config(
         if let Some(expire_second) = expire_second {
             r.expire_second = Some(expire_second);
         }
-        Config::insert(&CONTEXT.rb, &r).await?;
+        Config::insert(&CC.rb, &r).await?;
     }
 
     R::Ok(r)
@@ -76,7 +76,7 @@ pub async fn add_or_update_config(
  * 如果超时则删除配置项
  */
 pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
-    let config = Config::select_by_name(&CONTEXT.rb, "*", name).await?;
+    let config = Config::select_column_by_name(&CC.rb, "*", name).await?;
 
     if let Some(config) = config.as_ref() {
         let expire_second = config.expire_second.unwrap_or(-1) as i64;
@@ -88,7 +88,7 @@ pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
                 //超时，删除这个配置
                 if r {
                     info!("已超时，删除配置：{}", config.name);
-                    Config::delete_by_map(&CONTEXT.rb, value! {"id":&config.id}).await?;
+                    Config::delete_by_map(&CC.rb, value! {"id":&config.id}).await?;
 
                     return R::Ok(None);
                 }
@@ -112,7 +112,7 @@ pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
             let mut config_db = Config::default();
             config_db.name = config.name;
             config_db.value = Some(config.value);
-            Config::insert(&CONTEXT.rb, &config_db).await?;
+            Config::insert(&CC.rb, &config_db).await?;
         } else {
             let config_db = Config {
                 id: config.id.unwrap(),
@@ -124,7 +124,7 @@ pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
             };
 
             //修改
-            Config::update_by_map(&CONTEXT.rb, &config_db, value! {"id":&config_db.id}).await?;
+            Config::update_by_map(&CC.rb, &config_db, value! {"id":&config_db.id}).await?;
         }
     }
 
@@ -137,7 +137,7 @@ mod tests {
     use rbs::value;
 
     use crate::app::constans::BILI_ACCESS_KEY;
-    use crate::{app::database::CONTEXT, entity::models::Config};
+    use crate::{app::database::CC, entity::models::Config};
 
     use crate::service::config_service::*;
 
@@ -274,7 +274,7 @@ pub(crate) async fn is_first_use() -> R<bool> {
         let mut config = Config::default();
         config.name = FIRST_USE.to_string();
         config.value = Some("false".to_string());
-        Config::insert(&CONTEXT.rb, &config).await?;
+        Config::insert(&CC.rb, &config).await?;
 
         return R::Ok(true)
     }else{

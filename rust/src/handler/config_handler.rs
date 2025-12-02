@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::{
     api::bili, app::{
-        database::CONTEXT,
+        database::CC,
         response::{OkRespExt, RR, *},
     }, entity::{dtos::ConfigAddUpdateDTO, models::Config}, service::{config_service, cookie_header_data_service}
 };
@@ -134,7 +134,7 @@ async fn get_tv_qr_code() -> RR<String> {
  */
 #[debug_handler]
 async fn get_standard_config_info() -> RR<Vec<Config>> {
-    let select_all: Vec<Config> = Config::select_all(&CONTEXT.rb).await?;
+    let select_all: Vec<Config> = Config::select_all(&CC.rb).await?;
 
     RR::success(select_all)
 }

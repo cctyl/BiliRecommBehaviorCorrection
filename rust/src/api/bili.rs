@@ -4,7 +4,7 @@ use std::io::Write;
 use std::sync::{LazyLock, Mutex};
 
 use crate::api::bili;
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
@@ -412,7 +412,7 @@ pub async fn get_access_key(refresh: bool) -> R<String> {
     // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::BILI_ACCESS_KEY.to_string()));
     // let config_result = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
     let mut config_result: Vec<Config> = Config::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {"name":constans::BILI_ACCESS_KEY.to_string()},
     )
     .await?;
@@ -467,7 +467,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
         // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
         // let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
         let mut existing_config =
-            Config::select_by_map(&CONTEXT.rb, value! {"name":constans::MID_KEY.to_string()})
+            Config::select_by_map(&CC.rb, value! {"name":constans::MID_KEY.to_string()})
                 .await?;
 
         if existing_config.is_empty() {
@@ -480,7 +480,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
                 created_date: Some(rbatis::rbdc::types::DateTime::now()),
                 last_modified_date: Some(rbatis::rbdc::types::DateTime::now()),
             };
-            Config::insert(&CONTEXT.rb, &new_config).await?;
+            Config::insert(&CC.rb, &new_config).await?;
         } else {
             // 更新现有的mid配置
             let mut config = existing_config.pop().unwrap();
@@ -491,7 +491,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             // let mut update_where = ValueMap::new();
             // update_where.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
             // Config::update_by_map(&CONTEXT.rb, &config, rbs::Value::Map(update_where)).await?;
-            Config::update_by_map(&CONTEXT.rb, &config, value! {"id":&config.id}).await?;
+            Config::update_by_map(&CC.rb, &config, value! {"id":&config.id}).await?;
             info!("更新mid: {}", mid);
         }
     }

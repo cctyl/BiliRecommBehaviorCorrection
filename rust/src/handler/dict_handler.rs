@@ -16,7 +16,7 @@ use crate::utils::id::generate_id;
 use crate::{
     api::bili,
     app::{
-        database::CONTEXT,
+        database::CC,
         response::{OkRespExt, RR, *},
     },
     service::cookie_header_data_service,
@@ -120,7 +120,7 @@ pub async fn update(Json(dto): Json<DictDto>) -> RR<()> {
         RR::fail("id 不能为空")
     } else {
         let table: Dict = dto.into();
-        Dict::update_by_map(&CONTEXT.rb, &table, value! {"id":table.id.clone()}).await?;
+        Dict::update_by_map(&CC.rb, &table, value! {"id":table.id.clone()}).await?;
         RR::success(())
     }
 }
@@ -136,7 +136,7 @@ pub async fn add(Json(dto): Json<DictDto>) -> RR<bool> {
 /// 删除数据
 #[debug_handler]
 pub async fn del(Path(id): Path<String>) -> RR<()> {
-    Dict::delete_by_map(&CONTEXT.rb, value! {"id":id}).await?;
+    Dict::delete_by_map(&CC.rb, value! {"id":id}).await?;
     RR::success(())
 }
 
@@ -145,7 +145,7 @@ pub async fn del(Path(id): Path<String>) -> RR<()> {
  */
 #[debug_handler]
 pub async fn get_by_id(Path(id): Path<String>) -> RR<DictDto> {
-    let cookie_header_data = Dict::select_by_map(&CONTEXT.rb, value! {"id":id})
+    let cookie_header_data = Dict::select_by_map(&CC.rb, value! {"id":id})
         .await?
         .pop();
     if cookie_header_data.is_none() {

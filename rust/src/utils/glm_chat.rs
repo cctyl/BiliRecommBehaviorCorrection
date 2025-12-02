@@ -7,6 +7,12 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::LazyLock;
+
+use crate::app::database::CC;
+use crate::app::error::HttpError::*;
+use crate::app::response::R;
+use crate::utils::http;
 
 /// 消息角色枚举
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,7 +76,8 @@ struct ChatResponse {
 
 /// 配置结构
 #[derive(Debug, Clone)]
-pub struct Config {
+pub struct ChatConfig {
+    pub enable: bool,
     pub api_key: String,
     pub base_url: String,
     pub model: String,
@@ -79,9 +86,10 @@ pub struct Config {
     pub system_prompt: String,
 }
 
-impl Default for Config {
+impl Default for ChatConfig {
     fn default() -> Self {
         Self {
+            enable: false,
             api_key: "".to_string(),
             base_url: "https://open.bigmodel.cn/api/paas/v4/chat/completions".to_string(),
             model: "glm-4-flash".to_string(),
@@ -93,11 +101,11 @@ impl Default for Config {
     }
 }
 
-impl Config {
+impl ChatConfig {
     /// 从config.txt文件读取配置
     pub fn from_file(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let content = fs::read_to_string(file_path)?;
-        let mut config = Config::default();
+        let mut config = ChatConfig::default();
 
         for line in content.lines() {
             let line = line.trim();
@@ -124,6 +132,7 @@ impl Config {
         if config.api_key.is_empty() {
             return Err("API密钥未设置，请在config.txt中设置api_key".into());
         }
+        config.enable = true;
 
         Ok(config)
     }
@@ -131,29 +140,26 @@ impl Config {
 
 /// ChatGLM聊天客户端
 pub struct ChatGlm {
-    client: Client,
-    config: Config,
+    config: ChatConfig,
 }
 
 impl ChatGlm {
     /// 使用配置创建新的ChatGLM客户端
-    pub fn new(config: Config) -> Self {
-        Self {
-            client: Client::new(),
-            config,
-        }
+    pub fn new(config: ChatConfig) -> Self {
+        Self { config }
     }
 
     /// 从配置文件创建ChatGLM客户端
     pub fn from_config_file(config_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let config = Config::from_file(config_path)?;
+        let mut config = ChatConfig::from_file(config_path)?;
+
         Ok(Self::new(config))
     }
 
     /// 从核心配置文件中读取数据
     pub fn from_env_var() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut config = Config::default();
-
+        let mut config = ChatConfig::default();
+        config.enable = true;
         config.api_key = std::env::var("api_key").expect("必须提供智谱AI API密钥");
         config.base_url = std::env::var("base_url")
             .unwrap_or("https://open.bigmodel.cn/api/paas/v4/chat/completions".to_string());
@@ -172,7 +178,11 @@ impl ChatGlm {
     }
 
     /// 发送聊天消息并获取回复
-    pub async fn chat(&self, question: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn chat(&self, question: &str) -> R<String> {
+        if !self.config.enable {
+            return R::Ok("未启用".to_string());
+        }
+
         let messages = vec![
             Message {
                 role: MessageRole::System,
@@ -192,8 +202,7 @@ impl ChatGlm {
             stream: false,
         };
 
-        let response = self
-            .client
+        let response = http::CLIENT
             .post(&self.config.base_url)
             .header("Authorization", format!("Bearer {}", self.config.api_key))
             .header("Content-Type", "application/json")
@@ -204,26 +213,35 @@ impl ChatGlm {
         let status = response.status();
         if !status.is_success() {
             let error_text = response.text().await?;
-            return Err(format!("API请求失败: {} - {}", status, error_text).into());
+            return R::Err(ChatError(
+                format!("API请求失败: {} - {}", status, error_text).to_string(),
+            ));
         }
 
         // 获取响应文本
         let response_text = response.text().await?;
 
+
+
         // 解析JSON响应
         let chat_response: ChatResponse = serde_json::from_str(&response_text)
-            .map_err(|e| format!("JSON解析失败: {}\n响应内容: {}", e, response_text))?;
+            .map_err(|e| ChatError(format!("JSON解析失败: {}\n响应内容: {}", e, response_text)))?;
 
         if let Some(choice) = chat_response.choices.first() {
             Ok(choice.message.content.clone())
         } else {
-            Err("没有收到回复".into())
+            R::Err(ChatError("无法获取回复".to_string()))
         }
     }
 
     /// 获取当前配置的引用
-    pub fn config(&self) -> &Config {
+    pub fn config(&self) -> &ChatConfig {
         &self.config
+    }
+
+    /// 替换当前配置
+    pub fn replace_config(&mut self, new_config: ChatConfig) {
+        self.config = new_config;
     }
 }
 
@@ -247,8 +265,8 @@ impl ChatGlm {
 pub async fn quick_chat(
     api_key: &str,
     question: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let mut config = Config::default();
+) -> R<String> {
+    let mut config = ChatConfig::default();
     config.api_key = api_key.to_string();
     let chat_glm = ChatGlm::new(config);
     chat_glm.chat(question).await
@@ -260,14 +278,14 @@ mod tests {
 
     #[test]
     fn test_config_default() {
-        let config = Config::default();
+        let config = ChatConfig::default();
         assert_eq!(config.model, "glm-4-flash");
         assert_eq!(config.temperature, 0.7);
     }
 
     #[test]
     fn test_config_from_empty_string() {
-        let result = Config::from_file("nonexistent.txt");
+        let result = ChatConfig::from_file("nonexistent.txt");
         assert!(result.is_err());
     }
 

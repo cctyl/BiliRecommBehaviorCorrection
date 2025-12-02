@@ -19,7 +19,7 @@ use crate::utils::thread_util::ThreadUtil;
 use crate::{
     api::bili,
     app::{
-        database::CONTEXT,
+        database::CC,
         response::{OkRespExt, RR, *},
     },
     service::cookie_header_data_service,
@@ -62,7 +62,7 @@ pub async fn put_cache_train_result(
         if !discarded_id.is_empty() {
             //把缓存改为忽略的关键词
             dict_service::update_status_by_ids(
-                &CONTEXT.rb,
+                &CC.rb,
                 DictStatus::IGNORE,
                 &discarded_id,
             )
@@ -77,7 +77,7 @@ pub async fn put_cache_train_result(
         if !discarded_id.is_empty() {
             //把缓存改为忽略的关键词
             dict_service::update_status_by_ids(
-                &CONTEXT.rb,
+                &CC.rb,
                 DictStatus::IGNORE,
                 &discarded_id,
             )

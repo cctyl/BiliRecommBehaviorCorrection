@@ -9,7 +9,7 @@ use rbatis::{
 use rbs::value;
 
 use crate::{
-    app::{database::CONTEXT, error::HttpError, response::R, task_pool::TASK_POOL},
+    app::{database::CC, error::HttpError, response::R, task_pool::TASK_POOL},
     entity::{enumeration::TaskStatus, models::Task},
 };
 
@@ -24,7 +24,7 @@ pub async fn add_if_not_exist(name: &String) -> R<()> {
         t.current_run_status = Some(TaskStatus::STOPPED);
         t.total_run_count = Some(0);
         t.scheduled_hour = Some(-1);
-        Task::insert(&CONTEXT.rb, &t).await?;
+        Task::insert(&CC.rb, &t).await?;
     }
 
     R::Ok(())
@@ -51,7 +51,7 @@ async fn update_last_run_time(
 
 /// 通过任务名称查找任务
 pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
-    let mut tasks = select_one_by_condition(&CONTEXT.rb, value! {"class_method_name":name}).await?;
+    let mut tasks = select_one_by_condition(&CC.rb, value! {"class_method_name":name}).await?;
 
     R::Ok(tasks)
 }
@@ -90,13 +90,13 @@ where
 {
     // 需要记录任务的执行情况
     add_if_not_exist(&method_name).await?;
-    update_task_status(&CONTEXT.rb, TaskStatus::WAITING, &method_name).await?;
-    update_last_run_time(&CONTEXT.rb, DateTime::now(), &method_name).await?;
+    update_task_status(&CC.rb, TaskStatus::WAITING, &method_name).await?;
+    update_last_run_time(&CC.rb, DateTime::now(), &method_name).await?;
 
     let method_name_move = method_name.clone();
     R::Ok(TASK_POOL.put_if_absent(method_name_move, async move || {
         let start = Instant::now();
-        update_task_status(&CONTEXT.rb, TaskStatus::RUNNING, &method_name).await?;
+        update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
         task().await?;
 
         let end = Instant::now();
@@ -108,7 +108,7 @@ where
             t.total_run_count = Some(t.total_run_count.unwrap_or(0) + 1);
             t.last_run_duration = Some(millis as u32);
             t.current_run_status = Some(TaskStatus::STOPPED);
-            Task::update_by_id(&CONTEXT.rb, &t).await?;
+            Task::update_by_id(&CC.rb, &t).await?;
         }
 
         R::Ok(())
@@ -130,7 +130,7 @@ mod tests {
     use rbs::value;
 
     use crate::{
-        app::{database::CONTEXT, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
+        app::{database::CC, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
     };
 
     #[tokio::test]
@@ -152,7 +152,7 @@ mod tests {
 
         //在这中间编写测试代码
 
-        Task::delete_by_id(&CONTEXT.rb, "11679171886120965").await.unwrap();
+        Task::delete_by_id(&CC.rb, "11679171886120965").await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
@@ -167,14 +167,14 @@ mod tests {
 
         //在这中间编写测试代码
         let id = "11679233969684485";
-        let mut t: Task = Task::select_by_id(&CONTEXT.rb, id).await.unwrap().unwrap();
+        let mut t: Task = Task::select_by_id(&CC.rb, id).await.unwrap().unwrap();
 
         t.last_run_time = Some(DateTime::now());
         t.total_run_count = Some( 2001);
         t.class_method_name = Some( String::from("111222测试的类方法名啊") );
         t.task_name = Some( String::from("111222测试的名称啊"));
 
-        Task::update_by_id(&CONTEXT.rb,&t).await.unwrap();
+        Task::update_by_id(&CC.rb,&t).await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
@@ -186,7 +186,7 @@ mod tests {
         crate::init().await;
         
         //在这中间编写测试代码
-        let task = Task::select_by_id(&CONTEXT.rb, "5")
+        let task = Task::select_by_id(&CC.rb, "5")
             .await
             .unwrap();
 
@@ -207,7 +207,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-       let select_one_by_condition = Task::select_one_by_condition(&CONTEXT.rb, value!{"id":"1883877101111631873"}).await.unwrap();
+       let select_one_by_condition = Task::select_one_by_condition(&CC.rb, value!{"id":"1883877101111631873"}).await.unwrap();
 
         println!("select_one_by_condition: {:?}", select_one_by_condition);
 
@@ -228,7 +228,7 @@ mod tests {
 
         assert!(r.is_ok());
 
-        let tasks = Task::select_by_map(&CONTEXT.rb, value! {"class_method_name":&name})
+        let tasks = Task::select_by_map(&CC.rb, value! {"class_method_name":&name})
             .await
             .unwrap();
 
@@ -256,11 +256,11 @@ mod tests {
         let r = super::add_if_not_exist(&name).await;
 
         assert!(r.is_ok());
-        let result = update_task_status(&CONTEXT.rb, TaskStatus::WAITING, &name)
+        let result = update_task_status(&CC.rb, TaskStatus::WAITING, &name)
             .await
             .unwrap();
         assert_eq!(result.rows_affected, 1);
-        let tasks = Task::select_by_map(&CONTEXT.rb, value! {"class_method_name":&name})
+        let tasks = Task::select_by_map(&CC.rb, value! {"class_method_name":&name})
             .await
             .unwrap();
         assert_eq!(tasks.len(), 1);
@@ -349,7 +349,7 @@ mod tests {
 
         // 测试通过条件查找任务 - 存在的任务
         let condition = value! {"class_method_name": &name};
-        let result = super::select_one_by_condition(&CONTEXT.rb, condition).await;
+        let result = super::select_one_by_condition(&CC.rb, condition).await;
         assert!(result.is_ok());
         let task = result.unwrap();
         assert!(task.is_some());
@@ -359,7 +359,7 @@ mod tests {
         // 测试通过条件查找任务 - 不存在的任务
         let not_exist_name = "not_exist_task_name";
         let condition = value! {"class_method_name": not_exist_name};
-        let result = super::select_one_by_condition(&CONTEXT.rb, condition).await;
+        let result = super::select_one_by_condition(&CC.rb, condition).await;
         assert!(result.is_ok());
         assert!(result.unwrap().is_none());
 

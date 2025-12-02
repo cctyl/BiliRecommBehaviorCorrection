@@ -13,7 +13,7 @@ use tokio::time::sleep;
 
 use crate::{
     app::{
-        database::CONTEXT,
+        database::CC,
         global::{GlobalState, GlobalStateHandler, GLOBAL_STATE},
         response::R,
     }, entity::{
@@ -27,7 +27,7 @@ pub async fn remove_by_classify_and_media_type(
 ) -> R<()> {
 
 
-    CookieHeaderData::delete_by_map(&CONTEXT.rb, 
+    CookieHeaderData::delete_by_map(&CC.rb, 
         value! {"classify": classify, "media_type": media_type}
     ).await?;
 
@@ -58,7 +58,7 @@ pub async fn save_refresh_cookie_map(
 ) -> R<()> {
 
     let list = map_to_list(map,Classify::COOKIE,MediaType::TIMELY_UPDATE);
-    CookieHeaderData::insert_batch(&CONTEXT.rb, &list, 100).await?;
+    CookieHeaderData::insert_batch(&CC.rb, &list, 100).await?;
     Ok(())
 }
 
@@ -145,7 +145,7 @@ pub async fn find_by_classify_and_media_type(
     media_type: &MediaType,
 ) -> R<Vec<CookieHeaderData>> {
     let cookie_header_datas = CookieHeaderData::select_by_map(
-        &CONTEXT.rb,
+        &CC.rb,
         value! {
         "classify": classify,
         "media_type": media_type
@@ -221,7 +221,7 @@ pub async fn update_refresh_cookie(cookie_str:String) ->  R<HashMap<String, Stri
  */
 pub(crate) async fn page_list(page: u64, limit: u64) -> R<PageDTO<CookieHeaderData>> {
     
-    let page = CookieHeaderData::select_page(&CONTEXT.rb, &PageRequest::new(page, limit)).await?;
+    let page = CookieHeaderData::select_page(&CC.rb, &PageRequest::new(page, limit)).await?;
 
     R::Ok(page.into())
 

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use rbs::value;
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 use crate::app::response::R;
 use crate::entity::models::Tag;
 use crate::utils::id;
@@ -72,7 +72,7 @@ pub(crate) async fn save_if_not_exists(tags: Vec<Tag>) ->R<()>{
 
     let tag_id:Vec<i32> = tags.iter().map(|tag| { tag.tag_id }).collect();
 
-    let db:HashSet<i32> = Tag::select_by_map(&CONTEXT.rb, value! {"tag_id":tag_id}).await?
+    let db:HashSet<i32> = Tag::select_by_map(&CC.rb, value! {"tag_id":tag_id}).await?
         .iter().map(|tag| { tag.tag_id })
         .collect()
         ;
@@ -91,7 +91,7 @@ pub(crate) async fn save_if_not_exists(tags: Vec<Tag>) ->R<()>{
         x.id = Some(id::generate_id());
     }
     
-    Tag::insert_batch(&CONTEXT.rb, &filter,100).await?;
+    Tag::insert_batch(&CC.rb, &filter,100).await?;
     
     R::Ok(())
 }

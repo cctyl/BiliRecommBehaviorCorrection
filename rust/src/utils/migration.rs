@@ -33,7 +33,7 @@ async fn test_init() {
             .console()
             .level(log::LevelFilter::Debug),
     );
-    CONTEXT.init().await;
+    CC.init().await;
     start_migration().await.unwrap();
 }
 
@@ -45,8 +45,8 @@ pub async fn start_migration() -> R<()> {
     // 首先获取迁移文件路径
     let migration_paths: HashMap<u32, String> = load_migrations()?;
 
-    let migration_exist = migration_exist(&CONTEXT.rb).await?;
-    let table_num = table_num(&CONTEXT.rb).await?;
+    let migration_exist = migration_exist(&CC.rb).await?;
+    let table_num = table_num(&CC.rb).await?;
 
     let  mut update = true;
     //migration存在
@@ -54,7 +54,7 @@ pub async fn start_migration() -> R<()> {
     if migration_exist.is_some() {
         info!("表 migration_exist 存在");
         //表存在
-        let max = get_max_version(&CONTEXT.rb).await?.unwrap_or(0);
+        let max = get_max_version(&CC.rb).await?.unwrap_or(0);
         info!("历史最大版本号={},当前版本号={}", max, CURRENT_VERSION);
 
         if max < CURRENT_VERSION {
@@ -67,7 +67,7 @@ pub async fn start_migration() -> R<()> {
 
             //更新最大版本号
             Migration::insert(
-                &CONTEXT.rb,
+                &CC.rb,
                 &Migration {
                     id: None,
                     version: CURRENT_VERSION,
@@ -107,7 +107,7 @@ pub async fn start_migration() -> R<()> {
 
         //更新最大版本号
         Migration::insert(
-            &CONTEXT.rb,
+            &CC.rb,
             &Migration {
                 id: None,
                 version: CURRENT_VERSION,
@@ -121,7 +121,7 @@ pub async fn start_migration() -> R<()> {
         let end_sql = vec![" VACUUM;", "PRAGMA journal_mode=DELETE;"];
 
         for sql in end_sql {
-            CONTEXT.rb.exec(sql, vec![]).await?;
+            CC.rb.exec(sql, vec![]).await?;
         }
     }
    
@@ -138,7 +138,7 @@ pub async fn exec_sql(path: &str) -> R<()> {
 
     {
         // 在事务中执行多个 SQL
-        let tx = CONTEXT.rb.acquire_begin().await?;
+        let tx = CC.rb.acquire_begin().await?;
 
         for sql in split_sql_statements {
             info!("sql={sql}");
@@ -191,7 +191,7 @@ use serde::{Deserialize, Serialize};
 use sqlparser::dialect::SQLiteDialect;
 use sqlparser::parser::Parser;
 
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 use crate::app::response::R;
 
 /**

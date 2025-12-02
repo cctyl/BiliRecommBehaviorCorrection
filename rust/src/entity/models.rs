@@ -20,7 +20,7 @@ use rbatis::rbdc::types::DateTime;
 use rbatis::sql;
 use serde::{Deserialize, Serialize};
 
-use crate::app::database::CONTEXT;
+use crate::app::database::CC;
 
 
 
@@ -45,11 +45,18 @@ pub struct Config {
     pub last_modified_date: Option<DateTime>,
 }
 
-// crud!(Config {}, "config");
+
 crud!(Config {});  
+plus!(Config{});
 impl_select!(Config{
-    select_by_name(table_column:&str,name:&str) -> Option    =>" ` where name = #{name} limit 1 ` "
+    select_column_by_name(table_column:&str,name:&str) -> Option    =>" ` where name = #{name} limit 1 ` "
 });
+
+impl_select!(Config{
+    select_by_name(name:&str)->Option =>
+    "  ` where name = #{name}  limit 1 ` "
+});
+
 
 impl Config{
     pub fn default() -> Self {
@@ -71,9 +78,9 @@ async fn test_config() {
             .console()
             .level(log::LevelFilter::Debug),
     );
-    CONTEXT.init().await;
+    CC.init().await;
 
-    let select_by_map = Config::select_by_map(&CONTEXT.rb, rbs::Value::Null)
+    let select_by_map = Config::select_by_map(&CC.rb, rbs::Value::Null)
         .await
         .unwrap();
     println!("{:#?}", select_by_map);
@@ -97,9 +104,9 @@ async fn test_cookie_header_data() {
             .console()
             .level(log::LevelFilter::Debug),
     );
-    CONTEXT.init().await;
+    CC.init().await;
 
-    let select_by_map = CookieHeaderData::select_page(&CONTEXT.rb, &PageRequest::new(1, 10))
+    let select_by_map = CookieHeaderData::select_page(&CC.rb, &PageRequest::new(1, 10))
         .await
         .unwrap();
     println!("{:#?}", select_by_map);
@@ -290,7 +297,7 @@ async fn test_video_detail() {
             .console()
             .level(log::LevelFilter::Debug),
     );
-    CONTEXT.init().await;
+    CC.init().await;
 
     let page_request = PageRequest::new(1, 10); // 第一页，每页10条
     //let result = VideoDetail::select_page(&CONTEXT.rb, &page_request).await.unwrap();
@@ -306,7 +313,7 @@ async fn test_video_detail() {
     // .unwrap();
 
 
-    let result = VideoDetail::select_by_title_like(&CONTEXT.rb, "%不要%").await.unwrap();
+    let result = VideoDetail::select_by_title_like(&CC.rb, "%不要%").await.unwrap();
 
    
 
@@ -374,9 +381,9 @@ async fn test_white_list_rule() {
             .console()
             .level(log::LevelFilter::Debug),
     );
-    CONTEXT.init().await;
+    CC.init().await;
 
-    let select_by_map = WhiteListRule::select_by_map(&CONTEXT.rb, rbs::Value::Null)
+    let select_by_map = WhiteListRule::select_by_map(&CC.rb, rbs::Value::Null)
         .await
         .unwrap();
     println!("{:#?}", select_by_map);
