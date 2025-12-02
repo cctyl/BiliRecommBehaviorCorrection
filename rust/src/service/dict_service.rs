@@ -11,7 +11,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::entity::enumeration::DictStatus;
 use crate::{
-    app::{database::CC, error::HttpError, response::R},
+    app::{config::CC, error::HttpError, response::R},
     entity::{
         enumeration::{AccessType, DictType},
         models::Dict,
@@ -36,7 +36,7 @@ mod tests {
 
     use crate::entity::enumeration::DictStatus;
     use crate::{
-        app::{database::CC, error::HttpError, response::R},
+        app::{config::CC, error::HttpError, response::R},
         entity::{
             enumeration::{AccessType, DictType},
             models::Dict,

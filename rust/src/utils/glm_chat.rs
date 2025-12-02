@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::LazyLock;
 
-use crate::app::database::CC;
+use crate::app::config::CC;
 use crate::app::error::HttpError::*;
 use crate::app::response::R;
 use crate::utils::http;

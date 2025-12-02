@@ -191,7 +191,7 @@ use serde::{Deserialize, Serialize};
 use sqlparser::dialect::SQLiteDialect;
 use sqlparser::parser::Parser;
 
-use crate::app::database::CC;
+use crate::app::config::CC;
 use crate::app::response::R;
 
 /**

@@ -9,7 +9,7 @@ use rbatis::{
 use rbs::value;
 
 use crate::{
-    app::{database::CC, error::HttpError, response::R, task_pool::TASK_POOL},
+    app::{config::CC, error::HttpError, response::R, task_pool::TASK_POOL},
     entity::{enumeration::TaskStatus, models::Task},
 };
 
@@ -130,7 +130,7 @@ mod tests {
     use rbs::value;
 
     use crate::{
-        app::{database::CC, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
+        app::{config::CC, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
     };
 
     #[tokio::test]

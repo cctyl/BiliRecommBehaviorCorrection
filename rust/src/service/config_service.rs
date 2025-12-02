@@ -5,7 +5,7 @@ use rbs::value;
 use crate::{
     app::{
         constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
-        database::CC,
+        config::CC,
         response::R,
     },
     entity::{dtos::ConfigAddUpdateDTO, models::Config},
@@ -137,7 +137,7 @@ mod tests {
     use rbs::value;
 
     use crate::app::constans::BILI_ACCESS_KEY;
-    use crate::{app::database::CC, entity::models::Config};
+    use crate::{app::config::CC, entity::models::Config};
 
     use crate::service::config_service::*;
 

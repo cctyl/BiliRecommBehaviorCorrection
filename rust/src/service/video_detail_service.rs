@@ -1,4 +1,4 @@
-use crate::app::database::CC;
+use crate::app::config::CC;
 use crate::app::response::R;
 use crate::entity::dtos::VideoDetailDTO;
 use crate::entity::enumeration::HandleType;

@@ -6,7 +6,7 @@ use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::app::{
-    database::CC,
+    config::CC,
     error::{ErrorMessage, HttpError},
     response::R,
 };

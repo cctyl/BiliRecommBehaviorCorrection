@@ -20,7 +20,7 @@ use rbatis::rbdc::types::DateTime;
 use rbatis::sql;
 use serde::{Deserialize, Serialize};
 
-use crate::app::database::CC;
+use crate::app::config::CC;
 
 
 

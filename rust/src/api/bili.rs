@@ -4,7 +4,7 @@ use std::io::Write;
 use std::sync::{LazyLock, Mutex};
 
 use crate::api::bili;
-use crate::app::database::CC;
+use crate::app::config::CC;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};

@@ -19,7 +19,7 @@ use crate::utils::thread_util::ThreadUtil;
 use crate::{
     api::bili,
     app::{
-        database::CC,
+        config::CC,
         response::{OkRespExt, RR, *},
     },
     service::cookie_header_data_service,

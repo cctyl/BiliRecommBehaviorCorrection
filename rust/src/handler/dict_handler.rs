@@ -16,7 +16,7 @@ use crate::utils::id::generate_id;
 use crate::{
     api::bili,
     app::{
-        database::CC,
+        config::CC,
         response::{OkRespExt, RR, *},
     },
     service::cookie_header_data_service,

@@ -13,7 +13,7 @@ use tokio::time::sleep;
 
 use crate::{
     app::{
-        database::CC,
+        config::CC,
         global::{GlobalState, GlobalStateHandler, GLOBAL_STATE},
         response::R,
     }, entity::{

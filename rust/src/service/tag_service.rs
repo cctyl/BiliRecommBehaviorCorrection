@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use rbs::value;
-use crate::app::database::CC;
+use crate::app::config::CC;
 use crate::app::response::R;
 use crate::entity::models::Tag;
 use crate::utils::id;

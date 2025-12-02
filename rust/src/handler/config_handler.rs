@@ -6,7 +6,7 @@ use serde::Deserialize;
 
 use crate::{
     api::bili, app::{
-        database::CC,
+        config::CC,
         response::{OkRespExt, RR, *},
     }, entity::{dtos::ConfigAddUpdateDTO, models::Config}, service::{config_service, cookie_header_data_service}
 };

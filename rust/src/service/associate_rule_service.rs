@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests{
-    use crate::app::database::CC;
+    use crate::app::config::CC;
     use crate::entity::models::AssociateRule;
 
     #[tokio::test]
