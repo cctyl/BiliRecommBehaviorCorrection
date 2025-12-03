@@ -9,7 +9,7 @@ use log::LevelFilter;
 
 
 
-const LOG_LEVEL: LevelFilter = LevelFilter::Info;
+const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
 
 
 

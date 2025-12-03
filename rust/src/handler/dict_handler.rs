@@ -127,7 +127,7 @@ pub async fn update(Json(dto): Json<DictDto>) -> RR<()> {
 
 /// 新增数据
 #[debug_handler]
-pub async fn add(Json(dto): Json<DictDto>) -> RR<bool> {
+pub async fn add(Json(dto): Json<DictDto>) -> RR<String> {
     let table: Dict = dto.into();
 
     RR::success(dict_service::add_dict(table).await?)
@@ -160,6 +160,7 @@ pub async fn get_by_id(Path(id): Path<String>) -> RR<DictDto> {
 pub struct DictListQueryParam {
     pub dict_type: DictType,
     pub access_type: AccessType,
+    pub status: DictStatus,
 }
 
 /**
@@ -170,11 +171,12 @@ pub async fn get_list_by_dict_type_and_access_type(
     Query(DictListQueryParam {
         access_type,
         dict_type,
+        status,
     }): Query<DictListQueryParam>,
 ) -> RR<HashMap<String, Vec<DictDto>>> {
     let mut hash_map = HashMap::new();
     let r: Vec<Dict> =
-        dict_service::get_list_by_dict_type_and_access_type(access_type, dict_type).await?;
+        dict_service::get_list_by_dict_type_access_type_status(access_type, dict_type,status).await?;
     let r = r
         .into_iter()
         .map(|item| item.into())

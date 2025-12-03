@@ -75,11 +75,11 @@ mod tests {
     async fn test_check_is_need_save() {
         crate::init().await;
 
-        let r = check_is_need_save(AccessType::BLACK, DictType::KEYWORD, "泰国")
+        let r = check_is_need_save(AccessType::BLACK, DictType::KEYWORD, DictStatus::IGNORE, "泰国")
             .await
             .unwrap();
         assert_eq!(r, false);
-        let r = check_is_need_save(AccessType::BLACK, DictType::TAG, "泰国")
+        let r = check_is_need_save(AccessType::BLACK, DictType::TAG, DictStatus::IGNORE, "泰国")
             .await
             .unwrap();
         assert_eq!(r, false);
@@ -272,13 +272,14 @@ mod tests {
 /**
  * 根据DictType 和 AccessType 获取Dict列表
  */
-pub(crate) async fn get_list_by_dict_type_and_access_type(
+pub(crate) async fn get_list_by_dict_type_access_type_status(
     access_type: AccessType,
     dict_type: DictType,
+    status: DictStatus,
 ) -> R<Vec<Dict>> {
     Dict::select_by_map(
         &CC.rb,
-        value! {"dict_type":dict_type,"access_type":access_type},
+        value! {"dict_type":dict_type,"access_type":access_type,"status":status},
     )
     .await
     .map_err(HttpError::from)
@@ -401,7 +402,7 @@ pub async fn exist_by_access_type_and_dict_type_and_value(
         &CC.rb,
         value! {
             "dict_type":dict_type,
-            "access_type":AccessType::BLACK,
+            "access_type":access_type,
             "value":value,
             "status":status
         },
@@ -411,17 +412,20 @@ pub async fn exist_by_access_type_and_dict_type_and_value(
     R::Ok(!dicts.is_empty())
 }
 
-/// 如果不在忽略的名单内则保存，否则不报存
+/// 如果不在忽略的名单内则保存，否则不保存
+/// 返回true表示需要保存
+/// 返回false表示不需要保存
 pub async fn check_is_need_save(
     access_type: AccessType,
     dict_type: DictType,
+    status: DictStatus,
     value: &str,
 ) -> R<bool> {
     R::Ok(
-        exist_by_access_type_and_dict_type_and_value(
+        !exist_by_access_type_and_dict_type_and_value(
             access_type,
             dict_type,
-            DictStatus::IGNORE,
+            status,
             value,
         )
         .await?,
@@ -429,15 +433,14 @@ pub async fn check_is_need_save(
 }
 
 /// 新增字典，如果不在忽略名单内则新增
-pub(crate) async fn add_dict(table: Dict) -> R<bool> {
+pub(crate) async fn add_dict(table: Dict) -> R<String> {
     let access_type = table.access_type;
     let dict_type = table.dict_type;
-
-    let check_is_need_save = check_is_need_save(access_type, dict_type, &table.value).await?;
+    let check_is_need_save = check_is_need_save(access_type, dict_type,table.status, &table.value).await?;
     if check_is_need_save {
         Dict::insert(&CC.rb, &table).await?;
     }
-    R::Ok(check_is_need_save)
+    R::Ok(table.id)
 }
 
 #[py_sql(
@@ -527,7 +530,7 @@ async fn get_black_user_id_set() -> R<Vec<String>> {
 /// 查找黑名单用户id Dict
 /// 返回值：Vec<Dict>
 async fn find_black_user_id() -> R<Vec<Dict>> {
-    get_list_by_dict_type_and_access_type(AccessType::BLACK, DictType::MID).await
+    get_list_by_dict_type_access_type_status(AccessType::BLACK, DictType::MID, DictStatus::NORMAL).await
 }
 
 /// 根据dict_type 和 access_type 查询
