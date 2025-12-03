@@ -93,7 +93,10 @@ pub enum DictType {
      */
     STOP_WORDS,
 
-
+    /**
+     * ai 判断提示词
+     */
+    AI_JUDGMENT_PROMPT,
    
 }
 
