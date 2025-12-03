@@ -29,7 +29,7 @@ use rbatis::{RBatis, sql};
 use rbatis::impled;
 use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
-use tower_http::cors::{self, CorsLayer};
+use tower_http::cors::{self, CorsLayer, Any};
 
 use crate::service::cookie_header_data_service::{self, get_map_by_classify_and_media_type, init_common_header_map};
 use std::collections::HashMap;
@@ -74,10 +74,29 @@ pub async fn main() {
 
 fn build_router() -> Router {
     let cors = CorsLayer::new()
-        .allow_origin(cors::Any)
+
+        //=============================withCredentials=false，不使用cookie，使用header校验========================================
+      .allow_origin(cors::Any)
         .allow_methods(cors::Any)
         .allow_headers(cors::Any)
         .allow_credentials(false)
+
+        //=====================withCredentials=true时的写法==============================
+        // .allow_origin([
+        //     "http://localhost:8080".parse().unwrap(),
+        //     "http://127.0.0.1:8080".parse().unwrap(),
+        // ])
+        // .allow_methods([
+        //     "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        // ].iter().map(|s| s.parse().unwrap()).collect::<Vec<_>>())
+        // .allow_headers([
+        //     "authorization", "content-type", "accept", "origin",
+        //     "access-control-request-method", "access-control-request-headers"
+        // ].iter().map(|s| s.parse().unwrap()).collect::<Vec<_>>())
+        // .allow_credentials(true)
+
+
+        
         .max_age(Duration::from_secs(3600 * 12));
 
     handler::create_router().layer(cors)
