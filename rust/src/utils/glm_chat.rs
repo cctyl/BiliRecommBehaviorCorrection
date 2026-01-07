@@ -179,9 +179,7 @@ impl ChatGlm {
 
     /// 发送聊天消息并获取回复
     pub async fn chat(&self, question: &str) -> R<String> {
-        if !self.config.enable {
-            return R::Ok("未启用".to_string());
-        }
+      
 
         let messages = vec![
             Message {
@@ -194,6 +192,15 @@ impl ChatGlm {
             },
         ];
 
+        self.chat_request(messages).await
+    }
+
+    /// 聊天请求发起
+    /// 传入聊天消息
+    pub async fn chat_request(&self, messages: Vec<Message>) -> R<String> {
+        if !self.config.enable {
+            return R::Ok("未启用".to_string());
+        }
         let request = ChatRequest {
             model: self.config.model.clone(),
             messages,
@@ -220,8 +227,6 @@ impl ChatGlm {
 
         // 获取响应文本
         let response_text = response.text().await?;
-
-
 
         // 解析JSON响应
         let chat_response: ChatResponse = serde_json::from_str(&response_text)
@@ -262,10 +267,7 @@ impl ChatGlm {
 ///     Ok(())
 /// }
 /// ```
-pub async fn quick_chat(
-    api_key: &str,
-    question: &str,
-) -> R<String> {
+pub async fn quick_chat(api_key: &str, question: &str) -> R<String> {
     let mut config = ChatConfig::default();
     config.api_key = api_key.to_string();
     let chat_glm = ChatGlm::new(config);
