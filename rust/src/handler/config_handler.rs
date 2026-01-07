@@ -2,6 +2,7 @@ use std::{collections::HashMap, hash::Hash};
 
 use axum::{debug_handler, extract::Query, Json, Router};
 use fast_log::config;
+use log::info;
 use serde::Deserialize;
 
 use crate::{
@@ -62,11 +63,14 @@ async fn get_refresh_cookie() -> RR<HashMap<String, String>>{
     RR::success(get_refresh_cookie)
 }
 /**
- * 查询基本配置信息
+ * 修改基本配置信息
  */
 #[debug_handler]
 async fn update_standard_config_info(Json(payload): Json<Vec<ConfigAddUpdateDTO>>)->RR<()>{
     config_service::update_config_list(payload).await?;
+
+    let r = &CC.init_glm_chat().await?;
+    info!("重新初始化ai客户端,初始化结果为:{}",r);
 
     RR::success(())
 }
