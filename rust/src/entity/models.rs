@@ -115,15 +115,15 @@ async fn test_cookie_header_data() {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Dict {
     pub id: String,
-    pub value: String,
-    pub access_type: AccessType,
-    pub dict_type: DictType,
+    pub value: String,//字典值
+    pub access_type: AccessType,//黑名单或者白名单类型
+    pub dict_type: DictType,//字典的类型
     pub outer_id: Option<String>,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
-    pub status:DictStatus
+    pub status:DictStatus  //该字典当前的状态，
 
 }
 crud!(Dict {}, "dict");
