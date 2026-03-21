@@ -97,6 +97,10 @@ pub enum DictType {
      * ai 判断提示词
      */
     AI_JUDGMENT_PROMPT,
+
+
+    /// 关联规则对应字典
+    ASSOCIATE_RULE,
    
 }
 

@@ -12,6 +12,7 @@ mod handler;
 mod service;
 mod single_test;
 mod utils;
+mod extractor;
 use crate::app::database::{self};
 use crate::app::config::CC;
 use crate::app::error::HttpError;

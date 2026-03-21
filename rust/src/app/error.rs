@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use axum::{
-    extract::multipart::MultipartError, http::StatusCode, response::{IntoResponse, Response}, Json
+    Json, extract::{multipart::MultipartError, rejection::PathRejection}, http::StatusCode, response::{IntoResponse, Response}
 };
 
 use log::{error, info};
@@ -90,9 +90,18 @@ pub enum HttpError {
     JsonError(#[from] serde_json::Error),
 
 
-    
+
     #[error("{0}")]
     ChatError( String),
+}
+
+
+impl From<axum::extract::rejection::PathRejection> for HttpError {  
+    fn from(rejection: PathRejection) -> Self {  
+        info!("PathRejection: {:?}",rejection);
+        // 在这里可以隐藏敏感信息，只返回安全的错误  
+        HttpError::BadRequest("参数错误".to_string())
+    }  
 }
 
 impl From<sqlparser::parser::ParserError> for HttpError {
