@@ -19,7 +19,12 @@ pub async fn get_associate_tule_list(
     page: u64,
     limit: u64,
 ) -> R<PageDTO<AssociateRuleListDto>> {
-    let result = AssociateRule::select_page_by_access_type(&CC.rb, &PageRequest::new(page, limit),access_type).await?;
+    let result = AssociateRule::select_page_by_access_type(
+        &CC.rb,
+        &PageRequest::new(page, limit),
+        access_type,
+    )
+    .await?;
 
     let Page {
         records,
@@ -38,11 +43,10 @@ pub async fn get_associate_tule_list(
     )
     .await?;
 
-
-
     //按照id分组
-    let mut grouped = group_by(dict_by_outerid, |f| f.outer_id.clone().unwrap_or(String::from("0")).clone());
-
+    let mut grouped = group_by(dict_by_outerid, |f| {
+        f.outer_id.clone().unwrap_or(String::from("0")).clone()
+    });
 
     let mut result: Vec<AssociateRuleListDto> = Vec::new();
     for item in records {
@@ -118,8 +122,6 @@ mod tests {
             Ok(page_dto) => {
                 // 打印返回结果，方便调试查看
                 println!("测试返回的分页数据: {:#?}", page_dto);
-
-           
             }
             Err(e) => {
                 // 打印错误信息
@@ -132,4 +134,30 @@ mod tests {
         // 最后一句必须是这个
         log::logger().flush();
     }
+}
+
+/// 删除一条规则，同时删除规则关联的字典
+pub async fn delete_rule_by_id(id: String) -> R<String> {
+    // 1. 开始事务
+    let tx = &CC.rb.acquire_begin().await?;
+
+    // 2. 注册defer回调（这里只是注册，不会立即执行）
+    let guard = tx.defer_async(|tx| async move {
+        if !tx.done() {
+            // 检查事务是否已完成
+            let _ = tx.rollback().await; // 如果未完成则回滚  
+        }
+    });
+
+    // 3. 在这里,用guard 执行你的业务逻辑（两个删除操作）
+    AssociateRule::delete_by_id(&guard, &id).await?;
+    Dict::delete_by_map(&guard, value!{ "outer_id":id }).await?;
+
+
+    // 4. 正常提交事务
+    guard.commit().await?; // 设置done=true，defer回调不会回滚  
+    // guard离开作用域，defer回调执行，但发现done=true，不会回滚
+    
+
+    R::Ok("删除成功".to_string())
 }
