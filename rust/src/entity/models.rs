@@ -27,13 +27,22 @@ use crate::app::config::CC;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AssociateRule {
     pub id: String,
+    pub info: String,
     pub created_date: Option<DateTime>,
     pub last_modified_date: Option<DateTime>,
     pub access_type : AccessType
 }
 plus!(AssociateRule{});
 crud!(AssociateRule{});
+impl_select_page!(AssociateRule{select_page() => "  
+     if !sql.contains('count(1)'):  
+       `order by created_date desc`"});
 
+
+impl_select_page!(AssociateRule{select_page_by_access_type(access_type:AccessType) => "  
+    ` where access_type = #{access_type} `
+     if !sql.contains('count(1)'):  
+       `order by created_date desc`"});
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {

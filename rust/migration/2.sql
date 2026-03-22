@@ -207,7 +207,7 @@ drop table "_dict_old_20251030";
 
 CREATE TABLE "associate_rule" (
                                   "id" char(30) NOT NULL,
-                                  "info" varchar(100),
+                                  "info" varchar(100) NOT NULL,
                                   "created_date" DATE,
                                   "last_modified_date" DATE,
                                   "access_type" TEXT NOT NULL,

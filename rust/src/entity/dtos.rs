@@ -7,7 +7,7 @@ use std::{
 use validator::Validate;
 use rbatis::{rbdc::datetime::DateTime, Page};
 
-use crate::entity::models::{Owner, Tag, VideoDetail};
+use crate::entity::{enumeration::AccessType, models::{Dict, Owner, Tag, VideoDetail}};
 #[test]
 fn testnow() {
 
@@ -187,4 +187,21 @@ pub struct DescV2{
     pub raw_text:Option<String>,
     pub type_:Option<i32>,
     pub biz_id:Option<i32>,
+}
+
+
+
+/// 复合规则列表dto
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssociateRuleListDto{
+    pub id: String,
+    pub info:String,
+    pub access_type : AccessType,
+    pub title:Vec<Dict>,
+    pub desc:Vec<Dict>,
+    pub tag:Vec<Dict>,
+    pub cover:Vec<Dict>,
+    pub tid:Vec<Dict>,
+    pub mid:Vec<Dict>,
+
 }

@@ -1,4 +1,4 @@
-use log::{error, info};
+use log::{LevelFilter, error, info};
 use serde::Serialize;
 
 
@@ -15,7 +15,7 @@ use crate::{
     entity::models::Config,
     utils::glm_chat::{ChatConfig, ChatGlm},
 };
-use rbatis::{RBatis, dark_std::errors::new};
+use rbatis::{RBatis, dark_std::errors::new, intercept_log::LogInterceptor};
 use rbdc_sqlite::Driver;
 use rbdc_sqlite::driver::SqliteDriver;
 use serde::{Deserialize, Deserializer, de};
@@ -164,7 +164,8 @@ impl AppContext {
         self.rb
             .link(SqliteDriver {}, &self.config.db_url)
             .await
-            .expect("[bili-rust] rbatis pool init fail!");
+            .expect("[bili-rust] rbatis pool init fail!");  
+   
 
         let pool = self.rb.get_pool().unwrap();
         //max connections

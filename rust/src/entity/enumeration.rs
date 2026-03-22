@@ -42,7 +42,7 @@ pub enum MediaType{
 /**
  * 字典类型
  */
-#[derive(Debug,Clone,Copy,Serialize,Deserialize,PartialEq)]
+#[derive(Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq,Hash)]
 pub enum DictType {
 
 
