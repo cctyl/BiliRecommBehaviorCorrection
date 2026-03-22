@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 
-use rbatis::{Page, PageRequest};
+use rbatis::{Page, PageRequest, rbdc::DateTime};
 use rbs::value;
 
 use crate::{
     app::{config::CC, response::R},
     entity::{
-        dtos::{AssociateRuleListDto, PageDTO},
+        dtos::{AssociateRuleAddDto, AssociateRuleListDto, AssociateRuleUpdateDto, PageDTO},
         enumeration::{AccessType, DictType},
         models::{AssociateRule, Dict},
     },
-    utils::collection_tool::group_by,
+    utils::{collection_tool::group_by, id::generate_id},
 };
 
 /// 查询规则列表
@@ -65,6 +65,18 @@ pub async fn get_associate_tule_list(
                 mid: dict_type_map.remove(&DictType::MID).unwrap_or(vec![]),
             };
             result.push(newitem);
+        } else {
+            result.push(AssociateRuleListDto {
+                id: item.id,
+                info: item.info,
+                access_type,
+                title: vec![],
+                desc: vec![],
+                tag: vec![],
+                cover: vec![],
+                tid: vec![],
+                mid: vec![],
+            })
         }
     }
 
@@ -151,13 +163,45 @@ pub async fn delete_rule_by_id(id: String) -> R<String> {
 
     // 3. 在这里,用guard 执行你的业务逻辑（两个删除操作）
     AssociateRule::delete_by_id(&guard, &id).await?;
-    Dict::delete_by_map(&guard, value!{ "outer_id":id }).await?;
-
+    Dict::delete_by_map(&guard, value! { "outer_id":id }).await?;
 
     // 4. 正常提交事务
     guard.commit().await?; // 设置done=true，defer回调不会回滚  
     // guard离开作用域，defer回调执行，但发现done=true，不会回滚
-    
 
     R::Ok("删除成功".to_string())
+}
+
+/// 添加一条规则
+pub(crate) async fn add_rule(add: AssociateRuleAddDto) -> R<AssociateRule> {
+    let new_item = AssociateRule {
+        info: add.info,
+        id: generate_id(),
+        last_modified_date: Some(DateTime::now()),
+        created_date: Some(DateTime::now()),
+        access_type: add.access_type,
+    };
+
+    let exec_result = AssociateRule::insert(&CC.rb, &new_item).await?;
+
+    R::Ok(new_item)
+}
+
+/// 修改一条规则，实际只修改info字段
+pub(crate) async fn update_rule(update: AssociateRuleUpdateDto) -> R<AssociateRule> {
+
+
+    let update_item = AssociateRule{
+        id: update.id,
+        info: update.info,
+        access_type: update.access_type,
+        created_date:None,
+        last_modified_date:Some(DateTime::now()),
+    };
+    let exec_result = AssociateRule::update_by_id(&CC.rb, &update_item).await?;
+   if   let Some(associate_rule) = AssociateRule::select_by_id(&CC.rb, update_item.id).await?{
+        R::Ok(associate_rule)
+   }else {
+       R::Err(crate::app::error::HttpError::BadRequest("该数据已经被删除".to_string()))
+   }
 }

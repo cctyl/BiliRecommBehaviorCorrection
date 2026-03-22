@@ -205,3 +205,18 @@ pub struct AssociateRuleListDto{
     pub mid:Vec<Dict>,
 
 }
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssociateRuleAddDto {
+    pub info: String,
+    pub access_type : AccessType
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssociateRuleUpdateDto {
+    pub id:String,
+    pub info: String,
+    pub access_type : AccessType
+}

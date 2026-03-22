@@ -44,6 +44,8 @@ impl_select_page!(AssociateRule{select_page_by_access_type(access_type:AccessTyp
      if !sql.contains('count(1)'):  
        `order by created_date desc`"});
 
+
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub id: String,
