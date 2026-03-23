@@ -21,8 +21,9 @@ use hex;
 use log::{error, info};
 use rbs::value;
 use rbs::value::map::ValueMap;
+use regex::Regex;
 use reqwest::header;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::num::ParseIntError;
 use urlencoding::encode;
@@ -403,6 +404,28 @@ pub async fn update_cookie(
     cookie_header_data_service::replace_refresh_cookie(cookie_jar).await
 }
 
+/// 不携带cookie 和登陆凭证的陌生人get请求
+/// 返回纯html
+pub async fn no_auth_cookie_get(
+    url: &str,
+    param_map: Vec<(String, String)>,
+) -> R<String> {
+    let mut req = CLIENT.get(url);
+    req = req
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36")
+                .header("referer", "https://t.bilibili.com/")
+                .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7/");
+
+    let response: reqwest::Response = req
+        .timeout(Duration::from_secs(10))
+        .query(&param_map)
+        .send()
+        .await?;
+
+    let html = response.text().await?;
+    R::Ok(html)
+}
+
 /// 获取accessKey
 /// 若不存在，则抛出异常，提示重新登陆
 pub async fn get_access_key(refresh: bool) -> R<String> {
@@ -467,8 +490,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
         // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
         // let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
         let mut existing_config =
-            Config::select_by_map(&CC.rb, value! {"name":constans::MID_KEY.to_string()})
-                .await?;
+            Config::select_by_map(&CC.rb, value! {"name":constans::MID_KEY.to_string()}).await?;
 
         if existing_config.is_empty() {
             // 创建新的mid配置
@@ -770,6 +792,20 @@ mod tests {
         log::logger().flush();
     }
 
+    //测试 get_user_name_by_mid
+    #[tokio::test]
+    async fn test_get_user_name_by_mid() {
+        crate::init().await;
+
+        log::info!("开始测试dislike");
+       let get_user_name_by_mid = super::get_user_name_by_mid("123456".to_string()).await;
+
+        log::info!("result={:?}", get_user_name_by_mid);
+        log::logger().flush();
+    }
+
+
+
     //测试 get_rank_by_tid
     #[tokio::test]
     async fn test_get_rank_by_tid() {
@@ -781,14 +817,12 @@ mod tests {
         log::logger().flush();
     }
 
-
     //测试  get_region_lastest_video
     #[tokio::test]
     async fn test_get_region_lastest_video() {
-            
         crate::init().await;
         log::info!("开始测试get_region_lastest_video");
-        let result = super::get_region_lastest_video(1,4).await.unwrap();
+        let result = super::get_region_lastest_video(1, 4).await.unwrap();
         log::info!("result={:?}", result);
         log::logger().flush();
     }
@@ -814,7 +848,6 @@ pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
 
 /// json结构转换为VideoDetail
 pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailDTO> {
-
     let mut data = body["data"].take();
     let mut r: VideoDetailDTO = serde_json::from_value(data["View"].take())?;
     let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
@@ -855,8 +888,7 @@ pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
     .await?;
 
     let list = body["data"]["list"].take();
-    data_util::download_json_response(&list,"get_rank_by_tid.json")?;
-
+    data_util::download_json_response(&list, "get_rank_by_tid.json")?;
 
     R::Ok(serde_json::from_value(list)?)
 }
@@ -865,16 +897,45 @@ pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
 /// * tid 分区id
 /// * page_num 页码
 pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<VideoDetailDTO>> {
-
-
     let url = "https://api.bilibili.com/x/web-interface/dynamic/region";
-    let mut body = common_get(url, vec![
-        ("rid".to_string(), tid.to_string()),
-        ("ps".to_string(), "20".to_string()),
-        ("pn".to_string(), page_num.to_string()),
-    ]).await.context("get_region_lastest_video 请求失败")?;
+    let mut body = common_get(
+        url,
+        vec![
+            ("rid".to_string(), tid.to_string()),
+            ("ps".to_string(), "20".to_string()),
+            ("pn".to_string(), page_num.to_string()),
+        ],
+    )
+    .await
+    .context("get_region_lastest_video 请求失败")?;
 
     download_json_response(&mut body, "get_region_lastest_video.json")?;
     let value = body["data"]["archives"].take();
     R::Ok(serde_json::from_value(value).context("get_region_lastest_video json 解析失败")?)
 }
+
+
+// 使用 LazyLock 初始化用户名提起表达式
+pub static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"<title>(.*?)的个人空间-(.*?)个人主页-哔哩哔哩视频</title>")
+        .expect("Failed to compile 用户名提起表达式")
+});
+/// 根据mid获取用户名
+pub(crate) async fn get_user_name_by_mid(mid: String) -> R<String> {
+    let body = no_auth_cookie_get(&format!("https://space.bilibili.com/{}", mid), vec![]).await?;
+   
+    
+    if let Some(captures) = USER_NAME_REGEX.captures(&body) {
+        let xxx1 = captures.get(1).map(|m| m.as_str()).unwrap_or("");
+        let xxx2 = captures.get(2).map(|m| m.as_str()).unwrap_or("");
+        
+        if xxx1 == xxx2 {
+           return R::Ok(xxx1.to_string())
+        }
+    }
+    
+    R::Err(HttpError::BadRequest(format!("根据{mid} 无法获取到用户名")))
+}
+
+
+

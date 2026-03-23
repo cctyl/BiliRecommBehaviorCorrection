@@ -8,7 +8,7 @@ use crate::{
         enumeration::AccessType, models::AssociateRule,
     },
     extractor::path::MyPath,
-    handler::associate_rule,
+    handler::associate_rule_handler,
     service::associate_rule_service,
 };
 

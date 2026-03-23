@@ -1,6 +1,6 @@
 
 /// 当前版本
-const CURRENT_VERSION: u32 = 2;
+const CURRENT_VERSION: u32 = 3;
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -150,6 +150,13 @@ pub async fn exec_sql(path: &str) -> R<()> {
 
     Ok(())
 }
+
+
+// 使用 LazyLock 初始化用户名提起表达式
+pub static NUMBER_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(\d+)\.sql$")
+        .expect("Failed to compile NUMBER_REGEX")
+});
 /**
  * 加载迁移文件
  */
@@ -167,8 +174,8 @@ fn load_migrations() -> std::io::Result<HashMap<u32, String>> {
             if let Some(file_name) = path.file_name().and_then(|f| f.to_str()) {
                 if file_name.ends_with(".sql") {
                     // 使用正则表达式提取文件名中的数字
-                    let re = regex::Regex::new(r"^(\d+)\.sql$").unwrap();
-                    if let Some(captures) = re.captures(file_name) {
+                 
+                    if let Some(captures) = NUMBER_REGEX.captures(file_name) {
                         if let Ok(number) = captures[1].parse::<u32>() {
                             migrations.insert(number, path.to_string_lossy().to_string());
                         }
@@ -183,10 +190,12 @@ fn load_migrations() -> std::io::Result<HashMap<u32, String>> {
 }
 
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use log::info;
 use rbatis::{crud, impled, sql, RBatis};
 use rbatis::rbdc::DateTime;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sqlparser::dialect::SQLiteDialect;
 use sqlparser::parser::Parser;

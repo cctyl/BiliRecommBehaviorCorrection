@@ -23,6 +23,17 @@ use serde::{Deserialize, Serialize};
 use crate::app::config::CC;
 
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Region{
+    pub tid:u32,
+    pub code:String,
+    pub name:String,
+    pub desc:Option<String>,
+    pub router:Option<String>,
+    pub pid:u32
+}
+plus!(Region{});
+crud!(Region{});
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AssociateRule {
@@ -175,7 +186,7 @@ impl Dict{
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {
     pub id: Option<String>,
-    pub mid: u64,
+    pub mid: String,
     pub name: String,
     pub face: Option<String>,
 }
