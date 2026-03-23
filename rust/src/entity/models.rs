@@ -44,6 +44,11 @@ impl_select_page!(AssociateRule{select_page_by_access_type(access_type:AccessTyp
      if !sql.contains('count(1)'):  
        `order by created_date desc`"});
 
+impl Default for AssociateRule{
+    fn default() -> Self {
+        Self { id: generate_id(), info: Default::default(), created_date: Default::default(), last_modified_date: Default::default(), access_type: Default::default() }
+    }
+}
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -67,6 +72,8 @@ impl_select!(Config{
     select_by_name(name:&str)->Option =>
     "  ` where name = #{name}  limit 1 ` "
 });
+
+
 
 
 impl Config{

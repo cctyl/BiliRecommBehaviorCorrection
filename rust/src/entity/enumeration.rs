@@ -107,7 +107,7 @@ pub enum DictType {
 /**
  * 访问类型
  */
-#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize)]
+#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize,Default)]
 pub enum  AccessType  {
     /**
      * 黑名单
@@ -118,6 +118,7 @@ pub enum  AccessType  {
      */
     WHITE,
 
+    #[default]
     OTHER,
 
 

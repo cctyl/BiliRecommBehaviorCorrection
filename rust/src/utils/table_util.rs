@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 
 
-/// Simplifies table construction by relying on the Default trait
+/// 简化结构体的创建，依赖 Default trait
 ///
 /// step1:  impl Default
 /// ```rust
@@ -25,8 +25,9 @@ macro_rules! table {
            }
         }
 }
-/// take the target Vec member attribute Vec collection
-/// for example:
+
+/// 提取Vec中的对象的成员属性，生成Vec
+
 ///```rust
 ///use rbatis::table_field_vec;
 ///struct SysUserRole{
@@ -67,8 +68,8 @@ macro_rules! table_field_vec {
     }};
 }
 
-/// take the target Vec member attribute Vec collection
-/// for example:
+/// 提取Vec中的对象的成员属性，生成HashSet
+
 /// ```rust
 ///use std::collections::HashSet;
 ///use rbatis::table_field_set;
@@ -111,8 +112,10 @@ macro_rules! table_field_set {
     }};
 }
 
-/// Gets the HashMap collection of member attributes of the target Vec
-/// for example:
+
+/// 从结构体 Vec 中提取指定字段作为键，创建一个 HashMap，其中字段值为键，整个结构体为值
+/// 生成的是  HashMap<字段，对象>  ，注意值不是对象Vec，不是一个group_by
+
 /// ```rust
 ///use std::collections::HashMap;
 ///use rbatis::table_field_map;
@@ -143,8 +146,11 @@ macro_rules! table_field_map {
     }};
 }
 
-/// Gets the BtreeMap collection of member attributes of the target Vec
-/// for example:
+
+/// 从结构体 Vec 中提取指定字段作为键，创建一个 BTreeMap ，其中字段值为键，整个结构体为值
+/// 生成的是  BTreeMap<字段，对象>  ，注意值不是对象Vec，不是一个group_by
+/// 相比HashMap 查找快一点
+
 /// ```rust
 ///use std::collections::BTreeMap;
 /// use rbatis::table_field_btree;
@@ -175,9 +181,7 @@ macro_rules! table_field_btree {
     }};
 }
 
-/// Used to simulate enumerations to improve code maintainability.
-/// this is return &str data
-/// for example:
+/// 获取结构体的字段名，类似反射。比如有一个 name:Option<String>, 通过这个宏能拿到  "name"
 ///```rust
 ///pub struct MockTable{
 ///  pub id:String
@@ -208,9 +212,7 @@ macro_rules! field_name {
     }};
 }
 
-/// Used to simulate enumerations to improve code maintainability.
-/// this is return &str data
-/// for example:
+
 ///```rust
 ///pub struct MockTable{
 ///  pub id:String
