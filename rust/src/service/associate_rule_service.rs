@@ -10,7 +10,7 @@ use crate::{
         enumeration::{AccessType, DictType},
         models::{AssociateRule, Dict},
     },
-    utils::{collection_tool::group_by, id::generate_id},
+    utils::{ collection_tool::VecGroupByExt, id::generate_id},
 };
 
 /// 查询规则列表
@@ -44,14 +44,14 @@ pub async fn get_associate_tule_list(
     .await?;
 
     //按照id分组
-    let mut grouped = group_by(dict_by_outerid, |f| {
-        f.outer_id.clone().unwrap_or(String::from("0")).clone()
+    let mut grouped = dict_by_outerid.group_by( |f| {
+        f.outer_id.clone()
     });
 
     let mut result: Vec<AssociateRuleListDto> = Vec::new();
     for item in records {
         if let Some(v) = grouped.remove(&item.id) {
-            let mut dict_type_map = group_by(v, |f| f.dict_type);
+            let mut dict_type_map =v. group_by(|f| Some(f.dict_type));
 
             let newitem = AssociateRuleListDto {
                 id: item.id, // 直接转移所有权，无需 clone

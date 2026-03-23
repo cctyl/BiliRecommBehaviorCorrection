@@ -1,110 +1,94 @@
 use std::collections::HashMap;
+use std::hash::Hash;
 
-/// 通用分组函数
-pub fn group_by<K, V, F>(items: Vec<V>, key_extractor: F) -> HashMap<K, Vec<V>>
-where
-    K: std::hash::Hash + Eq + Clone,
-    F: Fn(&V) -> K,
-{
-    items.into_iter().fold(HashMap::new(), |mut map, item| {
-        let key = key_extractor(&item);
-        map.entry(key).or_insert_with(Vec::new).push(item);
+pub trait VecGroupByExt<T> {
+    /// 保留 None（None 作为一个合法分组 key）
+    fn group_by_full<K, F>(self, f: F) -> HashMap<Option<K>, Vec<T>>
+    where
+        K: Eq + Hash,
+        F: Fn(&T) -> Option<K>;
+
+    /// 忽略 None（过滤掉）
+    fn group_by<K, F>(self, f: F) -> HashMap<K, Vec<T>>
+    where
+        K: Eq + Hash,
+        F: Fn(&T) -> Option<K>;
+}
+
+impl<T> VecGroupByExt<T> for Vec<T> {
+    fn group_by_full<K, F>(self, f: F) -> HashMap<Option<K>, Vec<T>>
+    where
+        K: Eq + Hash,
+        F: Fn(&T) -> Option<K>,
+    {
+        let mut map = HashMap::with_capacity(self.len());
+        for item in self {
+            let key = f(&item); // Option<K>
+            map.entry(key)
+                .or_insert_with(Vec::new)
+                .push(item);
+        }
         map
-    })
+    }
+
+    fn group_by<K, F>(self, f: F) -> HashMap<K, Vec<T>>
+    where
+        K: Eq + Hash,
+        F: Fn(&T) -> Option<K>,
+    {
+        let mut map = HashMap::with_capacity(self.len());
+        for item in self {
+            if let Some(key) = f(&item) {
+                map.entry(key)
+                    .or_insert_with(Vec::new)
+                    .push(item);
+            }
+        }
+        map
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::app::config::CC;
-    use crate::entity::enumeration::AccessType;
-    use crate::entity::models::{AssociateRule, Dict};
-    use crate::utils::collection_tool::group_by;
+    use super::*;
 
-    #[tokio::test]
-    async fn example() {
-        //第一句必须是这个
-        crate::init().await;
-
-        //在这中间编写测试代码
-
-        //最后一句必须是这个
-        log::logger().flush();
+    #[derive(Clone, Debug, Default)]
+    struct TestTable {
+        id: Option<String>,
+        name: Option<String>,
     }
 
-    #[tokio::test]
-    async fn test_group() {
-        //第一句必须是这个
-        // crate::init().await;
+    fn mock_data() -> Vec<TestTable> {
+        vec![
+            TestTable { id: Some("1".into()), name: Some("a".into()) },
+            TestTable { id: Some("2".into()), name: Some("b".into()) },
+            TestTable { id: Some("1".into()), name: Some("c".into()) },
+            TestTable { id: None, name: Some("d".into()) },
+        ]
+    }
 
-        //在这中间编写测试代码
-        let rules = vec![
-            AssociateRule {
-                id: "rule_001".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_002".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_001".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_003".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_002".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_004".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_003".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_005".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_004".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-            AssociateRule {
-                id: "rule_001".to_string(),
-                created_date: None,
-                last_modified_date: None,
-                access_type: AccessType::BLACK,
-            },
-        ];
+    #[test]
+    fn test_group_by_full_keep_none() {
+        let data = mock_data();
 
+        let grouped = data.group_by_full(|x| x.id.clone());
 
-        let group_by = group_by(rules, |f| f.id.clone());
-        println!("{:#?}",group_by);
+        assert_eq!(grouped.len(), 3);
 
-        //最后一句必须是这个
-        // log::logger().flush();
+        assert_eq!(grouped.get(&Some("1".to_string())).unwrap().len(), 2);
+        assert_eq!(grouped.get(&Some("2".to_string())).unwrap().len(), 1);
+        assert_eq!(grouped.get(&None).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_group_by_ignore_none() {
+        let data = mock_data();
+
+        let grouped = data.group_by(|x| x.id.clone());
+
+        assert_eq!(grouped.len(), 2);
+
+        assert_eq!(grouped.get("1").unwrap().len(), 2);
+        assert_eq!(grouped.get("2").unwrap().len(), 1);
     }
 }

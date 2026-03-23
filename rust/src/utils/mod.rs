@@ -9,3 +9,4 @@ pub mod thread_util;
 pub mod segmenter_util;
 pub mod glm_chat;
 pub mod collection_tool;
+pub mod table_util;
