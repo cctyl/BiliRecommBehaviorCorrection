@@ -1,3 +1,52 @@
+
+#[macro_export]  
+macro_rules! impl_count_by_condition {  
+    ($table:ty) => {  
+        $crate::impl_count_by_condition!($table, "");  
+    };  
+    ($table:ty, $table_name:expr) => {  
+        impl $table {  
+            pub async fn count_by_condition(  
+                executor: &dyn rbatis::executor::Executor,  
+                condition: rbs::Value  
+            ) -> std::result::Result<u64, rbatis::rbdc::Error> {  
+                use rbatis::crud_traits::ValueOperatorSql;  
+                  
+                #[rbatis::py_sql(  
+                    "`select count(*) from ${table_name}`  
+                     trim end=' where ':  
+                       ` where `  
+                       trim ' and ': for key,item in condition:  
+                                    if item == null:  
+                                       continue:  
+                                    if !item.is_array():  
+                                      ` and ${key.operator_sql()}#{item}`  
+                                    if item.is_array():  
+                                      ` and ${key} in (`  
+                                         trim ',': for _,item_array in item:  
+                                              #{item_array},  
+                                      `)`"  
+                )]  
+                async fn count_by_condition_impl(  
+                    executor: &dyn rbatis::executor::Executor,  
+                    table_name: String,  
+                    condition: &rbs::Value  
+                ) -> std::result::Result<u64, rbatis::rbdc::Error> {  
+                    rbatis::impled!()  
+                }  
+                  
+                let mut table_name = $table_name.to_string();  
+                if table_name.is_empty() {  
+                    #[rbatis::snake_name($table)]  
+                    fn snake_name() {}  
+                    table_name = snake_name();  
+                }  
+                count_by_condition_impl(executor, table_name, &condition).await  
+            }  
+        }  
+    };  
+}
+
 #[macro_export]  
 macro_rules! impl_select_one_by_condition {  
     ($table:ty) => {  
@@ -222,11 +271,16 @@ macro_rules! plus {
         $crate::impl_update_by_id!($table);      
         $crate::impl_delete_by_id!($table);      
         $crate::impl_select_one_by_condition!($table);      
+        $crate::impl_count_by_condition!($table);      
     };      
     ($table:ty{}, $table_name:expr) => {      
         $crate::impl_select_by_id!($table, $table_name);      
         $crate::impl_update_by_id!($table, $table_name);      
         $crate::impl_delete_by_id!($table, $table_name);      
         $crate::impl_select_one_by_condition!($table, $table_name);      
+        $crate::impl_count_by_condition!($table, $table_name);      
     };      
 }
+
+
+

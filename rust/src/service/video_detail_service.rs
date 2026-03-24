@@ -21,6 +21,7 @@ mod tests {
     use crate::entity::models::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
     use crate::service::video_detail_service::exist_by_id;
     use log::info;
+    use rbs::value;
 
     #[tokio::test]
     async fn example() {
@@ -29,6 +30,21 @@ mod tests {
 
         //在这中间编写测试代码
 
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+     #[tokio::test]
+    async fn test_count_by_condition() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let count_by_condition = VideoDetail::count_by_condition(&CC.rb,value!{"id":116181130349580u64} ).await.unwrap();
+
+        print!("结果：{}",count_by_condition);
         //最后一句必须是这个
         log::logger().flush();
     }
