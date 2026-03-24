@@ -1,6 +1,6 @@
 
 /// 当前版本
-const CURRENT_VERSION: u32 = 3;
+const CURRENT_VERSION: u32 = 5;
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

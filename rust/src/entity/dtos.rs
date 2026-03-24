@@ -169,15 +169,97 @@ pub struct UserSubmissionVideo {
 }
 
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoDetailJsonDto {
+   
+    pub aid: u64,
+    pub tid: Option<i64>,
+    pub tname: Option<String>,
+    pub pic: Option<String>,
+    pub title: Option<String>,
+    pub pubdate: Option<i64>,
+    #[serde(rename = "desc")]
+    pub desc_field: Option<String>,
+    pub duration: Option<i32>,
+    pub dynamic: Option<String>,
+    pub bvid: String,
+    pub owner_id: Option<u64>,
+}
+impl From<VideoDetail> for VideoDetailJsonDto {
+    fn from(detail: VideoDetail) -> Self {
+        VideoDetailJsonDto {
+            aid: detail.id,
+            tid: detail.tid,
+            tname: detail.tname,
+            pic: detail.pic,
+            title: detail.title,
+            pubdate: detail.pubdate,
+            desc_field: detail.desc_field,
+            duration: detail.duration,
+            dynamic: detail.dynamic,
+            bvid: detail.bvid,
+            owner_id: detail.owner_id,
+        }
+    }
+}
+impl From<VideoDetailJsonDto> for VideoDetail {
+    fn from(dto: VideoDetailJsonDto) -> Self {
+        VideoDetail {
+            id: dto.aid,
+            tid: dto.tid,
+            tname: dto.tname,
+            pic: dto.pic,
+            title: dto.title,
+            pubdate: dto.pubdate,
+            desc_field: dto.desc_field,
+            duration: dto.duration,
+            dynamic: dto.dynamic,
+            bvid: dto.bvid,
+            owner_id: dto.owner_id,
+            // 以下字段留空，需要手动填充
+            handle_step: 0,
+            handle_reason: None,
+            handle_time: None,
+            handle_type: None,
+            created_date: Some(DateTime::now()),
+            tag: None,
+        }
+    }
+}
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OwnerJsonDto {
+    pub mid: u64,
+    pub name: String,
+    pub face: Option<String>,
+}
 
+impl From<OwnerJsonDto> for Owner {
+    fn from(dto: OwnerJsonDto) -> Self {
+        Owner {
+            id: dto.mid,
+            name: dto.name,
+            face: dto.face,
+        }
+    }
+}
+
+impl From<Owner> for OwnerJsonDto {
+    fn from(owner: Owner) -> Self {
+        OwnerJsonDto {
+            mid: owner.id,
+            name: owner.name,
+            face: owner.face,
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetailDTO {
     #[serde(flatten)]
-    pub video_detail:VideoDetail,
+    pub video_detail:VideoDetailJsonDto,
     pub tags:Option<Vec<Tag>>,
-    pub owner:Option<Owner>,
+    pub owner:Option<OwnerJsonDto>,
     pub desc_v2:Option<Vec<DescV2>>,
 }
 

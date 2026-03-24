@@ -19,6 +19,7 @@ use rbatis::impled;
 use rbatis::rbdc::types::DateTime;
 use rbatis::sql;
 use serde::{Deserialize, Serialize};
+use crate::app::database::default_false;
 
 use crate::app::config::CC;
 
@@ -185,43 +186,14 @@ impl Dict{
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Owner {
-    pub id: Option<String>,
-    pub mid: String,
+    pub id: u64,
     pub name: String,
     pub face: Option<String>,
 }
 crud!(Owner {}, "owner");
 plus!(Owner{});
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PrepareVideo {
-    pub id: String,
-    pub video_id: String,
-    pub handle_type: String,
-    pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
-}
-crud!(PrepareVideo {}, "prepare_video");
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Stat {
-    pub id: String,
-    pub aid: i32,
-    pub view: Option<i32>,
-    pub danmaku: Option<i32>,
-    pub reply: Option<i32>,
-    pub favorite: Option<i32>,
-    pub coin: Option<i32>,
-    pub share: Option<i32>,
-    pub now_rank: Option<i32>,
-    pub his_rank: Option<i32>,
-    pub like: Option<i32>,
-    pub dislike: Option<i32>,
-    pub video_id: Option<String>,
-    pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
-}
-crud!(Stat {}, "stat");
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Tag {
@@ -271,34 +243,94 @@ impl Task{
 
 
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SingleMatch {
+    #[serde(default="default_false")]
+    pub is_match: bool,
+    
+    #[serde(default)]
+    pub tag: Vec<String>,
+    
+    #[serde(default)]
+    pub desc: Vec<String>,
+    
+    #[serde(default)]
+    pub title: Vec<String>,
+    
+    #[serde(default)]
+    pub cover: Vec<String>,
+    
+    #[serde(default)]
+    pub mid: Vec<u64>,
+    
+    #[serde(default)]
+    pub tid: Vec<String>,
+    
+    #[serde(default)]
+    pub match_count: u32,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ComplexMatch {
+      #[serde(default="default_false")]
+    pub is_match: bool,
+    
+    pub rule_name: Option<String>,
+    
+    #[serde(default)]
+    pub tag: Vec<String>,
+    
+    #[serde(default)]
+    pub desc: Vec<String>,
+    
+    #[serde(default)]
+    pub title: Vec<String>,
+    
+    #[serde(default)]
+    pub cover: Vec<String>,
+    
+    #[serde(default)]
+    pub mid: Vec<u64>,
+    
+    #[serde(default)]
+    pub tid: Vec<String>,
+    
+    #[serde(default)]
+    pub match_count: u32,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct MatchResult {
+    pub single_match: Option<SingleMatch>,
+    pub complex_match: Option<ComplexMatch>,
+    pub ai_match: Option<bool>,
+    pub user_handle_reason: Option<String>,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetail {
-    pub id: Option<String>,
-    #[serde(default)]
-    pub aid: u64,
+   
+    pub id: u64,
     pub tid: Option<i64>,
     pub tname: Option<String>,
     pub pic: Option<String>,
     pub title: Option<String>,
     pub pubdate: Option<i64>,
-    pub ctime: Option<i64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
     pub duration: Option<i32>,
     pub dynamic: Option<String>,
-    pub first_frame: Option<String>,
-    pub pub_location: Option<String>,
     pub bvid: String,
-    pub owner_id: Option<String>,
-    #[serde(deserialize_with = "bool_or_int_opt", default)]
-    pub handle: Option<bool>,
-    pub handle_reason: Option<String>,
-    pub rcmd_reason: Option<String>,
+    pub owner_id: Option<u64>,
+    /// 数字类型，未处理时是0，第一次机器处理是1，第二次处理是2，以此类推，处理完毕是100
+    pub handle_step: u64,
+    pub handle_reason: Option<MatchResult>,
+    /// 处理时间
+    pub handle_time:  Option<DateTime>,
     pub handle_type: Option<HandleType>,
     pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
-    pub tag_ids: Option<String>,
+    /// 标签，逗号分隔
+    pub tag:Option<String>
 
 }
 crud!(VideoDetail {}, "video_detail");
@@ -318,6 +350,9 @@ impl_select!(
     select_by_title_like(name: &str) -> Vec => 
     "`where title like #{name} limit 1`"
 });
+
+
+
 
 #[tokio::test]
 async fn test_video_detail() {
@@ -349,72 +384,7 @@ async fn test_video_detail() {
     println!("{:#?}", result);
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct VideoRelate {
-    pub id: String,
-    pub master_video_id: String,
-    pub related_video_id: String,
-}
-crud!(VideoRelate {}, "video_relate");
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct VideoReply {
-    pub id: String,
-    pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
-    pub video_id: String,
-    pub rpid: i64,
-    pub oid: i64,
-    pub mid: String,
-    pub root: i64,
-    pub parent: i64,
-    pub dialog: i64,
-    pub ctime: i32,
-    pub current_level: i32,
-    pub vip_type: i32,
-    pub message: String,
-    pub sex: Option<String>,
-}
-crud!(VideoReply {}, "video_reply");
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct VideoTag {
-    pub id: String,
-    pub tag_id: String,
-    pub video_id: String,
-    pub created_date: Option<DateTime>,
-}
-crud!(VideoTag {}, "video_tag");
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct WatchedVideo {
-    pub aid: i32,
-}
-crud!(WatchedVideo {}, "watched_video");
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct WhiteListRule {
-    pub id: String,
-    pub info: Option<String>,
-    pub created_date: Option<DateTime>,
-    pub last_modified_date: Option<DateTime>,
-    #[serde(deserialize_with = "bool_or_int_opt")]
-    pub is_deleted: Option<bool>,
-    pub version: Option<i32>,
-}
-crud!(WhiteListRule {}, "white_list_rule");
-#[tokio::test]
-async fn test_white_list_rule() {
-    _ = fast_log::init(
-        fast_log::Config::new()
-            .console()
-            .level(log::LevelFilter::Debug),
-    );
-    CC.init().await;
-
-    let select_by_map = WhiteListRule::select_by_map(&CC.rb, rbs::Value::Null)
-        .await
-        .unwrap();
-    println!("{:#?}", select_by_map);
-}
 

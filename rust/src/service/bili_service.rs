@@ -5,7 +5,7 @@ use crate::{
     app::response::R,
     entity::{
         dtos::{UserSubmissionVideo, VideoDetailDTO},
-        models::VideoDetail,
+        models::{MatchResult, VideoDetail},
     },
     handler::black_rule_handler,
     service::{black_rule_service, dict_service},
@@ -190,13 +190,13 @@ pub(crate) async fn disklike_by_tid(tid: u32) -> R<u32> {
 }
 
 /// 批量给视频点踩
-pub async fn disklisk_video_list(video_list: &mut Vec<VideoDetailDTO>, reason: String) -> R<()> {
+pub async fn disklisk_video_list(video_list: &mut Vec<VideoDetailDTO>, reason_str: String) -> R<()> {
     for video in video_list.iter_mut() {
         let aid = video.video_detail.aid;
         let error_hanle = {
             let db = video_detail_service::find_by_aid(aid).await?;
 
-            if db.is_some() && db.unwrap().handle.unwrap_or(false) {
+            if db.is_some() && db.unwrap().handle_step==100 {
                 info!("该视频已经处理过了：{}", aid);
                 continue;
             }
@@ -207,7 +207,9 @@ pub async fn disklisk_video_list(video_list: &mut Vec<VideoDetailDTO>, reason: S
                 video.video_detail.title.as_ref().unwrap_or(&"".to_string())
             );
             bili::dislike(aid).await?;
-            video_detail_service::record_handle_video(video, HandleType::DISLIKE, reason.clone())
+            let mut reason = MatchResult::default();
+            reason.user_handle_reason = Some(reason_str.clone());
+            video_detail_service::record_handle_video(video, HandleType::DISLIKE, reason)
                 .await?;
 
             ThreadUtil::s30().await;

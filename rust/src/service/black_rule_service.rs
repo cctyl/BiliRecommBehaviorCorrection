@@ -9,9 +9,7 @@ use crate::{
 };
 
 /// 根据视频列表训练黑名单
-pub(crate) async fn train_blacklist_by_video_list(
-    video_detail_list: Vec<VideoDetailDTO>,
-) -> R<()> {
+pub(crate) async fn train_blacklist_by_video_list(video_detail_list: Vec<VideoDetailDTO>) -> R<()> {
     let mut title_process = vec![];
     let mut desc_processs = vec![];
     let mut tag_name_process = vec![];
@@ -45,11 +43,11 @@ pub(crate) async fn train_blacklist_by_video_list(
 
     let stop_word_list: Vec<String> = dict_service::get_stop_word_list().await?;
 
-    let  top_title_word =
+    let top_title_word =
         segmenter_util::get_top_frequent_word_from_list_auto_limit(&title_process, &stop_word_list);
-    let  top_desc_word =
+    let top_desc_word =
         segmenter_util::get_top_frequent_word_from_list_auto_limit(&desc_processs, &stop_word_list);
-    let  top_tag_name_word = segmenter_util::get_top_frequent_word_from_list_auto_limit(
+    let top_tag_name_word = segmenter_util::get_top_frequent_word_from_list_auto_limit(
         &tag_name_process,
         &stop_word_list,
     );
@@ -64,70 +62,71 @@ pub(crate) async fn train_blacklist_by_video_list(
         top_desc_word, top_tag_name_word, top_title_word
     );
 
-
-
     //获取需要忽略的黑名单关键词
-    let ignore_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(DictType::KEYWORD, AccessType::BLACK).await?;
-    let ignore_tag_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(DictType::TAG, AccessType::BLACK).await?;
+    let ignore_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(
+        DictType::KEYWORD,
+        AccessType::BLACK,
+    )
+    .await?;
+    let ignore_tag_keyword = dict_service::find_ignore_value_by_dict_type_and_access_type(
+        DictType::TAG,
+        AccessType::BLACK,
+    )
+    .await?;
 
     //已有的关键词
-    let exist_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(DictType::KEYWORD, AccessType::BLACK).await?;
-    let exist_tag_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(DictType::TAG, AccessType::BLACK).await?;
+    let exist_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(
+        DictType::KEYWORD,
+        AccessType::BLACK,
+    )
+    .await?;
+    let exist_tag_keyword = dict_service::find_normal_value_by_dict_type_and_access_type(
+        DictType::TAG,
+        AccessType::BLACK,
+    )
+    .await?;
 
-    top_title_word.retain(|s|
-        !(ignore_keyword.contains(s) 
-        ||
-        exist_keyword.contains(s))
-    );
+    //去重
+    top_title_word.retain(|s| !(ignore_keyword.contains(s) || exist_keyword.contains(s)));
 
-
-    if !top_title_word.is_empty(){
-
+    if !top_title_word.is_empty() {
         dict_service::batch_add_dict_from_value(
             top_title_word,
             DictType::KEYWORD,
             AccessType::BLACK,
-            DictStatus::CACHE
-        ).await?;
-
+            DictStatus::CACHE,
+        )
+        .await?;
     }
 
-    top_desc_word.retain(|s|{
-        !(ignore_keyword.contains(s) 
-        ||
-        exist_keyword.contains(s))
-    });
+    //去重
+    top_desc_word.retain(|s| !(ignore_keyword.contains(s) || exist_keyword.contains(s)));
 
-
-    if !top_desc_word.is_empty(){
-
+    if !top_desc_word.is_empty() {
         dict_service::batch_add_dict_from_value(
             top_desc_word,
             DictType::KEYWORD,
             AccessType::BLACK,
-            DictStatus::CACHE
-        ).await?;
-
+            DictStatus::CACHE,
+        )
+        .await?;
     }
 
+    //去重
+    top_tag_name_word
+        .retain(|s| !(ignore_tag_keyword.contains(s) || exist_tag_keyword.contains(s)));
 
-    top_tag_name_word.retain(|s|
-        !(ignore_tag_keyword.contains(s) 
-        ||
-        exist_tag_keyword.contains(s))
-    );
-
-
-    if !top_tag_name_word.is_empty(){
+    if !top_tag_name_word.is_empty() {
         dict_service::batch_add_dict_from_value(
             top_tag_name_word,
             DictType::TAG,
             AccessType::BLACK,
-            DictStatus::CACHE
-        ).await?;
+            DictStatus::CACHE,
+        )
+        .await?;
     }
-   
-   R::Ok(())
+
+    R::Ok(())
 }
 
 /// 过滤掉以bv开头的关键词
