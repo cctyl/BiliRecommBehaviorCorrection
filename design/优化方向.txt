@@ -214,10 +214,15 @@ video_detail 表的修改
 
 	
 plus宏
-	添加 exits_by_condition
-	和 count_by_condition
+	
+	 count_by_condition
 	
 	并测试
+	
+	
+	
+增加 select_column_by_condition
+	就是手动输入字段，只查询部分字段
 	
 完成rust版本的视频判断
 

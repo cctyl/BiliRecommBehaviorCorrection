@@ -7,9 +7,9 @@ use rbatis::Page;
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
-use crate::entity::dtos::PageDTO;
-use crate::entity::enumeration::{Classify, MediaType};
-use crate::entity::models::CookieHeaderData;
+use crate::domain::dtos::PageDTO;
+use crate::domain::enumeration::{Classify, MediaType};
+use crate::domain::cookie_header_data::CookieHeaderData;
 use crate::utils::id::generate_id;
 use crate::{
     api::bili, app::{

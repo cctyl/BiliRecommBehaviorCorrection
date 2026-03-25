@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::constans::{DISLIKE_BY_TID_TASK, DISLIKE_BY_USER_ID_TASK};
 use crate::app::task_pool::{self, TASK_POOL};
-use crate::entity::dtos::{self, PageDTO};
-use crate::entity::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
-use crate::entity::models::{CookieHeaderData, Dict, Task};
+use crate::domain::dtos::{self, PageDTO};
+use crate::domain::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
+use crate::domain::{cookie_header_data::CookieHeaderData, dict::Dict, task::Task};
 use crate::service::{bili_service, dict_service, task_service};
 use crate::utils::id::generate_id;
 use crate::utils::thread_util::ThreadUtil;

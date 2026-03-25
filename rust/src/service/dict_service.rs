@@ -1,7 +1,7 @@
 use anyhow::Context;
 use log::info;
 use rbatis::{
-    RBatis, impl_select, impl_update, py_sql,
+    RBatis,  py_sql,
     rbdc::{DateTime, db::ExecResult},
 };
 use rbs::value;
@@ -9,12 +9,12 @@ use std::collections::HashSet;
 use tokio::sync::mpsc;
 use tokio::{fs::File, io::AsyncReadExt};
 
-use crate::entity::enumeration::DictStatus;
+use crate::domain::enumeration::DictStatus;
 use crate::{
     app::{config::CC, error::HttpError, response::R},
-    entity::{
+    domain::{
         enumeration::{AccessType, DictType},
-        models::Dict,
+        dict::Dict,
     },
     handler::dict_handler::DictDto,
     service::{
@@ -31,15 +31,15 @@ mod tests {
 
     use anyhow::Context;
     use log::info;
-    use rbatis::{impl_select, rbdc::DateTime};
+    use rbatis::{ rbdc::DateTime};
     use rbs::value;
 
-    use crate::entity::enumeration::DictStatus;
+    use crate::domain::enumeration::DictStatus;
     use crate::{
         app::{config::CC, error::HttpError, response::R},
-        entity::{
+        domain::{
             enumeration::{AccessType, DictType},
-            models::Dict,
+            dict::Dict,
         },
         handler::dict_handler::DictDto,
         service::dict_service::{

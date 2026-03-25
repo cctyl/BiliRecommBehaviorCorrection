@@ -10,7 +10,7 @@ use rbs::value;
 
 use crate::{
     app::{config::CC, error::HttpError, response::R, task_pool::TASK_POOL},
-    entity::{enumeration::TaskStatus, models::Task},
+    domain::{enumeration::TaskStatus, task::Task},
 };
 
 /// 不存在则新增该任务
@@ -130,7 +130,7 @@ mod tests {
     use rbs::value;
 
     use crate::{
-        app::{config::CC, response::R}, entity::{enumeration::TaskStatus, models::Task}, impl_select_by_id, service::task_service::update_task_status
+        app::{config::CC, response::R}, domain::{enumeration::TaskStatus, task::Task}, impl_select_by_id, service::task_service::update_task_status
     };
 
     #[tokio::test]

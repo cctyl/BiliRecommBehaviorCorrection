@@ -50,7 +50,7 @@ macro_rules! impl_count_by_condition {
 #[macro_export]  
 macro_rules! impl_select_one_by_condition {  
     ($table:ty) => {  
-        impl_select_one_by_condition!($table, "");  
+         $crate::impl_select_one_by_condition!($table, "");  
     };  
     ($table:ty, $table_name:expr) => {  
         impl $table {  

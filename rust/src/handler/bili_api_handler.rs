@@ -2,7 +2,7 @@ use axum::{Router, debug_handler};
 use log::info;
 use rbs::value;
 
-use crate::{api::bili, app::{config::CC, response::{OkRespExt, R, RR}}, entity::models::Owner, extractor::path::MyPath};
+use crate::{api::bili, app::{config::CC, response::{OkRespExt, R, RR}}, domain::owner::Owner, extractor::path::MyPath};
 
 pub fn create_router() -> Router {
     Router::new().route(

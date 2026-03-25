@@ -2,12 +2,12 @@ use std::collections::HashSet;
 use rbs::value;
 use crate::app::config::CC;
 use crate::app::response::R;
-use crate::entity::models::Tag;
+use crate::domain::tag::Tag;
 use crate::utils::id;
 
 #[cfg(test)]
 mod tests{
-    use crate::entity::models::Tag;
+    use crate::domain::tag::Tag;
 
     #[tokio::test]
     async fn example() {

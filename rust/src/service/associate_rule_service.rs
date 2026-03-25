@@ -5,10 +5,8 @@ use rbs::value;
 
 use crate::{
     app::{config::CC, response::R},
-    entity::{
-        dtos::{AssociateRuleAddDto, AssociateRuleListDto, AssociateRuleUpdateDto, PageDTO},
-        enumeration::{AccessType, DictType},
-        models::{AssociateRule, Dict},
+    domain::{
+        associate_rule::AssociateRule, dict::Dict, dtos::{AssociateRuleAddDto, AssociateRuleListDto, AssociateRuleUpdateDto, PageDTO}, enumeration::{AccessType, DictType}
     },
     utils::{ collection_tool::VecGroupByExt, id::generate_id},
 };
@@ -85,9 +83,11 @@ pub async fn get_associate_tule_list(
 
 #[cfg(test)]
 mod tests {
+    use rbs::value;
+
     use crate::app::config::CC;
-    use crate::entity::enumeration::AccessType;
-    use crate::entity::models::AssociateRule;
+    use crate::domain::enumeration::AccessType;
+    use crate::domain::associate_rule::AssociateRule;
     use crate::service::associate_rule_service::get_associate_tule_list;
 
     #[tokio::test]
@@ -107,7 +107,7 @@ mod tests {
         crate::init().await;
 
         //在这中间编写测试代码
-        let vec = AssociateRule::select_all(&CC.rb).await.unwrap();
+        let vec = AssociateRule::select_by_map(&CC.rb,value!{}).await.unwrap();
 
         println!("{:#?}", vec);
 

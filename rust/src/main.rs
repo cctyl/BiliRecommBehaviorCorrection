@@ -9,7 +9,7 @@ mod app;
 mod macros;
 
 mod api;
-mod entity;
+mod domain;
 mod handler;
 mod service;
 mod single_test;
@@ -20,7 +20,7 @@ use crate::app::config::CC;
 use crate::app::error::HttpError;
 use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
-use crate::entity::enumeration::{Classify, MediaType};
+use crate::domain::enumeration::{Classify, MediaType};
 use crate::utils::migration::start_migration;
 
 use app::config::ServerConfig;

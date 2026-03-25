@@ -7,7 +7,7 @@ use std::{
 use validator::Validate;
 use rbatis::{rbdc::datetime::DateTime, Page};
 
-use crate::entity::{enumeration::AccessType, models::{Dict, Owner, Tag, VideoDetail}};
+use crate::domain::{ dict::Dict, enumeration::AccessType, owner::Owner, tag::Tag, video_detail::VideoDetail};
 #[test]
 fn testnow() {
 

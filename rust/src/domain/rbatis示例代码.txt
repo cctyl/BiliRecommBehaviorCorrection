@@ -1,0 +1,48 @@
+
+
+返回值不需要用 rbatis::Result包裹，如果报错了，到时候再包起来
+
+
+#[sql("SELECT * FROM config WHERE name = ?")]
+pub async fn select_by_name(rb: &dyn Executor, name: &str) -> Option<Config> {
+    impled!()
+}
+
+
+
+
+
+#[html_sql("src/domain/table/associate_rule.html")]
+impl AssociateRule {
+
+     pub async fn select_page(
+        conn: &dyn Executor,
+
+        request:&rbatis::PageRequest,
+
+        dto: &PermissionPageDTO
+
+     ) -> RB<Page<RbacPermission>> { impled!() }
+}
+
+
+
+
+<select id="select_page">
+    `select * from rbac_permission`
+    <where>
+        <if test="dto.name != null">
+            ` and name like concat('%', #{dto.name}, '%')`
+        </if>
+    </where>
+    <if test="do_count == false">
+        ` order by create_date desc`
+    </if>
+</select>
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
+<mapper>
+  
+</mapper>

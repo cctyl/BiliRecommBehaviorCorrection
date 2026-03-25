@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler};
 
 use crate::{
-    app::response::{OkRespExt, RR}, entity::models::Region, service::region_service,
+    app::response::{OkRespExt, RR}, domain::region::Region, service::region_service,
 };
 
 pub fn create_router() -> Router {

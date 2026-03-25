@@ -1,12 +1,12 @@
 use crate::app::config::CC;
 use crate::app::response::R;
-use crate::entity::models::Owner;
+use crate::domain::owner::Owner;
 use crate::utils::id;
 use rbs::value;
 use std::borrow::Cow::Owned;
 #[cfg(test)]
 mod tests{
-    use crate::entity::models::Owner;
+    use crate::domain::owner::Owner;
 
     #[tokio::test]
     async fn example() {

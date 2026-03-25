@@ -1,10 +1,10 @@
 use log::info;
 
-use crate::entity::enumeration::{AccessType, DictStatus, DictType};
+use crate::domain::enumeration::{AccessType, DictStatus, DictType};
 use crate::utils::segmenter_util;
 use crate::{
     app::response::R,
-    entity::{dtos::VideoDetailDTO, models::VideoDetail},
+    domain::{dtos::VideoDetailDTO, video_detail::VideoDetail},
     service::dict_service,
 };
 

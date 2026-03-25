@@ -1,0 +1,11 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
+<mapper>
+    <select id="select_page_by_access_type">
+        ` select * from associate_rule   where access_type = #{access_type} `
+
+         <if test="do_count == false">
+        ` order by created_date desc`
+         </if>
+    </select>
+</mapper>

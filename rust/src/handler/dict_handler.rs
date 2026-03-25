@@ -8,9 +8,9 @@ use rbatis::rbdc::{Date, DateTime};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 
-use crate::entity::dtos::{self, PageDTO};
-use crate::entity::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
-use crate::entity::models::{CookieHeaderData, Dict};
+use crate::domain::dtos::{self, PageDTO};
+use crate::domain::enumeration::{AccessType, Classify, DictStatus, DictType, MediaType};
+use crate::domain::{cookie_header_data::CookieHeaderData, dict::Dict};
 use crate::service::dict_service;
 use crate::utils::id::generate_id;
 use crate::{

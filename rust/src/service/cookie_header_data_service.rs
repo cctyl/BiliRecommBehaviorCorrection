@@ -16,8 +16,8 @@ use crate::{
         config::CC,
         global::{GlobalState, GlobalStateHandler, GLOBAL_STATE},
         response::R,
-    }, entity::{
-        dtos::PageDTO, enumeration::{Classify, MediaType}, models::CookieHeaderData
+    }, domain::{
+        dtos::PageDTO, enumeration::{Classify, MediaType}, cookie_header_data::CookieHeaderData
     }, service::cookie_header_data_service, utils::{data_util, id::generate_id}
 };
 

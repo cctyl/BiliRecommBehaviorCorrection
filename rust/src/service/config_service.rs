@@ -8,7 +8,7 @@ use crate::{
         config::CC,
         response::R,
     },
-    entity::{dtos::ConfigAddUpdateDTO, models::Config},
+    domain::{dtos::ConfigAddUpdateDTO, config::Config},
 };
 
 /**
@@ -76,7 +76,7 @@ pub async fn add_or_update_config(
  * 如果超时则删除配置项
  */
 pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
-    let config = Config::select_column_by_name(&CC.rb, "*", name).await?;
+    let config = Config::select_one_by_condition(&CC.rb,  value! {"name":name}).await?;
 
     if let Some(config) = config.as_ref() {
         let expire_second = config.expire_second.unwrap_or(-1) as i64;
@@ -137,7 +137,7 @@ mod tests {
     use rbs::value;
 
     use crate::app::constans::BILI_ACCESS_KEY;
-    use crate::{app::config::CC, entity::models::Config};
+    use crate::{app::config::CC, domain::config::Config};
 
     use crate::service::config_service::*;
 

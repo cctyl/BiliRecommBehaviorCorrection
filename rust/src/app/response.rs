@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::error::{ErrorMessage, HttpError};
 pub type R<T> = Result<T, HttpError>;
+pub type RB<T> =  std::result::Result<T, rbatis::error::Error>;
 pub type RR<T> = R<Resp<T>>;
 
 #[derive(Debug, Serialize, Deserialize)]

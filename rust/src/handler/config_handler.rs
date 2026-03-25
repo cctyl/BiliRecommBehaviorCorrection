@@ -3,13 +3,14 @@ use std::{collections::HashMap, hash::Hash};
 use axum::{debug_handler, extract::Query, Json, Router};
 use fast_log::config;
 use log::info;
+use rbs::value;
 use serde::Deserialize;
 
 use crate::{
     api::bili, app::{
         config::CC,
         response::{OkRespExt, RR, *},
-    }, entity::{dtos::ConfigAddUpdateDTO, models::Config}, service::{config_service, cookie_header_data_service}
+    }, domain::{dtos::ConfigAddUpdateDTO, config::Config}, service::{config_service, cookie_header_data_service}
 };
 
 
@@ -138,7 +139,7 @@ async fn get_tv_qr_code() -> RR<String> {
  */
 #[debug_handler]
 async fn get_standard_config_info() -> RR<Vec<Config>> {
-    let select_all: Vec<Config> = Config::select_all(&CC.rb).await?;
+    let select_all: Vec<Config> = Config::select_by_map(&CC.rb,value!{}).await?;
 
     RR::success(select_all)
 }

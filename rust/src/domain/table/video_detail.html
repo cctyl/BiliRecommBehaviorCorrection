@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "https://raw.githubusercontent.com/rbatis/rbatis/master/rbatis-codegen/mybatis-3-mapper.dtd">
+<mapper>
+    <select id="select_by_title_like">
+        ` select * from video_detail where title  like concat('%', #{name}, '%') limit 1 `
+    </select>
+
+
+     <select id="select_page">
+        ` select * from video_detail   `
+
+         <if test="do_count == false">
+        ` order by created_date desc`
+         </if>
+    </select>
+
+
+  <select id="select_page_by_name">
+    `select * from video_detail`
+    <where>
+        <if test=" tname != null && tname != '' ">
+            ` and tname like concat('%', #{tname}, '%')`
+        </if>
+    </where>
+    <if test="do_count == false">
+        ` order by created_date desc`
+    </if>
+</select>
+</mapper>

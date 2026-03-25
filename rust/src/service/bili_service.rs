@@ -3,9 +3,9 @@ use std::sync::Arc;
 use crate::{
     api::bili,
     app::response::R,
-    entity::{
+    domain::{
         dtos::{UserSubmissionVideo, VideoDetailDTO},
-        models::{MatchResult, VideoDetail},
+        video_detail::{MatchResult, VideoDetail},
     },
     handler::black_rule_handler,
     service::{black_rule_service, dict_service},
@@ -16,7 +16,7 @@ use crate::{
 };
 
 use crate::app::error::HttpError;
-use crate::entity::enumeration::HandleType;
+use crate::domain::enumeration::HandleType;
 use crate::service::video_detail_service;
 use data_util::RandomAccessListConsumer;
 use log::{error, info};

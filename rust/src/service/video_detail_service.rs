@@ -1,8 +1,8 @@
 use crate::app::config::CC;
 use crate::app::response::R;
-use crate::entity::dtos::VideoDetailDTO;
-use crate::entity::enumeration::HandleType;
-use crate::entity::models::{MatchResult, VideoDetail};
+use crate::domain::dtos::VideoDetailDTO;
+use crate::domain::enumeration::HandleType;
+use crate::domain::{video_detail::MatchResult, video_detail::VideoDetail};
 use crate::service::{owner_service, tag_service};
 use crate::utils::id;
 use anyhow::Context;
@@ -17,8 +17,8 @@ mod tests {
     use crate::api::bili;
     use crate::app::config::CC;
     use crate::app::response::R;
-    use crate::entity::enumeration::HandleType;
-    use crate::entity::models::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
+    use crate::domain::enumeration::HandleType;
+    use crate::domain::video_detail::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
     use crate::service::video_detail_service::exist_by_id;
     use log::info;
     use rbs::value;

@@ -3,9 +3,9 @@ use log::info;
 
 use crate::{
     app::response::{OkRespExt, RR},
-    entity::{
+    domain::{
         dtos::{AssociateRuleAddDto, AssociateRuleListDto, AssociateRuleUpdateDto, PageDTO},
-        enumeration::AccessType, models::AssociateRule,
+        enumeration::AccessType, associate_rule::AssociateRule,
     },
     extractor::path::MyPath,
     handler::associate_rule_handler,
