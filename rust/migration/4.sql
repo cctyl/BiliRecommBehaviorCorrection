@@ -25,7 +25,7 @@ CREATE TABLE "video_detail_new" (
 CREATE INDEX "idx_video_detail_new_handle_type" ON "video_detail_new"("handle_type" ASC);
 CREATE INDEX "idx_video_detail_new_handle_step" ON "video_detail_new"("handle_step" ASC);
 
--- 步骤3: 先迁移数据（tag字段暂时为NULL）
+-- 步骤3: 迁移数据（使用转义处理特殊字符）
 INSERT INTO "video_detail_new" (
     "id",
     "tid",
@@ -66,7 +66,23 @@ SELECT
     END AS handle_step,
     CASE 
         WHEN vd.handle_reason IS NOT NULL AND vd.handle_reason != '' 
-        THEN '{"user_handle_reason":"' || vd.handle_reason || '"}'
+        THEN '{"user_handle_reason":"' || 
+            replace(
+                replace(
+                    replace(
+                        replace(
+                            replace(
+                                vd.handle_reason,
+                                '\', '\\'    -- 转义反斜杠
+                            ),
+                            '"', '\\"'      -- 转义双引号
+                        ),
+                        CHAR(10), '\\n'     -- 转义换行符
+                    ),
+                    CHAR(13), '\\r'         -- 转义回车符
+                ),
+                CHAR(9), '\\t'              -- 转义制表符
+            ) || '"}'
         ELSE NULL
     END AS handle_reason,
     NULL,  -- tag字段先留空
@@ -115,8 +131,7 @@ DROP TABLE video_detail;
 -- 步骤9: 重命名新表
 ALTER TABLE video_detail_new RENAME TO video_detail;
 
-
-
+-- 步骤10: 清理其他表
 DROP TABLE IF EXISTS stat;
 DROP TABLE IF EXISTS white_list_rule;
 DROP TABLE IF EXISTS prepare_video;
@@ -124,12 +139,3 @@ DROP TABLE IF EXISTS video_reply;
 DROP TABLE IF EXISTS video_relate;
 DROP TABLE IF EXISTS video_tag;
 DROP TABLE IF EXISTS watched_video;
-
-
-
-
-
-
-
-
-
