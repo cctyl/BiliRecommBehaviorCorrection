@@ -1,20 +1,23 @@
-use log::{LevelFilter, error, info};
+use log::{LevelFilter, debug, error, info};
+use rbs::value;
 use serde::Serialize;
 
 use core::error;
 use std::{
     cell::RefCell,
     collections::HashMap,
-    sync::{LazyLock, OnceLock},
+    sync::{Arc, LazyLock, OnceLock},
     time::Duration,
 };
 
 use crate::{
-    app::response::R,
+    app::{interceptor::SqlOnlyLogInterceptor, response::R},
     domain::config::Config,
     utils::glm_chat::{ChatConfig, ChatGlm},
 };
-use rbatis::{RBatis, dark_std::errors::new, intercept_log::LogInterceptor};
+use rbatis::{
+    RBatis, dark_std::errors::new, intercept_log::LogInterceptor, intercept_page::PageIntercept,
+};
 use rbdc_sqlite::Driver;
 use rbdc_sqlite::driver::SqliteDriver;
 use serde::{Deserialize, Deserializer, de};
@@ -53,16 +56,21 @@ pub struct AppContext {
     pub rb: RBatis,
     pub config: ServerConfig,
     pub chat: RwLock<ChatGlm>,
+    pub config_map: RwLock<HashMap<String, String>>,
 }
 pub static CC: LazyLock<AppContext> = LazyLock::new(|| AppContext {
     rb: RBatis::new(),
     config: ServerConfig::new(),
     chat: RwLock::new(ChatGlm::new(ChatConfig::default())),
+    config_map: RwLock::new(HashMap::new()),
 });
 
 impl AppContext {
     pub async fn init(&self) -> R<()> {
         self.init_db().await;
+
+        // 先初始化配置，后面的初始化需要用到这里的配置
+        self.init_config_data().await?;
 
         self.init_glm_chat().await?;
         R::Ok(())
@@ -70,33 +78,22 @@ impl AppContext {
 
     /// 初始化glm chat
     pub async fn init_glm_chat(&self) -> R<String> {
-        info!("开始查询！");
+        let lock = self.config_map.read().await;
+
         //ai 功能是否开启
-        let enable_r = Config::select_by_name(&CC.rb, "ai_chat_enable").await;
-        info!("查询完成，开始解析！");
-        let mut enable = match enable_r {
-            Ok(a) => a.map_or(false, |c| c.value.map_or(false, |ss| ss == "true")),
+        let enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
 
-            Err(e) => {
-
-                error!("ai_chat_enable 查询出错！");
-                error!("{:#?}",e);
-                false
-            }
-        };
-
-        info!("ai查询完毕");
         let mut config = ChatConfig::default();
         config.enable = enable;
+
+        info!("初始config：{:#?}", config);
+
         if !enable {
             log::info!("[bili-rust] ai 功能未启用");
         } else {
-            match Config::select_by_name(&CC.rb, "ai_api_key")
-                .await?
-                .map_or(None, |c| c.value)
-            {
+            match lock.get("ai_api_key") {
                 Some(api_key) => {
-                    config.api_key = api_key;
+                    config.api_key = api_key.clone();
                 }
                 None => {
                     config.enable = false;
@@ -105,12 +102,9 @@ impl AppContext {
                 }
             }
 
-            match Config::select_by_name(&CC.rb, "ai_base_url")
-                .await?
-                .map_or(None, |c| c.value)
-            {
+            match lock.get("ai_base_url") {
                 Some(base_url) => {
-                    config.base_url = base_url;
+                    config.base_url = base_url.clone();
                 }
                 None => {
                     config.enable = false;
@@ -119,12 +113,9 @@ impl AppContext {
                 }
             }
 
-            match Config::select_by_name(&CC.rb, "ai_model")
-                .await?
-                .map_or(None, |c| c.value)
-            {
+            match lock.get("ai_model") {
                 Some(model) => {
-                    config.model = model;
+                    config.model = model.clone();
                 }
                 None => {
                     config.enable = false;
@@ -133,30 +124,19 @@ impl AppContext {
                 }
             }
 
-            Config::select_by_name(&CC.rb, "ai_temperature")
-                .await?
-                .map(|c| {
-                    if let Some(value) = c.value {
-                        config.temperature = value.parse::<f32>().unwrap_or(0.7);
-                    }
-                });
+            if let Some(value) = lock.get("ai_temperature") {
+                config.temperature = value.parse::<f32>().unwrap_or(0.7);
+            };
 
-            Config::select_by_name(&CC.rb, "ai_max_tokens")
-                .await?
-                .map(|c| {
-                    if let Some(value) = c.value {
-                        config.max_tokens = value.parse::<i32>().unwrap_or(4096);
-                    }
-                });
+            if let Some(value) = lock.get("ai_max_tokens") {
+                config.max_tokens = value.parse::<i32>().unwrap_or(4096);
+            }
 
-            Config::select_by_name(&CC.rb, "ai_system_prompt")
-                .await?
-                .map(|c| {
-                    if let Some(value) = c.value {
-                        config.system_prompt = value;
-                    }
-                });
+            if let Some(value) = lock.get("ai_system_prompt") {
+                config.system_prompt = value.clone();
+            }
         }
+        info!("赋值后config：{:#?}", config);
 
         let mut lock = self.chat.write().await;
         lock.replace_config(config);
@@ -166,6 +146,17 @@ impl AppContext {
 
     /// 初始化数据库
     pub async fn init_db(&self) {
+        // 清除默认拦截器
+        self.rb.intercepts.clear();
+
+            // 如果需要分页功能，也要添加PageIntercept
+        self.rb.intercepts.push(Arc::new(PageIntercept::new()));
+        // 只添加自定义的SQL日志拦截器
+        self.rb
+            .intercepts
+            .push(Arc::new(SqlOnlyLogInterceptor::default()));
+    
+
         self.rb
             .link(SqliteDriver {}, &self.config.db_url)
             .await
@@ -180,6 +171,30 @@ impl AppContext {
             "[bili-rust] rbatis pool init success! pool state = {}",
             self.rb.get_pool().expect("pool not init!").state().await
         );
+    }
+
+    /// 初始化config数据
+    pub async fn init_config_data(&self) -> R<()> {
+        let select_all: Vec<Config> = Config::select_by_map(&CC.rb, value! {}).await?;
+        let mut lock = self.config_map.write().await;
+
+        for ele in select_all {
+            lock.insert(ele.name, ele.value.unwrap_or("".to_string()));
+        }
+
+        debug!("初始化init_config_data：");
+        debug!("{:#?}", *lock);
+        R::Ok(())
+    }
+
+    /// 更新config数据
+    pub async fn update_config_data(&self, v: Vec<(String, String)>) -> R<()> {
+        let mut lock = self.config_map.write().await;
+        for ele in v {
+            lock.insert(ele.0, ele.1);
+        }
+        info!("更新实时配置：{:#?}", *lock);
+        R::Ok(())
     }
 }
 
@@ -201,6 +216,15 @@ mod tests {
 
         let config = read.config();
         println!("{:#?}", config);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_init_config() {
+        //第一句必须是这个
+        crate::init().await;
 
         //最后一句必须是这个
         log::logger().flush();

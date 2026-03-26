@@ -68,11 +68,8 @@ async fn get_refresh_cookie() -> RR<HashMap<String, String>>{
  */
 #[debug_handler]
 async fn update_standard_config_info(Json(payload): Json<Vec<ConfigAddUpdateDTO>>)->RR<()>{
+    config_service::check_need_reinit_glm(&payload).await?;
     config_service::update_config_list(payload).await?;
-
-    let r = &CC.init_glm_chat().await?;
-    info!("重新初始化ai客户端,初始化结果为:{}",r);
-
     RR::success(())
 }
 

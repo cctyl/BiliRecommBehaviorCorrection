@@ -8,7 +8,7 @@ use crate::{
         video_detail::{MatchResult, VideoDetail},
     },
     handler::black_rule_handler,
-    service::{black_rule_service, dict_service},
+    service::{rule_service, dict_service},
     utils::{
         data_util::{self},
         thread_util::ThreadUtil,
@@ -90,7 +90,7 @@ pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<u32> {
     if train {
         info!("开始进行训练...");
         //保存数据
-        black_rule_service::train_blacklist_by_video_list(video_detail_list).await?;
+        rule_service::train_blacklist_by_video_list(video_detail_list).await?;
     }
 
     R::Ok(len as u32)
@@ -184,7 +184,7 @@ pub(crate) async fn disklike_by_tid(tid: u32) -> R<u32> {
     all_video.extend(region_latest_video);
 
     let size = all_video.len();
-    black_rule_service::train_blacklist_by_video_list(all_video).await?;
+    rule_service::train_blacklist_by_video_list(all_video).await?;
     
     R::Ok(size as u32)
 }

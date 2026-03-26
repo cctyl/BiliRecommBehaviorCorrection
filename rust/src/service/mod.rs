@@ -3,7 +3,7 @@ pub mod cookie_header_data_service;
 pub mod dict_service;
 pub mod task_service;
 pub mod bili_service;
-pub mod black_rule_service;
+pub mod rule_service;
 pub mod video_detail_service;
 pub mod owner_service;
 pub mod tag_service;

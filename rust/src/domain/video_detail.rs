@@ -235,7 +235,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        let p = PageRequest::new(1, 1);
+        let p = PageRequest::new(1, 2);
 
         // 基本条件查询
         let condition = value! {

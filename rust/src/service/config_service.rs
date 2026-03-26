@@ -4,11 +4,14 @@ use rbs::value;
 
 use crate::{
     app::{
-        constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
         config::CC,
+        constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
         response::R,
     },
-    domain::{dtos::ConfigAddUpdateDTO, config::Config},
+    domain::{
+        config::Config,
+        dtos::{ConfigAddUpdateDTO, VideoDetailDTO},
+    },
 };
 
 /**
@@ -76,7 +79,7 @@ pub async fn add_or_update_config(
  * 如果超时则删除配置项
  */
 pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
-    let config = Config::select_one_by_condition(&CC.rb,  value! {"name":name}).await?;
+    let config = Config::select_one_by_condition(&CC.rb, value! {"name":name}).await?;
 
     if let Some(config) = config.as_ref() {
         let expire_second = config.expire_second.unwrap_or(-1) as i64;
@@ -103,9 +106,16 @@ pub async fn find_config_by_name(name: &str) -> R<Option<Config>> {
  * 此方法用于批量更新配置项，通过接收一个配置对象列表来实现配置的批量修改或添加
  * 主要用途是当有一批新的配置需要应用或者现有配置发生变更时，通过调用此方法来更新系统内的配置信息
  *
+ * 同时更新 AppContext 中的配置
+ *
  * @param configList 一个包含多个Config对象的列表，用于更新系统配置
  */
 pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
+    let update: Vec<(String, String)> = payload
+        .iter()
+        .map(|f| (f.name.clone(), f.value.clone()))
+        .collect();
+
     for config in payload.into_iter() {
         if config.id.is_none() {
             //新增
@@ -127,6 +137,9 @@ pub async fn update_config_list(payload: Vec<ConfigAddUpdateDTO>) -> R<()> {
             Config::update_by_map(&CC.rb, &config_db, value! {"id":&config_db.id}).await?;
         }
     }
+
+    //更新实时配置
+    let _ = &CC.update_config_data(update).await?;
 
     R::Ok(())
 }
@@ -163,9 +176,10 @@ mod tests {
     #[tokio::test]
     async fn test_add_or_update_config() {
         crate::init().await;
-        let r = add_or_update_config(BILI_ACCESS_KEY, "bbbb", None).await.unwrap();
+        let r = add_or_update_config(BILI_ACCESS_KEY, "bbbb", None)
+            .await
+            .unwrap();
         println!("{:#?}", r);
-
 
         log::logger().flush();
     }
@@ -225,8 +239,6 @@ mod tests {
         log::logger().flush();
     }
 
-
-
     //测试 is_first_use
     #[tokio::test]
     async fn test_is_first_use() {
@@ -237,7 +249,6 @@ mod tests {
 
         log::logger().flush();
     }
-
 }
 
 /// 获取img_key
@@ -265,22 +276,36 @@ pub(crate) async fn update_wbi(img_key: &Option<String>, sub_key: &Option<String
 
 /// 是否是第一次使用
 pub(crate) async fn is_first_use() -> R<bool> {
-
-
     let config: Option<Config> = find_config_by_name(FIRST_USE).await?;
     //这个配置不存在，我直接默认为是第一次使用
-    if config.is_none(){
-
+    if config.is_none() {
         let mut config = Config::default();
         config.name = FIRST_USE.to_string();
         config.value = Some("false".to_string());
         Config::insert(&CC.rb, &config).await?;
 
-        return R::Ok(true)
-    }else{
+        return R::Ok(true);
+    } else {
         //存在则认为肯定初始化过
         R::Ok(false)
     }
+}
 
- 
+/// 判断是否需要重新初始化glm客户端
+pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> R<()> {
+    let newflag = payload
+        .iter()
+        .find(|f| f.name == "ai_chat_enable")
+        .map_or("", |f| &f.name);
+
+    let lock = &CC.config_map.read().await;
+
+    if let Some(db_flag) = lock.get("ai_chat_enable") {
+        if db_flag != newflag {
+            let r = &CC.init_glm_chat().await?;
+            info!("重新初始化ai客户端,初始化结果为:{}", r);
+        }
+    }
+
+    R::Ok(())
 }

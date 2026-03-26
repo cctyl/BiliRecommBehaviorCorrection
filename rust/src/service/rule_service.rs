@@ -1,6 +1,7 @@
 use log::info;
 
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
+use crate::domain::video_detail::MatchResult;
 use crate::utils::segmenter_util;
 use crate::{
     app::response::R,
@@ -9,6 +10,7 @@ use crate::{
 };
 
 /// 根据视频列表训练黑名单
+/// 应该改为通用的训练，如果后续还需要训练的话
 pub(crate) async fn train_blacklist_by_video_list(video_detail_list: Vec<VideoDetailDTO>) -> R<()> {
     let mut title_process = vec![];
     let mut desc_processs = vec![];
@@ -138,9 +140,31 @@ pub fn filter_start_with_bv(list: Vec<String>) -> R<Vec<String>> {
     )
 }
 
+
+
+
+
+
+/// 白名单匹配
+/// 传什么东西过来？规则需要什么，就传什么
+/// 按照配置来决定要判断什么
+pub async fn white_match()->R<(bool,MatchResult)>{
+
+    //0. 读取规则配置，看看现在开启了什么规则
+
+    todo!();
+}
+
+
+
+
+
+
 #[cfg(test)]
 mod tests {
     use jieba_rs::Jieba;
+
+    use crate::service::rule_service;
 
     #[tokio::test]
     async fn example() {
@@ -181,7 +205,7 @@ mod tests {
             "wqe744".to_string(),
         ];
 
-        let result = super::filter_start_with_bv(list);
+        let result = rule_service::filter_start_with_bv(list);
 
         println!("{:?}", result);
         //最后一句必须是这个
