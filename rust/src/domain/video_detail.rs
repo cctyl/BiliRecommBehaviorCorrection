@@ -111,15 +111,25 @@ impl VideoDetail {
         impled!()
     }
 
-    pub async fn select_page_by_name(conn: &dyn Executor, tname: &str) -> RB<Page<VideoDetail>> {
+    pub async fn select_page_by_tname_like(
+        conn: &dyn Executor,
+        tname: &str,
+    ) -> RB<Page<VideoDetail>> {
+        impled!()
+    }
+
+    pub async fn select_page_by_handle_reason_not_null(
+        conn: &dyn Executor,
+    ) -> RB<Page<VideoDetail>> {
         impled!()
     }
 }
 
-/// 
+///
 
 #[cfg(test)]
 mod tests {
+    use log::info;
     use rbatis::PageRequest;
 
     use crate::{app::config::CC, domain::video_detail::VideoDetail};
@@ -165,14 +175,53 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_select_handle_reason() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let mut page_no = 1;
+        loop {
+            info!("第{page_no}页循环");
+
+            match VideoDetail::select_page_by_handle_reason_not_null(
+                &CC.rb,
+                &PageRequest::new(page_no, 2),
+            )
+            .await
+            {
+                Ok(page) => {
+                    if page.records.is_empty() {
+                        break;
+                    }
+
+                    
+                }
+                Err(e) => {
+                    info!("第{page_no}页出错");
+                    info!("{:#?}",e);
+                },
+            }
+
+            page_no = page_no + 1;
+        }
+
+        info!("共有{page_no}页");
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    #[tokio::test]
     async fn test_find_by_id() {
         //第一句必须是这个
         crate::init().await;
 
         //在这中间编写测试代码
 
-        let select_by_id = VideoDetail::select_by_id(&CC.rb, 643755790u64).await;
-        println!("{:#?}",select_by_id);
+        let select_by_id = VideoDetail::select_by_id(&CC.rb, 961025315u64).await;
+        println!("{:#?}", select_by_id);
         //最后一句必须是这个
         log::logger().flush();
     }

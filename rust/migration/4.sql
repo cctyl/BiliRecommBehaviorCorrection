@@ -64,27 +64,7 @@ SELECT
         WHEN vd.handle_type IS NOT NULL AND vd.handle_type != '' AND vd.handle = 1 THEN 100
         ELSE 0
     END AS handle_step,
-    CASE 
-        WHEN vd.handle_reason IS NOT NULL AND vd.handle_reason != '' 
-        THEN '{"user_handle_reason":"' || 
-            replace(
-                replace(
-                    replace(
-                        replace(
-                            replace(
-                                vd.handle_reason,
-                                '\', '\\'    -- 转义反斜杠
-                            ),
-                            '"', '\\"'      -- 转义双引号
-                        ),
-                        CHAR(10), '\\n'     -- 转义换行符
-                    ),
-                    CHAR(13), '\\r'         -- 转义回车符
-                ),
-                CHAR(9), '\\t'              -- 转义制表符
-            ) || '"}'
-        ELSE NULL
-    END AS handle_reason,
+    NULL, -- handle_reason 不要了
     NULL,  -- tag字段先留空
     vd.created_date
 FROM video_detail vd;
