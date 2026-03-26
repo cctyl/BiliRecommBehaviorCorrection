@@ -1,4 +1,5 @@
 use crate::app::database::default_false;
+use crate::impl_select_page_by_condition;
 use crate::{
     app::{
         config::CC,
@@ -7,6 +8,7 @@ use crate::{
     domain::enumeration::HandleType,
     plus,
 };
+
 use rbatis::{Page, PageRequest, crud, executor::Executor, html_sql, impled, rbdc::DateTime};
 use serde::{Deserialize, Serialize};
 
@@ -101,6 +103,7 @@ pub struct VideoDetail {
 crud!(VideoDetail {}, "video_detail");
 plus!(VideoDetail {});
 
+
 #[html_sql("src/domain/table/video_detail.html")]
 impl VideoDetail {
     pub async fn select_by_title_like(conn: &dyn Executor, name: &str) -> VideoDetail {
@@ -125,14 +128,17 @@ impl VideoDetail {
     }
 }
 
-///
 
 #[cfg(test)]
 mod tests {
     use log::info;
     use rbatis::PageRequest;
+    use rbs::value;
 
-    use crate::{app::config::CC, domain::video_detail::VideoDetail};
+    use crate::{
+        app::config::CC,
+        domain::{enumeration::HandleType, video_detail::VideoDetail},
+    };
 
     #[tokio::test]
     async fn test_video_detail() {
@@ -195,13 +201,11 @@ mod tests {
                     if page.records.is_empty() {
                         break;
                     }
-
-                    
                 }
                 Err(e) => {
                     info!("第{page_no}页出错");
-                    info!("{:#?}",e);
-                },
+                    info!("{:#?}", e);
+                }
             }
 
             page_no = page_no + 1;
@@ -222,6 +226,29 @@ mod tests {
 
         let select_by_id = VideoDetail::select_by_id(&CC.rb, 961025315u64).await;
         println!("{:#?}", select_by_id);
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_imp_page() {
+        //第一句必须是这个
+        crate::init().await;
+
+        let p = PageRequest::new(1, 1);
+
+        // 基本条件查询
+        let condition = value! {
+            "handle_type": HandleType::THUMB_UP,
+            // "column": ["*"],
+            // "order_by": "created_date desc"
+        };
+        //在这中间编写测试代码
+        let select_page_by_condition = VideoDetail::select_page_by_condition(&CC.rb, &p, condition)
+            .await
+            .unwrap();
+        println!("{:#?}", select_page_by_condition);
+
         //最后一句必须是这个
         log::logger().flush();
     }
