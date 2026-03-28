@@ -1,4 +1,5 @@
 use crate::app::database::default_false;
+use crate::domain::enumeration::AccessType;
 use crate::impl_select_page_by_condition;
 use crate::{
     app::{
@@ -14,8 +15,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SingleMatch {
-    #[serde(default = "default_false")]
-    pub is_match: bool,
+    pub match_type: Option<AccessType>,
 
     #[serde(default)]
     pub tag: Vec<String>,
@@ -41,8 +41,7 @@ pub struct SingleMatch {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ComplexMatch {
-    #[serde(default = "default_false")]
-    pub is_match: bool,
+    pub match_type: Option<AccessType>,
 
     pub rule_name: Option<String>,
 
@@ -69,17 +68,23 @@ pub struct ComplexMatch {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct AiMatch {
+    pub match_type: AccessType,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MatchResult {
     pub single_match: Option<SingleMatch>,
     pub complex_match: Option<ComplexMatch>,
-    pub ai_match: Option<bool>,
+    pub ai_match: Option<AiMatch>,
     pub user_handle_reason: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetail {
     pub id: u64,
-    pub tid: Option<i64>,
+    pub tid: Option<u64>,
     pub tname: Option<String>,
     pub pic: Option<String>,
     pub title: Option<String>,
@@ -102,7 +107,6 @@ pub struct VideoDetail {
 }
 crud!(VideoDetail {}, "video_detail");
 plus!(VideoDetail {});
-
 
 #[html_sql("src/domain/table/video_detail.html")]
 impl VideoDetail {
@@ -127,7 +131,6 @@ impl VideoDetail {
         impled!()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

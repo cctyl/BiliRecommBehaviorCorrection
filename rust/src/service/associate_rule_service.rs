@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// 查询规则列表
-pub async fn get_associate_tule_list(
+pub async fn get_associate_rule_list(
     access_type: AccessType,
     page: u64,
     limit: u64,
@@ -88,7 +88,7 @@ mod tests {
     use crate::app::config::CC;
     use crate::domain::enumeration::AccessType;
     use crate::domain::associate_rule::AssociateRule;
-    use crate::service::associate_rule_service::get_associate_tule_list;
+    use crate::service::associate_rule_service::get_associate_rule_list;
 
     #[tokio::test]
     async fn example() {
@@ -127,7 +127,7 @@ mod tests {
         let test_limit = 10u64;
 
         // 2. 调用待测试的函数
-        let result = get_associate_tule_list(test_access_type, test_page, test_limit).await;
+        let result = get_associate_rule_list(test_access_type, test_page, test_limit).await;
 
         // 3. 验证返回结果是否符合预期
         match result {

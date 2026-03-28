@@ -149,9 +149,9 @@ impl AppContext {
         // 清除默认拦截器
         self.rb.intercepts.clear();
 
-            // 如果需要分页功能，也要添加PageIntercept
+        // PageIntercept 要在前面
         self.rb.intercepts.push(Arc::new(PageIntercept::new()));
-        // 只添加自定义的SQL日志拦截器
+        // 自定义的SQL日志拦截器
         self.rb
             .intercepts
             .push(Arc::new(SqlOnlyLogInterceptor::default()));

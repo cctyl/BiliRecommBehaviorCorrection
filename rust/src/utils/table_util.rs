@@ -15,7 +15,7 @@ use std::collections::HashMap;
 /// //step2: make struct
 /// let activity = table!(MockTable{id : "12312".to_string()});
 /// ```
-#[macro_export]
+
 macro_rules! table {
         ($t:path{ $($key:ident:$value:expr$(,)?)+ }) => {
            {
@@ -38,7 +38,7 @@ macro_rules! table {
 ///let role_ids: Vec<String> = table_field_vec!(user_roles,role_id);
 /// ```
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! table_field_vec {
     (&$vec_ref:expr,$($field_name:ident$(.)?)+) => {{
         let vec = &$vec_ref;
@@ -82,7 +82,7 @@ macro_rules! table_field_vec {
 ///let role_ids: HashSet<String> = table_field_set!(user_roles,role_id);
 ///```
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! table_field_set {
     (&$vec_ref:expr,$($field_name:ident$(.)?)+) => {{
         let vec = &$vec_ref;
@@ -129,7 +129,7 @@ macro_rules! table_field_set {
 ///let role_ids: HashMap<String,SysUserRole> = table_field_map!(user_roles,role_id);
 ///```
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! table_field_map {
     ($vec_ref:expr,$($field_name:ident$(.)?)+) => {{
         let vec = $vec_ref;
@@ -165,7 +165,7 @@ macro_rules! table_field_map {
 ///
 ///
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! table_field_btree {
     ($vec_ref:expr,$($field_name:ident$(.)?)+) => {{
         let mut ids = std::collections::BTreeMap::new();
@@ -190,7 +190,7 @@ macro_rules! table_field_btree {
 /// ```
 ///
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! field_name {
     ($t:ident.$field:ident) => {{
         if false {
@@ -221,7 +221,7 @@ macro_rules! field_name {
 /// ```
 ///
 #[allow(unused_macros)]
-#[macro_export]
+
 macro_rules! field_key {
     ($t:ident::$field:ident) => {{
         if false {

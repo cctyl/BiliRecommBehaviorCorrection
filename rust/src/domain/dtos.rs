@@ -1,8 +1,8 @@
 use core::str;
+use aho_corasick::AhoCorasick;
 use serde::{Deserialize, Serialize};
 use std::{
-    thread,
-    time::{Duration, SystemTime},
+    collections::HashSet, thread, time::{Duration, SystemTime}
 };
 use validator::Validate;
 use rbatis::{rbdc::datetime::DateTime, Page};
@@ -173,7 +173,7 @@ pub struct UserSubmissionVideo {
 pub struct VideoDetailJsonDto {
    
     pub aid: u64,
-    pub tid: Option<i64>,
+    pub tid: Option<u64>,
     pub tname: Option<String>,
     pub pic: Option<String>,
     pub title: Option<String>,
@@ -285,6 +285,20 @@ pub struct AssociateRuleListDto{
     pub cover:Vec<Dict>,
     pub tid:Vec<Dict>,
     pub mid:Vec<Dict>,
+
+}
+
+
+/// 复合规则列表dto
+#[derive(Clone, Debug)]
+pub struct AssociateRuleAc{
+    pub id: String,
+    pub title:AhoCorasick,
+    pub desc:AhoCorasick,
+    pub tag:AhoCorasick,
+    pub cover:AhoCorasick,
+    pub tid:HashSet<u64>,
+    pub mid:HashSet<u64>,
 
 }
 

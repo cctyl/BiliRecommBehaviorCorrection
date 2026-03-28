@@ -28,7 +28,7 @@ async fn list(
     MyPath((access_type, page, limit)): MyPath<(AccessType, u64, u64)>,
 ) -> RR<PageDTO<AssociateRuleListDto>> {
     let page_dto =
-        associate_rule_service::get_associate_tule_list(access_type, page, limit).await?;
+        associate_rule_service::get_associate_rule_list(access_type, page, limit).await?;
 
     RR::success(page_dto)
 }

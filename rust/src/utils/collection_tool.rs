@@ -1,29 +1,31 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
+
+
 pub trait VecGroupByExt<T> {
-    /// 保留 None（None 作为一个合法分组 key）
-    fn group_by_full<K, F>(self, f: F) -> HashMap<Option<K>, Vec<T>>
+    /// 保留 None（None 作为一个合法分组 key），但需要显式处理
+    fn group_by_full<K, F>(self, f: F) -> HashMap<K, Vec<T>>
     where
         K: Eq + Hash,
-        F: Fn(&T) -> Option<K>;
+        F: Fn(&T) -> K;  // 直接返回 K，不包裹 Option
 
     /// 忽略 None（过滤掉）
     fn group_by<K, F>(self, f: F) -> HashMap<K, Vec<T>>
     where
         K: Eq + Hash,
-        F: Fn(&T) -> Option<K>;
+        F: Fn(&T) -> Option<K>;  // 返回 Option，None 表示过滤
 }
 
 impl<T> VecGroupByExt<T> for Vec<T> {
-    fn group_by_full<K, F>(self, f: F) -> HashMap<Option<K>, Vec<T>>
+    fn group_by_full<K, F>(self, f: F) -> HashMap<K, Vec<T>>
     where
         K: Eq + Hash,
-        F: Fn(&T) -> Option<K>,
+        F: Fn(&T) -> K,
     {
         let mut map = HashMap::with_capacity(self.len());
         for item in self {
-            let key = f(&item); // Option<K>
+            let key = f(&item);  // 直接得到 K，没有 Option
             map.entry(key)
                 .or_insert_with(Vec::new)
                 .push(item);
