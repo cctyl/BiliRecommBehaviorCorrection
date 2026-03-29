@@ -1,3 +1,4 @@
+use crate::api::bili;
 use crate::app::config::CC;
 use crate::app::response::R;
 use crate::domain::dtos::VideoDetailDTO;
@@ -85,7 +86,7 @@ mod tests {
         // 6. 完整匹配结果（所有字段都有值）
         let full_match_result = MatchResult {
             single_match: Some(SingleMatch {
-                is_match: true,
+                match_type: None,
                 tag: vec!["游戏".to_string()],
                 desc: vec!["包含违规描述".to_string()],
                 title: vec!["标题违规".to_string()],
@@ -95,7 +96,7 @@ mod tests {
                 match_count: 4,
             }),
             complex_match: Some(ComplexMatch {
-                is_match: true,
+               match_type: None,
                 rule_name: Some("复杂规则A".to_string()),
                 tag: vec!["动漫".to_string()],
                 desc: vec!["描述匹配复杂规则".to_string()],
@@ -105,7 +106,7 @@ mod tests {
                 tid: vec!["444".to_string()],
                 match_count: 1,
             }),
-            ai_match: Some(false),
+            ai_match:None,
             user_handle_reason: Some("AI误判，人工修正".to_string()),
         };
         newitem.handle_reason = Some(full_match_result);
@@ -296,4 +297,18 @@ async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
 #[sql("SELECT count(1) > 0 FROM video_detail WHERE id = ?")]
 async fn exist_by_id(rb: &dyn Executor, id: u64) -> Result<u32, Error> {
     impled!()
+}
+
+
+/// 根据aid 从数据库或网络查找数据并返回数据
+pub async fn find_or_save_video(aid:u64)->R<VideoDetail>{
+
+    match find_by_aid(aid).await?{
+        Some(v) => R::Ok(v),
+        None => {
+            let mut video_detail_dto = bili::get_video_detail(aid).await?;
+            save_video_detail(&mut video_detail_dto).await?;
+            R::Ok(video_detail_dto.video_detail.into())
+        },
+    }
 }

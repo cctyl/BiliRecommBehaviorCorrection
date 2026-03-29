@@ -287,9 +287,9 @@ pub async fn ai_match(
     prefix_prompt: &str,
 ) -> R<AiMatch> {
     let mut output_prompt = r#"**输出格式**  
-        将内容输出为一个json对象，包含两个字段，
+        将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。包含两个字段，
         match_type字段: 匹配结果，黑名单为BLACK，白名单为：WHITE，其他为：OTHER。
-        reason字段：20个字，简要描述一下得出这个结果的原因"#;
+        reason字段：20个字，简要描述一下得出这个结果的原因。 "#;
 
     let system_prompt = format!("{}{}", prefix_prompt, output_prompt);
     let video_info = format!(
@@ -299,14 +299,22 @@ pub async fn ai_match(
         描述: {};
         封面文字:{};
         标签：{};
-        分区:{}
+        分区:{};
+
+        黑名单规则如下：{};
+        白名单规则如下：{};
+
     "#,
         video.title.clone().unwrap_or(String::from("")),
         video.desc_field.clone().unwrap_or(String::from("")),
         "", // 暂时没有完成封面ocr或者摘要模型的配置，封面文字留空
         video.tag.clone().unwrap_or(String::from("")),
-        video.tname.clone().unwrap_or(String::from(""))
+        video.tname.clone().unwrap_or(String::from("")),
+        black_prompt,
+        white_prompt
     );
+
+    info!("{}",video_info);
 
     let glm = &CC.chat.read().await;
 

@@ -107,7 +107,7 @@ pub enum DictType {
 /**
  * 访问类型
  */
-#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize,Default)]
+#[derive(Debug,Clone, Copy,PartialEq, Serialize,Deserialize,Default,std::cmp::Eq,std::hash::Hash)]
 pub enum  AccessType  {
     /**
      * 黑名单
