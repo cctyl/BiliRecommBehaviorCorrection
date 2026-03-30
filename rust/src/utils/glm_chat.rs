@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::LazyLock;
-
+use log::info;
 use crate::app::config::CC;
 use crate::app::error::HttpError::*;
 use crate::app::response::R;
@@ -71,7 +71,6 @@ struct ChatResponse {
     model: String,
     choices: Vec<ChatChoice>,
     usage: Usage,
-    request_id: String,
 }
 
 /// 配置结构
