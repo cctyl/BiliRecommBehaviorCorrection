@@ -292,7 +292,7 @@ pub(crate) async fn is_first_use() -> R<bool> {
 }
 
 /// 判断是否需要重新初始化glm客户端
-pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> R<()> {
+pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> R<bool> {
     let newflag = payload
         .iter()
         .find(|f| f.name == "ai_chat_enable")
@@ -302,10 +302,9 @@ pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> 
 
     if let Some(db_flag) = lock.get("ai_chat_enable") {
         if db_flag != newflag {
-            let r = &CC.init_glm_chat().await?;
-            info!("重新初始化ai客户端,初始化结果为:{}", r);
+            return R::Ok(true);
         }
     }
 
-    R::Ok(())
+    R::Ok(false)
 }

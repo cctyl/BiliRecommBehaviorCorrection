@@ -69,7 +69,7 @@ struct ChatResponse {
     id: String,
     created: i64,
     model: String,
-    choices: Vec<ChatChoice>,
+    choices: Option<Vec<ChatChoice>>,
     usage: Usage,
 }
 
@@ -243,7 +243,9 @@ impl ChatGlm {
         let chat_response: ChatResponse = serde_json::from_str(&response_text)
             .map_err(|e| ChatError(format!("JSON解析失败: {}\n响应内容: {}", e, response_text)))?;
 
-        if let Some(choice) = chat_response.choices.first() {
+
+
+        if let Some(choice) = chat_response.choices.unwrap_or(vec![]).first() {
             Ok(choice.message.content.clone())
         } else {
             R::Err(ChatError("无法获取回复".to_string()))
