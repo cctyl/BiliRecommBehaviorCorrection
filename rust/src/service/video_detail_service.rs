@@ -3,6 +3,7 @@ use crate::app::config::CC;
 use crate::app::response::R;
 use crate::domain::dtos::VideoDetailDTO;
 use crate::domain::enumeration::HandleType;
+use crate::domain::region::Region;
 use crate::domain::{video_detail::MatchResult, video_detail::VideoDetail};
 use crate::service::{owner_service, tag_service};
 use crate::utils::id;
@@ -280,11 +281,24 @@ async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
             .context("保存标签出错")?;
     }
 
+
+    //3. 分区名
+    let mut tname: Option<String> = None;
+     info!("开始保存分区名:{:?}", dto.video_detail.tid);
+    if let Some(tid) = dto.video_detail.tid{
+        let mut regions = Region::select_by_map(&CC.rb, value! {"tid":tid}).await?;
+        if let Some(f) = regions.pop(){
+            tname = Some(f.name);
+        }
+    }
+
+
     //1.保存本体
     info!("开始保存本体信息:{:?}", dto.video_detail);
     if exist_by_id(&CC.rb, dto.video_detail.aid).await? == 0 {
         let mut v: VideoDetail = dto.video_detail.clone().into();
         v.tag = Some(tag_vec.join(","));
+        v.tname = tname;
         VideoDetail::insert(&CC.rb, &v)
             .await
             .context("保存本体出错")?;
@@ -308,7 +322,7 @@ pub async fn find_or_save_video(aid:u64)->R<VideoDetail>{
         None => {
             let mut video_detail_dto = bili::get_video_detail(aid).await?;
             save_video_detail(&mut video_detail_dto).await?;
-            R::Ok(video_detail_dto.video_detail.into())
+            R::Ok(find_by_aid(aid).await?.unwrap_or(video_detail_dto.video_detail.into()))
         },
     }
 }
