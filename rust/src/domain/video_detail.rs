@@ -33,7 +33,7 @@ pub struct SingleMatch {
     pub mid: Vec<u64>,
 
     #[serde(default)]
-    pub tid: Vec<String>,
+    pub tid: Vec<u64>,
 
     #[serde(default)]
     pub match_count: u32,
@@ -61,7 +61,7 @@ pub struct ComplexMatch {
     pub mid: Vec<u64>,
 
     #[serde(default)]
-    pub tid: Vec<String>,
+    pub tid: Vec<u64>,
 
     #[serde(default)]
     pub match_count: u32,

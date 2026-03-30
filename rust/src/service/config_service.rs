@@ -298,7 +298,7 @@ pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> 
         .find(|f| f.name == "ai_chat_enable")
         .map_or("", |f| &f.name);
 
-    let lock = &CC.config_map.read().await;
+    let lock = CC.config_map.read().await;
 
     if let Some(db_flag) = lock.get("ai_chat_enable") {
         if db_flag != newflag {

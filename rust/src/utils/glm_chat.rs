@@ -195,6 +195,17 @@ impl ChatGlm {
         self.chat_request(messages).await
     }
 
+
+    /// 获取base_url
+    fn get_chat_endpoint(&self) -> String {
+        // 确保 base_url 以 /v1 或类似结尾
+        if self.config.base_url.ends_with('/') {
+            format!("{}chat/completions", self.config.base_url)
+        } else {
+            format!("{}/chat/completions", self.config.base_url)
+        }
+    }
+
     /// 聊天请求发起
     /// 传入聊天消息
     pub async fn chat_request(&self, messages: Vec<Message>) -> R<String> {
@@ -209,8 +220,9 @@ impl ChatGlm {
             stream: false,
         };
 
+        info!("url={}",self.get_chat_endpoint());
         let response = http::CLIENT
-            .post(&self.config.base_url)
+            .post(self.get_chat_endpoint())
             .header("Authorization", format!("Bearer {}", self.config.api_key))
             .header("Content-Type", "application/json")
             .json(&request)

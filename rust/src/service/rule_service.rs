@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::result;
 
 use aho_corasick::{AhoCorasick, BuildError};
 use log::{error, info};
@@ -7,12 +8,14 @@ use rbatis::table_field_vec;
 use rbs::value;
 
 use crate::app::config::CC;
+use crate::app::constans::DEFAULT_PROMPT;
 use crate::domain::associate_rule::AssociateRule;
 use crate::domain::dict::Dict;
-use crate::domain::dtos::AssociateRuleAc;
+use crate::domain::dtos::{AssociateRuleAc, SingleMatchRuleAc};
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
-use crate::domain::video_detail::{AiMatch, MatchResult};
-use crate::service::associate_rule_service;
+use crate::domain::tag;
+use crate::domain::video_detail::{AiMatch, ComplexMatch, MatchResult, SingleMatch};
+use crate::service::{associate_rule_service, video_detail_service};
 use crate::utils::collection_tool::VecGroupByExt;
 use crate::utils::glm_chat::{Message, MessageRole};
 use crate::utils::segmenter_util;
@@ -154,7 +157,7 @@ pub fn filter_start_with_bv(list: Vec<String>) -> R<Vec<String>> {
 }
 
 /// 根据access_type获得复杂规则列表
-pub async fn get_associate_rule_list(access_type: AccessType) -> R<Vec<AssociateRuleAc>> {
+pub async fn build_complex_rule_list(access_type: AccessType) -> R<Vec<AssociateRuleAc>> {
     //规则不可能超过999条
     let associate_rules = associate_rule_service::get_associate_rule_list(access_type, 1, 999)
         .await?
@@ -192,6 +195,7 @@ pub async fn get_associate_rule_list(access_type: AccessType) -> R<Vec<Associate
 
         let associate_rule_ac = AssociateRuleAc {
             id: ele.id,
+            name: ele.info,
             title: build_ac(title_arr),
             desc: build_ac(desc_arr),
             tag: build_ac(tag_arr),
@@ -207,20 +211,8 @@ pub async fn get_associate_rule_list(access_type: AccessType) -> R<Vec<Associate
 }
 
 /// 根据黑白类型，构建acmap ，数据直接在函数内部查询得到
-pub async fn build_single_matchac_map(
-    access_type: AccessType,
-) -> R<HashMap<DictType, AhoCorasick>> {
-    let dicts = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "access_type": access_type,
-            "status": DictStatus::NORMAL
-        },
-    )
-    .await?;
-
-    let mut group_by_full = dicts.group_by_full(|f| f.dict_type);
-    let mut ac_map: HashMap<DictType, AhoCorasick> = HashMap::new();
+pub async fn build_single_match_rule_ac(access_type: AccessType) -> R<SingleMatchRuleAc> {
+    info!("build_single_match_rule_ac , {:?}",access_type);
     let dict_enum = vec![
         DictType::TAG,
         DictType::DESC,
@@ -229,32 +221,81 @@ pub async fn build_single_matchac_map(
         DictType::MID,
         DictType::TID,
     ];
+    let dicts = Dict::select_by_map(
+        &CC.rb,
+        value! {
+            "access_type": access_type,
+            "status": DictStatus::NORMAL,
+            "dict_type":&dict_enum
+        },
+    )
+    .await?;
+
+    let mut group_by_full = dicts.group_by_full(|f| f.dict_type);
+
+    let mut title_arr: AhoCorasick = build_ac(vec![]);
+    let mut desc_arr: AhoCorasick = build_ac(vec![]);
+    let mut tag_arr: AhoCorasick = build_ac(vec![]);
+    let mut cover_arr: AhoCorasick = build_ac(vec![]);
+    let mut tid_arr: HashSet<u64> = HashSet::new();
+    let mut mid_arr: HashSet<u64> = HashSet::new();
 
     for dict_type in dict_enum {
         if let Some(dict_arr) = group_by_full.remove(&dict_type) {
             let patterns: Vec<String> = dict_arr.into_iter().map(|f| f.value).collect();
-            match AhoCorasick::builder()
-                .ascii_case_insensitive(true)
-                .build(patterns)
-            {
-                Ok(ac) => {
-                    ac_map.insert(dict_type, ac);
+            match dict_type {
+                DictType::TAG => tag_arr = build_ac(patterns),
+                DictType::DESC => desc_arr = build_ac(patterns),
+                DictType::TITLE => {
+
+                    info!("accesstype = {:?} ,title build ac  arr = {:?}",access_type,patterns);
+                    title_arr = build_ac(patterns)
+                },
+                DictType::COVER => cover_arr = build_ac(patterns),
+                DictType::MID => {
+                    mid_arr = patterns
+                        .into_iter()
+                        .filter_map(|f| match f.parse::<u64>() {
+                            Ok(a) => Some(a),
+                            Err(e) => {
+                                error!("tid 转换数字失败:{:#?}", e);
+                                None
+                            }
+                        })
+                        .collect();
                 }
-                Err(err) => {
-                    error!(
-                        "access_type={:?},dict_type={:?}ac构建失败！{:#?}",
-                        access_type, dict_type, err
-                    );
+                DictType::TID => {
+                    tid_arr = patterns
+                        .into_iter()
+                        .filter_map(|f| match f.parse::<u64>() {
+                            Ok(a) => Some(a),
+                            Err(e) => {
+                                error!("mid 转换数字失败:{:#?}", e);
+                                None // 使用 None 过滤掉错误的值
+                            }
+                        })
+                        .collect();
                 }
+                _ => {}
             }
         }
     }
 
-    R::Ok(ac_map)
+    R::Ok(SingleMatchRuleAc {
+        title: title_arr,
+        desc: desc_arr,
+        tag: tag_arr,
+        cover: cover_arr,
+        tid: tid_arr,
+        mid: mid_arr,
+    })
 }
 
 /// 构建ac
 pub fn build_ac(patterns: Vec<String>) -> AhoCorasick {
+    if patterns.is_empty() {
+        return AhoCorasick::new([] as [&str; 0]).unwrap();
+    }
     match AhoCorasick::builder()
         .ascii_case_insensitive(true)
         .build(patterns)
@@ -268,28 +309,33 @@ pub fn build_ac(patterns: Vec<String>) -> AhoCorasick {
 }
 
 /// ac匹配，获得匹配的关键词
-pub fn ac_match(ac: AhoCorasick, haystack: &str) -> R<Vec<String>> {
+pub fn get_ac_match_result(ac: &AhoCorasick, haystack: &str) -> Vec<String> {
+
     // 获取所有匹配的关键词
     let matched_keywords: Vec<String> = ac
         .find_iter(haystack)
         .map(|mat| &haystack[mat.start()..mat.end()])
         .map(|f| f.to_string())
+        .collect::<HashSet<_>>()
+        .into_iter()
         .collect();
 
-    R::Ok(matched_keywords)
+    matched_keywords
 }
 
+
 /// 将视频信息，以及黑白名单规则发送给ai，然后让ai判断这属于什么类型的视频，并给出简短的解释
-pub async fn ai_match(
+pub async fn get_ai_match_result(
     video: &VideoDetail,
     white_prompt: &str,
     black_prompt: &str,
     prefix_prompt: &str,
 ) -> R<AiMatch> {
     let mut output_prompt = r#"**输出格式**  
-        将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。包含两个字段，
+        将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。
+        包含两个字段，
         match_type字段: 匹配结果，黑名单为BLACK，白名单为：WHITE，其他为：OTHER。
-        reason字段：20个字，简要描述一下得出这个结果的原因。 "#;
+        reason字段：20个字，简要描述一下给出该判断的原因。 "#;
 
     let system_prompt = format!("{}{}", prefix_prompt, output_prompt);
     let video_info = format!(
@@ -314,7 +360,7 @@ pub async fn ai_match(
         white_prompt
     );
 
-    info!("{}",video_info);
+    info!("{}", video_info);
 
     let glm = &CC.chat.read().await;
 
@@ -351,59 +397,341 @@ pub async fn ai_match(
     R::Ok(result)
 }
 
+/// 单一包含匹配
+pub fn get_single_match_result(
+    v: &VideoDetail,
+    black_single_match: &SingleMatchRuleAc,
+    white_single_match: &SingleMatchRuleAc,
+) -> R<SingleMatch> {
+    let black_result = try_single_match(v, black_single_match, AccessType::BLACK)?;
+    if black_result.match_count > 0 {
+        //直接返回黑名单匹配
+        return R::Ok(black_result);
+    }
+    let mut white_result = try_single_match(v, white_single_match, AccessType::WHITE)?;
+    if white_result.match_count > 0 {
+        return R::Ok(white_result);
+    }
+    R::Ok(SingleMatch::default())
+}
+
+/// 传入视频和规则，返回匹配结果
+pub fn try_single_match(
+    v: &VideoDetail,
+    rule: &SingleMatchRuleAc,
+    access_type: AccessType,
+) -> R<SingleMatch> {
+    let mut match_count: u32 = 0;
+    let tag: Vec<String> = match &v.tag {
+        Some(tag_str) => {
+             info!("tag single match {:?}",access_type);
+            let ac_match = get_ac_match_result(&rule.tag, &tag_str);
+            match_count = match_count + ac_match.len() as u32;
+            ac_match
+        }
+        None => vec![],
+    };
+
+    let desc: Vec<String> = match &v.desc_field {
+        Some(desc_str) => {
+            info!("desc single match  {:?}",access_type);
+            let ac_match = get_ac_match_result(&rule.desc, &desc_str);
+            match_count = match_count + ac_match.len() as u32;
+            ac_match
+        }
+        None => vec![],
+    };
+
+    let title: Vec<String> = match &v.title {
+        Some(title_str) => {
+             info!("title single match  {:?}",access_type);
+            let ac_match = get_ac_match_result(&rule.title, &title_str);
+            match_count = match_count + ac_match.len() as u32;
+            ac_match
+        }
+        None => vec![],
+    };
+
+    // todo 封面数据还未存储进video_detail中
+    let cover: Vec<String> = vec![];
+    // let cover: Vec<String> = match &v.cover {
+    //     Some(cover_str) => {
+    //         let ac_match = ac_match(&black_single_match.cover, &cover_str);
+    //         match_count = match_count + ac_match.len()as u32;
+    //         ac_match
+    //     }
+    //     None => vec![],
+    // };
+
+    let mid: Vec<u64> = match v.owner_id {
+        Some(a) => {
+            if  rule.mid.contains(&a) {
+
+                match_count = match_count + 1;
+                vec![a]
+            }else {
+                vec![]
+            }
+
+        }
+        None => vec![],
+    };
+
+    let tid: Vec<u64> = match v.tid {
+        Some(a) => {
+
+
+            if  rule.tid.contains(&a) {
+
+                match_count = match_count + 1;
+                vec![a]
+            }else {
+                vec![]
+            }
+
+
+        }
+        None => vec![],
+    };
+
+    R::Ok(SingleMatch {
+        match_type: match match_count > 0 {
+            true => Some(access_type),
+            false => None,
+        },
+        tag,
+        desc,
+        title,
+        cover,
+        mid,
+        tid,
+        match_count,
+    })
+}
+
 /// 规则匹配, 返回这是黑名单还是白名单，还是其他，然后把匹配结果也返回
 /// 传什么东西过来？规则需要什么，就传什么
 /// 按照配置来决定要判断什么
-pub async fn rule_match(v: &VideoDetail) -> R<(AccessType, MatchResult)> {
-    let lock = &CC.config_map.read().await;
-    let default_prompt = r#"**角色定义**  
-你是一个严格的视频内容审核助手。你的任务是根据用户提供的视频信息（如标题、描述等）以及预设的审核规则（黑名单、白名单），
-结合你自身的知识库，判断该视频属于“黑名单”“白名单”还是“其他”。
-
-**审核规则**  
-用户将提供以下两类规则：  
-1. **黑名单规则**：包含禁止出现的内容、关键词、主题、敏感领域等。一旦视频涉及其中任何一项，应判定为“黑名单”。  
-2. **白名单规则**：包含允许或优先通过的内容、关键词、主题等。仅当视频符合白名单规则且未触发任何黑名单规则时，判定为“白名单”。
-
-**判断原则**  
-- 严格遵循用户提供的规则，不得自行放宽或添加条件。  
-- 若用户规则与你的知识库存在冲突，以用户规则为最优先。  
-- 若视频信息不足以明确判定，或同时触发黑白名单规则（需按黑名单优先原则），应判定为“待定/其他”，并简要说明原因。  
-- 结合你的知识库对视频内容进行理解，尤其当标题、描述存在隐喻、隐晦表达或行业术语时，需识别其真实含义以判断是否命中规则。"#.to_string();
-
+pub async fn total_rule_match(
+    v: &VideoDetail,
+    ai_chat_enable: bool,
+    single_match_enable: bool,
+    complex_match_enable: bool,
+) -> R<(AccessType, MatchResult)> {
+    let lock = CC.config_map.read().await;
+    let default_prompt = DEFAULT_PROMPT.to_string();
+    let mut result = MatchResult::default();
     let prefix_prompt = lock.get("ai_system_prompt").unwrap_or(&default_prompt);
 
     //0. 读取规则配置，看看现在开启了什么规则
-    let ai_chat_enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
-    let single_match = lock.get("single_match").map_or(false, |f| f == "true");
-    let complex_match = lock.get("complex_match").map_or(false, |f| f == "true");
+    //TODO
+    // let ai_chat_enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
+    // let single_match_enable = lock.get("single_match").map_or(false, |f| f == "true");
+    // let complex_match_enable = lock.get("complex_match").map_or(false, |f| f == "true");
+
+    // 0.1 单一规则
+    let black_single_match: SingleMatchRuleAc =
+        build_single_match_rule_ac(AccessType::BLACK).await?;
+    let white_single_match: SingleMatchRuleAc =
+        build_single_match_rule_ac(AccessType::WHITE).await?;
+
+    // 0.2 复合规则
+    let black_complex_rule = build_complex_rule_list(AccessType::BLACK).await?;
+    let white_complex_rule = build_complex_rule_list(AccessType::WHITE).await?;
+
+    // 0.3 ai提示词
+    let mut prompt_map = Dict::select_by_map(
+        &CC.rb,
+        value! {
+            "dict_type":DictType::AI_JUDGMENT_PROMPT,
+            "status":DictStatus::NORMAL
+        },
+    )
+    .await?
+    .group_by_full(|f| f.access_type);
+
+    let black = prompt_map
+        .remove(&AccessType::BLACK)
+        .map_or(String::from(""), |mut f| {
+            if f.is_empty() {
+                String::from("")
+            } else {
+                f.remove(0).value
+            }
+        });
+    let white = prompt_map
+        .remove(&AccessType::WHITE)
+        .map_or(String::from(""), |mut f| {
+            if f.is_empty() {
+                String::from("")
+            } else {
+                f.remove(0).value
+            }
+        });
 
     //1. 单一包含匹配
-    if single_match {
-        // if let Some(title) = v.title {}
+    if single_match_enable {
+        let single_result = get_single_match_result(v, &black_single_match, &white_single_match)?;
+        let access_type = single_result.match_type.clone();
+        result.single_match = Some(single_result);
+        if let Some(a) = access_type {
+            return R::Ok((a, result));
+        }
     }
 
     //2. 复杂规则匹配
-    if complex_match {}
+    if complex_match_enable {
+        let complex_result = get_complex_match_result(v, &black_complex_rule, &white_complex_rule)?;
+        let access_type = complex_result.match_type.clone();
+        result.complex_match = Some(complex_result);
+        if let Some(a) = access_type {
+            return R::Ok((a, result));
+        }
+    }
 
     //3. ai调用匹配
     if ai_chat_enable {
+        let ai_match = get_ai_match_result(v, &white, &black, &prefix_prompt).await?;
 
-        // let chat_glm = &CC.chat.read().await;
-        // chat_glm.chat(question)
+        let access_type = ai_match.match_type.clone();
+        result.ai_match = Some(ai_match);
+        return R::Ok((access_type, result));
     }
 
-    todo!();
+    R::Ok((AccessType::OTHER, MatchResult::default()))
+}
+
+/// 复杂规则匹配
+pub fn get_complex_match_result(
+    v: &VideoDetail,
+    black_complex_rule: &[AssociateRuleAc],
+    white_complex_rule: &[AssociateRuleAc],
+) -> R<ComplexMatch> {
+    let black_result = try_complex_match(v, black_complex_rule, AccessType::BLACK)?;
+    if black_result.match_count > 0 {
+        //直接返回黑名单匹配
+        return R::Ok(black_result);
+    }
+    let mut white_result = try_complex_match(v, white_complex_rule, AccessType::WHITE)?;
+    if white_result.match_count > 0 {
+        return R::Ok(white_result);
+    }
+    R::Ok(ComplexMatch::default())
+}
+
+/// 输入视频和规则，返回判断结果
+fn try_complex_match(
+    v: &VideoDetail,
+    rule_list: &[AssociateRuleAc],
+    access_type: AccessType,
+) -> R<ComplexMatch> {
+    for f in rule_list {
+        let mut count: u32 = 0;
+
+        let title_arr = match &v.title {
+            Some(title) => {
+                let ac_match = get_ac_match_result(&f.title, title);
+                count = count + ac_match.len() as u32;
+                ac_match
+            }
+            None => vec![],
+        };
+
+        let desc_arr = match &v.desc_field {
+            Some(desc) => {
+                let ac_match = get_ac_match_result(&f.desc, desc);
+                count = count + ac_match.len() as u32;
+                ac_match
+            }
+            None => vec![],
+        };
+
+        let tag_arr = match &v.tag {
+            Some(tag) => {
+                let ac_match = get_ac_match_result(&f.tag, tag);
+                count = count + ac_match.len() as u32;
+                ac_match
+            }
+            None => vec![],
+        };
+
+        // todo 暂时没有实现封面数据的存储和获取
+        let cover_arr: Vec<String> = vec![];
+        // let cover_arr = match &v.cover {
+        //     Some(cover) => {
+        //         let ac_match = ac_match(&f.cover, cover);
+        //         count = count + ac_match.len()as u32;
+        //         ac_match
+        //     }
+        //     None => vec![],
+        // };
+
+        let tid_arr = match v.tid {
+            Some(u) => {
+                if    f.tid.contains(&u) {
+                    count = count + 1;
+                    vec![u]
+
+                }else {
+                    vec![]
+                }
+
+
+
+            }
+            None => vec![],
+        };
+
+        let mid_arr = match v.owner_id {
+            Some(u) => {
+
+
+                if    f.mid.contains(&u) {
+                    count = count + 1;
+                    vec![u]
+
+                }else {
+                    vec![]
+                }
+
+
+
+
+            }
+            None => vec![],
+        };
+
+        if count >= 3 {
+            return R::Ok(ComplexMatch {
+                match_type: Some(access_type),
+                rule_name: Some(f.name.clone()),
+                tag: tag_arr,
+                desc: desc_arr,
+                title: title_arr,
+                cover: cover_arr,
+                mid: mid_arr,
+                tid: tid_arr,
+                match_count: count,
+            });
+        }
+    }
+
+    R::Ok(ComplexMatch::default())
 }
 
 #[cfg(test)]
 mod tests {
+    use aho_corasick::AhoCorasick;
     use jieba_rs::Jieba;
+    use rbs::value;
 
     use crate::{
-        domain::enumeration::AccessType,
-        service::rule_service::{self, build_single_matchac_map},
+        app::config::CC, domain::{dict::Dict, enumeration::{AccessType, DictType}}, service::rule_service::{self, build_ac, build_single_match_rule_ac}
     };
+    use crate::domain::dtos::TestRuleDto;
+    use crate::service::rule_service::total_rule_match;
+    use crate::service::video_detail_service;
+    use crate::utils::data_util::bvid_to_aid;
 
     #[tokio::test]
     async fn example() {
@@ -416,15 +744,185 @@ mod tests {
         log::logger().flush();
     }
 
+
+
+    #[tokio::test]
+    async fn test_all_match() {
+        //第一句必须是这个
+        crate::init().await;
+
+        let  (bvid, ai_chat_enable, single_match_enable, complex_match_enable )= ("BV1YiXQBNEYT",false,true,false);
+        let aid = bvid_to_aid(&bvid);
+        let find_or_save_video = video_detail_service::find_or_save_video(aid).await.unwrap();
+        let (_,m) = total_rule_match(&find_or_save_video, ai_chat_enable, single_match_enable, complex_match_enable).await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+
+    #[tokio::test]
+    async fn test_ac_match2() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+
+
+        pub fn get_ac_match_result(ac: &AhoCorasick, haystack: &str) -> Vec<String> {
+            // 获取所有匹配的关键词
+            let matched_keywords: Vec<String> = ac
+                .find_iter(haystack)
+                .map(|mat| &haystack[mat.start()..mat.end()])
+                .map(|f| f.to_string())
+                .collect();
+
+            matched_keywords
+        }
+
+        let select_by_map:Vec<String> = Dict::select_by_map(&CC.rb, value!{
+            "access_type":AccessType::BLACK,
+            "dict_type":DictType::TITLE
+
+        }).await.unwrap()
+        .into_iter().map(|f|f.value).collect();
+
+        let ac = build_ac(select_by_map);
+        let haystack = "邻居至今都不知道我家到底几只猫？";
+        let get_ac_match_result = get_ac_match_result(&ac, haystack);
+        println!("{:#?}",get_ac_match_result);
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    #[test]
+    fn test_ac_match() {
+        println!("=== Aho-Corasick 中文测试 ===\n");
+
+        // 测试文本
+        let text = "邻居至今都不知道我家到底几只猫？";
+        println!("测试文本: {}", text);
+        println!("文本长度: {} 字节", text.len());
+        println!();
+
+        // 测试1: 基本中文关键词匹配
+        println!("--- 测试1: 基本中文关键词 ---");
+        let keywords = vec!["邻居", "知道", "猫"];
+        println!("关键词: {:?}", keywords);
+        let ac = AhoCorasick::new(keywords).unwrap();
+
+        println!("匹配结果:");
+
+        for mat in ac.find_iter(text) {
+            let matched = &text[mat.start()..mat.end()];
+            println!(
+                "  - 位置: {}..{}, 内容: '{}'",
+                mat.start(),
+                mat.end(),
+                matched
+            );
+        }
+        println!();
+
+        // 测试2: 重叠关键词
+        println!("--- 测试2: 重叠关键词测试 ---");
+        let keywords = vec!["苹果", "苹果手机", "手机"];
+        println!("关键词: {:?}", keywords);
+        let ac = AhoCorasick::new(keywords).unwrap();
+        let text2 = "我买了一部苹果手机";
+
+        println!("文本: {}", text2);
+        println!("匹配结果:");
+
+        for mat in ac.find_iter(text2) {
+            let matched = &text2[mat.start()..mat.end()];
+            println!(
+                "  - 位置: {}..{}, 内容: '{}'",
+                mat.start(),
+                mat.end(),
+                matched
+            );
+        }
+        println!();
+
+        // 测试3: 完整的关键词集（你原来的场景）
+        println!("--- 测试3: 完整场景测试 ---");
+        let all_keywords = vec![
+            "邻居",
+            "至今",
+            "都不知道",
+            "知道",
+            "我家",
+            "到底",
+            "几只",
+            "猫",
+        ];
+        let ac = AhoCorasick::new(all_keywords.clone()).unwrap();
+
+        println!("关键词数量: {}", all_keywords.len());
+        println!("文本: {}", text);
+        println!("所有匹配:");
+
+        let matches: Vec<_> = ac.find_iter(text).collect();
+        for mat in &matches {
+            let matched = &text[mat.start()..mat.end()];
+            println!(
+                "  - 位置: {:3}..{:3}, 内容: '{}'",
+                mat.start(),
+                mat.end(),
+                matched
+            );
+        }
+
+        println!("\n总共匹配到 {} 个关键词", matches.len());
+        println!();
+
+        // 测试4: 去重后的结果
+        println!("--- 测试4: 去重后的关键词 ---");
+        use std::collections::HashSet;
+
+        let unique_matches: HashSet<String> = ac
+            .find_iter(text)
+            .map(|mat| text[mat.start()..mat.end()].to_string())
+            .collect();
+
+        println!("唯一关键词: {:?}", unique_matches);
+        println!();
+
+        // 测试5: 验证字节边界问题
+        println!("--- 测试5: 字节边界验证 ---");
+        println!("文本的字符和字节位置:");
+        for (i, (byte_pos, ch)) in text.char_indices().enumerate() {
+            println!("  字符[{}]: '{}' 位于字节索引 {}", i, ch, byte_pos);
+        }
+
+        println!("\n验证匹配的边界是否在字符边界上:");
+        for mat in ac.find_iter(text) {
+            let matched = &text[mat.start()..mat.end()];
+            let is_char_boundary =
+                text.is_char_boundary(mat.start()) && text.is_char_boundary(mat.end());
+            println!(
+                "  '{}' ({}..{}) 边界正确: {}",
+                matched,
+                mat.start(),
+                mat.end(),
+                is_char_boundary
+            );
+        }
+    }
+
     #[tokio::test]
     async fn test_build_ac_map() {
         //第一句必须是这个
         crate::init().await;
 
         //在这中间编写测试代码
-        let build_ac_map = build_single_matchac_map(AccessType::BLACK).await.unwrap();
-
-        println!("{:#?}", build_ac_map.keys());
+        let build_ac_map = build_single_match_rule_ac(AccessType::BLACK).await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();

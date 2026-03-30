@@ -310,7 +310,7 @@ macro_rules! impl_select_page_by_condition {
 
                 // 处理分页逻辑
                 let mut executor = executor;
-                let mut conn = None;
+                let mut conn ;
                 if executor.name().eq(rbatis::executor::Executor::name(executor.rb_ref())){
                     conn = Some(executor.rb_ref().acquire().await?);
                     match &conn {

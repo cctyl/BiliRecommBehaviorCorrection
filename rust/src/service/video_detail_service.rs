@@ -92,7 +92,7 @@ mod tests {
                 title: vec!["标题违规".to_string()],
                 cover: vec!["封面违规".to_string()],
                 mid: vec![111],
-                tid: vec!["222".to_string()],
+                tid: vec![222],
                 match_count: 4,
             }),
             complex_match: Some(ComplexMatch {
@@ -103,7 +103,7 @@ mod tests {
                 title: vec![],
                 cover: vec![],
                 mid: vec![333],
-                tid: vec!["444".to_string()],
+                tid: vec![444],
                 match_count: 1,
             }),
             ai_match:None,

@@ -35,3 +35,17 @@ pub const PIC_MAX_SIZE: usize = 2097152; // 或 u32
 pub const DISLIKE_BY_USER_ID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByUserId";
 pub const DISLIKE_BY_TID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByTid";
 
+pub const  DEFAULT_PROMPT:&str = r#"**角色定义**  
+你是一个严格的视频内容审核助手。你的任务是根据用户提供的视频信息（如标题、描述等）以及预设的审核规则（黑名单、白名单），
+结合你自身的知识库，判断该视频属于“黑名单”“白名单”还是“其他”。
+
+**审核规则**  
+用户将提供以下两类规则：  
+1. **黑名单规则**：包含禁止出现的内容、关键词、主题、敏感领域等。一旦视频涉及其中任何一项，应判定为“黑名单”。  
+2. **白名单规则**：包含允许或优先通过的内容、关键词、主题等。仅当视频符合白名单规则且未触发任何黑名单规则时，判定为“白名单”。
+
+**判断原则**  
+- 严格遵循用户提供的规则，不得自行放宽或添加条件。  
+- 若用户规则与你的知识库存在冲突，以用户规则为最优先。  
+- 若视频信息不足以明确判定，或同时触发黑白名单规则（需按黑名单优先原则），应判定为“其他”，并简要说明原因。  
+- 结合你的知识库对视频内容进行理解，尤其当标题、描述存在隐喻、隐晦表达或行业术语时，需识别其真实含义以判断是否命中规则。"#;

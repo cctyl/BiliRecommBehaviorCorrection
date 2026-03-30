@@ -293,6 +293,7 @@ pub struct AssociateRuleListDto{
 #[derive(Clone, Debug)]
 pub struct AssociateRuleAc{
     pub id: String,
+    pub name:String,
     pub title:AhoCorasick,
     pub desc:AhoCorasick,
     pub tag:AhoCorasick,
@@ -301,6 +302,27 @@ pub struct AssociateRuleAc{
     pub mid:HashSet<u64>,
 
 }
+
+#[derive(Clone, Debug,Serialize,Deserialize)]
+pub struct TestRuleDto{
+
+    pub bvid:String,
+    pub ai_chat_enable:bool,
+    pub single_match_enable:bool,
+    pub complex_match_enable:bool,
+
+}
+
+#[derive(Clone, Debug)]
+pub struct SingleMatchRuleAc{
+    pub title:AhoCorasick,
+    pub desc:AhoCorasick,
+    pub tag:AhoCorasick,
+    pub cover:AhoCorasick,
+    pub tid:HashSet<u64>,
+    pub mid:HashSet<u64>,
+}
+
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
