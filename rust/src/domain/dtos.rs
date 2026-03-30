@@ -267,8 +267,8 @@ pub struct VideoDetailDTO {
 pub struct DescV2{
    
     pub raw_text:Option<String>,
-    pub type_:Option<i32>,
-    pub biz_id:Option<i32>,
+    pub type_:Option<u64>,
+    pub biz_id:Option<u64>,
 }
 
 

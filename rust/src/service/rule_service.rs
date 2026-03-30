@@ -713,6 +713,8 @@ fn try_complex_match(
                 tid: tid_arr,
                 match_count: count,
             });
+        }else {
+            info!("{} 没有匹配成功，匹配count={}",f.name,count);
         }
     }
 
@@ -751,7 +753,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        let  (bvid, ai_chat_enable, single_match_enable, complex_match_enable )= ("BV1YiXQBNEYT",false,true,false);
+        let  (bvid, ai_chat_enable, single_match_enable, complex_match_enable )= ("BV1QNXYBkERs",false,false,true);
         let aid = bvid_to_aid(&bvid);
         let find_or_save_video = video_detail_service::find_or_save_video(aid).await.unwrap();
         let (_,m) = total_rule_match(&find_or_save_video, ai_chat_enable, single_match_enable, complex_match_enable).await.unwrap();

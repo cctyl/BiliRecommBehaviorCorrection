@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::format;
 use std::fs::File;
 use std::io::Write;
 use std::sync::{LazyLock, Mutex};
@@ -843,13 +844,23 @@ pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
     let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
     let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
 
+ 
     trans2_video_detail(body)
 }
 
 /// json结构转换为VideoDetail
 pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailDTO> {
     let mut data = body["data"].take();
-    let mut r: VideoDetailDTO = serde_json::from_value(data["View"].take())?;
+       
+    let mut r: VideoDetailDTO = match serde_json::from_value(data["View"].take()){
+        Ok(r) => r,
+        Err(e) => {
+
+            error!("trans2_video_detail json 解析失败！{:#?}",e);
+            return R::Err(HttpError::ServerError(format!("trans2_video_detail json 解析失败！{:#?}",e)));
+
+        },
+    };
     let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
     r.tags = Some(tags);
     R::Ok(r)
