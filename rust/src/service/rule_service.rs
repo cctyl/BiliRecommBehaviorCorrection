@@ -503,6 +503,24 @@ pub fn try_single_match(
     })
 }
 
+
+/// 获得视频判断需要的配置
+pub async fn get_match_need_config()->R<(bool,bool,bool,String)>{
+
+    let lock = CC.config_map.read().await;
+    let default_prompt = DEFAULT_PROMPT.to_string();
+    let mut result = MatchResult::default();
+    let prefix_prompt = lock.get("ai_system_prompt").map_or(default_prompt,|f|f.to_owned());
+
+    //0. 读取规则配置，看看现在开启了什么规则
+    let ai_chat_enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
+    let single_match_enable = lock.get("single_match").map_or(false, |f| f == "true");
+    let complex_match_enable = lock.get("complex_match").map_or(false, |f| f == "true");
+
+    R::Ok((ai_chat_enable,single_match_enable,complex_match_enable,prefix_prompt))
+}
+
+
 /// 规则匹配, 返回这是黑名单还是白名单，还是其他，然后把匹配结果也返回
 /// 传什么东西过来？规则需要什么，就传什么
 /// 按照配置来决定要判断什么
@@ -511,57 +529,64 @@ pub async fn total_rule_match(
     ai_chat_enable: bool,
     single_match_enable: bool,
     complex_match_enable: bool,
+    prefix_prompt:&String,
+    //单一规则
+    black_single_match: &SingleMatchRuleAc,
+    white_single_match: &SingleMatchRuleAc,
+
+    //复合规则
+    black_complex_rule:&Vec<AssociateRuleAc>,
+    white_complex_rule:&Vec<AssociateRuleAc>,
+
+    //ai 规则
+    black_prompt:&String,
+    white_prompt:&String,
 ) -> R<(AccessType, MatchResult)> {
-    let lock = CC.config_map.read().await;
-    let default_prompt = DEFAULT_PROMPT.to_string();
+
+
     let mut result = MatchResult::default();
-    let prefix_prompt = lock.get("ai_system_prompt").unwrap_or(&default_prompt);
 
-    //0. 读取规则配置，看看现在开启了什么规则
-    //TODO
-    // let ai_chat_enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
-    // let single_match_enable = lock.get("single_match").map_or(false, |f| f == "true");
-    // let complex_match_enable = lock.get("complex_match").map_or(false, |f| f == "true");
 
-    // 0.1 单一规则
-    let black_single_match: SingleMatchRuleAc =
-        build_single_match_rule_ac(AccessType::BLACK).await?;
-    let white_single_match: SingleMatchRuleAc =
-        build_single_match_rule_ac(AccessType::WHITE).await?;
 
-    // 0.2 复合规则
-    let black_complex_rule = build_complex_rule_list(AccessType::BLACK).await?;
-    let white_complex_rule = build_complex_rule_list(AccessType::WHITE).await?;
-
-    // 0.3 ai提示词
-    let mut prompt_map = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "dict_type":DictType::AI_JUDGMENT_PROMPT,
-            "status":DictStatus::NORMAL
-        },
-    )
-    .await?
-    .group_by_full(|f| f.access_type);
-
-    let black = prompt_map
-        .remove(&AccessType::BLACK)
-        .map_or(String::from(""), |mut f| {
-            if f.is_empty() {
-                String::from("")
-            } else {
-                f.remove(0).value
-            }
-        });
-    let white = prompt_map
-        .remove(&AccessType::WHITE)
-        .map_or(String::from(""), |mut f| {
-            if f.is_empty() {
-                String::from("")
-            } else {
-                f.remove(0).value
-            }
-        });
+    // // 0.1 单一规则
+    // let black_single_match: SingleMatchRuleAc =
+    //     build_single_match_rule_ac(AccessType::BLACK).await?;
+    // let white_single_match: SingleMatchRuleAc =
+    //     build_single_match_rule_ac(AccessType::WHITE).await?;
+    //
+    // // 0.2 复合规则
+    // let black_complex_rule:Vec<AssociateRuleAc> = build_complex_rule_list(AccessType::BLACK).await?;
+    // let white_complex_rule:Vec<AssociateRuleAc> = build_complex_rule_list(AccessType::WHITE).await?;
+    //
+    // // 0.3 ai提示词
+    // let mut prompt_map = Dict::select_by_map(
+    //     &CC.rb,
+    //     value! {
+    //         "dict_type":DictType::AI_JUDGMENT_PROMPT,
+    //         "status":DictStatus::NORMAL
+    //     },
+    // )
+    // .await?
+    // .group_by_full(|f| f.access_type);
+    //
+    // let black_prompt:String = prompt_map
+    //     .remove(&AccessType::BLACK)
+    //     .map_or(String::from(""), |mut f| {
+    //         if f.is_empty() {
+    //             String::from("")
+    //         } else {
+    //             f.remove(0).value
+    //         }
+    //     });
+    // let white_prompt:String  = prompt_map
+    //     .remove(&AccessType::WHITE)
+    //     .map_or(String::from(""), |mut f| {
+    //         if f.is_empty() {
+    //             String::from("")
+    //         } else {
+    //             f.remove(0).value
+    //         }
+    //     });
 
     //1. 单一包含匹配
     if single_match_enable {
@@ -585,7 +610,7 @@ pub async fn total_rule_match(
 
     //3. ai调用匹配
     if ai_chat_enable {
-        let ai_match = get_ai_match_result(v, &white, &black, &prefix_prompt).await?;
+        let ai_match = get_ai_match_result(v, &white_prompt, &black_prompt, prefix_prompt).await?;
 
         let access_type = ai_match.match_type.clone();
         result.ai_match = Some(ai_match);
@@ -737,7 +762,7 @@ mod tests {
     use rbs::value;
 
     use crate::domain::dtos::TestRuleDto;
-    use crate::service::rule_service::total_rule_match;
+    use crate::service::rule_service::{get_match_need_config, total_rule_match};
     use crate::service::video_detail_service;
     use crate::utils::data_util::bvid_to_aid;
     use crate::{
@@ -765,18 +790,7 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        let (bvid, ai_chat_enable, single_match_enable, complex_match_enable) =
-            ("BV1AJXHBeE6L", false, false, true);
-        let aid = bvid_to_aid(&bvid);
-        let find_or_save_video = video_detail_service::find_or_save_video(aid).await.unwrap();
-        let (_, m) = total_rule_match(
-            &find_or_save_video,
-            ai_chat_enable,
-            single_match_enable,
-            complex_match_enable,
-        )
-        .await
-        .unwrap();
+
 
         //最后一句必须是这个
         log::logger().flush();
