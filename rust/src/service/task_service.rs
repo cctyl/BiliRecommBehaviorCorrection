@@ -1,5 +1,4 @@
-use std::time::Instant;
-
+use log::{error, info};
 use rbatis::{
     executor::Executor,
     impled, py_sql,
@@ -7,6 +6,8 @@ use rbatis::{
     sql,
 };
 use rbs::value;
+use std::collections::HashSet;
+use std::time::Instant;
 
 use crate::{
     app::{config::CC, error::HttpError, response::R, task_pool::TASK_POOL},
@@ -56,7 +57,21 @@ pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
     R::Ok(tasks)
 }
 
+use crate::api::bili;
+use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK};
+use crate::domain::dict::Dict;
+use crate::domain::dtos::{AssociateRuleAc, SearchKeywordDto, SingleMatchRuleAc, TestRuleDto};
+use crate::domain::enumeration::{AccessType, DictStatus, DictType};
+use crate::domain::video_detail::VideoDetail;
+use crate::service::rule_service::{
+    build_complex_rule_list, build_single_match_rule_ac, get_match_need_config,
+};
+use crate::service::{bili_service, dict_service, rule_service, video_detail_service};
+use crate::utils::collection_tool::VecGroupByExt;
+use crate::utils::data_util::{bvid_to_aid, get_random_set, random_access_list};
+use crate::utils::thread_util::ThreadUtil;
 use rbatis::crud_traits::ValueOperatorSql;
+
 #[py_sql(
     "`select * from task`  
      trim end=' where ':  
@@ -80,8 +95,6 @@ async fn select_one_by_condition(
     impled!()
 }
 
-
-
 /// 执行任务并记录任务信息
 pub async fn do_task<F, Fut>(method_name: String, task: F) -> R<bool>
 where
@@ -98,7 +111,6 @@ where
         let start = Instant::now();
         update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
         task().await?;
-
         let end = Instant::now();
         let millis = end.duration_since(start).as_millis();
 
@@ -112,26 +124,162 @@ where
         }
 
         R::Ok(())
-    }))
+    }).await)
 }
 
+/// 关键词搜索任务
+pub async fn search_keyword_task() -> R<()> {
+    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
+        let keyword_set = dict_service::get_search_keyword_set().await?;
+        // todo 记得删除
+        // let mut keyword_set:HashSet<String> =HashSet::new();
+        // keyword_set.insert("红色沙漠".to_string());
+
+        // 0.1 单一规则
+        let (
+            black_single_match,
+            white_single_match,
+            black_complex_rule,
+            white_complex_rule,
+            black_prompt,
+            white_prompt,
+            ai_chat_enable,
+            single_match_enable,
+            complex_match_enable,
+            prompt,
+        ) = rule_service::build_match_config().await?;
+        for keyword in keyword_set {
+            for page in 0..2 {
+                info!("搜索关键词={}",keyword);
+                let set: HashSet<SearchKeywordDto> = bili::search_keyword(&keyword, page)
+                    .await?
+                    .into_iter()
+                    .collect();
+                ThreadUtil::sleep(3).await;
+
+                // 使用闭包，和之前一样
+                for item in set {
+                    let aid = item.aid;
+                    match first_process(
+                        item.into(),
+                        ai_chat_enable,
+                        single_match_enable,
+                        complex_match_enable,
+                        &prompt,
+                        &black_single_match,
+                        &white_single_match,
+                        &black_complex_rule,
+                        &white_complex_rule,
+                        &black_prompt,
+                        &white_prompt,
+                    )
+                    .await
+                    {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("处理aid={aid} 时出错！ 错误：{:?}", e);
+                        }
+                    };
+                    ThreadUtil::s5().await;
+                }
+            }
+            ThreadUtil::sleep(3).await;
+        }
+        R::Ok(())
+    })
+    .await?;
+    info!("关键词搜索任务 启动，提交结果：{flag}");
+    R::Ok(())
+}
+
+/// 初次处理视频
+pub async fn first_process(
+    mut v: VideoDetail,
+    ai_chat_enable: bool,
+    single_match_enable: bool,
+    complex_match_enable: bool,
+    prefix_prompt: &String,
+    //单一规则
+    black_single_match: &SingleMatchRuleAc,
+    white_single_match: &SingleMatchRuleAc,
+
+    //复合规则
+    black_complex_rule: &Vec<AssociateRuleAc>,
+    white_complex_rule: &Vec<AssociateRuleAc>,
+
+    //ai 规则
+    black_prompt: &String,
+    white_prompt: &String,
+) -> R<()> {
+    info!("first_process 处理视频:{},{:?}", v.id, v.title);
+
+    let option = VideoDetail::select_by_id(&CC.rb, v.id).await?;
+    if let Some(db) = option {
+        if db.handle_step != 0 {
+            // 已处理过，跳过
+            info!(
+                "first_process :{},{:?}  已处理过，跳过该视频",
+                v.id, v.title
+            );
+            return R::Ok(());
+        }
+    } else {
+        VideoDetail::insert(&CC.rb, &v).await?;
+    }
+
+    match rule_service::total_rule_match(
+        &v,
+        ai_chat_enable,
+        single_match_enable,
+        complex_match_enable,
+        prefix_prompt,
+        //单一规则
+        black_single_match,
+        white_single_match,
+        //复合规则
+        black_complex_rule,
+        white_complex_rule,
+        //ai 规则
+        black_prompt,
+        white_prompt,
+    )
+        .await {
+        Ok((access_type, match_result)) => {
+            info!(
+                "first_process :{},{:?}  匹配结果为：{:?}",
+                v.id, v.title,access_type
+            );
+
+            v.handle_type = Some(access_type);
+            v.handle_reason = Some(match_result);
+            VideoDetail::update_by_id(&CC.rb, &v).await?;
+        }
+        Err(e) => {
+            info!(
+                "first_process :{},{:?}  匹配错误！：{:?}",
+                v.id, v.title,e
+            );
+        }
+    };
 
 
-
-
-
-
-
-
+    R::Ok(())
+}
 
 #[cfg(test)]
 mod tests {
+    use log::info;
     use rbatis::rbdc::DateTime;
     use rbs::value;
-
+    use tokio::runtime::Runtime;
     use crate::{
-        app::{config::CC, response::R}, domain::{enumeration::TaskStatus, task::Task}, impl_select_by_id, service::task_service::update_task_status
+        app::{config::CC, response::R},
+        domain::{enumeration::TaskStatus, task::Task},
+        impl_select_by_id,
+        service::task_service::update_task_status,
     };
+    use crate::app::task_pool::TASK_POOL;
+    use crate::service::task_service::search_keyword_task;
 
     #[tokio::test]
     async fn example() {
@@ -143,7 +291,25 @@ mod tests {
         //最后一句必须是这个
         log::logger().flush();
     }
-    
+
+
+    // search_keyword_task
+
+    #[tokio::test]
+    async fn test_search_keyword_task() {
+
+
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        search_keyword_task().await.unwrap();
+        TASK_POOL.shutdown().await;
+        info!("任务结束！");
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     #[tokio::test]
     async fn test_impl_delete_by_id() {
@@ -152,13 +318,13 @@ mod tests {
 
         //在这中间编写测试代码
 
-        Task::delete_by_id(&CC.rb, "11679171886120965").await.unwrap();
+        Task::delete_by_id(&CC.rb, "11679171886120965")
+            .await
+            .unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
     }
-    
-
 
     #[tokio::test]
     async fn test_impl_update_by_id() {
@@ -170,36 +336,29 @@ mod tests {
         let mut t: Task = Task::select_by_id(&CC.rb, id).await.unwrap().unwrap();
 
         t.last_run_time = Some(DateTime::now());
-        t.total_run_count = Some( 2001);
-        t.class_method_name = Some( String::from("111222测试的类方法名啊") );
-        t.task_name = Some( String::from("111222测试的名称啊"));
+        t.total_run_count = Some(2001);
+        t.class_method_name = Some(String::from("111222测试的类方法名啊"));
+        t.task_name = Some(String::from("111222测试的名称啊"));
 
-        Task::update_by_id(&CC.rb,&t).await.unwrap();
+        Task::update_by_id(&CC.rb, &t).await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
     }
-    
+
     #[tokio::test]
     async fn test_impl_select_by_id() {
         //第一句必须是这个
         crate::init().await;
-        
+
         //在这中间编写测试代码
-        let task = Task::select_by_id(&CC.rb, "5")
-            .await
-            .unwrap();
+        let task = Task::select_by_id(&CC.rb, "5").await.unwrap();
 
         println!("task: {:?}", task);
-
-
-        
 
         //最后一句必须是这个
         log::logger().flush();
     }
-
-
 
     //测试 impl_select_one_by_condition
     #[tokio::test]
@@ -207,15 +366,16 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-       let select_one_by_condition = Task::select_one_by_condition(&CC.rb, value!{"id":"1883877101111631873"}).await.unwrap();
+        let select_one_by_condition =
+            Task::select_one_by_condition(&CC.rb, value! {"id":"1883877101111631873"})
+                .await
+                .unwrap();
 
         println!("select_one_by_condition: {:?}", select_one_by_condition);
-
 
         //最后一句必须是这个
         log::logger().flush();
     }
-
 
     //测试 add_if_not_exist
     #[tokio::test]

@@ -1,11 +1,12 @@
 use anyhow::Context;
 use log::info;
 use rbatis::{
-    RBatis,  py_sql,
+    RBatis, py_sql,
     rbdc::{DateTime, db::ExecResult},
 };
 use rbs::value;
 use std::collections::HashSet;
+use std::hash::Hash;
 use tokio::sync::mpsc;
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -13,8 +14,8 @@ use crate::domain::enumeration::DictStatus;
 use crate::{
     app::{config::CC, error::HttpError, response::R},
     domain::{
-        enumeration::{AccessType, DictType},
         dict::Dict,
+        enumeration::{AccessType, DictType},
     },
     handler::dict_handler::DictDto,
     service::{
@@ -31,15 +32,15 @@ mod tests {
 
     use anyhow::Context;
     use log::info;
-    use rbatis::{ rbdc::DateTime};
+    use rbatis::rbdc::DateTime;
     use rbs::value;
 
     use crate::domain::enumeration::DictStatus;
     use crate::{
         app::{config::CC, error::HttpError, response::R},
         domain::{
-            enumeration::{AccessType, DictType},
             dict::Dict,
+            enumeration::{AccessType, DictType},
         },
         handler::dict_handler::DictDto,
         service::dict_service::{
@@ -75,9 +76,14 @@ mod tests {
     async fn test_check_is_need_save() {
         crate::init().await;
 
-        let r = check_is_need_save(AccessType::BLACK, DictType::KEYWORD, DictStatus::IGNORE, "泰国")
-            .await
-            .unwrap();
+        let r = check_is_need_save(
+            AccessType::BLACK,
+            DictType::KEYWORD,
+            DictStatus::IGNORE,
+            "泰国",
+        )
+        .await
+        .unwrap();
         assert_eq!(r, false);
         let r = check_is_need_save(AccessType::BLACK, DictType::TAG, DictStatus::IGNORE, "泰国")
             .await
@@ -422,13 +428,8 @@ pub async fn check_is_need_save(
     value: &str,
 ) -> R<bool> {
     R::Ok(
-        !exist_by_access_type_and_dict_type_and_value(
-            access_type,
-            dict_type,
-            status,
-            value,
-        )
-        .await?,
+        !exist_by_access_type_and_dict_type_and_value(access_type, dict_type, status, value)
+            .await?,
     )
 }
 
@@ -436,7 +437,8 @@ pub async fn check_is_need_save(
 pub(crate) async fn add_dict(table: Dict) -> R<String> {
     let access_type = table.access_type;
     let dict_type = table.dict_type;
-    let check_is_need_save = check_is_need_save(access_type, dict_type,table.status, &table.value).await?;
+    let check_is_need_save =
+        check_is_need_save(access_type, dict_type, table.status, &table.value).await?;
     if check_is_need_save {
         Dict::insert(&CC.rb, &table).await?;
     }
@@ -530,7 +532,8 @@ async fn get_black_user_id_set() -> R<Vec<String>> {
 /// 查找黑名单用户id Dict
 /// 返回值：Vec<Dict>
 async fn find_black_user_id() -> R<Vec<Dict>> {
-    get_list_by_dict_type_access_type_status(AccessType::BLACK, DictType::MID, DictStatus::NORMAL).await
+    get_list_by_dict_type_access_type_status(AccessType::BLACK, DictType::MID, DictStatus::NORMAL)
+        .await
 }
 
 /// 根据dict_type 和 access_type 查询
@@ -671,4 +674,21 @@ pub async fn read_stop_word() -> R<Vec<String>> {
         .collect::<Vec<String>>();
 
     R::Ok(collect)
+}
+
+/// 查询搜索关键词列表
+pub(crate) async fn get_search_keyword_set() -> R<HashSet<String>> {
+    let vec: HashSet<String> = Dict::select_by_map(
+        &CC.rb,
+        value! {
+            "dict_type":DictType::SEARCH_KEYWORD,
+            "status":DictStatus::NORMAL,
+        },
+    )
+    .await?
+    .into_iter()
+    .map(|d| d.value)
+    .collect();
+
+    R::Ok(vec)
 }

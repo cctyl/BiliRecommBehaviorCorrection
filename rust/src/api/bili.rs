@@ -9,8 +9,10 @@ use crate::app::config::CC;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::domain::dtos::{PageBean, UserSubmissionVideo, VideoDetailDTO};
-use crate::domain::{config::Config, cookie_header_data::CookieHeaderData, tag::Tag, video_detail::VideoDetail};
+use crate::domain::dtos::{PageBean, SearchKeywordDto, UserSubmissionVideo, VideoDetailDTO};
+use crate::domain::{
+    config::Config, cookie_header_data::CookieHeaderData, tag::Tag, video_detail::VideoDetail,
+};
 use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::data_util::{self, download_json_response};
@@ -31,6 +33,7 @@ use urlencoding::encode;
 //扫码登陆的code
 static TEMP_TV_AUTH_CODE: Mutex<String> = Mutex::new(String::new());
 
+/// 检查响应
 async fn check_resp(value: &serde_json::Value) -> R<()> {
     let flag = value["code"]
         .as_i64()
@@ -407,10 +410,7 @@ pub async fn update_cookie(
 
 /// 不携带cookie 和登陆凭证的陌生人get请求
 /// 返回纯html
-pub async fn no_auth_cookie_get(
-    url: &str,
-    param_map: Vec<(String, String)>,
-) -> R<String> {
+pub async fn no_auth_cookie_get(url: &str, param_map: Vec<(String, String)>) -> R<String> {
     let mut req = CLIENT.get(url);
     req = req
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36")
@@ -705,6 +705,156 @@ fn get_mixin_key(orig: &[u8]) -> String {
         .collect::<String>()
 }
 
+/**
+ * 获取视频非常详细的信息
+ * view 视频基本信息
+ * Card UP主信息
+ * Tags 视频的标签信息
+ * Reply 视频热评信息
+ * Related 相关视频列表
+ *
+ * @param avid 视频id
+ */
+pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
+    info!("正在获取视频详情aid={}", aid);
+    let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
+    let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
+
+    trans2_video_detail(body)
+}
+
+/// json结构转换为VideoDetail
+pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailDTO> {
+    let mut data = body["data"].take();
+
+    let mut r: VideoDetailDTO = match serde_json::from_value(data["View"].take()) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("trans2_video_detail json 解析失败！{:#?}", e);
+            return R::Err(HttpError::ServerError(format!(
+                "trans2_video_detail json 解析失败！{:#?}",
+                e
+            )));
+        }
+    };
+    let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
+    r.tags = Some(tags);
+    R::Ok(r)
+}
+
+/// 对视频点踩
+pub(crate) async fn dislike(aid: u64) -> R<()> {
+    info!("正在对视频点踩aid={}", aid);
+    let url = "https://app.biliapi.net/x/v2/view/dislike";
+    let body = common_post_form(
+        url,
+        vec![
+            ("aid".to_string(), aid.to_string()),
+            ("access_key".to_string(), get_access_key(false).await?),
+            ("dislike".to_string(), "0".to_string()),
+        ],
+    )
+    .await?;
+
+    check_resp(&body).await?;
+
+    R::Ok(())
+}
+/// 获取指定分区的视频排行榜数据
+/// 注意: 该接口不支持 主分区下的子分区,比如游戏分区下的单机分区17，无法访问，提示请求错误。但是游戏主分区4可以访问
+pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
+    info!("请求分区排行榜数据，tid={}", tid);
+    let url = "https://api.bilibili.com/x/web-interface/ranking/v2";
+    let mut body = common_get(
+        url,
+        vec![
+            ("rid".to_string(), tid.to_string()),
+            ("type".to_string(), "all".to_string()),
+        ],
+    )
+    .await?;
+
+    let list = body["data"]["list"].take();
+    // data_util::download_json_response(&list, "get_rank_by_tid.json")?;
+
+    R::Ok(serde_json::from_value(list)?)
+}
+
+///获取指定分区内的最新视频
+/// * tid 分区id
+/// * page_num 页码
+pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<VideoDetailDTO>> {
+    let url = "https://api.bilibili.com/x/web-interface/dynamic/region";
+    let mut body = common_get(
+        url,
+        vec![
+            ("rid".to_string(), tid.to_string()),
+            ("ps".to_string(), "20".to_string()),
+            ("pn".to_string(), page_num.to_string()),
+        ],
+    )
+    .await
+    .context("get_region_lastest_video 请求失败")?;
+
+    download_json_response(&mut body, "get_region_lastest_video.json")?;
+    let value = body["data"]["archives"].take();
+    R::Ok(serde_json::from_value(value).context("get_region_lastest_video json 解析失败")?)
+}
+
+// 使用 LazyLock 初始化用户名提起表达式
+pub static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"<title>(.*?)的个人空间-(.*?)个人主页-哔哩哔哩视频</title>")
+        .expect("Failed to compile 用户名提起表达式")
+});
+/// 根据mid获取用户名
+pub(crate) async fn get_user_name_by_mid(mid: String) -> R<String> {
+    let body = no_auth_cookie_get(&format!("https://space.bilibili.com/{}", mid), vec![]).await?;
+
+    if let Some(captures) = USER_NAME_REGEX.captures(&body) {
+        let xxx1 = captures.get(1).map(|m| m.as_str()).unwrap_or("");
+        let xxx2 = captures.get(2).map(|m| m.as_str()).unwrap_or("");
+
+        if xxx1 == xxx2 {
+            return R::Ok(xxx1.to_string());
+        }
+    }
+
+    R::Err(HttpError::BadRequest(format!("根据{mid} 无法获取到用户名")))
+}
+
+/// 根据关键词进行综合搜索
+pub(crate) async fn search_keyword(keyword: &str, page: i32) -> R<Vec<SearchKeywordDto>> {
+    let url = "https://api.bilibili.com/x/web-interface/search/all/v2";
+    let mut body = common_get(
+        url,
+        vec![
+            ("search_type".to_string(), "video".to_string()),
+            ("keyword".to_string(), keyword.to_string()),
+            ("order".to_string(), "totalrank".to_string()),
+            ("page".to_string(), page.to_string()),
+        ],
+    )
+    .await?;
+
+    let value = body["data"]["result"].take();
+    if let Value::Array(array) = value {
+        for mut item in array {
+            if let Some(result_type) = item.get("result_type").and_then(|v| v.as_str()) {
+                if result_type == "video" {
+                    if let Some(data_array) = item.get_mut("data") {
+                        let data_value = data_array.take();
+                        // data_util::download_json_response(&data_value, "search_keyword_data_value.json")?;
+                        return R::Ok(serde_json::from_value(data_value).context("search_keyword 序列化失败".to_string())?);
+                    }
+                }
+            }
+        }
+    }
+
+    error!("{}关键词搜索失败了",keyword);
+    R::Ok(vec![])
+}
+
 #[cfg(test)]
 mod tests {
     use std::{
@@ -717,6 +867,7 @@ mod tests {
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
     };
+    use crate::api::bili::search_keyword;
 
     #[tokio::test]
     async fn example() {
@@ -724,6 +875,21 @@ mod tests {
         crate::init().await;
 
         //在这中间编写测试代码
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    #[tokio::test]
+    async fn test_search_keyword() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let vec = search_keyword("红色沙漠", 1).await.unwrap();
+        println!("{:#?}",vec);
 
         //最后一句必须是这个
         log::logger().flush();
@@ -799,13 +965,11 @@ mod tests {
         crate::init().await;
 
         log::info!("开始测试dislike");
-       let get_user_name_by_mid = super::get_user_name_by_mid("123456".to_string()).await;
+        let get_user_name_by_mid = super::get_user_name_by_mid("123456".to_string()).await;
 
         log::info!("result={:?}", get_user_name_by_mid);
         log::logger().flush();
     }
-
-
 
     //测试 get_rank_by_tid
     #[tokio::test]
@@ -828,125 +992,3 @@ mod tests {
         log::logger().flush();
     }
 }
-
-/**
- * 获取视频非常详细的信息
- * view 视频基本信息
- * Card UP主信息
- * Tags 视频的标签信息
- * Reply 视频热评信息
- * Related 相关视频列表
- *
- * @param avid 视频id
- */
-pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
-    info!("正在获取视频详情aid={}", aid);
-    let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
-    let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
-
- 
-    trans2_video_detail(body)
-}
-
-/// json结构转换为VideoDetail
-pub fn trans2_video_detail(mut body: serde_json::Value) -> R<VideoDetailDTO> {
-    let mut data = body["data"].take();
-       
-    let mut r: VideoDetailDTO = match serde_json::from_value(data["View"].take()){
-        Ok(r) => r,
-        Err(e) => {
-
-            error!("trans2_video_detail json 解析失败！{:#?}",e);
-            return R::Err(HttpError::ServerError(format!("trans2_video_detail json 解析失败！{:#?}",e)));
-
-        },
-    };
-    let tags: Vec<Tag> = serde_json::from_value(data["Tags"].take())?;
-    r.tags = Some(tags);
-    R::Ok(r)
-}
-
-/// 对视频点踩
-pub(crate) async fn dislike(aid: u64) -> R<()> {
-    info!("正在对视频点踩aid={}", aid);
-    let url = "https://app.biliapi.net/x/v2/view/dislike";
-    let body = common_post_form(
-        url,
-        vec![
-            ("aid".to_string(), aid.to_string()),
-            ("access_key".to_string(), get_access_key(false).await?),
-            ("dislike".to_string(), "0".to_string()),
-        ],
-    )
-    .await?;
-
-    check_resp(&body).await?;
-
-    R::Ok(())
-}
-/// 获取指定分区的视频排行榜数据
-/// 注意: 该接口不支持 主分区下的子分区,比如游戏分区下的单机分区17，无法访问，提示请求错误。但是游戏主分区4可以访问
-pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
-    info!("请求分区排行榜数据，tid={}", tid);
-    let url = "https://api.bilibili.com/x/web-interface/ranking/v2";
-    let mut body = common_get(
-        url,
-        vec![
-            ("rid".to_string(), tid.to_string()),
-            ("type".to_string(), "all".to_string()),
-        ],
-    )
-    .await?;
-
-    let list = body["data"]["list"].take();
-    data_util::download_json_response(&list, "get_rank_by_tid.json")?;
-
-    R::Ok(serde_json::from_value(list)?)
-}
-
-///获取指定分区内的最新视频
-/// * tid 分区id
-/// * page_num 页码
-pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<VideoDetailDTO>> {
-    let url = "https://api.bilibili.com/x/web-interface/dynamic/region";
-    let mut body = common_get(
-        url,
-        vec![
-            ("rid".to_string(), tid.to_string()),
-            ("ps".to_string(), "20".to_string()),
-            ("pn".to_string(), page_num.to_string()),
-        ],
-    )
-    .await
-    .context("get_region_lastest_video 请求失败")?;
-
-    download_json_response(&mut body, "get_region_lastest_video.json")?;
-    let value = body["data"]["archives"].take();
-    R::Ok(serde_json::from_value(value).context("get_region_lastest_video json 解析失败")?)
-}
-
-
-// 使用 LazyLock 初始化用户名提起表达式
-pub static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"<title>(.*?)的个人空间-(.*?)个人主页-哔哩哔哩视频</title>")
-        .expect("Failed to compile 用户名提起表达式")
-});
-/// 根据mid获取用户名
-pub(crate) async fn get_user_name_by_mid(mid: String) -> R<String> {
-    let body = no_auth_cookie_get(&format!("https://space.bilibili.com/{}", mid), vec![]).await?;
-   
-    
-    if let Some(captures) = USER_NAME_REGEX.captures(&body) {
-        let xxx1 = captures.get(1).map(|m| m.as_str()).unwrap_or("");
-        let xxx2 = captures.get(2).map(|m| m.as_str()).unwrap_or("");
-        
-        if xxx1 == xxx2 {
-           return R::Ok(xxx1.to_string())
-        }
-    }
-    
-    R::Err(HttpError::BadRequest(format!("根据{mid} 无法获取到用户名")))
-}
-
-
-

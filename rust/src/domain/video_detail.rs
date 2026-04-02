@@ -88,19 +88,20 @@ pub struct VideoDetail {
     pub tname: Option<String>,
     pub pic: Option<String>,
     pub title: Option<String>,
-    pub pubdate: Option<i64>,
+    pub pubdate: Option<u64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
     pub duration: Option<i32>,
     pub dynamic: Option<String>,
     pub bvid: String,
     pub owner_id: Option<u64>,
-    /// 数字类型，未处理时是0，第一次机器处理是1，第二次处理是2，以此类推，处理完毕是100
+    /// 数字类型，未处理时是0，第一次机器处理是1，以此类推，处理完毕是100
     pub handle_step: u64,
     pub handle_reason: Option<MatchResult>,
     /// 处理时间
     pub handle_time: Option<DateTime>,
-    pub handle_type: Option<HandleType>,
+    /// 点赞或者点踩还是其他
+    pub handle_type: Option<AccessType>,
     pub created_date: Option<DateTime>,
     /// 标签，逗号分隔
     pub tag: Option<String>,

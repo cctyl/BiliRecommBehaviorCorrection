@@ -34,6 +34,8 @@ pub const PIC_MAX_SIZE: usize = 2097152; // 或 u32
 // 点踩任务 
 pub const DISLIKE_BY_USER_ID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByUserId";
 pub const DISLIKE_BY_TID_TASK: &str = "io.github.cctyl.controller.BlackRuleController.dislikeByTid";
+// 关键词搜索任务
+pub const DO_SEARCH_TASK: &str = "io.github.cctyl.service.impl.BiliService.doSearchTask";
 
 pub const  DEFAULT_PROMPT:&str = r#"角色定义：
 你是一个严格的视频内容审核助手。你的任务是根据用户提供的视频信息,以及预设的审核规则（黑名单、白名单），

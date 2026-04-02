@@ -77,19 +77,24 @@ pub trait RandomAccessListConsumer {
 
 
 /// 随机访问列表中的元素
-pub async fn random_access_list<T, F>(source: &[T], size: usize, mut consumer: F) -> R<()>
+/// 可以抄的模仿，只要把所有权给他，就没问题了，async move 需要所有权
+pub async fn random_access_list<T, F, Fut>(mut source: Vec<T>, size: usize, mut consumer: F) -> R<()>
 where
-    F: AsyncFnMut(&T) -> R<()>,
+    F: FnMut(T) -> Fut,
+    Fut: Future<Output = R<()>>,
 {
     let actual_size = std::cmp::min(size, source.len());
-    let indices = get_random_set(actual_size, 0, (actual_size - 1) as i32);
-
-    for &index in &indices {
-        consumer(&source[index as usize]).await?;
+    let indices:HashSet<i32> = get_random_set(actual_size, 0, (actual_size - 1) as i32);
+    let mut result = Vec::with_capacity(source.len());
+    // 按照新顺序取出元素
+    for idx in indices {
+        result.push(source.remove(idx as usize));
+    }
+    for item in result{
+        consumer(item).await?;
     }
     R::Ok(())
 }
-
 
 
 /// 获取指定范围内的随机数

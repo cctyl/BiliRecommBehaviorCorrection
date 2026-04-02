@@ -2,7 +2,7 @@ use crate::api::bili;
 use crate::app::config::CC;
 use crate::app::response::R;
 use crate::domain::dtos::VideoDetailDTO;
-use crate::domain::enumeration::HandleType;
+use crate::domain::enumeration::{AccessType, HandleType};
 use crate::domain::region::Region;
 use crate::domain::{video_detail::MatchResult, video_detail::VideoDetail};
 use crate::service::{owner_service, tag_service};
@@ -19,7 +19,7 @@ mod tests {
     use crate::api::bili;
     use crate::app::config::CC;
     use crate::app::response::R;
-    use crate::domain::enumeration::HandleType;
+    use crate::domain::enumeration::{AccessType, HandleType};
     use crate::domain::video_detail::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
     use crate::service::video_detail_service::exist_by_id;
     use log::info;
@@ -186,7 +186,7 @@ mod tests {
         let mut reason = MatchResult::default();
         reason.user_handle_reason = Some("aaaaa".to_string());
         //在这中间编写测试代码
-        super::record_handle_video(&mut dto, HandleType::DISLIKE, reason)
+        super::record_handle_video(&mut dto, AccessType::BLACK, reason)
             .await
             .expect("保存出错");
 
@@ -223,7 +223,7 @@ pub(crate) async fn find_by_aid(aid: u64) -> R<Option<VideoDetail>> {
 /// 记录视频的处理结果
 pub(crate) async fn record_handle_video(
     video: &mut VideoDetailDTO,
-    handle_type: HandleType,
+    handle_type: AccessType,
     reason: MatchResult,
 ) -> R<()> {
     let mut v: VideoDetail = video.video_detail.clone().into();

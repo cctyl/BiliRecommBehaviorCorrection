@@ -16,7 +16,7 @@ use crate::{
 };
 
 use crate::app::error::HttpError;
-use crate::domain::enumeration::HandleType;
+use crate::domain::enumeration::{AccessType, HandleType};
 use crate::service::video_detail_service;
 use data_util::RandomAccessListConsumer;
 use log::{error, info};
@@ -209,7 +209,7 @@ pub async fn disklisk_video_list(video_list: &mut Vec<VideoDetailDTO>, reason_st
             bili::dislike(aid).await?;
             let mut reason = MatchResult::default();
             reason.user_handle_reason = Some(reason_str.clone());
-            video_detail_service::record_handle_video(video, HandleType::DISLIKE, reason)
+            video_detail_service::record_handle_video(video, AccessType::BLACK, reason)
                 .await?;
 
             ThreadUtil::s30().await;

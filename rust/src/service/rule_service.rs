@@ -332,6 +332,7 @@ pub async fn get_ai_match_result(
     black_prompt: &str,
     prefix_prompt: &str,
 ) -> R<AiMatch> {
+    info!("开始进行ai匹配 ：{:?}", video.title);
     let mut output_prompt = r#"**输出格式**  
         将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。
         包含两个字段，
@@ -347,21 +348,22 @@ pub async fn get_ai_match_result(
         封面文字:{};
         标签：{};
         分区:{};
-
-        黑名单规则如下：{};
-        白名单规则如下：{};
-
     "#,
         video.title.clone().unwrap_or(String::from("")),
         video.desc_field.clone().unwrap_or(String::from("")),
         "", // 暂时没有完成封面ocr或者摘要模型的配置，封面文字留空
         video.tag.clone().unwrap_or(String::from("")),
         video.tname.clone().unwrap_or(String::from("")),
-        black_prompt,
-        white_prompt
     );
 
     info!("{}", video_info);
+    let rule_info = format!(
+        r#"黑名单规则如下：{};
+        白名单规则如下：{};"#,
+        black_prompt, white_prompt
+    );
+
+    let user_prompt = format!("{}，{}", video_info, rule_info);
 
     let glm = &CC.chat.read().await;
 
@@ -372,7 +374,7 @@ pub async fn get_ai_match_result(
         },
         Message {
             role: MessageRole::User,
-            content: video_info,
+            content: user_prompt,
         },
     ];
     let result = match glm.chat_request(message).await {
@@ -503,23 +505,107 @@ pub fn try_single_match(
     })
 }
 
-
 /// 获得视频判断需要的配置
-pub async fn get_match_need_config()->R<(bool,bool,bool,String)>{
-
+pub async fn get_match_need_config() -> R<(bool, bool, bool, String)> {
     let lock = CC.config_map.read().await;
     let default_prompt = DEFAULT_PROMPT.to_string();
     let mut result = MatchResult::default();
-    let prefix_prompt = lock.get("ai_system_prompt").map_or(default_prompt,|f|f.to_owned());
+    let prefix_prompt = lock
+        .get("ai_system_prompt")
+        .map_or(default_prompt, |f| f.to_owned());
 
     //0. 读取规则配置，看看现在开启了什么规则
     let ai_chat_enable = lock.get("ai_chat_enable").map_or(false, |f| f == "true");
     let single_match_enable = lock.get("single_match").map_or(false, |f| f == "true");
     let complex_match_enable = lock.get("complex_match").map_or(false, |f| f == "true");
 
-    R::Ok((ai_chat_enable,single_match_enable,complex_match_enable,prefix_prompt))
+    R::Ok((
+        ai_chat_enable,
+        single_match_enable,
+        complex_match_enable,
+        prefix_prompt,
+    ))
 }
 
+/// 构建匹配所需要的规则
+pub async fn build_match_config() -> R<(
+    // 单一规则
+    SingleMatchRuleAc,
+    SingleMatchRuleAc,
+    // 复合规则
+    Vec<AssociateRuleAc>,
+    Vec<AssociateRuleAc>,
+    // AI提示词
+    String,
+    String,
+    // 开关配置
+    bool,
+    bool,
+    bool,
+    String,
+)> {
+    // 0.1 单一规则
+    let black_single_match: SingleMatchRuleAc =
+        build_single_match_rule_ac(AccessType::BLACK).await?;
+    let white_single_match: SingleMatchRuleAc =
+        build_single_match_rule_ac(AccessType::WHITE).await?;
+
+    // 0.2 复合规则
+    let black_complex_rule: Vec<AssociateRuleAc> =
+        build_complex_rule_list(AccessType::BLACK).await?;
+    let white_complex_rule: Vec<AssociateRuleAc> =
+        build_complex_rule_list(AccessType::WHITE).await?;
+
+    // 0.3 AI提示词
+    let mut prompt_map = Dict::select_by_map(
+        &CC.rb,
+        value! {
+            "dict_type": DictType::AI_JUDGMENT_PROMPT,
+            "status": DictStatus::NORMAL
+        },
+    )
+    .await?
+    .group_by_full(|f| f.access_type);
+
+    let black_prompt: String =
+        prompt_map
+            .remove(&AccessType::BLACK)
+            .map_or(String::new(), |mut f| {
+                if f.is_empty() {
+                    String::new()
+                } else {
+                    f.remove(0).value
+                }
+            });
+
+    let white_prompt: String =
+        prompt_map
+            .remove(&AccessType::WHITE)
+            .map_or(String::new(), |mut f| {
+                if f.is_empty() {
+                    String::new()
+                } else {
+                    f.remove(0).value
+                }
+            });
+
+    // 0.4 开关配置
+    let (ai_chat_enable, single_match_enable, complex_match_enable, prompt) =
+        get_match_need_config().await?;
+
+    Ok((
+        black_single_match,
+        white_single_match,
+        black_complex_rule,
+        white_complex_rule,
+        black_prompt,
+        white_prompt,
+        ai_chat_enable,
+        single_match_enable,
+        complex_match_enable,
+        prompt,
+    ))
+}
 
 /// 规则匹配, 返回这是黑名单还是白名单，还是其他，然后把匹配结果也返回
 /// 传什么东西过来？规则需要什么，就传什么
@@ -529,24 +615,20 @@ pub async fn total_rule_match(
     ai_chat_enable: bool,
     single_match_enable: bool,
     complex_match_enable: bool,
-    prefix_prompt:&String,
+    prefix_prompt: &String,
     //单一规则
     black_single_match: &SingleMatchRuleAc,
     white_single_match: &SingleMatchRuleAc,
 
     //复合规则
-    black_complex_rule:&Vec<AssociateRuleAc>,
-    white_complex_rule:&Vec<AssociateRuleAc>,
+    black_complex_rule: &Vec<AssociateRuleAc>,
+    white_complex_rule: &Vec<AssociateRuleAc>,
 
     //ai 规则
-    black_prompt:&String,
-    white_prompt:&String,
+    black_prompt: &String,
+    white_prompt: &String,
 ) -> R<(AccessType, MatchResult)> {
-
-
     let mut result = MatchResult::default();
-
-
 
     // // 0.1 单一规则
     // let black_single_match: SingleMatchRuleAc =
@@ -789,8 +871,6 @@ mod tests {
     async fn test_all_match() {
         //第一句必须是这个
         crate::init().await;
-
-
 
         //最后一句必须是这个
         log::logger().flush();
