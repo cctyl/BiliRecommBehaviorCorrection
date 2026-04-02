@@ -78,6 +78,7 @@ impl AppContext {
 
     /// 初始化glm chat
     pub async fn init_glm_chat(&self) -> R<String> {
+        info!("初始化ai客户端");
         let lock = self.config_map.read().await;
 
         //ai 功能是否开启
@@ -86,7 +87,7 @@ impl AppContext {
         let mut config = ChatConfig::default();
         config.enable = enable;
 
-        info!("初始config：{:#?}", config);
+        // info!("初始config：{:#?}", config);
 
         if !enable {
             log::info!("[bili-rust] ai 功能未启用");
@@ -136,7 +137,7 @@ impl AppContext {
                 config.system_prompt = value.clone();
             }
         }
-        info!("赋值后config：{:#?}", config);
+        // info!("赋值后config：{:#?}", config);
 
         let mut lock = self.chat.write().await;
         lock.replace_config(config);
