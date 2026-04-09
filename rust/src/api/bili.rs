@@ -9,7 +9,7 @@ use crate::app::config::CC;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::domain::dtos::{PageBean, SearchKeywordDto, UserSubmissionVideo, VideoDetailDTO};
+use crate::domain::dtos::{PageBean, SearchKeywordDto, UserSubmissionVideo, VideoDetailDTO, VideoRawDto};
 use crate::domain::{
     config::Config, cookie_header_data::CookieHeaderData, tag::Tag, video_detail::VideoDetail,
 };
@@ -17,7 +17,7 @@ use crate::service::config_service;
 use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
 use crate::utils::data_util::{self, download_json_response};
 use crate::utils::http::CLIENT;
-use crate::utils::id::generate_id;
+use crate::utils::id::{generate_id, next_id};
 use anyhow::Context;
 use axum::body;
 use hex;
@@ -855,6 +855,41 @@ pub(crate) async fn search_keyword(keyword: &str, page: i32) -> R<Vec<SearchKeyw
     R::Ok(vec![])
 }
 
+/// 获取热门排行榜数据
+pub async fn hot_rank_video(page_num:u32,page_size:u32)->R<Vec<VideoDetail>>{
+
+    let  url = "https://api.bilibili.com/x/web-interface/popular";
+    let mut body = common_get(url, vec![
+        ("pn".to_string(), page_num.to_string()),
+        ("ps".to_string(), page_size.to_string())
+    ]).await?;
+    let value_source = body["data"]["list"].take();
+    // 使用 for 循环转换
+    if let Value::Array(array) = value_source {
+        let mut video_list = Vec::with_capacity(array.len());
+
+        for value in array {
+            match serde_json::from_value::<VideoRawDto>(value) {
+                Ok(raw_dto) => {
+                    video_list.push(VideoDetail::from(raw_dto));
+                }
+                Err(e) => {
+                    info!("解析 热门排行榜 视频数据失败: {}, 跳过一条数据", e);
+                    continue;
+                }
+            }
+        }
+        R::Ok(video_list)
+
+
+    }else {
+
+        R::Err(HttpError::ServerError("热门排行榜数据结构错误！".to_string()))
+    }
+
+}
+
+
 #[cfg(test)]
 mod tests {
     use std::{
@@ -867,7 +902,7 @@ mod tests {
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
     };
-    use crate::api::bili::search_keyword;
+    use crate::api::bili::{hot_rank_video, search_keyword};
 
     #[tokio::test]
     async fn example() {
@@ -880,6 +915,21 @@ mod tests {
         log::logger().flush();
     }
 
+// hot_rank_video
+
+    #[tokio::test]
+    async fn test_hot_rank_video() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let vec = hot_rank_video(1, 10).await.unwrap();
+        println!("len={:#?}", vec);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     #[tokio::test]
     async fn test_search_keyword() {

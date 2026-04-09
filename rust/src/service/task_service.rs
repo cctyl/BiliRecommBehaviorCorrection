@@ -107,33 +107,37 @@ where
     update_last_run_time(&CC.rb, DateTime::now(), &method_name).await?;
 
     let method_name_move = method_name.clone();
-    R::Ok(TASK_POOL.put_if_absent(method_name_move, async move || {
-        let start = Instant::now();
-        update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
-        task().await?;
-        let end = Instant::now();
-        let millis = end.duration_since(start).as_millis();
+    R::Ok(
+        TASK_POOL
+            .put_if_absent(method_name_move, async move || {
+                let start = Instant::now();
+                update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
+                task().await?;
+                let end = Instant::now();
+                let millis = end.duration_since(start).as_millis();
 
-        let mut t = find_by_class_method_name(&method_name).await?;
-        if let Some(mut t) = t {
-            t.last_run_time = Some(DateTime::now());
-            t.total_run_count = Some(t.total_run_count.unwrap_or(0) + 1);
-            t.last_run_duration = Some(millis as u32);
-            t.current_run_status = Some(TaskStatus::STOPPED);
-            Task::update_by_id(&CC.rb, &t).await?;
-        }
+                let mut t = find_by_class_method_name(&method_name).await?;
+                if let Some(mut t) = t {
+                    t.last_run_time = Some(DateTime::now());
+                    t.total_run_count = Some(t.total_run_count.unwrap_or(0) + 1);
+                    t.last_run_duration = Some(millis as u32);
+                    t.current_run_status = Some(TaskStatus::STOPPED);
+                    Task::update_by_id(&CC.rb, &t).await?;
+                }
 
-        R::Ok(())
-    }).await)
+                R::Ok(())
+            })
+            .await,
+    )
 }
 
 /// 关键词搜索任务
 pub async fn search_keyword_task() -> R<()> {
     let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
-        // let keyword_set = dict_service::get_search_keyword_set().await?;
+        let keyword_set = dict_service::get_search_keyword_set().await?;
         // todo 记得删除
-        let mut keyword_set:HashSet<String> =HashSet::new();
-        keyword_set.insert("红色沙漠".to_string());
+        // let mut keyword_set:HashSet<String> =HashSet::new();
+        // keyword_set.insert("红色沙漠".to_string());
 
         // 0.1 单一规则
         let (
@@ -150,7 +154,7 @@ pub async fn search_keyword_task() -> R<()> {
         ) = rule_service::build_match_config().await?;
         for keyword in keyword_set {
             for page in 0..2 {
-                info!("搜索关键词={}",keyword);
+                info!("搜索关键词={}", keyword);
                 let set: HashSet<SearchKeywordDto> = bili::search_keyword(&keyword, page)
                     .await?
                     .into_iter()
@@ -188,6 +192,63 @@ pub async fn search_keyword_task() -> R<()> {
     })
     .await?;
     info!("关键词搜索任务 启动，提交结果：{flag}");
+    R::Ok(())
+}
+
+/// 热门排行榜任务
+pub async fn hot_rank_video_task() -> R<()> {
+    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
+        // 0.1 单一规则
+        let (
+            black_single_match,
+            white_single_match,
+            black_complex_rule,
+            white_complex_rule,
+            black_prompt,
+            white_prompt,
+            ai_chat_enable,
+            single_match_enable,
+            complex_match_enable,
+            prompt,
+        ) = rule_service::build_match_config().await?;
+        // for page in 1..=10 {
+        //todo 记得删
+        for page in 1..=1 {
+
+            let set = bili::hot_rank_video(page, 10)
+                .await?;
+            ThreadUtil::sleep(3).await;
+
+            for item in set {
+                let aid = item.id;
+                match first_process(
+                    item.into(),
+                    ai_chat_enable,
+                    single_match_enable,
+                    complex_match_enable,
+                    &prompt,
+                    &black_single_match,
+                    &white_single_match,
+                    &black_complex_rule,
+                    &white_complex_rule,
+                    &black_prompt,
+                    &white_prompt,
+                )
+                .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        error!("处理aid={aid} 时出错！ 错误：{:?}", e);
+                    }
+                };
+                ThreadUtil::s5().await;
+            }
+        }
+        ThreadUtil::sleep(3).await;
+        R::Ok(())
+    })
+    .await?;
+    info!("热门排行榜任务 启动，提交结果：{flag}");
     R::Ok(())
 }
 
@@ -242,47 +303,45 @@ pub async fn first_process(
         black_prompt,
         white_prompt,
     )
-        .await {
+    .await
+    {
         Ok((access_type, match_result)) => {
             info!(
                 "first_process :{},{:?}  匹配结果为：{:?}",
-                v.id, v.title,access_type
+                v.id, v.title, access_type
             );
 
-
-           video_detail_service:: update_handle_data(&mut v,
-                               1,
-                               Some(match_result),
-                               None,
-                               Some(access_type)).await?;
+            video_detail_service::update_handle_data(
+                &mut v,
+                1,
+                Some(match_result),
+                None,
+                Some(access_type),
+            )
+            .await?;
         }
         Err(e) => {
-            info!(
-                "first_process :{},{:?}  匹配错误！：{:?}",
-                v.id, v.title,e
-            );
+            info!("first_process :{},{:?}  匹配错误！：{:?}", v.id, v.title, e);
         }
     };
-
 
     R::Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
-    use log::info;
-    use rbatis::rbdc::DateTime;
-    use rbs::value;
-    use tokio::runtime::Runtime;
+    use crate::app::task_pool::TASK_POOL;
+    use crate::service::task_service::{hot_rank_video_task, search_keyword_task};
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
         impl_select_by_id,
         service::task_service::update_task_status,
     };
-    use crate::app::task_pool::TASK_POOL;
-    use crate::service::task_service::search_keyword_task;
+    use log::info;
+    use rbatis::rbdc::DateTime;
+    use rbs::value;
+    use tokio::runtime::Runtime;
 
     #[tokio::test]
     async fn example() {
@@ -295,13 +354,23 @@ mod tests {
         log::logger().flush();
     }
 
-
-    // search_keyword_task
+    // hot_rank_video_task
 
     #[tokio::test]
+    async fn test_hot_rank_video_task() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        hot_rank_video_task().await.unwrap();
+        TASK_POOL.shutdown().await;
+        info!("任务结束！");
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+    #[tokio::test]
     async fn test_search_keyword_task() {
-
-
         //第一句必须是这个
         crate::init().await;
 

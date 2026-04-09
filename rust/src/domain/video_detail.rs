@@ -91,7 +91,7 @@ pub struct VideoDetail {
     pub pubdate: Option<u64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
-    pub duration: Option<i32>,
+    pub duration: Option<u32>,
     pub dynamic: Option<String>,
     pub bvid: String,
     pub owner_id: Option<u64>,

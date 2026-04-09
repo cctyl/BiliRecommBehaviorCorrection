@@ -35,7 +35,49 @@ pub struct ConfigAddUpdateDTO {
     pub value: String
     
 }
+#[derive(Debug, Clone, Deserialize)]
+pub struct VideoRawDto {
+    pub aid: u64,
+    pub tid: Option<u64>,
+    pub tname: Option<String>,
+    pub pic: Option<String>,
+    pub title: Option<String>,
+    pub pubdate: Option<u64>,
+    pub desc: Option<String>,
+    pub duration: Option<u32>,
+    pub dynamic: Option<String>,
+    pub bvid: String,
+    pub owner: Option<OwnerDto>,
+}
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct OwnerDto {
+    pub mid: u64,
+}
+
+impl From<VideoRawDto> for VideoDetail {
+    fn from(raw: VideoRawDto) -> Self {
+        VideoDetail {
+            id: raw.aid,
+            tid: raw.tid,
+            tname: raw.tname,
+            pic: raw.pic,
+            title: raw.title,
+            pubdate: raw.pubdate,
+            desc_field: raw.desc,
+            duration: raw.duration,
+            dynamic: raw.dynamic,
+            bvid: raw.bvid,
+            owner_id: raw.owner.map(|f|f.mid),
+            handle_step: 0,
+            handle_reason: None,
+            handle_time: None,
+            handle_type: None,
+            created_date:  Some(DateTime::now()),
+            tag: None,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize,PartialEq,Eq,Hash)]
 pub struct SearchKeywordDto {
@@ -293,7 +335,7 @@ pub struct VideoDetailJsonDto {
     pub pubdate: Option<u64>,
     #[serde(rename = "desc")]
     pub desc_field: Option<String>,
-    pub duration: Option<i32>,
+    pub duration: Option<u32>,
     pub dynamic: Option<String>,
     pub bvid: String,
     pub owner_id: Option<u64>,
