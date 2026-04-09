@@ -62,7 +62,7 @@ use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK};
 use crate::domain::dict::Dict;
 use crate::domain::dtos::{AssociateRuleAc, SearchKeywordDto, SingleMatchRuleAc, TestRuleDto};
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
-use crate::domain::video_detail::VideoDetail;
+use crate::domain::video_detail::{MatchResult, VideoDetail};
 use crate::service::rule_service::{
     build_complex_rule_list, build_single_match_rule_ac, get_match_need_config,
 };
@@ -130,10 +130,10 @@ where
 /// 关键词搜索任务
 pub async fn search_keyword_task() -> R<()> {
     let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
-        let keyword_set = dict_service::get_search_keyword_set().await?;
+        // let keyword_set = dict_service::get_search_keyword_set().await?;
         // todo 记得删除
-        // let mut keyword_set:HashSet<String> =HashSet::new();
-        // keyword_set.insert("红色沙漠".to_string());
+        let mut keyword_set:HashSet<String> =HashSet::new();
+        keyword_set.insert("红色沙漠".to_string());
 
         // 0.1 单一规则
         let (
@@ -157,7 +157,6 @@ pub async fn search_keyword_task() -> R<()> {
                     .collect();
                 ThreadUtil::sleep(3).await;
 
-                // 使用闭包，和之前一样
                 for item in set {
                     let aid = item.aid;
                     match first_process(
@@ -250,9 +249,12 @@ pub async fn first_process(
                 v.id, v.title,access_type
             );
 
-            v.handle_type = Some(access_type);
-            v.handle_reason = Some(match_result);
-            VideoDetail::update_by_id(&CC.rb, &v).await?;
+
+           video_detail_service:: update_handle_data(&mut v,
+                               1,
+                               Some(match_result),
+                               None,
+                               Some(access_type)).await?;
         }
         Err(e) => {
             info!(
@@ -265,6 +267,7 @@ pub async fn first_process(
 
     R::Ok(())
 }
+
 
 #[cfg(test)]
 mod tests {

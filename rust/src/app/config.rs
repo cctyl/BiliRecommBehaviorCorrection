@@ -184,7 +184,7 @@ impl AppContext {
         }
 
         debug!("初始化init_config_data：");
-        debug!("{:#?}", *lock);
+        // debug!("{:#?}", *lock);
         R::Ok(())
     }
 

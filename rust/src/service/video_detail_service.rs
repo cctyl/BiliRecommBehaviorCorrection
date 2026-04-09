@@ -11,6 +11,7 @@ use anyhow::Context;
 use log::info;
 use rbatis::executor::Executor;
 use rbatis::{Error, impled, sql};
+use rbatis::rbdc::DateTime;
 use rbs::value;
 use sqlparser::ast::ObjectType::View;
 
@@ -220,7 +221,30 @@ pub(crate) async fn find_by_aid(aid: u64) -> R<Option<VideoDetail>> {
     R::Ok(v)
 }
 
-/// 记录视频的处理结果
+
+
+/// 修改视频处理相关数据
+pub async fn update_handle_data( v:& mut VideoDetail,
+                                 handle_step: u64,
+                                 handle_reason: Option<MatchResult>,
+                                 handle_time: Option<DateTime>,
+                                 handle_type: Option<AccessType>,
+)->R<()>{
+
+    v.handle_type = handle_type;
+    v.handle_reason = handle_reason;
+    v.handle_step =handle_step ;
+    if let Some(t) = handle_time {
+        v.handle_time = Some(t);
+    }else {
+        v.handle_time = Some(DateTime::now());
+    }
+    VideoDetail::update_by_id(&CC.rb, &v).await?;
+    R::Ok(())
+}
+
+
+/// 记录视频的处理结果,目前该函数仅用于黑名单点踩
 pub(crate) async fn record_handle_video(
     video: &mut VideoDetailDTO,
     handle_type: AccessType,
@@ -231,6 +255,7 @@ pub(crate) async fn record_handle_video(
     v.handle_type = Some(handle_type);
     v.handle_step = 100;
     v.handle_reason = Some(reason);
+    v.handle_time = Some(DateTime::now());
 
     if exist_by_id(&CC.rb, v.id).await? == 0 {
         save_video_detail(video).await?;
