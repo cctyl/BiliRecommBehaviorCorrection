@@ -211,12 +211,11 @@ pub async fn hot_rank_video_task() -> R<()> {
             complex_match_enable,
             prompt,
         ) = rule_service::build_match_config().await?;
-        // for page in 1..=10 {
-        //todo 记得删
-        for page in 1..=1 {
+        for page in 1..=10 {
+            // todo 记得删
+            // for page in 1..=1 {
 
-            let set = bili::hot_rank_video(page, 10)
-                .await?;
+            let set = bili::hot_rank_video(page, 10).await?;
             ThreadUtil::sleep(3).await;
 
             for item in set {
@@ -249,6 +248,64 @@ pub async fn hot_rank_video_task() -> R<()> {
     })
     .await?;
     info!("热门排行榜任务 启动，提交结果：{flag}");
+    R::Ok(())
+}
+
+/// 首页推荐任务
+pub async fn home_recommend_task() -> R<()> {
+    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
+        // 0.1 单一规则
+        let (
+            black_single_match,
+            white_single_match,
+            black_complex_rule,
+            white_complex_rule,
+            black_prompt,
+            white_prompt,
+            ai_chat_enable,
+            single_match_enable,
+            complex_match_enable,
+            prompt,
+        ) = rule_service::build_match_config().await?;
+        // for page in 1..=10 {
+        // todo 记得删
+        for page in 1..=1 {
+            let aid_set = bili::get_home_recommend_video()
+                .await?;
+
+            for aid in aid_set {
+                let item = video_detail_service::find_or_save_video(aid).await?;
+                match first_process(
+                    item,
+                    ai_chat_enable,
+                    single_match_enable,
+                    complex_match_enable,
+                    &prompt,
+                    &black_single_match,
+                    &white_single_match,
+                    &black_complex_rule,
+                    &white_complex_rule,
+                    &black_prompt,
+                    &white_prompt,
+                )
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        error!("处理aid={aid} 时出错！ 错误：{:?}", e);
+                    }
+                };
+                ThreadUtil::s5().await;
+            }
+
+            ThreadUtil::sleep(3).await;
+
+        }
+        ThreadUtil::sleep(3).await;
+        R::Ok(())
+    })
+    .await?;
+    info!("首页推荐任务 启动，提交结果：{flag}");
     R::Ok(())
 }
 
@@ -331,7 +388,7 @@ pub async fn first_process(
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
-    use crate::service::task_service::{hot_rank_video_task, search_keyword_task};
+    use crate::service::task_service::{home_recommend_task, hot_rank_video_task, search_keyword_task};
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
@@ -354,8 +411,20 @@ mod tests {
         log::logger().flush();
     }
 
-    // hot_rank_video_task
+    // home_recommend_task
+    #[tokio::test]
+    async fn test_home_recommend_task() {
+        //第一句必须是这个
+        crate::init().await;
 
+        //在这中间编写测试代码
+
+        home_recommend_task().await.unwrap();
+        TASK_POOL.shutdown().await;
+        info!("任务结束！");
+        //最后一句必须是这个
+        log::logger().flush();
+    }
     #[tokio::test]
     async fn test_hot_rank_video_task() {
         //第一句必须是这个

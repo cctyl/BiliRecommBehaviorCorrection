@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::format;
 use std::fs::File;
 use std::io::Write;
@@ -9,7 +9,9 @@ use crate::app::config::CC;
 use crate::app::global::{GLOBAL_STATE, GlobalStateHandler};
 use crate::app::response::R;
 use crate::app::{constans, error::HttpError};
-use crate::domain::dtos::{PageBean, SearchKeywordDto, UserSubmissionVideo, VideoDetailDTO, VideoRawDto};
+use crate::domain::dtos::{
+    PageBean, SearchKeywordDto, UserSubmissionVideo, VideoDetailDTO, VideoRawDto,
+};
 use crate::domain::{
     config::Config, cookie_header_data::CookieHeaderData, tag::Tag, video_detail::VideoDetail,
 };
@@ -844,25 +846,31 @@ pub(crate) async fn search_keyword(keyword: &str, page: i32) -> R<Vec<SearchKeyw
                     if let Some(data_array) = item.get_mut("data") {
                         let data_value = data_array.take();
                         // data_util::download_json_response(&data_value, "search_keyword_data_value.json")?;
-                        return R::Ok(serde_json::from_value(data_value).context("search_keyword 序列化失败".to_string())?);
+                        return R::Ok(
+                            serde_json::from_value(data_value)
+                                .context("search_keyword 序列化失败".to_string())?,
+                        );
                     }
                 }
             }
         }
     }
 
-    error!("{}关键词搜索失败了",keyword);
+    error!("{}关键词搜索失败了", keyword);
     R::Ok(vec![])
 }
 
 /// 获取热门排行榜数据
-pub async fn hot_rank_video(page_num:u32,page_size:u32)->R<Vec<VideoDetail>>{
-
-    let  url = "https://api.bilibili.com/x/web-interface/popular";
-    let mut body = common_get(url, vec![
-        ("pn".to_string(), page_num.to_string()),
-        ("ps".to_string(), page_size.to_string())
-    ]).await?;
+pub async fn hot_rank_video(page_num: u32, page_size: u32) -> R<Vec<VideoDetail>> {
+    let url = "https://api.bilibili.com/x/web-interface/popular";
+    let mut body = common_get(
+        url,
+        vec![
+            ("pn".to_string(), page_num.to_string()),
+            ("ps".to_string(), page_size.to_string()),
+        ],
+    )
+    .await?;
     let value_source = body["data"]["list"].take();
     // 使用 for 循环转换
     if let Value::Array(array) = value_source {
@@ -880,15 +888,52 @@ pub async fn hot_rank_video(page_num:u32,page_size:u32)->R<Vec<VideoDetail>>{
             }
         }
         R::Ok(video_list)
-
-
-    }else {
-
-        R::Err(HttpError::ServerError("热门排行榜数据结构错误！".to_string()))
+    } else {
+        R::Err(HttpError::ServerError(
+            "热门排行榜数据结构错误！".to_string(),
+        ))
     }
-
 }
 
+/// 获取首页推荐视频
+pub async fn get_home_recommend_video() -> R<Vec<u64>> {
+    let url = "https://app.bilibili.com/x/v2/feed/index";
+
+    let mut body = common_get(
+        url,
+        vec![
+            ("build".to_string(), "1".to_string()),
+            ("mobi_app".to_string(), "android".to_string()),
+            ("idx".to_string(), get_ts().to_string()),
+            ("appkey".to_string(), THIRD_PART_APPKEY.to_string()),
+            ("access_key".to_string(), get_access_key(false).await?),
+        ],
+    )
+    .await?;
+
+    let value_source = body["data"]["items"].take();
+    // data_util::download_json_response(&value_source, "get_home_recommend_video.json")?;
+
+
+    if let Value::Array(array) = value_source {
+        let avs = array.into_iter().filter(|f| {
+            f["card_goto"].as_str() == Some("av")
+        }).filter_map(|mut f| {
+            if let Value::Number(s) = f["args"]["aid"].take() {
+                s.as_u64()
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<u64>>();
+
+        return R::Ok(avs);
+    }
+
+    R::Err(HttpError::ServerError("首页推荐视频 数据格式解析失败".to_string()))
+}
+use crate::app::constans::THIRD_PART_APPKEY;
+use rand::Rng;
 
 #[cfg(test)]
 mod tests {
@@ -898,11 +943,11 @@ mod tests {
         hash::Hash,
     };
 
+    use crate::api::bili::{get_home_recommend_video, hot_rank_video, search_keyword};
     use crate::{
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
     };
-    use crate::api::bili::{hot_rank_video, search_keyword};
 
     #[tokio::test]
     async fn example() {
@@ -915,7 +960,20 @@ mod tests {
         log::logger().flush();
     }
 
-// hot_rank_video
+    // get_home_recommend_video
+    #[tokio::test]
+    async fn test_get_home_recommend_video() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let vec = get_home_recommend_video().await.unwrap();
+        println!("len={:#?}", vec);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     #[tokio::test]
     async fn test_hot_rank_video() {
@@ -939,7 +997,7 @@ mod tests {
         //在这中间编写测试代码
 
         let vec = search_keyword("红色沙漠", 1).await.unwrap();
-        println!("{:#?}",vec);
+        println!("{:#?}", vec);
 
         //最后一句必须是这个
         log::logger().flush();
