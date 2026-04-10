@@ -9,3 +9,4 @@ pub mod owner_service;
 pub mod tag_service;
 pub mod associate_rule_service;
 pub mod region_service;
+pub mod schedule_service;

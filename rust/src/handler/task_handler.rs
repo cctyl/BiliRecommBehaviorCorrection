@@ -20,7 +20,6 @@ pub async fn second_handler(Json(dto): Json<SecondHandleDto>) -> RR<String> {
 /// 批量二次处理
 #[debug_handler]
 pub async fn batch_second_handle(Json(arr): Json<Vec<SecondHandleDto>>) -> RR<String> {
-
-     let string = task_service::batch_second_handle(arr).await?;
+    let string = task_service::batch_second_handle(arr).await?;
     RR::success(string)
 }

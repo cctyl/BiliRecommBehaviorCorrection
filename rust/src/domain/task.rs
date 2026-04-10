@@ -1,21 +1,21 @@
 
 use rbatis::{crud, rbdc::DateTime};
 use serde::{Deserialize, Serialize};
-use crate::app::database::bool_or_int_opt;
+use crate::app::database::bool_or_int;
 
 use crate::{domain::enumeration::TaskStatus, plus, utils::id::generate_id};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: String,
     pub last_run_time: Option<DateTime>,
-    pub current_run_status: Option<TaskStatus>,
+    pub current_run_status: TaskStatus,
     pub total_run_count: Option<i32>,
     pub last_run_duration: Option<u32>,
     pub task_name: Option<String>,
-    pub scheduled_hour: Option<i32>,
-    #[serde(deserialize_with = "bool_or_int_opt")]
-    pub is_enabled: Option<bool>,
-    pub class_method_name: Option<String>,
+    pub scheduled_hour: i32,
+    #[serde(deserialize_with = "bool_or_int")]
+    pub is_enabled: bool,
+    pub class_method_name: String,
     pub description: Option<String>,
     pub img: Option<String>,
 }
@@ -27,13 +27,13 @@ impl Task {
         Task {
             id: generate_id(),
             last_run_time: None,
-            current_run_status: None,
+            current_run_status: TaskStatus::STOPPED,
             total_run_count: None,
             last_run_duration: None,
             task_name: None,
-            scheduled_hour: None,
-            is_enabled: None,
-            class_method_name: None,
+            scheduled_hour: -1,
+            is_enabled: false,
+            class_method_name: String::from("default_class_name"),
             description: None,
             img: None,
         }

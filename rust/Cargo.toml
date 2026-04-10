@@ -46,3 +46,4 @@ tokio-stream = "0.1.17"
 jieba-rs = "0.8"
 
 aho-corasick = "1.1.4"
+tokio-cron-scheduler = "0.15.1"

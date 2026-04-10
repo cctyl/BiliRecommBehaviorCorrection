@@ -4,24 +4,24 @@
     allow(dead_code, unused_imports, unused_variables, unused_mut)
 )]
 
-
 mod app;
 mod macros;
 
 mod api;
 mod domain;
+mod extractor;
 mod handler;
 mod service;
 mod single_test;
 mod utils;
-mod extractor;
 
-use crate::app::database::{self};
 use crate::app::config::CC;
+use crate::app::database::{self};
 use crate::app::error::HttpError;
 use crate::app::global::GLOBAL_STATE;
 use crate::app::response::R;
 use crate::domain::enumeration::{Classify, MediaType};
+use crate::service::schedule_service;
 use crate::utils::migration::start_migration;
 
 use app::config::ServerConfig;
@@ -33,9 +33,12 @@ use rbatis::{RBatis, sql};
 use rbatis::impled;
 use std::{sync::Arc, time::Duration};
 use tokio::{net::TcpListener, runtime::Runtime};
-use tower_http::cors::{self, CorsLayer, Any};
+use tokio_cron_scheduler::{Job, JobScheduler};
+use tower_http::cors::{self, Any, CorsLayer};
 
-use crate::service::cookie_header_data_service::{self, get_map_by_classify_and_media_type, init_common_header_map};
+use crate::service::cookie_header_data_service::{
+    self, get_map_by_classify_and_media_type, init_common_header_map,
+};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -48,9 +51,12 @@ pub async fn init() -> u16 {
     crate::utils::log::init_log();
 
     //全局变量的初始化
-    CC.init().await 
-        .expect("全局变量初始化失败!");
-  
+    CC.init().await.expect("全局变量初始化失败!");
+
+
+    //定时任务的初始化
+    schedule_service::init_scheduler().await;
+
 
     //端口
     let port = CC.config.port;
@@ -69,6 +75,7 @@ pub async fn main() {
         format!("🚀 Server is running on http://localhost:{}", port)
     );
 
+
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
@@ -78,13 +85,11 @@ pub async fn main() {
 
 fn build_router() -> Router {
     let cors = CorsLayer::new()
-
         //=============================withCredentials=false，不使用cookie，使用header校验========================================
-      .allow_origin(cors::Any)
+        .allow_origin(cors::Any)
         .allow_methods(cors::Any)
         .allow_headers(cors::Any)
         .allow_credentials(false)
-
         //=====================withCredentials=true时的写法==============================
         // .allow_origin([
         //     "http://localhost:8080".parse().unwrap(),
@@ -98,9 +103,6 @@ fn build_router() -> Router {
         //     "access-control-request-method", "access-control-request-headers"
         // ].iter().map(|s| s.parse().unwrap()).collect::<Vec<_>>())
         // .allow_credentials(true)
-
-
-        
         .max_age(Duration::from_secs(3600 * 12));
 
     handler::create_router().layer(cors)

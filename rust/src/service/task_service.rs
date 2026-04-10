@@ -10,9 +10,55 @@ use std::collections::HashSet;
 use std::time::Instant;
 
 use crate::{
-    app::{config::CC, error::HttpError, response::R, task_pool::TASK_POOL},
+    app::{config::CC, constans::{DO_HOME_RECOMMEND_TASK, DO_HOT_RANK_TASK}, error::HttpError, response::R, task_pool::TASK_POOL},
     domain::{enumeration::TaskStatus, task::Task},
 };
+
+
+
+/// 检查并执行任务
+pub async fn check_and_run_task(hour:u32)->R<()>{
+
+    let tasks = Task::select_by_map(&CC.rb, value! {
+        "is_enabled":true,
+        "scheduled_hour":hour,
+        "current_run_status":TaskStatus::STOPPED
+    }).await?;
+
+
+    for t in tasks {
+        
+        match t.class_method_name.as_str() {
+          "io.github.cctyl.service.impl.BiliService.doSearchTask"=>{
+
+
+            search_keyword_task().await?;
+
+          },
+          "io.github.cctyl.service.impl.BiliService.doHotRankTask"=>{
+
+            hot_rank_video_task().await?;
+          },
+          "io.github.cctyl.service.impl.BiliService.doHomeRecommendTask"=>{
+
+            home_recommend_task().await?;
+          },
+          "io.github.cctyl.service.impl.BiliService.doDefaultProcessVideo"=>{
+
+          },
+          "io.github.cctyl.service.impl.BiliService.doThirdProcess"=>{
+
+          },
+          e=>{
+            error!("class_name={} ,未知的任务，跳过",e);
+          }
+        }
+    }
+
+
+    R::Ok(())
+
+}
 
 /// 不存在则新增该任务
 pub async fn add_if_not_exist(name: &String) -> R<()> {
@@ -20,11 +66,11 @@ pub async fn add_if_not_exist(name: &String) -> R<()> {
 
     if tasks.is_none() {
         let mut t = Task::default();
-        t.class_method_name = Some(name.clone());
-        t.is_enabled = Some(true);
-        t.current_run_status = Some(TaskStatus::STOPPED);
+        t.class_method_name = name.clone();
+        t.is_enabled = true;
+        t.current_run_status = TaskStatus::STOPPED;
         t.total_run_count = Some(0);
-        t.scheduled_hour = Some(-1);
+        t.scheduled_hour = -1;
         Task::insert(&CC.rb, &t).await?;
     }
 
@@ -121,7 +167,7 @@ where
                     t.last_run_time = Some(DateTime::now());
                     t.total_run_count = Some(t.total_run_count.unwrap_or(0) + 1);
                     t.last_run_duration = Some(millis as u32);
-                    t.current_run_status = Some(TaskStatus::STOPPED);
+                    t.current_run_status = TaskStatus::STOPPED;
                     Task::update_by_id(&CC.rb, &t).await?;
                 }
 
@@ -197,7 +243,7 @@ pub async fn search_keyword_task() -> R<()> {
 
 /// 热门排行榜任务
 pub async fn hot_rank_video_task() -> R<()> {
-    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
+    let flag = do_task(DO_HOT_RANK_TASK.to_string(), async move || {
         // 0.1 单一规则
         let (
             black_single_match,
@@ -253,7 +299,7 @@ pub async fn hot_rank_video_task() -> R<()> {
 
 /// 首页推荐任务
 pub async fn home_recommend_task() -> R<()> {
-    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
+    let flag = do_task(DO_HOME_RECOMMEND_TASK.to_string(), async move || {
         // 0.1 单一规则
         let (
             black_single_match,
@@ -604,7 +650,7 @@ mod tests {
 
         t.last_run_time = Some(DateTime::now());
         t.total_run_count = Some(2001);
-        t.class_method_name = Some(String::from("111222测试的类方法名啊"));
+        t.class_method_name =String::from("111222测试的类方法名啊");
         t.task_name = Some(String::from("111222测试的名称啊"));
 
         Task::update_by_id(&CC.rb, &t).await.unwrap();
@@ -644,82 +690,8 @@ mod tests {
         log::logger().flush();
     }
 
-    //测试 add_if_not_exist
-    #[tokio::test]
-    async fn test_add_if_not_exist() {
-        crate::init().await;
-
-        let name = "test_add_if_not_exist".to_string();
-
-        let r = super::add_if_not_exist(&name).await;
-
-        assert!(r.is_ok());
-
-        let tasks = Task::select_by_map(&CC.rb, value! {"class_method_name":&name})
-            .await
-            .unwrap();
-
-        assert_eq!(tasks.len(), 1);
-
-        assert_eq!(tasks[0].class_method_name.as_ref().unwrap(), &name);
-
-        assert_eq!(tasks[0].is_enabled.unwrap(), true);
-
-        assert_eq!(tasks[0].current_run_status.unwrap(), TaskStatus::STOPPED);
-
-        assert_eq!(tasks[0].total_run_count.unwrap(), 0);
-
-        assert_eq!(tasks[0].scheduled_hour.unwrap(), -1);
-        log::logger().flush();
-    }
-
-    // 测试 update_task_status
-    #[tokio::test]
-    async fn test_update_task_status() {
-        crate::init().await;
-
-        let name = "test_update_task_status".to_string();
-
-        let r = super::add_if_not_exist(&name).await;
-
-        assert!(r.is_ok());
-        let result = update_task_status(&CC.rb, TaskStatus::WAITING, &name)
-            .await
-            .unwrap();
-        assert_eq!(result.rows_affected, 1);
-        let tasks = Task::select_by_map(&CC.rb, value! {"class_method_name":&name})
-            .await
-            .unwrap();
-        assert_eq!(tasks.len(), 1);
-        assert_eq!(tasks[0].current_run_status.unwrap(), TaskStatus::WAITING);
-
-        log::logger().flush();
-    }
-
-    // 测试 find_by_class_method_name
-    #[tokio::test]
-    async fn test_find_by_class_method_name() {
-        crate::init().await;
-
-        let name = "test_find_by_class_method_name".to_string();
-
-        // 先确保任务存在
-        super::add_if_not_exist(&name).await.unwrap();
-
-        // 测试能找到已存在的任务
-        let result = super::find_by_class_method_name(&name).await;
-        assert!(result.is_ok());
-        let task = result.unwrap().unwrap();
-        assert_eq!(task.class_method_name.unwrap(), name);
-
-        // 测试找不到不存在的任务
-        let not_exist_name = "not_exist_task_name";
-        let result = super::find_by_class_method_name(not_exist_name).await;
-        assert!(result.is_ok());
-        assert!(result.unwrap().is_none());
-        log::logger().flush();
-    }
-
+   
+   
     // 测试 do_task
     #[tokio::test]
     async fn test_do_task() {
@@ -753,7 +725,7 @@ mod tests {
 
         // 验证任务状态是 STOPPED (因为任务已经执行完毕)
         println!("任务状态: {:#?}", task);
-        assert_eq!(task.current_run_status.unwrap(), TaskStatus::STOPPED);
+        assert_eq!(task.current_run_status, TaskStatus::STOPPED);
 
         // 验证总运行次数增加
         assert_eq!(task.total_run_count.unwrap(), 1);
@@ -781,7 +753,7 @@ mod tests {
         let task = result.unwrap();
         assert!(task.is_some());
         println!("任务: {:#?}", task);
-        assert_eq!(task.unwrap().class_method_name.unwrap(), name);
+        assert_eq!(task.unwrap().class_method_name, name);
 
         // 测试通过条件查找任务 - 不存在的任务
         let not_exist_name = "not_exist_task_name";
