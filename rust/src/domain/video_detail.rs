@@ -6,7 +6,6 @@ use crate::{
         config::CC,
         response::{R, RB},
     },
-    domain::enumeration::HandleType,
     plus,
 };
 
@@ -95,7 +94,7 @@ pub struct VideoDetail {
     pub dynamic: Option<String>,
     pub bvid: String,
     pub owner_id: Option<u64>,
-    /// 数字类型，未处理时是0，第一次机器处理是1，以此类推，处理完毕是100
+    /// 数字类型，未处理时是0，第一次机器处理是1，第二次用户处理是2， 机器处理。。。  以此类推，处理完毕是100
     pub handle_step: u64,
     pub handle_reason: Option<MatchResult>,
     /// 处理时间
@@ -141,8 +140,9 @@ mod tests {
 
     use crate::{
         app::config::CC,
-        domain::{enumeration::HandleType, video_detail::VideoDetail},
+        domain::{ video_detail::VideoDetail},
     };
+    use crate::domain::enumeration::AccessType;
 
     #[tokio::test]
     async fn test_video_detail() {
@@ -243,7 +243,7 @@ mod tests {
 
         // 基本条件查询
         let condition = value! {
-            "handle_type": HandleType::THUMB_UP,
+            "handle_type": AccessType::WHITE,
             // "column": ["*"],
             // "order_by": "created_date desc"
         };

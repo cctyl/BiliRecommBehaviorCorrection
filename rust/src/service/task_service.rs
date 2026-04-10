@@ -60,7 +60,7 @@ pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
 use crate::api::bili;
 use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK};
 use crate::domain::dict::Dict;
-use crate::domain::dtos::{AssociateRuleAc, SearchKeywordDto, SingleMatchRuleAc, TestRuleDto};
+use crate::domain::dtos::{AssociateRuleAc, SearchKeywordDto, SecondHandleDto, SingleMatchRuleAc, TestRuleDto};
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
 use crate::domain::video_detail::{MatchResult, VideoDetail};
 use crate::service::rule_service::{
@@ -385,10 +385,32 @@ pub async fn first_process(
     R::Ok(())
 }
 
+
+/// 二次处理视频
+pub(crate) async fn second_process(dto: SecondHandleDto) ->R<String> {
+    let v = VideoDetail::select_by_id(&CC.rb, dto.id).await?;
+    if let Some(mut v) = v{
+        let mut r = v.handle_reason.clone().unwrap_or(MatchResult::default());
+        if let Some(reason) = dto.reason {
+            r.user_handle_reason = Some(reason);
+        }
+        video_detail_service::update_handle_data(&mut v,
+                                                 2,
+
+                                                 Some(r),
+                                                 Some(DateTime::now()),
+                                                 Some(dto.handle_type),
+        ).await?;
+        R::Ok("成功".to_string())
+    }else {
+        R::Err(HttpError::BadRequest("id 对应的视频不存在".to_string()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
-    use crate::service::task_service::{home_recommend_task, hot_rank_video_task, search_keyword_task};
+    use crate::service::task_service::{home_recommend_task, hot_rank_video_task, search_keyword_task, second_process};
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
@@ -399,6 +421,9 @@ mod tests {
     use rbatis::rbdc::DateTime;
     use rbs::value;
     use tokio::runtime::Runtime;
+    use crate::domain::dtos::SecondHandleDto;
+    use crate::domain::enumeration::{AccessType};
+    use crate::domain::video_detail::VideoDetail;
 
     #[tokio::test]
     async fn example() {
@@ -407,6 +432,28 @@ mod tests {
 
         //在这中间编写测试代码
 
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    //116286373759185
+    #[tokio::test]
+    async fn test_second_process() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+        let option = VideoDetail::select_by_id(&CC.rb, 116286373759185u64).await.unwrap().unwrap();
+
+        second_process(
+            SecondHandleDto {
+                id: 116286373759185,
+                handle_type: AccessType::BLACK,
+                reason: Some("用户反转了判断！".to_string()),
+            }
+
+        ).await.unwrap();
         //最后一句必须是这个
         log::logger().flush();
     }
@@ -667,3 +714,4 @@ mod tests {
         log::logger().flush();
     }
 }
+

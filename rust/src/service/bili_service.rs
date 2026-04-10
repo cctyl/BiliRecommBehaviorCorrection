@@ -16,7 +16,7 @@ use crate::{
 };
 
 use crate::app::error::HttpError;
-use crate::domain::enumeration::{AccessType, HandleType};
+use crate::domain::enumeration::{AccessType};
 use crate::service::video_detail_service;
 use data_util::RandomAccessListConsumer;
 use log::{error, info};

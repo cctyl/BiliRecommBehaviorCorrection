@@ -2,7 +2,7 @@ use crate::api::bili;
 use crate::app::config::CC;
 use crate::app::response::R;
 use crate::domain::dtos::VideoDetailDTO;
-use crate::domain::enumeration::{AccessType, HandleType};
+use crate::domain::enumeration::{AccessType};
 use crate::domain::region::Region;
 use crate::domain::{video_detail::MatchResult, video_detail::VideoDetail};
 use crate::service::{owner_service, tag_service};
@@ -20,7 +20,7 @@ mod tests {
     use crate::api::bili;
     use crate::app::config::CC;
     use crate::app::response::R;
-    use crate::domain::enumeration::{AccessType, HandleType};
+    use crate::domain::enumeration::{AccessType};
     use crate::domain::video_detail::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
     use crate::service::video_detail_service::exist_by_id;
     use log::info;
@@ -233,7 +233,7 @@ pub async fn update_handle_data( v:& mut VideoDetail,
 
     v.handle_type = handle_type;
     v.handle_reason = handle_reason;
-    v.handle_step =handle_step ;
+    v.handle_step = handle_step ;
     if let Some(t) = handle_time {
         v.handle_time = Some(t);
     }else {

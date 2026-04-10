@@ -1,7 +1,7 @@
 use rbatis::{PageRequest, html_sql};
 use crate::app::database::bool_or_int;
 use crate::app::database::bool_or_int_opt;
-use crate::domain::enumeration::{AccessType, DictStatus, HandleType};
+use crate::domain::enumeration::{AccessType, DictStatus};
 use crate::domain::enumeration::Classify;
 use crate::domain::enumeration::DictType;
 use crate::domain::enumeration::MediaType;

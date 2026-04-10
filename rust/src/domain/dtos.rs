@@ -1,17 +1,19 @@
-use core::str;
+use crate::domain::{
+    dict::Dict, enumeration::AccessType, owner::Owner, tag::Tag, video_detail::VideoDetail,
+};
 use aho_corasick::AhoCorasick;
+use core::str;
+use rbatis::{Page, rbdc::datetime::DateTime};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::{
-    collections::HashSet, thread, time::{Duration, SystemTime}
+    collections::HashSet,
+    thread,
+    time::{Duration, SystemTime},
 };
 use validator::Validate;
-use rbatis::{rbdc::datetime::DateTime, Page};
-use serde_json::Value;
-use crate::domain::{dict::Dict, enumeration::AccessType, owner::Owner, tag::Tag, video_detail::VideoDetail};
 #[test]
 fn testnow() {
-
-
     let now = SystemTime::now();
     let secs = now
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -27,13 +29,11 @@ fn testnow() {
     println!("过去了：{subsec_millis}毫秒");
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ConfigAddUpdateDTO {
     pub id: Option<String>,
     pub name: String,
-    pub value: String
-    
+    pub value: String,
 }
 #[derive(Debug, Clone, Deserialize)]
 pub struct VideoRawDto {
@@ -68,18 +68,18 @@ impl From<VideoRawDto> for VideoDetail {
             duration: raw.duration,
             dynamic: raw.dynamic,
             bvid: raw.bvid,
-            owner_id: raw.owner.map(|f|f.mid),
+            owner_id: raw.owner.map(|f| f.mid),
             handle_step: 0,
             handle_reason: None,
             handle_time: None,
             handle_type: None,
-            created_date:  Some(DateTime::now()),
+            created_date: Some(DateTime::now()),
             tag: None,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize,PartialEq,Eq,Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct SearchKeywordDto {
     pub aid: u64,
     pub arcurl: String,
@@ -169,7 +169,6 @@ pub struct SearchKeywordDto {
     pub hit_columns: Option<Vec<String>>,
 }
 
-
 impl From<SearchKeywordDto> for VideoDetail {
     fn from(dto: SearchKeywordDto) -> Self {
         VideoDetail {
@@ -178,7 +177,7 @@ impl From<SearchKeywordDto> for VideoDetail {
             tname: Some(dto.typename),
             pic: Some(dto.pic),
             title: Some(dto.title),
-            pubdate: Some(dto.pubdate ),
+            pubdate: Some(dto.pubdate),
             desc_field: Some(dto.description),
             duration: None,
             dynamic: None, // SearchKeywordDto 中没有对应字段
@@ -195,19 +194,15 @@ impl From<SearchKeywordDto> for VideoDetail {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PageDTO<T: Send + Sync>{
-
+pub struct PageDTO<T: Send + Sync> {
     pub current: u64,
-    pub pages:u64,
-    pub records:Vec<T>,
-    pub size:u64,
-    pub total:u64,
-
+    pub pages: u64,
+    pub records: Vec<T>,
+    pub size: u64,
+    pub total: u64,
 }
 
-impl<T : Send + Sync>  PageDTO<T> 
-{
-    
+impl<T: Send + Sync> PageDTO<T> {
     pub fn new(current: u64, size: u64, records: Vec<T>, total: u64) -> Self {
         PageDTO {
             current,
@@ -218,7 +213,7 @@ impl<T : Send + Sync>  PageDTO<T>
         }
     }
 
-     /// 将 PageDTO<D> 转换为 PageDTO<T>，其中 T 实现了 From<D>
+    /// 将 PageDTO<D> 转换为 PageDTO<T>，其中 T 实现了 From<D>
     pub fn convert_from<D: Send + Sync>(source: PageDTO<D>) -> PageDTO<T>
     where
         T: From<D>,
@@ -231,23 +226,20 @@ impl<T : Send + Sync>  PageDTO<T>
             total: source.total,
         }
     }
-
 }
 
-impl<T : Send + Sync> From<Page<T>> for PageDTO<T> {
+impl<T: Send + Sync> From<Page<T>> for PageDTO<T> {
     fn from(value: Page<T>) -> Self {
-       
         PageDTO {
             current: value.page_no,
             //总数处于每页大小
-            pages:( value.total as f64/value.page_size as f64).ceil() as u64,
+            pages: (value.total as f64 / value.page_size as f64).ceil() as u64,
             records: value.records,
             size: value.page_size,
             total: value.total,
         }
     }
 }
-
 
 /// 分页数据结构体
 #[derive(Debug, Clone)]
@@ -291,7 +283,6 @@ impl<T> Default for PageBean<T> {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserSubmissionVideo {
     pub comment: Option<i32>,
@@ -323,10 +314,8 @@ pub struct UserSubmissionVideo {
     pub enable_vt: Option<i32>,
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetailJsonDto {
-   
     pub aid: u64,
     pub tid: Option<u64>,
     pub tname: Option<String>,
@@ -383,6 +372,14 @@ impl From<VideoDetailJsonDto> for VideoDetail {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SecondHandleDto {
+    pub id: u64,
+    pub handle_type: AccessType,
+    pub reason: Option<String>,
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OwnerJsonDto {
     pub mid: u64,
     pub name: String,
@@ -412,84 +409,73 @@ impl From<Owner> for OwnerJsonDto {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VideoDetailDTO {
     #[serde(flatten)]
-    pub video_detail:VideoDetailJsonDto,
-    pub tags:Option<Vec<Tag>>,
-    pub owner:Option<OwnerJsonDto>,
-    pub desc_v2:Option<Vec<DescV2>>,
+    pub video_detail: VideoDetailJsonDto,
+    pub tags: Option<Vec<Tag>>,
+    pub owner: Option<OwnerJsonDto>,
+    pub desc_v2: Option<Vec<DescV2>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DescV2{
-   
-    pub raw_text:Option<String>,
-    pub type_:Option<u64>,
-    pub biz_id:Option<u64>,
+pub struct DescV2 {
+    pub raw_text: Option<String>,
+    pub type_: Option<u64>,
+    pub biz_id: Option<u64>,
 }
-
-
 
 /// 复合规则列表dto
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AssociateRuleListDto{
+pub struct AssociateRuleListDto {
     pub id: String,
-    pub info:String,
-    pub access_type : AccessType,
-    pub title:Vec<Dict>,
-    pub desc:Vec<Dict>,
-    pub tag:Vec<Dict>,
-    pub cover:Vec<Dict>,
-    pub tid:Vec<Dict>,
-    pub mid:Vec<Dict>,
-
+    pub info: String,
+    pub access_type: AccessType,
+    pub title: Vec<Dict>,
+    pub desc: Vec<Dict>,
+    pub tag: Vec<Dict>,
+    pub cover: Vec<Dict>,
+    pub tid: Vec<Dict>,
+    pub mid: Vec<Dict>,
 }
-
 
 /// 复合规则列表dto
 #[derive(Clone, Debug)]
-pub struct AssociateRuleAc{
+pub struct AssociateRuleAc {
     pub id: String,
-    pub name:String,
-    pub title:AhoCorasick,
-    pub desc:AhoCorasick,
-    pub tag:AhoCorasick,
-    pub cover:AhoCorasick,
-    pub tid:HashSet<u64>,
-    pub mid:HashSet<u64>,
-
+    pub name: String,
+    pub title: AhoCorasick,
+    pub desc: AhoCorasick,
+    pub tag: AhoCorasick,
+    pub cover: AhoCorasick,
+    pub tid: HashSet<u64>,
+    pub mid: HashSet<u64>,
 }
 
-#[derive(Clone, Debug,Serialize,Deserialize)]
-pub struct TestRuleDto{
-
-    pub bvid:String,
-    pub ai_chat_enable:bool,
-    pub single_match_enable:bool,
-    pub complex_match_enable:bool,
-
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct TestRuleDto {
+    pub bvid: String,
+    pub ai_chat_enable: bool,
+    pub single_match_enable: bool,
+    pub complex_match_enable: bool,
 }
 
 #[derive(Clone, Debug)]
-pub struct SingleMatchRuleAc{
-    pub title:AhoCorasick,
-    pub desc:AhoCorasick,
-    pub tag:AhoCorasick,
-    pub cover:AhoCorasick,
-    pub tid:HashSet<u64>,
-    pub mid:HashSet<u64>,
+pub struct SingleMatchRuleAc {
+    pub title: AhoCorasick,
+    pub desc: AhoCorasick,
+    pub tag: AhoCorasick,
+    pub cover: AhoCorasick,
+    pub tid: HashSet<u64>,
+    pub mid: HashSet<u64>,
 }
-
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AssociateRuleAddDto {
     pub info: String,
-    pub access_type : AccessType
+    pub access_type: AccessType,
 }
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AssociateRuleUpdateDto {
-    pub id:String,
+    pub id: String,
     pub info: String,
-    pub access_type : AccessType
+    pub access_type: AccessType,
 }
