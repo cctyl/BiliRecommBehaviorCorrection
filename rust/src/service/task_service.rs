@@ -407,10 +407,60 @@ pub(crate) async fn second_process(dto: SecondHandleDto) ->R<String> {
     }
 }
 
+
+/// 批量进行二次处理
+pub(crate) async fn batch_second_handle(arr: Vec<SecondHandleDto>) -> R<String> {
+
+
+    
+    // 批量处理都是直接按照一次匹配的数据进行处理，所以只需要修改handle_step, handle_time 即可
+    // 创建包含新值的 VideoDetail 实例  
+    let update_data = VideoDetail {  
+        id: 0, // 这个字段会被跳过，因为它是主键  
+        handle_step: 2u64,  
+        handle_time: Some(DateTime::now()),  
+        // 其他字段保持 None，这样不会被更新  
+        tid: None,  
+        tname: None,  
+        pic: None,  
+        title: None,  
+        pubdate: None,  
+        desc_field: None,  
+        duration: None,  
+        dynamic: None,  
+        bvid: String::new(),  
+        owner_id: None,  
+        handle_reason: None,  
+        handle_type: None,  
+        created_date: None,  
+        tag: None,  
+    };  
+    
+    let len = arr.len();
+    let id_arr:Vec<u64> = arr.into_iter().map(|f|f.id).collect();
+
+    // 使用 update_by_map 批量更新  
+    let exec_result = VideoDetail::update_by_map(  
+        &CC.rb,  
+        &update_data,  
+        value! {  
+            "id": id_arr,  // 使用数组实现 IN 查询  
+            "column": ["handle_step", "handle_time"]  // 只更新这两个字段  
+        }  
+    ).await?;  
+
+
+
+
+    R::Ok(format!("成功修改{}条数据",len))
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
-    use crate::service::task_service::{home_recommend_task, hot_rank_video_task, search_keyword_task, second_process};
+    use crate::service::task_service::{batch_second_handle, home_recommend_task, hot_rank_video_task, search_keyword_task, second_process};
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
@@ -418,6 +468,7 @@ mod tests {
         service::task_service::update_task_status,
     };
     use log::info;
+    use rbatis::dark_std::sync::vec;
     use rbatis::rbdc::DateTime;
     use rbs::value;
     use tokio::runtime::Runtime;
@@ -437,6 +488,34 @@ mod tests {
     }
 
 
+    //batch_second_handle
+
+
+    #[tokio::test]
+    async fn test_batch_second_handle() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        batch_second_handle(
+
+
+            vec![
+
+
+            SecondHandleDto{ id: 116259932933316u64, handle_type: AccessType::BLACK, reason: None },
+            SecondHandleDto{ id: 116301943021405u64, handle_type: AccessType::BLACK, reason: None },
+
+            ]
+
+        ).await.unwrap();
+
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
     //116286373759185
     #[tokio::test]
     async fn test_second_process() {

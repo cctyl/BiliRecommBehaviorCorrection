@@ -130,6 +130,20 @@ impl VideoDetail {
     ) -> RB<Page<VideoDetail>> {
         impled!()
     }
+
+
+    // #[sql("UPDATE video_detail SET handle_step = ?, handle_time = ? WHERE id IN (${ids})")]  
+    // async fn batch_update_video_details(  
+    //     rb: &dyn Executor,  
+    //     new_handle_step: u64,  
+    //     new_handle_time: DateTime,  
+    //     ids: String,  // 格式: "1,2,3,4,5"  
+    // ) -> Result<ExecResult, Error> {  
+    //     impled!()  
+    // }  
+
+
+
 }
 
 #[cfg(test)]
