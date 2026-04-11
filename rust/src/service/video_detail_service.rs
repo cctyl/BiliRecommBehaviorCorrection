@@ -1,17 +1,19 @@
 use crate::api::bili;
 use crate::app::config::CC;
 use crate::app::response::R;
-use crate::domain::dtos::VideoDetailDTO;
-use crate::domain::enumeration::{AccessType};
+use crate::domain::dtos::{PageConvert, PageDTO, VideoDetailDTO, VideoVo};
+use crate::domain::enumeration::AccessType;
+use crate::domain::owner::Owner;
 use crate::domain::region::Region;
 use crate::domain::{video_detail::MatchResult, video_detail::VideoDetail};
 use crate::service::{owner_service, tag_service};
+use crate::utils::collection_tool::VecGroupByExt;
 use crate::utils::id;
 use anyhow::Context;
 use log::info;
 use rbatis::executor::Executor;
-use rbatis::{Error, impled, sql};
 use rbatis::rbdc::DateTime;
+use rbatis::{Error, Page, PageRequest, impled, sql};
 use rbs::value;
 use sqlparser::ast::ObjectType::View;
 
@@ -20,7 +22,7 @@ mod tests {
     use crate::api::bili;
     use crate::app::config::CC;
     use crate::app::response::R;
-    use crate::domain::enumeration::{AccessType};
+    use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::{ComplexMatch, MatchResult, SingleMatch, VideoDetail};
     use crate::service::video_detail_service::exist_by_id;
     use log::info;
@@ -37,17 +39,19 @@ mod tests {
         log::logger().flush();
     }
 
-
-     #[tokio::test]
+    #[tokio::test]
     async fn test_count_by_condition() {
         //第一句必须是这个
         crate::init().await;
 
         //在这中间编写测试代码
 
-        let count_by_condition = VideoDetail::count_by_condition(&CC.rb,value!{"id":116181130349580u64} ).await.unwrap();
+        let count_by_condition =
+            VideoDetail::count_by_condition(&CC.rb, value! {"id":116181130349580u64})
+                .await
+                .unwrap();
 
-        print!("结果：{}",count_by_condition);
+        print!("结果：{}", count_by_condition);
         //最后一句必须是这个
         log::logger().flush();
     }
@@ -58,15 +62,14 @@ mod tests {
     async fn test_get_video_handle_reason() {
         crate::init().await;
 
-
-        let select_by_id = VideoDetail::select_by_id(&CC.rb, 116181130349580u64).await.unwrap().unwrap();
-        
+        let select_by_id = VideoDetail::select_by_id(&CC.rb, 116181130349580u64)
+            .await
+            .unwrap()
+            .unwrap();
 
         let reason = select_by_id.handle_reason.unwrap();
 
-        println!("{:#?}",reason);
-
-
+        println!("{:#?}", reason);
 
         //最后一句必须是这个
         log::logger().flush();
@@ -98,7 +101,7 @@ mod tests {
                 match_count: 4,
             }),
             complex_match: Some(ComplexMatch {
-               match_type: None,
+                match_type: None,
                 rule_name: Some("复杂规则A".to_string()),
                 tag: vec!["动漫".to_string()],
                 desc: vec!["描述匹配复杂规则".to_string()],
@@ -108,7 +111,7 @@ mod tests {
                 tid: vec![444],
                 match_count: 1,
             }),
-            ai_match:None,
+            ai_match: None,
             user_handle_reason: Some("AI误判，人工修正".to_string()),
         };
         newitem.handle_reason = Some(full_match_result);
@@ -221,28 +224,25 @@ pub(crate) async fn find_by_aid(aid: u64) -> R<Option<VideoDetail>> {
     R::Ok(v)
 }
 
-
-
 /// 修改视频处理相关数据
-pub async fn update_handle_data( v:& mut VideoDetail,
-                                 handle_step: u64,
-                                 handle_reason: Option<MatchResult>,
-                                 handle_time: Option<DateTime>,
-                                 handle_type: Option<AccessType>,
-)->R<()>{
-
+pub async fn update_handle_data(
+    v: &mut VideoDetail,
+    handle_step: u64,
+    handle_reason: Option<MatchResult>,
+    handle_time: Option<DateTime>,
+    handle_type: Option<AccessType>,
+) -> R<()> {
     v.handle_type = handle_type;
     v.handle_reason = handle_reason;
-    v.handle_step = handle_step ;
+    v.handle_step = handle_step;
     if let Some(t) = handle_time {
         v.handle_time = Some(t);
-    }else {
+    } else {
         v.handle_time = Some(DateTime::now());
     }
     VideoDetail::update_by_id(&CC.rb, &v).await?;
     R::Ok(())
 }
-
 
 /// 记录视频的处理结果,目前该函数仅用于黑名单点踩
 pub(crate) async fn record_handle_video(
@@ -306,17 +306,15 @@ async fn save_video_detail(dto: &mut VideoDetailDTO) -> R<()> {
             .context("保存标签出错")?;
     }
 
-
     //3. 分区名
     let mut tname: Option<String> = None;
-     info!("开始保存分区名:{:?}", dto.video_detail.tid);
-    if let Some(tid) = dto.video_detail.tid{
+    info!("开始保存分区名:{:?}", dto.video_detail.tid);
+    if let Some(tid) = dto.video_detail.tid {
         let mut regions = Region::select_by_map(&CC.rb, value! {"tid":tid}).await?;
-        if let Some(f) = regions.pop(){
+        if let Some(f) = regions.pop() {
             tname = Some(f.name);
         }
     }
-
 
     //1.保存本体
     info!("开始保存本体信息:{:?}", dto.video_detail);
@@ -338,16 +336,64 @@ async fn exist_by_id(rb: &dyn Executor, id: u64) -> Result<u32, Error> {
     impled!()
 }
 
-
 /// 根据aid 从数据库或网络查找数据并返回数据
-pub async fn find_or_save_video(aid:u64)->R<VideoDetail>{
-
-    match find_by_aid(aid).await?{
+pub async fn find_or_save_video(aid: u64) -> R<VideoDetail> {
+    match find_by_aid(aid).await? {
         Some(v) => R::Ok(v),
         None => {
             let mut video_detail_dto = bili::get_video_detail(aid).await?;
             save_video_detail(&mut video_detail_dto).await?;
-            R::Ok(find_by_aid(aid).await?.unwrap_or(video_detail_dto.video_detail.into()))
-        },
+            R::Ok(
+                find_by_aid(aid)
+                    .await?
+                    .unwrap_or(video_detail_dto.video_detail.into()),
+            )
+        }
     }
+}
+
+/// 查询视频详情 含 owner 并返回vo
+pub async fn get_handle_video(
+    page: u64,
+    limit: u64,
+    search: Option<String>,
+    handle_step: u64,
+    handle_type: Option<AccessType>,
+) -> R<PageDTO<VideoVo>> {
+
+
+
+    let page = VideoDetail::search_handle_videos(
+        &CC.rb,
+        &PageRequest::new(page, limit),
+        search.clone(),
+        search,
+        handle_step,
+        handle_type,
+    )
+    .await?;
+
+    let owner_id: Vec<u64> = page.records.iter().filter_map(|f| f.owner_id).collect();
+    let mut id_owner_map = Owner::select_by_map(
+        &CC.rb,
+        value! {
+            "id":owner_id
+        },
+    )
+    .await?
+    .group_by(|f| Some(f.id));
+
+    let convert = page.convert(|f| {
+        let mut v: VideoVo = f.into();
+        v.owner_id.map(|f| {
+            id_owner_map.remove(&f).map(|mut a| {
+                a.pop().map(|s| {
+                    v.owner = Some(s);
+                })
+            })
+        });
+        v
+    });
+
+   R::Ok(convert)
 }

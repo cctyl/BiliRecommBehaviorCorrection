@@ -1,4 +1,5 @@
 use crate::app::database::default_false;
+use crate::domain::dtos::VideoVo;
 use crate::domain::enumeration::AccessType;
 use crate::impl_select_page_by_condition;
 use crate::{
@@ -132,31 +133,104 @@ impl VideoDetail {
     }
 
 
-    // #[sql("UPDATE video_detail SET handle_step = ?, handle_time = ? WHERE id IN (${ids})")]  
-    // async fn batch_update_video_details(  
-    //     rb: &dyn Executor,  
-    //     new_handle_step: u64,  
-    //     new_handle_time: DateTime,  
-    //     ids: String,  // 格式: "1,2,3,4,5"  
-    // ) -> Result<ExecResult, Error> {  
-    //     impled!()  
-    // }  
-
-
-
+    pub async fn search_handle_videos(
+        rb: &dyn Executor,
+        request: &rbatis::PageRequest,
+        title: Option<String>,
+        desc: Option<String>,
+        handle_step: u64,
+        handle_type: Option<AccessType>,
+    ) -> RB<Page<VideoDetail>> {
+        impled!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use log::info;
-    use rbatis::PageRequest;
+    use rbatis::utils::table_util;
+    use rbatis::{PageRequest, table_field_vec};
     use rbs::value;
 
-    use crate::{
-        app::config::CC,
-        domain::{ video_detail::VideoDetail},
-    };
+    use crate::domain::dtos::VideoVo;
     use crate::domain::enumeration::AccessType;
+    use crate::domain::owner::Owner;
+    use crate::utils::collection_tool::VecGroupByExt;
+    use crate::{app::config::CC, domain::video_detail::VideoDetail};
+
+    #[tokio::test]
+    async fn example() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_search_handle_videos() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let search = Some("红色沙漠".to_string());
+
+        let search_handle_videos = VideoDetail::search_handle_videos(&CC.rb, &PageRequest::new(1, 10), search.clone(), search, 1, Some(AccessType::WHITE)).await.unwrap();
+        println!("{:#?}",search_handle_videos);
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_find_vo_with_owner_by_id_in() {
+        //第一句必须是这个
+        crate::init().await;
+
+        // table_util
+
+        let id_arr = vec![305988942];
+        let v_arr = VideoDetail::select_by_map(
+            &CC.rb,
+            value! {
+                "id": id_arr,
+            },
+        )
+        .await
+        .unwrap();
+
+        let owner_id: Vec<u64> = v_arr.iter().filter_map(|f| f.owner_id).collect();
+        let mut id_owner_map = Owner::select_by_map(
+            &CC.rb,
+            value! {
+                "id":owner_id
+            },
+        )
+        .await
+        .unwrap()
+        .group_by(|f| Some(f.id));
+        let collect: Vec<VideoVo> = v_arr
+            .into_iter()
+            .map(|f| {
+                let mut v: VideoVo = f.into();
+
+                v.owner_id.map(|f| {
+                    id_owner_map.remove(&f).map(|mut a| {
+                        a.pop().map(|s| {
+                            v.owner = Some(s);
+                        })
+                    })
+                });
+                v
+            })
+            .collect();
+
+        println!("{:#?}", collect);
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     #[tokio::test]
     async fn test_video_detail() {
@@ -180,23 +254,14 @@ mod tests {
         // .await
         // .unwrap();
 
-        let result = VideoDetail::select_by_title_like(&CC.rb, "%不要%")
-            .await
-            .unwrap();
+        // let result = VideoDetail::select_by_title_like(&CC.rb, "%不要%")
+        //     .await
+        //     .unwrap();
 
-        println!("{:#?}", result);
+        // println!("{:#?}", result);
     }
 
-    #[tokio::test]
-    async fn example() {
-        //第一句必须是这个
-        crate::init().await;
-
-        //在这中间编写测试代码
-
-        //最后一句必须是这个
-        log::logger().flush();
-    }
+   
 
     #[tokio::test]
     async fn test_select_handle_reason() {
@@ -205,31 +270,31 @@ mod tests {
 
         //在这中间编写测试代码
 
-        let mut page_no = 1;
-        loop {
-            info!("第{page_no}页循环");
-
-            match VideoDetail::select_page_by_handle_reason_not_null(
-                &CC.rb,
-                &PageRequest::new(page_no, 2),
-            )
-            .await
-            {
-                Ok(page) => {
-                    if page.records.is_empty() {
-                        break;
-                    }
-                }
-                Err(e) => {
-                    info!("第{page_no}页出错");
-                    info!("{:#?}", e);
-                }
-            }
-
-            page_no = page_no + 1;
-        }
-
-        info!("共有{page_no}页");
+        // let mut page_no = 1;
+        // loop {
+        //     info!("第{page_no}页循环");
+        //
+        //     match VideoDetail::select_page_by_handle_reason_not_null(
+        //         &CC.rb,
+        //         &PageRequest::new(page_no, 2),
+        //     )
+        //     .await
+        //     {
+        //         Ok(page) => {
+        //             if page.records.is_empty() {
+        //                 break;
+        //             }
+        //         }
+        //         Err(e) => {
+        //             info!("第{page_no}页出错");
+        //             info!("{:#?}", e);
+        //         }
+        //     }
+        //
+        //     page_no = page_no + 1;
+        // }
+        //
+        // info!("共有{page_no}页");
 
         //最后一句必须是这个
         log::logger().flush();

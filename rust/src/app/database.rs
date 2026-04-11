@@ -1,6 +1,8 @@
 
 
 
+use std::str::FromStr;
+
 use log::error;
 // use rbatis::{RBatis, dark_std::errors::new};
 // use rbdc_sqlite::Driver;
@@ -132,4 +134,20 @@ where
 }
 
 
+pub fn empty_string_as_none<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+
+    match opt {
+        None => Ok(None),
+        Some(s) if s.trim().is_empty() => Ok(None),
+        Some(s) => {
+            let de = serde::de::value::StringDeserializer::<D::Error>::new(s);
+            T::deserialize(de).map(Some)
+        }
+    }
+}
 

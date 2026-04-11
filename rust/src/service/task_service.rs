@@ -27,7 +27,6 @@ pub async fn check_and_run_task(hour:u32)->R<()>{
 
 
     for t in tasks {
-        
         match t.class_method_name.as_str() {
           "io.github.cctyl.service.impl.BiliService.doSearchTask"=>{
 

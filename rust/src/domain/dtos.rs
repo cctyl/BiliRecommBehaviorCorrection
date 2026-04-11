@@ -12,6 +12,8 @@ use std::{
     time::{Duration, SystemTime},
 };
 use validator::Validate;
+use crate::domain::video_detail::MatchResult;
+use crate::app::database::empty_string_as_none;
 #[test]
 fn testnow() {
     let now = SystemTime::now();
@@ -195,18 +197,29 @@ impl From<SearchKeywordDto> for VideoDetail {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PageDTO<T: Send + Sync> {
+    /// 当前页
     pub current: u64,
+    /// 总页数
     pub pages: u64,
+    /// 数据
     pub records: Vec<T>,
+    /// 每页大小
     pub size: u64,
+    /// 总记录数
     pub total: u64,
 }
 
 impl<T: Send + Sync> PageDTO<T> {
     pub fn new(current: u64, size: u64, records: Vec<T>, total: u64) -> Self {
+
+        let pages = if total == 0 {
+            0
+        } else {
+            (total + size - 1) / size
+        };
         PageDTO {
             current,
-            pages: (total as f64 / size as f64).ceil() as u64,
+            pages: pages,
             records,
             size,
             total,
@@ -226,8 +239,46 @@ impl<T: Send + Sync> PageDTO<T> {
             total: source.total,
         }
     }
+
+
+    // pub fn convert<D: Send + Sync>(&self,  records:Vec<T>)->PageDTO<T>{
+    //       PageDTO {
+    //         current: self.current,
+    //         pages: self.pages,
+    //         records: records,
+    //         size: self.size,
+    //         total: self.total,
+    //     }
+    // }
+
+
 }
 
+pub trait PageConvert<T: Send + Sync> {
+    fn convert<D: Send + Sync, F>(self, f: F) -> PageDTO<D>
+    where
+        F: FnMut(T) -> D; // 👈 这里
+}
+impl<T: Send + Sync> PageConvert<T> for Page<T> {
+    fn convert<D: Send + Sync, F>(self, mut f: F) -> PageDTO<D>
+    where
+        F: FnMut(T) -> D, // 👈 这里
+    {
+        let pages = if self.page_size == 0 {
+            0
+        } else {
+            (self.total + self.page_size - 1) / self.page_size
+        };
+
+        PageDTO {
+            current: self.page_no,
+            pages,
+            records: self.records.into_iter().map(|x| f(x)).collect(),
+            size: self.page_size,
+            total: self.total,
+        }
+    }
+}
 impl<T: Send + Sync> From<Page<T>> for PageDTO<T> {
     fn from(value: Page<T>) -> Self {
         PageDTO {
@@ -241,7 +292,10 @@ impl<T: Send + Sync> From<Page<T>> for PageDTO<T> {
     }
 }
 
-/// 分页数据结构体
+
+
+
+/// bilibili的分页数据结构体
 #[derive(Debug, Clone)]
 pub struct PageBean<T> {
     pub data: Vec<T>,
@@ -378,6 +432,68 @@ pub struct SecondHandleDto {
     pub reason: Option<String>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VideoVo{
+    pub id: u64,
+    pub tid: Option<u64>,
+    pub tname: Option<String>,
+    pub pic: Option<String>,
+    pub title: Option<String>,
+    pub pubdate: Option<u64>,
+    #[serde(rename = "desc")]
+    pub desc_field: Option<String>,
+    pub duration: Option<u32>,
+    pub dynamic: Option<String>,
+    pub bvid: String,
+    pub owner_id: Option<u64>,
+    pub handle_step: u64,
+    pub handle_reason: Option<MatchResult>,
+    pub handle_time: Option<DateTime>,
+    pub handle_type: Option<AccessType>,
+    pub created_date: Option<DateTime>,
+    pub tag: Option<String>,
+    pub owner:Option<Owner>,
+}
+// 实现基础转换（不包含 owner 字段）
+impl From<VideoDetail> for VideoVo {
+    fn from(detail: VideoDetail) -> Self {
+        Self {
+            id: detail.id,
+            tid: detail.tid,
+            tname: detail.tname,
+            pic: detail.pic,
+            title: detail.title,
+            pubdate: detail.pubdate,
+            desc_field: detail.desc_field,
+            duration: detail.duration,
+            dynamic: detail.dynamic,
+            bvid: detail.bvid,
+            owner_id: detail.owner_id,
+            handle_step: detail.handle_step,
+            handle_reason: detail.handle_reason,
+            handle_time: detail.handle_time,
+            handle_type: detail.handle_type,
+            created_date: detail.created_date,
+            tag: detail.tag,
+            owner: None, // 临时设为 None
+        }
+    }
+}
+
+
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SearchHandleVideoRequest {
+    pub page: u64,
+    pub limit: u64,
+    pub handle_step: u64,
+
+    pub search: Option<String>,
+
+    #[serde(deserialize_with = "empty_string_as_none")]
+    pub handle_type: Option<AccessType>,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OwnerJsonDto {

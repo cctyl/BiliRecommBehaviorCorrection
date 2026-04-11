@@ -36,7 +36,7 @@ impl AssociateRule {
         </if>
     </where>
     <if test="do_count == false">
-        ` order by create_date desc`
+        ` order by created_date desc`
     </if>
 </select>
 
@@ -46,3 +46,79 @@ impl AssociateRule {
 <mapper>
   
 </mapper>
+
+
+
+or 条件连接分页
+       <select id="search_handle_videos">
+        `select * from video_detail where`
+        <if test="title != null || desc != null">
+            ` (`
+            <if test="title != null">
+                ` title like concat('%', #{title}, '%')`
+            </if>
+            <if test="title != null && desc != null">
+                ` or `
+            </if>
+            <if test="desc != null">
+
+                ` desc like concat('%', #{desc}, '%')`
+            </if>
+            ` ) and`
+        </if>
+        ` handle_step = #{handle_step}
+        and handle_type = #{handle_type}`
+
+        <if test="do_count == false">
+            ` order by created_date desc`
+        </if>
+    </select>
+
+        pub async fn search_handle_videos(
+        rb: &dyn Executor,
+        request: &rbatis::PageRequest,
+        title: Option<String>,
+        desc: Option<String>,
+        handle_step: u64,
+        handle_type: AccessType,
+    ) -> RB<Page<VideoDetail>> {
+        impled!()
+    }
+
+
+
+
+动态条件
+
+    use rbs::value::map::ValueMap;  
+    use rbs::Value;  
+    
+    // 创建可变的条件 map  
+    let mut condition = ValueMap::new();  
+    
+    // 动态添加条件  
+    if let Some(id) = some_id {  
+        condition.insert("id".into(), id.into());  
+    }  
+    
+    if let Some(name) = some_name {  
+        condition.insert("name".into(), name.into());  
+    }  
+    
+    // 如果需要数组条件  
+    if !ids.is_empty() {  
+        condition.insert("ids".into(), ids.into());  
+    }  
+    
+    // 执行查询  
+    let results = MyTable::select_by_map(&rb, Value::Map(condition)).await?;
+
+
+或者直接传option，为none会跳过
+
+
+pageDTO的转换
+
+    let page: Page<SysDict> = SysDict::select_page(pool!(), &PageRequest::from(arg), arg).await?;
+    let page_vo: Page<SysDictVO> = Page::<SysDictVO>::from(page);
+
