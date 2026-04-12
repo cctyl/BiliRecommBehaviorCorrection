@@ -16,10 +16,13 @@ use crate::domain::{
     config::Config, cookie_header_data::CookieHeaderData, tag::Tag, video_detail::VideoDetail,
 };
 use crate::service::config_service;
-use crate::service::cookie_header_data_service::{self, init_common_header_map, init_header};
+use crate::service::cookie_header_data_service::{
+    self, get_csrf, init_common_header_map, init_header,
+};
 use crate::utils::data_util::{self, download_json_response};
 use crate::utils::http::CLIENT;
 use crate::utils::id::{generate_id, next_id};
+use crate::utils::thread_util::ThreadUtil;
 use anyhow::Context;
 use axum::body;
 use hex;
@@ -487,15 +490,17 @@ pub async fn get_user_info() -> R<serde_json::Value> {
     let response = common_get(url, get_app_sign(params)).await?;
 
     // 更新mid到配置中
-    if let Some(mid) = response["data"]["mid"].as_str() {
+    if let Some(mid) = response["data"]["mid"].as_number() {
+
+        info!("响应中获得mid={}",mid);
         // 查找是否已存在mid配置
-        // let mut where_map = ValueMap::new();
-        // where_map.insert(rbs::Value::String("name".to_string()), rbs::Value::String(constans::MID_KEY.to_string()));
-        // let existing_config = Config::select_by_map(&CONTEXT.rb, rbs::Value::Map(where_map)).await?;
         let mut existing_config =
             Config::select_by_map(&CC.rb, value! {"name":constans::MID_KEY.to_string()}).await?;
 
         if existing_config.is_empty() {
+
+            info!("不存在配置！");
+
             // 创建新的mid配置
             let new_config = Config {
                 id: generate_id(),
@@ -507,6 +512,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             };
             Config::insert(&CC.rb, &new_config).await?;
         } else {
+            info!("更新现有配置");
             // 更新现有的mid配置
             let mut config = existing_config.pop().unwrap();
             config.value = Some(mid.to_string());
@@ -519,8 +525,12 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             Config::update_by_map(&CC.rb, &config, value! {"id":&config.id}).await?;
             info!("更新mid: {}", mid);
         }
-    }
+    }else{
 
+        info!("响应没有获得mid");
+        info!("{:#?}",response["data"]["mid"]);
+        info!("{:#?}",response["data"]["mid"].as_number());
+    }
     Ok(response)
 }
 
@@ -798,7 +808,7 @@ pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<V
     .await
     .context("get_region_lastest_video 请求失败")?;
 
-    download_json_response(&mut body, "get_region_lastest_video.json")?;
+    //download_json_response(&mut body, "get_region_lastest_video.json")?;
     let value = body["data"]["archives"].take();
     R::Ok(serde_json::from_value(value).context("get_region_lastest_video json 解析失败")?)
 }
@@ -914,26 +924,269 @@ pub async fn get_home_recommend_video() -> R<Vec<u64>> {
     let value_source = body["data"]["items"].take();
     // data_util::download_json_response(&value_source, "get_home_recommend_video.json")?;
 
-
     if let Value::Array(array) = value_source {
-        let avs = array.into_iter().filter(|f| {
-            f["card_goto"].as_str() == Some("av")
-        }).filter_map(|mut f| {
-            if let Value::Number(s) = f["args"]["aid"].take() {
-                s.as_u64()
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<u64>>();
+        let avs = array
+            .into_iter()
+            .filter(|f| f["card_goto"].as_str() == Some("av"))
+            .filter_map(|mut f| {
+                if let Value::Number(s) = f["args"]["aid"].take() {
+                    s.as_u64()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<u64>>();
 
         return R::Ok(avs);
     }
 
-    R::Err(HttpError::ServerError("首页推荐视频 数据格式解析失败".to_string()))
+    R::Err(HttpError::ServerError(
+        "首页推荐视频 数据格式解析失败".to_string(),
+    ))
 }
-use crate::app::constans::THIRD_PART_APPKEY;
+use crate::app::constans::{MID_KEY, THIRD_PART_APPKEY};
 use rand::Rng;
+
+/// 获得视频url
+pub async fn get_video_url(bvid: String, cid: u64) -> R<String> {
+    let url = "https://api.bilibili.com/x/player/playurl";
+    let mut body = common_get(
+        url,
+        vec![
+            ("bvid".to_string(), bvid),
+            ("cid".to_string(), cid.to_string()),
+            ("qn".to_string(), 64.to_string()),
+        ],
+    )
+    .await?;
+
+    if let Value::String(s) = body["data"]["durl"][0]["url"].take() {
+        R::Ok(s)
+    } else {
+        R::Err(HttpError::BadRequest("获取url失败！".to_string()))
+    }
+
+    // data_util::download_json_response(&body, "get_video_url.json")?;
+}
+
+/// 点赞并播放视频
+pub(crate) async fn play_and_thumb_up(v: &VideoDetail) -> R<()> {
+    let video_url = get_video_url(v.bvid.clone(), v.cid).await?;
+    ThreadUtil::s1().await;
+
+    //模拟播放
+    simulate_play(v.id, v.cid, v.duration.unwrap_or(10)).await?;
+
+    ThreadUtil::s1().await;
+    //点赞
+    thumb_up(v.id).await?;
+    
+
+    R::Ok(())
+}
+
+/// 对指定视频点赞
+pub async fn thumb_up(aid: u64) -> R<()> {
+    let url = "https://api.bilibili.com/x/web-interface/archive/like";
+    let body = common_post_form(
+        url,
+        vec![
+            ("aid".to_string(), aid.to_string()),
+            ("like".to_string(), 1.to_string()),
+            ("csrf".to_string(), get_csrf().await?),
+        ],
+    )
+    .await?;
+
+    if let Some(num) = body["code"].as_number() {
+        if num.as_i64() == Some(65006) {
+            info!("aid={aid} 已经赞过");
+        }
+    }
+
+    R::Ok(())
+}
+
+/// 上报播放心跳
+pub async fn report_heart_beat(
+    start_ts: u64,
+    aid: u64,
+    cid: u64,
+    v_type: u32,
+    sub_type: u32,
+    dt: u32,
+    realtime: u32,
+    play_type: u32,
+    played_time: u32,
+    real_played_time: u32,
+    video_duration: u32,
+    last_play_progress_time: u32,
+    max_play_progress_time: u32,
+) -> R<()> {
+    let url = "https://api.bilibili.com/x/click-interface/web/heartbeat";
+    let mid = config_service::find_config_by_name(MID_KEY)
+        .await?
+        .ok_or(HttpError::BadRequest(
+            "找不到mid，无法模拟播放！".to_string(),
+        ))?
+        .value
+        .ok_or(HttpError::BadRequest(
+            "找不到mid，无法模拟播放！".to_string(),
+        ))?;
+    let csrf = cookie_header_data_service::get_csrf().await?;
+
+    common_post_form(
+        url,
+        vec![
+            ("start_ts".to_string(), get_ts().to_string()),
+            ("mid".to_string(), mid),
+            ("aid".to_string(), aid.to_string()),
+            ("cid".to_string(), cid.to_string()),
+            ("type".to_string(), v_type.to_string()),
+            ("sub_type".to_string(), sub_type.to_string()),
+            ("dt".to_string(), dt.to_string()),
+            ("play_type".to_string(), play_type.to_string()),
+            ("realtime".to_string(), realtime.to_string()),
+            ("played_time".to_string(), played_time.to_string()),
+            ("real_played_time".to_string(), real_played_time.to_string()),
+            ("quality".to_string(), "80".to_string()),
+            ("video_duration".to_string(), video_duration.to_string()),
+            (
+                "last_play_progress_time".to_string(),
+                last_play_progress_time.to_string(),
+            ),
+            (
+                "max_play_progress_time".to_string(),
+                max_play_progress_time.to_string(),
+            ),
+            (
+                "extra".to_string(),
+                "{\"player_version\":\"4.1.18\"}".to_string(),
+            ),
+            ("csrf".to_string(), csrf),
+        ],
+    )
+    .await?;
+    R::Ok(())
+}
+
+/// 模拟播放
+pub async fn simulate_play(aid: u64, cid: u64, video_duration: u32) -> R<()> {
+    let start_ts = get_ts();
+
+    let min_play_second = config_service::get_min_play_second().await?;
+
+    // 0. 初始播放
+    report_heart_beat(
+        start_ts,
+        aid,
+        cid,
+        3,
+        0,
+        2,
+        0,
+        1,
+        0,
+        0,
+        video_duration - 1,
+        0,
+        0,
+    )
+    .await?;
+
+    if video_duration <= 15 {
+        if video_duration >= 7 {
+            // 时间较短的，播完
+            report_heart_beat(
+                start_ts,
+                aid,
+                cid,
+                3,
+                0,
+                2,
+                video_duration - 2,
+                1,
+                video_duration,
+                video_duration,
+                video_duration,
+                video_duration - 1,
+                video_duration - 1,
+            )
+            .await?;
+        } else {
+            // 7秒以下，不播
+            log::error!(
+                "视频 avid={} 时间={}，时长过短，不播放",
+                aid,
+                video_duration
+            );
+            return R::Ok(());
+        }
+    }
+
+    // 本次预计要播放多少秒
+    let mut play_time = data_util::get_random(0, video_duration as i32) as u32;
+
+    // play_time 不能太长, 最大值50
+    if play_time >= min_play_second {
+        play_time = min_play_second + data_util::get_random(1, 10) as u32;
+    }
+    // 不能太短, 最小值15
+    if play_time <= 15 {
+        play_time = play_time + data_util::get_random(1, 10) as u32;
+    }
+    // 最终都不能超过 video_duration
+    if play_time >= video_duration {
+        play_time = video_duration;
+    }
+
+    log::debug!("视频 avid={} 预计观看时间：{}秒", aid, play_time);
+
+    // 当前已播放多少秒
+    let mut now_play_time = 0;
+    while now_play_time + 15 <= play_time {
+        ThreadUtil::sleep(15).await;
+        now_play_time += 15;
+        report_heart_beat(
+            start_ts,
+            aid,
+            cid,
+            3,
+            0,
+            2,
+            now_play_time - 2,
+            1,
+            now_play_time,
+            now_play_time,
+            video_duration,
+            now_play_time - 1,
+            now_play_time - 1,
+        )
+        .await?;
+    }
+
+    // 收尾操作，如果还差5秒以上没播完，那再播放一次（原 Java 逻辑实际是差 remaining_time 秒也播一次）
+    let remaining_time = play_time - now_play_time;
+    ThreadUtil::sleep(remaining_time as u64).await;
+    now_play_time += remaining_time;
+    report_heart_beat(
+        start_ts,
+        aid,
+        cid,
+        3,
+        0,
+        2,
+        now_play_time - 2,
+        1,
+        now_play_time,
+        now_play_time,
+        video_duration,
+        now_play_time - 1,
+        now_play_time - 1,
+    )
+    .await?;
+    R::Ok(())
+}
 
 #[cfg(test)]
 mod tests {
@@ -943,7 +1196,9 @@ mod tests {
         hash::Hash,
     };
 
-    use crate::api::bili::{get_home_recommend_video, hot_rank_video, search_keyword};
+    use crate::{api::bili::{
+        get_home_recommend_video, get_video_url, hot_rank_video, play_and_thumb_up, search_keyword
+    }, app::config::CC, domain::video_detail::VideoDetail};
     use crate::{
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
@@ -956,6 +1211,39 @@ mod tests {
 
         //在这中间编写测试代码
 
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    //play_and_thumb_up
+    #[tokio::test]
+    async fn test_play_and_thumb_up() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+        let v = VideoDetail::select_by_id(&CC.rb, 114472521896185u64).await.unwrap().unwrap();
+        play_and_thumb_up(&v).await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    // get_video_url
+    #[tokio::test]
+    async fn test_get_video_url() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let get_video_url = get_video_url("BV1CDJEzfEQ7".to_string(), 30084172011u64)
+            .await
+            .unwrap();
+
+        println!("{}", get_video_url);
         //最后一句必须是这个
         log::logger().flush();
     }

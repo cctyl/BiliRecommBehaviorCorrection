@@ -887,7 +887,7 @@ public class BiliApi {
         Map<String, Object> paramMap = new HashMap<>(16);
 
         paramMap.put("start_ts", start_ts);
-        //播放视频的用户id
+
         paramMap.put("mid", configService.getMID());
         paramMap.put("aid", aid);
         paramMap.put("cid", cid);
@@ -978,7 +978,9 @@ public class BiliApi {
         String body = commonGet(url,
                 getAppSign(
                         Map.of(
-                                "access_key", getAccessKey(false),
+//                                "access_key", getAccessKey(false),
+                                //todo 记得删
+                                "access_key", "1c86e21ababe36490f7e02677a124931",
                                 "appkey", THIRD_PART_APPKEY,
                                 "ts", String.valueOf(getTs())
                         )

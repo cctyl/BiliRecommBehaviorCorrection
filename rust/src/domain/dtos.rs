@@ -40,6 +40,7 @@ pub struct ConfigAddUpdateDTO {
 #[derive(Debug, Clone, Deserialize)]
 pub struct VideoRawDto {
     pub aid: u64,
+    pub cid: u64,
     pub tid: Option<u64>,
     pub tname: Option<String>,
     pub pic: Option<String>,
@@ -63,6 +64,7 @@ impl From<VideoRawDto> for VideoDetail {
             id: raw.aid,
             tid: raw.tid,
             tname: raw.tname,
+            cid:raw.cid,
             pic: raw.pic,
             title: raw.title,
             pubdate: raw.pubdate,
@@ -88,6 +90,7 @@ pub struct SearchKeywordDto {
     pub area: u32,
     pub author: String,
     pub badgepay: bool,
+    pub cid: u64,
     pub bvid: String,
     pub card_status: u32,
     pub cate_name: String,
@@ -171,29 +174,30 @@ pub struct SearchKeywordDto {
     pub hit_columns: Option<Vec<String>>,
 }
 
-impl From<SearchKeywordDto> for VideoDetail {
-    fn from(dto: SearchKeywordDto) -> Self {
-        VideoDetail {
-            id: dto.aid,
-            tid: dto.typeid.parse().ok(),
-            tname: Some(dto.typename),
-            pic: Some(dto.pic),
-            title: Some(dto.title),
-            pubdate: Some(dto.pubdate),
-            desc_field: Some(dto.description),
-            duration: None,
-            dynamic: None, // SearchKeywordDto 中没有对应字段
-            bvid: dto.bvid,
-            owner_id: Some(dto.mid),
-            handle_step: 0, // 默认未处理
-            handle_reason: None,
-            handle_time: None,
-            handle_type: None,
-            created_date: Some(DateTime::now()),
-            tag: Some(dto.tag),
-        }
-    }
-}
+// impl From<SearchKeywordDto> for VideoDetail {
+//     fn from(dto: SearchKeywordDto) -> Self {
+//         VideoDetail {
+//             id: dto.aid,
+//             cid:0,
+//             tid: dto.typeid.parse().ok(),
+//             tname: Some(dto.typename),
+//             pic: Some(dto.pic),
+//             title: Some(dto.title),
+//             pubdate: Some(dto.pubdate),
+//             desc_field: Some(dto.description),
+//             duration: None,
+//             dynamic: None, // SearchKeywordDto 中没有对应字段
+//             bvid: dto.bvid,
+//             owner_id: Some(dto.mid),
+//             handle_step: 0, // 默认未处理
+//             handle_reason: None,
+//             handle_time: None,
+//             handle_type: None,
+//             created_date: Some(DateTime::now()),
+//             tag: Some(dto.tag),
+//         }
+//     }
+// }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PageDTO<T: Send + Sync> {
@@ -381,6 +385,7 @@ pub struct VideoDetailJsonDto {
     pub duration: Option<u32>,
     pub dynamic: Option<String>,
     pub bvid: String,
+    pub cid:u64,
     pub owner_id: Option<u64>,
 }
 impl From<VideoDetail> for VideoDetailJsonDto {
@@ -388,6 +393,7 @@ impl From<VideoDetail> for VideoDetailJsonDto {
         VideoDetailJsonDto {
             aid: detail.id,
             tid: detail.tid,
+            cid:detail.cid,
             tname: detail.tname,
             pic: detail.pic,
             title: detail.title,
@@ -406,6 +412,7 @@ impl From<VideoDetailJsonDto> for VideoDetail {
             id: dto.aid,
             tid: dto.tid,
             tname: dto.tname,
+            cid:dto.cid,
             pic: dto.pic,
             title: dto.title,
             pubdate: dto.pubdate,

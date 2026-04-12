@@ -1,0 +1,32 @@
+可以使用 Value::take() 方法获得url的所有权而不需要clone。take() 会将值从原位置移出，并在原位置留下 Value::Null 
+
+方法1：使用 pointer_mut + take
+    let mut value = your_value; // 需要可变引用  
+    let url = value.pointer_mut("/data/durl/0")  
+        .and_then(|v| v.as_object_mut())  
+        .and_then(|obj| obj.remove("url")); // 获得所有权
+
+
+
+
+方法2：使用索引 + take
+    let mut value = your_value;  
+    let url = value["data"]["durl"][0].take(); // 直接获得Value  
+    // 如果需要String类型  
+    let url_string = url.as_str().unwrap().to_owned();
+
+
+方法3：使用 get_mut 链式调用
+    let mut value = your_value;  
+    let url = value.get_mut("data")  
+        .and_then(|d| d.get_mut("durl"))  
+        .and_then(|durl| durl.get_mut(0))  
+        .and_then(|item| item.get_mut("url"))  
+        .map(|url| url.take());
+
+
+if let Value::String(s) = body["data"]["durl"][0]["url"].take() {
+        R::Ok(s)
+    } else {
+        R::Err(HttpError::BadRequest("获取url失败！".to_string()))
+    }

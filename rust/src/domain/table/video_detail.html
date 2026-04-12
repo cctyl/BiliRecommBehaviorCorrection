@@ -62,4 +62,21 @@
             ` order by created_date desc`
         </if>
     </select>
+
+
+     <update id="update_handle_step_by_ids">  
+        `update video_detail`  
+        <set>  
+            <if test="handle_step != null">  
+                `handle_step = #{handle_step},`  
+            </if>  
+            <if test="handle_time != null">  
+                `handle_time = #{handle_time},`  
+            </if>  
+        </set>  
+        `where id in`  
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">  
+            #{id}  
+        </foreach>  
+    </update>  
 </mapper>

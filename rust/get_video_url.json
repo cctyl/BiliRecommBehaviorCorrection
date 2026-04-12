@@ -1,0 +1,75 @@
+{
+  "code": 0,
+  "data": {
+    "accept_description": [
+      "高清 720P",
+      "流畅 360P"
+    ],
+    "accept_format": "mp4720,mp4",
+    "accept_quality": [
+      64,
+      16
+    ],
+    "auto_qn_resp": {
+      "dyeid": "d6f12c77ebb582ee00c9615169db3073"
+    },
+    "cur_language": "",
+    "cur_production_type": 0,
+    "durl": [
+      {
+        "ahead": "",
+        "backup_url": [
+          "https://upos-sz-mirror08c.bilivideo.com/upgcxcode/11/20/30084172011/30084172011-1-192.mp4?e=ig8euxZM2rNcNbRVhwdVhwdlhWdVhwdVhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&platform=pc&oi=0x24098a55ca5dfc60a82d65c50496e9ab&deadline=1775979667&nbs=1&uipk=5&mid=0&trid=4ec32ae5e4b44a06a0847750fd22eb6u&gen=playurlv3&os=08cbv&og=hw&upsig=f330c858ba1b75617f13394113411cb7&uparams=e,platform,oi,deadline,nbs,uipk,mid,trid,gen,os,og&bvc=vod&nettype=0&bw=103084&agrr=0&buvid=C83BED02-94B1-5878-5DFB-1855C679005500255infoc&build=0&dl=0&f=u_0_0&qn_dyeid=d6f12c77ebb582ee00c9615169db3073&orderid=1,3",
+          "https://upos-sz-mirrorhwb.bilivideo.com/upgcxcode/11/20/30084172011/30084172011-1-192.mp4?e=ig8euxZM2rNcNbRVhwdVhwdlhWdVhwdVhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&nbs=1&oi=0x24098a55ca5dfc60a82d65c50496e9ab&gen=playurlv3&os=hwbbv&og=hw&deadline=1775979667&uipk=5&trid=4ec32ae5e4b44a06a0847750fd22eb6u&platform=pc&mid=0&upsig=ee9cf06e562785599c50ce0ffcb13f99&uparams=e,nbs,oi,gen,os,og,deadline,uipk,trid,platform,mid&bvc=vod&nettype=0&bw=103084&f=u_0_0&qn_dyeid=d6f12c77ebb582ee00c9615169db3073&agrr=0&buvid=C83BED02-94B1-5878-5DFB-1855C679005500255infoc&build=0&dl=0&orderid=2,3"
+        ],
+        "length": 183207,
+        "order": 1,
+        "size": 2358069,
+        "url": "https://upos-sz-mirror08c.bilivideo.com/upgcxcode/11/20/30084172011/30084172011-1-192.mp4?e=ig8euxZM2rNcNbRVhwdVhwdlhWdVhwdVhoNvNC8BqJIzNbfqXBvEqxTEto8BTrNvN0GvT90W5JZMkX_YN0MvXg8gNEV4NC8xNEV4N03eN0B5tZlqNxTEto8BTrNvNeZVuJ10Kj_g2UB02J0mN0B5tZlqNCNEto8BTrNvNC7MTX502C8f2jmMQJ6mqF2fka1mqx6gqj0eN0B599M=&trid=4ec32ae5e4b44a06a0847750fd22eb6u&mid=0&gen=playurlv3&os=08cbv&nbs=1&uipk=5&platform=pc&oi=0x24098a55ca5dfc60a82d65c50496e9ab&og=hw&deadline=1775979667&upsig=f7420f8294c4ee4a65664575bf821084&uparams=e,trid,mid,gen,os,nbs,uipk,platform,oi,og,deadline&bvc=vod&nettype=0&bw=103084&build=0&dl=0&f=u_0_0&qn_dyeid=d6f12c77ebb582ee00c9615169db3073&agrr=0&buvid=C83BED02-94B1-5878-5DFB-1855C679005500255infoc&orderid=0,3",
+        "vhead": ""
+      }
+    ],
+    "format": "mp4720",
+    "from": "local",
+    "high_format": null,
+    "last_play_cid": 0,
+    "last_play_time": 0,
+    "message": "",
+    "play_conf": {
+      "is_new_description": false
+    },
+    "quality": 64,
+    "result": "suee",
+    "seek_param": "start",
+    "seek_type": "offset",
+    "support_formats": [
+      {
+        "can_watch_qn_reason": 0,
+        "codecs": null,
+        "display_desc": "720P",
+        "format": "mp4720",
+        "limit_watch_reason": 0,
+        "new_description": "720P 准高清",
+        "quality": 64,
+        "report": {},
+        "superscript": ""
+      },
+      {
+        "can_watch_qn_reason": 0,
+        "codecs": null,
+        "display_desc": "360P",
+        "format": "mp4",
+        "limit_watch_reason": 0,
+        "new_description": "360P 流畅",
+        "quality": 16,
+        "report": {},
+        "superscript": ""
+      }
+    ],
+    "timelength": 183207,
+    "video_codecid": 7,
+    "view_info": null
+  },
+  "message": "OK",
+  "ttl": 1
+}

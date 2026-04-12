@@ -11,7 +11,7 @@ use std::{
 };
 
 use crate::{
-    app::{interceptor::SqlOnlyLogInterceptor, response::R}, domain::config::Config, service::task_service, utils::glm_chat::{ChatConfig, ChatGlm}
+    app::{interceptor::SqlOnlyLogInterceptor, response::R}, domain::config::Config, service::{config_service, task_service}, utils::glm_chat::{ChatConfig, ChatGlm}
 };
 use rbatis::{
     RBatis, dark_std::errors::new, intercept_log::LogInterceptor, intercept_page::PageIntercept,
@@ -74,6 +74,11 @@ impl AppContext {
 
         // 启动时，所有任务都应该是停止的
         task_service::update_stop_status().await?;
+
+
+        //检查access_key 是否过期
+        config_service::check_accesskey().await;
+
         R::Ok(())
     }
 
@@ -209,15 +214,15 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        //在这中间编写测试代码
-        let chat = &CC.chat;
-        let read = chat.read().await;
+        // //在这中间编写测试代码
+        // let chat = &CC.chat;
+        // let read = chat.read().await;
 
-        let chat = read.chat("rust是什么东西").await.unwrap();
-        println!("{}", chat);
+        // let chat = read.chat("rust是什么东西").await.unwrap();
+        // println!("{}", chat);
 
-        let config = read.config();
-        println!("{:#?}", config);
+        // let config = read.config();
+        // println!("{:#?}", config);
 
         //最后一句必须是这个
         log::logger().flush();

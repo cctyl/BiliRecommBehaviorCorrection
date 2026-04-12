@@ -33,6 +33,7 @@ pub struct CookieHeaderData {
     pub media_type: Option<MediaType>,
 }
 crud!(CookieHeaderData {}, "cookie_header_data");
+plus!(CookieHeaderData {}, "cookie_header_data");
 
 #[html_sql("src/domain/table/cookie_header_data.html")]
 impl CookieHeaderData{

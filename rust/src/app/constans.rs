@@ -6,6 +6,7 @@ pub const IMG_KEY: &str = "bili:imgKey";
 pub const SUB_KEY: &str = "bili:subKey";
 pub const BILI_ACCESS_KEY: &str = "bili:access_key";
 pub const MID_KEY: &str = "bili:mid";
+pub const CSRF: &str = "bili_jct";
 
 // 独立字符串常量
 pub const BILITICKET: &str = "bili_ticket";

@@ -3,15 +3,14 @@ use rbatis::rbdc::{DateTime, Timestamp};
 use rbs::value;
 
 use crate::{
-    app::{
+    api::bili, app::{
         config::CC,
-        constans::{self, FIRST_USE, IMG_KEY, SUB_KEY},
+        constans::{self, FIRST_USE, IMG_KEY, MIN_PLAY_SECOND, SUB_KEY},
         response::R,
-    },
-    domain::{
+    }, domain::{
         config::Config,
         dtos::{ConfigAddUpdateDTO, VideoDetailDTO},
-    },
+    }
 };
 
 /**
@@ -307,4 +306,32 @@ pub(crate) async fn check_need_reinit_glm(payload: &Vec<ConfigAddUpdateDTO>) -> 
     }
 
     R::Ok(false)
+}
+
+
+
+/// 检查access_key
+pub async fn check_accesskey(){
+    match bili::get_user_info().await {
+        Ok(info) => {
+
+            info!("检查access_key: {:#?}",info);
+        },
+        Err(e) => {
+            info!("检查access_key 失败: {:#?}",e);
+        }
+    }
+}
+
+/// 获取最小播放时长
+pub(crate)  async fn get_min_play_second() -> R<u32> {
+
+
+    let config = Config::select_one_by_condition(&CC.rb, value!{
+        "name":MIN_PLAY_SECOND
+    }).await?.map_or(0, |f|{
+        f.value.map_or(0, |f|f.parse().unwrap_or(0))
+    });
+
+    R::Ok(config)
 }

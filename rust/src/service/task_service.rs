@@ -1,9 +1,6 @@
 use log::{error, info};
 use rbatis::{
-    executor::Executor,
-    impled, py_sql,
-    rbdc::{DateTime, db::ExecResult},
-    sql,
+    PageRequest, executor::Executor, impled, py_sql, rbdc::{DateTime, db::ExecResult}, sql
 };
 use rbs::value;
 use std::collections::HashSet;
@@ -59,11 +56,13 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
         }
         // 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
         DO_DEFAULT_PROCESS_VIDEO => {
-            do_default_process_video().await?;
+            default_process().await?;
         }
 
         // 进行三次处理，把判断好的视频开始执行点赞点踩操作
-        DO_THIRD_PROCESS => {}
+        DO_THIRD_PROCESS => {
+            third_process().await?;
+        }
         e => {
             error!("class_name={} ,未知的任务，跳过", e);
         }
@@ -72,8 +71,60 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
     R::Ok(())
 }
 
+/// 进行三次处理，把判断好的视频开始执行点赞点踩操作
+/// 每次只处理40条，防止触发风控
+pub async fn third_process() -> R<()> {
+
+
+
+    let handle_type_arr = vec![AccessType::BLACK,AccessType::WHITE];
+
+    for handle_type in handle_type_arr {
+
+     
+
+        let video_list = VideoDetail::select_page_by_condition(&CC.rb, &PageRequest::new(1, 20), value!{
+            "handle_step":2,
+            "handle_type":handle_type
+        }).await?.records;
+
+
+        for v in video_list {
+            
+            let r = {
+                
+                if handle_type==AccessType::BLACK {
+                    //点踩
+                    bili::dislike(v.id).await
+
+                }else{
+                    //点赞并播放
+                    bili::play_and_thumb_up(&v).await
+                }
+            };
+
+
+            match r {
+                Ok(_) => {},
+                Err(e) => {
+                    error!("对视频aid={}处理时，出现错误:{:#?}",v.id,e);
+
+                },
+            }
+
+            ThreadUtil::s10().await;
+
+        }
+
+    }
+
+
+    R::Ok(())
+}
+
+
 /// 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
-pub async fn do_default_process_video() -> R<()> {
+pub async fn default_process() -> R<()> {
     let video_detail_arr = VideoDetail::select_by_map(
         &CC.rb,
         value! {
@@ -247,8 +298,10 @@ pub async fn search_keyword_task() -> R<()> {
 
                 for item in set {
                     let aid = item.aid;
+                    let video_detail_dto = bili::get_video_detail(aid).await?;
+                    ThreadUtil::s1().await;
                     match first_process(
-                        item.into(),
+                        video_detail_dto.video_detail.into(),
                         ai_chat_enable,
                         single_match_enable,
                         complex_match_enable,
@@ -493,40 +546,47 @@ pub(crate) async fn second_process(dto: SecondHandleDto) -> R<String> {
 pub(crate) async fn batch_second_handle(arr: Vec<SecondHandleDto>) -> R<String> {
     // 批量处理都是直接按照一次匹配的数据进行处理，所以只需要修改handle_step, handle_time 即可
     // 创建包含新值的 VideoDetail 实例
-    let update_data = VideoDetail {
-        id: 0, // 这个字段会被跳过，因为它是主键
-        handle_step: 2u64,
-        handle_time: Some(DateTime::now()),
-        // 其他字段保持 None，这样不会被更新
-        tid: None,
-        tname: None,
-        pic: None,
-        title: None,
-        pubdate: None,
-        desc_field: None,
-        duration: None,
-        dynamic: None,
-        bvid: String::new(),
-        owner_id: None,
-        handle_reason: None,
-        handle_type: None,
-        created_date: None,
-        tag: None,
-    };
+    // let update_data = VideoDetail {
+    //     id: 0, // 这个字段会被跳过，因为它是主键
+    //     handle_step: 2u64,
+    //     handle_time: Some(DateTime::now()),
+    //     // 其他字段保持 None，这样不会被更新
+    //     tid: None,
+    //     tname: None,
+    //     pic: None,
+    //     title: None,
+    //     pubdate: None,
+    //     desc_field: None,
+    //     duration: None,
+    //     dynamic: None,
+    //     bvid: String::new(),
+    //     owner_id: None,
+    //     handle_reason: None,
+    //     handle_type: None,
+    //     created_date: None,
+    //     tag: None,
+    // };
 
     let len = arr.len();
     let id_arr: Vec<u64> = arr.into_iter().map(|f| f.id).collect();
 
     // 使用 update_by_map 批量更新
-    let exec_result = VideoDetail::update_by_map(
+
+    let exec_result = VideoDetail::update_handle_step_by_ids(
         &CC.rb,
-        &update_data,
-        value! {
-            "id": id_arr,  // 使用数组实现 IN 查询
-            "column": ["handle_step", "handle_time"]  // 只更新这两个字段
-        },
-    )
-    .await?;
+        &id_arr,
+         2u64,
+         DateTime::now()
+    ).await?;
+    // let exec_result = VideoDetail::update_by_map(
+    //     &CC.rb,
+    //     &update_data,
+    //     value! {
+    //         "id": id_arr,  // 使用数组实现 IN 查询
+    //         "column": ["handle_step", "handle_time"]  // 只更新这两个字段
+    //     },
+    // )
+    // .await?;
 
     R::Ok(format!("成功修改{}条数据", len))
 }
@@ -545,7 +605,7 @@ mod tests {
     use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::VideoDetail;
     use crate::service::task_service::{
-        batch_second_handle, do_default_process_video, home_recommend_task, hot_rank_video_task,
+        batch_second_handle, default_process, home_recommend_task, hot_rank_video_task,
         search_keyword_task, second_process, update_stop_status,
     };
     use crate::{
@@ -573,13 +633,34 @@ mod tests {
 
     //do_default_process_video
 
+
+    //update_handle_step_by_ids
+    #[tokio::test]
+    async fn test_update_handle_step_by_ids() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+        let update_handle_step_by_ids = VideoDetail::update_handle_step_by_ids(
+            &CC.rb,
+            &vec![305988942u64],
+            1,
+            DateTime::now()
+
+
+        ).await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
     #[tokio::test]
     async fn test_do_default_process_video() {
         //第一句必须是这个
         crate::init().await;
 
         //在这中间编写测试代码
-        do_default_process_video().await.unwrap();
+        default_process().await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();

@@ -13,11 +13,9 @@ use tokio::time::sleep;
 
 use crate::{
     app::{
-        config::CC,
-        global::{GlobalState, GlobalStateHandler, GLOBAL_STATE},
-        response::R,
+        config::CC, constans::CSRF, error::HttpError, global::{GLOBAL_STATE, GlobalState, GlobalStateHandler}, response::R
     }, domain::{
-        dtos::PageDTO, enumeration::{Classify, MediaType}, cookie_header_data::CookieHeaderData
+        cookie_header_data::CookieHeaderData, dtos::PageDTO, enumeration::{Classify, MediaType}
     }, service::cookie_header_data_service, utils::{data_util, id::generate_id}
 };
 
@@ -225,4 +223,19 @@ pub(crate) async fn page_list(page: u64, limit: u64) -> R<PageDTO<CookieHeaderDa
 
     R::Ok(page.into())
 
+}
+
+
+
+/// 获取csrf值
+pub async fn get_csrf()->R<String>{
+    let cookie_header_data = CookieHeaderData::select_one_by_condition(&CC.rb, value!{
+        "ckey":CSRF
+    }).await?
+    .ok_or(HttpError::BadRequest("CSRF 值不存在".to_string()))?
+    .cvalue
+    ;
+
+
+   R::Ok(cookie_header_data)
 }

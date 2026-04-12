@@ -47,6 +47,7 @@ CREATE TABLE "video_detail" (
                                 "tname" VARCHAR(255),
                                 "pic" VARCHAR(350),
                                 "title" VARCHAR(255),
+                                 "cid" INT,
                                 "pubdate" INT,
                                 "ctime" INT,
                                 "desc" VARCHAR(255),
@@ -68,12 +69,12 @@ CREATE TABLE "video_detail" (
 );
 
 INSERT INTO "video_detail" (
-    "id", "aid", "tid", "tname", "pic", "title", "pubdate", "ctime", "desc", "duration",
+    "id", "aid", "tid", "tname", "pic", "title","cid", "pubdate", "ctime", "desc", "duration",
     "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason",
     "handle_type", "created_date", "last_modified_date", "handle_reason"
 )
 SELECT
-    "id", "aid", "tid", "tname", "pic", "title", "pubdate", "ctime", "desc", "duration",
+    "id", "aid", "tid", "tname", "pic", "title","cid",  "pubdate", "ctime", "desc", "duration",
     "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason",
     "handle_type", "created_date", "last_modified_date",
     CASE
@@ -111,6 +112,7 @@ CREATE TABLE "main"."video_detail" (
                                        "tname" VARCHAR(255),
                                        "pic" VARCHAR(350),
                                        "title" VARCHAR(255),
+                                        "cid" INT,
                                        "pubdate" INT,
                                        "ctime" INT,
                                        "desc" VARCHAR(255),
@@ -132,7 +134,8 @@ CREATE TABLE "main"."video_detail" (
                                        UNIQUE ("bvid" ASC)
 );
 
-INSERT INTO "main"."video_detail" ("id", "aid", "tid", "tname", "pic", "title", "pubdate", "ctime", "desc", "duration", "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "handle_reason") SELECT "id", "aid", "tid", "tname", "pic", "title", "pubdate", "ctime", "desc", "duration", "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "handle_reason" FROM "main"."_video_detail_old_20251029";
+INSERT INTO "main"."video_detail" ("id", "aid", "tid", "tname", "pic", "title", "cid", "pubdate", "ctime", "desc", "duration", "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "handle_reason")
+ SELECT "id", "aid", "tid", "tname", "pic", "title",  "cid","pubdate", "ctime", "desc", "duration", "dynamic", "first_frame", "pub_location", "bvid", "owner_id", "handle", "rcmd_reason", "handle_type", "created_date", "last_modified_date", "handle_reason" FROM "main"."_video_detail_old_20251029";
 
 CREATE INDEX "main"."idx_aid"
     ON "video_detail" (

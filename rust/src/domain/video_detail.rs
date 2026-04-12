@@ -87,6 +87,8 @@ pub struct VideoDetail {
     pub tid: Option<u64>,
     pub tname: Option<String>,
     pub pic: Option<String>,
+    /// 视频1p的id，模拟播放需要
+    pub cid: u64,
     pub title: Option<String>,
     pub pubdate: Option<u64>,
     #[serde(rename = "desc")]
@@ -143,6 +145,17 @@ impl VideoDetail {
     ) -> RB<Page<VideoDetail>> {
         impled!()
     }
+
+
+     /// 批量更新视频的处理步骤和处理时间  
+    pub async fn update_handle_step_by_ids(  
+        rb: &dyn Executor,  
+        ids: &[u64],  
+        handle_step: u64,  
+        handle_time: DateTime,  
+    ) -> rbatis::Result<rbatis::rbdc::db::ExecResult> {  
+        impled!()  
+    }  
 }
 
 #[cfg(test)]
