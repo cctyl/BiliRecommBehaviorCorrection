@@ -90,7 +90,7 @@ impl Default for ChatConfig {
         Self {
             enable: false,
             api_key: "".to_string(),
-            base_url: "https://open.bigmodel.cn/api/paas/v4/chat/completions".to_string(),
+            base_url: "https://open.bigmodel.cn/api/paas/v4".to_string(),
             model: "glm-4-flash".to_string(),
             temperature: 0.7,
             max_tokens: 4096,
@@ -161,7 +161,7 @@ impl ChatGlm {
         config.enable = true;
         config.api_key = std::env::var("api_key").expect("必须提供智谱AI API密钥");
         config.base_url = std::env::var("base_url")
-            .unwrap_or("https://open.bigmodel.cn/api/paas/v4/chat/completions".to_string());
+            .unwrap_or("https://open.bigmodel.cn/api/paas/v4".to_string());
         config.model = std::env::var("model").unwrap_or("glm-4-flash".to_string());
         config.temperature = std::env::var("temperature")
             .map(|s| s.parse().unwrap_or(0.7))
