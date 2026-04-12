@@ -43,7 +43,7 @@ pub async fn check_and_run_task(hour: u32) -> R<()> {
 
 /// 按照名字调用任务
 pub async fn do_task_by_name(name: &str) -> R<()> {
-    info!("执行：{} 任务",name);
+    info!("执行：{} 任务", name);
     match name {
         // 关键词搜索任务
         DO_SEARCH_TASK => {
@@ -58,13 +58,39 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
             home_recommend_task().await?;
         }
         // 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
-        DO_DEFAULT_PROCESS_VIDEO => {}
+        DO_DEFAULT_PROCESS_VIDEO => {
+            do_default_process_video().await?;
+        }
 
         // 进行三次处理，把判断好的视频开始执行点赞点踩操作
         DO_THIRD_PROCESS => {}
         e => {
             error!("class_name={} ,未知的任务，跳过", e);
         }
+    }
+
+    R::Ok(())
+}
+
+/// 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
+pub async fn do_default_process_video() -> R<()> {
+    let video_detail_arr = VideoDetail::select_by_map(
+        &CC.rb,
+        value! {
+            "handle_step":1
+        },
+    )
+    .await?;
+
+    let reason = Some("用户执行了默认状态处理".to_string());
+    for mut ele in video_detail_arr {
+        ele.handle_step = 2;
+
+        let mut match_result = ele.handle_reason.unwrap_or(MatchResult::default());
+        match_result.user_handle_reason = reason.clone();
+        ele.handle_reason = Some(match_result);
+
+        VideoDetail::update_by_id(&CC.rb, &ele).await?;
     }
 
     R::Ok(())
@@ -505,19 +531,12 @@ pub(crate) async fn batch_second_handle(arr: Vec<SecondHandleDto>) -> R<String> 
     R::Ok(format!("成功修改{}条数据", len))
 }
 
-
-
 /// 把所有任务的状态都改为停止
 pub(crate) async fn update_stop_status() -> R<ExecResult> {
-
-
-
     let exec_result: ExecResult = Task::update_task_state(&CC.rb, TaskStatus::STOPPED).await?;
 
-    
     R::Ok(exec_result)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -526,8 +545,8 @@ mod tests {
     use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::VideoDetail;
     use crate::service::task_service::{
-        batch_second_handle, home_recommend_task, hot_rank_video_task, search_keyword_task,
-        second_process, update_stop_status,
+        batch_second_handle, do_default_process_video, home_recommend_task, hot_rank_video_task,
+        search_keyword_task, second_process, update_stop_status,
     };
     use crate::{
         app::{config::CC, response::R},
@@ -552,10 +571,22 @@ mod tests {
         log::logger().flush();
     }
 
+    //do_default_process_video
 
+    #[tokio::test]
+    async fn test_do_default_process_video() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+        do_default_process_video().await.unwrap();
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     //update_stop_status
-   #[tokio::test]
+    #[tokio::test]
     async fn test_update_stop_status() {
         //第一句必须是这个
         crate::init().await;
@@ -563,12 +594,11 @@ mod tests {
         //在这中间编写测试代码
 
         let update_stop_status = update_stop_status().await.unwrap();
-        println!("{:#?}",update_stop_status);
+        println!("{:#?}", update_stop_status);
 
         //最后一句必须是这个
         log::logger().flush();
     }
-
 
     //batch_second_handle
 
