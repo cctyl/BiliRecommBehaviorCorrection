@@ -1,13 +1,15 @@
 use crate::app::config::CC;
 use crate::app::error::HttpError;
 use crate::app::response::{FailRespExt, OkRespExt, RR};
-use crate::domain::dtos::{PageDTO, SearchHandleVideoRequest, SecondHandleDto, VideoVo};
+use crate::domain::dtos::{CommonTriggerTaskRequest, PageDTO, SearchHandleVideoRequest, SecondHandleDto, VideoVo};
 use crate::domain::task::Task;
 use crate::service::{task_service, video_detail_service};
 use axum::extract::Query;
 use axum::routing::{get, post, put};
 use axum::{Json, Router, debug_handler};
+use log::info;
 use rbs::value;
+use serde_json::Value;
 
 pub fn create_router() -> Router {
     Router::new()
@@ -16,6 +18,7 @@ pub fn create_router() -> Router {
         .route("/already-handle", get(search_handle_video))
         .route("/task-list", get(task_list))
         .route("/", put(update_task))
+        .route("/common-trigger-task", get(common_trigger_task))
 }
 
 /// 二次处理视频
@@ -49,31 +52,33 @@ pub async fn search_handle_video(
     RR::success(get_handle_video)
 }
 
-
 /// 任务列表
 #[debug_handler]
-pub async fn task_list()->RR<Vec<Task>>{
-
-    let list = Task::select_by_map(&CC.rb, value!{}).await?;
+pub async fn task_list() -> RR<Vec<Task>> {
+    let list = Task::select_by_map(&CC.rb, value! {}).await?;
 
     RR::success(list)
 }
 
 /// 修改任务信息
 #[debug_handler]
-pub async fn update_task(Json(t):Json<Task>)->RR<()>{
-
-
+pub async fn update_task(Json(t): Json<Task>) -> RR<()> {
     let update_by_id: rbatis::rbdc::db::ExecResult = Task::update_by_id(&CC.rb, &t).await?;
 
-
-    if update_by_id.rows_affected>0{
+    if update_by_id.rows_affected > 0 {
         RR::success(())
-    }else {
-        
+    } else {
         RR::fail(HttpError::BadRequest("更新失败！".to_string()))
     }
+}
 
+/// 触发任务
+#[debug_handler]
+pub async fn common_trigger_task(Query(CommonTriggerTaskRequest{name}): Query<CommonTriggerTaskRequest>) -> RR<()> {
+
+
+    task_service::do_task_by_name(&name).await?;
+    RR::success(())
 
 
 }

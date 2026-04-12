@@ -10,53 +10,64 @@ use std::collections::HashSet;
 use std::time::Instant;
 
 use crate::{
-    app::{config::CC, constans::{DO_HOME_RECOMMEND_TASK, DO_HOT_RANK_TASK}, error::HttpError, response::R, task_pool::TASK_POOL},
+    app::{
+        config::CC,
+        constans::{
+            DO_DEFAULT_PROCESS_VIDEO, DO_HOME_RECOMMEND_TASK, DO_HOT_RANK_TASK, DO_THIRD_PROCESS,
+        },
+        error::HttpError,
+        response::R,
+        task_pool::TASK_POOL,
+    },
     domain::{enumeration::TaskStatus, task::Task},
 };
 
-
-
 /// 检查并执行任务
-pub async fn check_and_run_task(hour:u32)->R<()>{
-
-    let tasks = Task::select_by_map(&CC.rb, value! {
-        "is_enabled":true,
-        "scheduled_hour":hour,
-        "current_run_status":TaskStatus::STOPPED
-    }).await?;
-
+pub async fn check_and_run_task(hour: u32) -> R<()> {
+    let tasks = Task::select_by_map(
+        &CC.rb,
+        value! {
+            "is_enabled":true,
+            "scheduled_hour":hour,
+            "current_run_status":TaskStatus::STOPPED
+        },
+    )
+    .await?;
 
     for t in tasks {
-        match t.class_method_name.as_str() {
-          "io.github.cctyl.service.impl.BiliService.doSearchTask"=>{
+        do_task_by_name(t.class_method_name.as_str()).await?;
+    }
 
+    R::Ok(())
+}
 
+/// 按照名字调用任务
+pub async fn do_task_by_name(name: &str) -> R<()> {
+    info!("执行：{} 任务",name);
+    match name {
+        // 关键词搜索任务
+        DO_SEARCH_TASK => {
             search_keyword_task().await?;
-
-          },
-          "io.github.cctyl.service.impl.BiliService.doHotRankTask"=>{
-
+        }
+        // 热门排行榜任务
+        DO_HOT_RANK_TASK => {
             hot_rank_video_task().await?;
-          },
-          "io.github.cctyl.service.impl.BiliService.doHomeRecommendTask"=>{
-
+        }
+        // 首页推荐任务
+        DO_HOME_RECOMMEND_TASK => {
             home_recommend_task().await?;
-          },
-          "io.github.cctyl.service.impl.BiliService.doDefaultProcessVideo"=>{
+        }
+        // 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
+        DO_DEFAULT_PROCESS_VIDEO => {}
 
-          },
-          "io.github.cctyl.service.impl.BiliService.doThirdProcess"=>{
-
-          },
-          e=>{
-            error!("class_name={} ,未知的任务，跳过",e);
-          }
+        // 进行三次处理，把判断好的视频开始执行点赞点踩操作
+        DO_THIRD_PROCESS => {}
+        e => {
+            error!("class_name={} ,未知的任务，跳过", e);
         }
     }
 
-
     R::Ok(())
-
 }
 
 /// 不存在则新增该任务
@@ -105,7 +116,9 @@ pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
 use crate::api::bili;
 use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK};
 use crate::domain::dict::Dict;
-use crate::domain::dtos::{AssociateRuleAc, SearchKeywordDto, SecondHandleDto, SingleMatchRuleAc, TestRuleDto};
+use crate::domain::dtos::{
+    AssociateRuleAc, SearchKeywordDto, SecondHandleDto, SingleMatchRuleAc, TestRuleDto,
+};
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
 use crate::domain::video_detail::{MatchResult, VideoDetail};
 use crate::service::rule_service::{
@@ -315,8 +328,7 @@ pub async fn home_recommend_task() -> R<()> {
         // for page in 1..=10 {
         // todo 记得删
         for page in 1..=1 {
-            let aid_set = bili::get_home_recommend_video()
-                .await?;
+            let aid_set = bili::get_home_recommend_video().await?;
 
             for aid in aid_set {
                 let item = video_detail_service::find_or_save_video(aid).await?;
@@ -333,7 +345,7 @@ pub async fn home_recommend_task() -> R<()> {
                     &black_prompt,
                     &white_prompt,
                 )
-                    .await
+                .await
                 {
                     Ok(_) => {}
                     Err(e) => {
@@ -344,7 +356,6 @@ pub async fn home_recommend_task() -> R<()> {
             }
 
             ThreadUtil::sleep(3).await;
-
         }
         ThreadUtil::sleep(3).await;
         R::Ok(())
@@ -430,82 +441,94 @@ pub async fn first_process(
     R::Ok(())
 }
 
-
 /// 二次处理视频
-pub(crate) async fn second_process(dto: SecondHandleDto) ->R<String> {
+pub(crate) async fn second_process(dto: SecondHandleDto) -> R<String> {
     let v = VideoDetail::select_by_id(&CC.rb, dto.id).await?;
-    if let Some(mut v) = v{
+    if let Some(mut v) = v {
         let mut r = v.handle_reason.clone().unwrap_or(MatchResult::default());
         if let Some(reason) = dto.reason {
             r.user_handle_reason = Some(reason);
         }
-        video_detail_service::update_handle_data(&mut v,
-                                                 2,
-
-                                                 Some(r),
-                                                 Some(DateTime::now()),
-                                                 Some(dto.handle_type),
-        ).await?;
+        video_detail_service::update_handle_data(
+            &mut v,
+            2,
+            Some(r),
+            Some(DateTime::now()),
+            Some(dto.handle_type),
+        )
+        .await?;
         R::Ok("成功".to_string())
-    }else {
+    } else {
         R::Err(HttpError::BadRequest("id 对应的视频不存在".to_string()))
     }
 }
 
-
 /// 批量进行二次处理
 pub(crate) async fn batch_second_handle(arr: Vec<SecondHandleDto>) -> R<String> {
-
-
-    
     // 批量处理都是直接按照一次匹配的数据进行处理，所以只需要修改handle_step, handle_time 即可
-    // 创建包含新值的 VideoDetail 实例  
-    let update_data = VideoDetail {  
-        id: 0, // 这个字段会被跳过，因为它是主键  
-        handle_step: 2u64,  
-        handle_time: Some(DateTime::now()),  
-        // 其他字段保持 None，这样不会被更新  
-        tid: None,  
-        tname: None,  
-        pic: None,  
-        title: None,  
-        pubdate: None,  
-        desc_field: None,  
-        duration: None,  
-        dynamic: None,  
-        bvid: String::new(),  
-        owner_id: None,  
-        handle_reason: None,  
-        handle_type: None,  
-        created_date: None,  
-        tag: None,  
-    };  
-    
+    // 创建包含新值的 VideoDetail 实例
+    let update_data = VideoDetail {
+        id: 0, // 这个字段会被跳过，因为它是主键
+        handle_step: 2u64,
+        handle_time: Some(DateTime::now()),
+        // 其他字段保持 None，这样不会被更新
+        tid: None,
+        tname: None,
+        pic: None,
+        title: None,
+        pubdate: None,
+        desc_field: None,
+        duration: None,
+        dynamic: None,
+        bvid: String::new(),
+        owner_id: None,
+        handle_reason: None,
+        handle_type: None,
+        created_date: None,
+        tag: None,
+    };
+
     let len = arr.len();
-    let id_arr:Vec<u64> = arr.into_iter().map(|f|f.id).collect();
+    let id_arr: Vec<u64> = arr.into_iter().map(|f| f.id).collect();
 
-    // 使用 update_by_map 批量更新  
-    let exec_result = VideoDetail::update_by_map(  
-        &CC.rb,  
-        &update_data,  
-        value! {  
-            "id": id_arr,  // 使用数组实现 IN 查询  
-            "column": ["handle_step", "handle_time"]  // 只更新这两个字段  
-        }  
-    ).await?;  
+    // 使用 update_by_map 批量更新
+    let exec_result = VideoDetail::update_by_map(
+        &CC.rb,
+        &update_data,
+        value! {
+            "id": id_arr,  // 使用数组实现 IN 查询
+            "column": ["handle_step", "handle_time"]  // 只更新这两个字段
+        },
+    )
+    .await?;
 
-
-
-
-    R::Ok(format!("成功修改{}条数据",len))
+    R::Ok(format!("成功修改{}条数据", len))
 }
 
+
+
+/// 把所有任务的状态都改为停止
+pub(crate) async fn update_stop_status() -> R<ExecResult> {
+
+
+
+    let exec_result: ExecResult = Task::update_task_state(&CC.rb, TaskStatus::STOPPED).await?;
+
+    
+    R::Ok(exec_result)
+}
 
 
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
-    use crate::service::task_service::{batch_second_handle, home_recommend_task, hot_rank_video_task, search_keyword_task, second_process};
+    use crate::domain::dtos::SecondHandleDto;
+    use crate::domain::enumeration::AccessType;
+    use crate::domain::video_detail::VideoDetail;
+    use crate::service::task_service::{
+        batch_second_handle, home_recommend_task, hot_rank_video_task, search_keyword_task,
+        second_process, update_stop_status,
+    };
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
@@ -517,9 +540,6 @@ mod tests {
     use rbatis::rbdc::DateTime;
     use rbs::value;
     use tokio::runtime::Runtime;
-    use crate::domain::dtos::SecondHandleDto;
-    use crate::domain::enumeration::{AccessType};
-    use crate::domain::video_detail::VideoDetail;
 
     #[tokio::test]
     async fn example() {
@@ -533,8 +553,24 @@ mod tests {
     }
 
 
-    //batch_second_handle
 
+    //update_stop_status
+   #[tokio::test]
+    async fn test_update_stop_status() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let update_stop_status = update_stop_status().await.unwrap();
+        println!("{:#?}",update_stop_status);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    //batch_second_handle
 
     #[tokio::test]
     async fn test_batch_second_handle() {
@@ -543,20 +579,20 @@ mod tests {
 
         //在这中间编写测试代码
 
-        batch_second_handle(
-
-
-            vec![
-
-
-            SecondHandleDto{ id: 116259932933316u64, handle_type: AccessType::BLACK, reason: None },
-            SecondHandleDto{ id: 116301943021405u64, handle_type: AccessType::BLACK, reason: None },
-
-            ]
-
-        ).await.unwrap();
-
-
+        batch_second_handle(vec![
+            SecondHandleDto {
+                id: 116259932933316u64,
+                handle_type: AccessType::BLACK,
+                reason: None,
+            },
+            SecondHandleDto {
+                id: 116301943021405u64,
+                handle_type: AccessType::BLACK,
+                reason: None,
+            },
+        ])
+        .await
+        .unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
@@ -568,16 +604,18 @@ mod tests {
         crate::init().await;
 
         //在这中间编写测试代码
-        let option = VideoDetail::select_by_id(&CC.rb, 116286373759185u64).await.unwrap().unwrap();
+        let option = VideoDetail::select_by_id(&CC.rb, 116286373759185u64)
+            .await
+            .unwrap()
+            .unwrap();
 
-        second_process(
-            SecondHandleDto {
-                id: 116286373759185,
-                handle_type: AccessType::BLACK,
-                reason: Some("用户反转了判断！".to_string()),
-            }
-
-        ).await.unwrap();
+        second_process(SecondHandleDto {
+            id: 116286373759185,
+            handle_type: AccessType::BLACK,
+            reason: Some("用户反转了判断！".to_string()),
+        })
+        .await
+        .unwrap();
         //最后一句必须是这个
         log::logger().flush();
     }
@@ -649,7 +687,7 @@ mod tests {
 
         t.last_run_time = Some(DateTime::now());
         t.total_run_count = Some(2001);
-        t.class_method_name =String::from("111222测试的类方法名啊");
+        t.class_method_name = String::from("111222测试的类方法名啊");
         t.task_name = Some(String::from("111222测试的名称啊"));
 
         Task::update_by_id(&CC.rb, &t).await.unwrap();
@@ -689,8 +727,6 @@ mod tests {
         log::logger().flush();
     }
 
-   
-   
     // 测试 do_task
     #[tokio::test]
     async fn test_do_task() {
@@ -764,4 +800,3 @@ mod tests {
         log::logger().flush();
     }
 }
-

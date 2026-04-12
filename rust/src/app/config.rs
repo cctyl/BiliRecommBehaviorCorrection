@@ -11,9 +11,7 @@ use std::{
 };
 
 use crate::{
-    app::{interceptor::SqlOnlyLogInterceptor, response::R},
-    domain::config::Config,
-    utils::glm_chat::{ChatConfig, ChatGlm},
+    app::{interceptor::SqlOnlyLogInterceptor, response::R}, domain::config::Config, service::task_service, utils::glm_chat::{ChatConfig, ChatGlm}
 };
 use rbatis::{
     RBatis, dark_std::errors::new, intercept_log::LogInterceptor, intercept_page::PageIntercept,
@@ -73,6 +71,9 @@ impl AppContext {
         self.init_config_data().await?;
 
         self.init_glm_chat().await?;
+
+        // 启动时，所有任务都应该是停止的
+        task_service::update_stop_status().await?;
         R::Ok(())
     }
 

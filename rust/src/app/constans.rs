@@ -38,6 +38,8 @@ pub const DISLIKE_BY_TID_TASK: &str = "io.github.cctyl.controller.BlackRuleContr
 pub const DO_SEARCH_TASK: &str = "io.github.cctyl.service.impl.BiliService.doSearchTask";
 pub const DO_HOT_RANK_TASK: &str = "io.github.cctyl.service.impl.BiliService.doHotRankTask";
 pub const DO_HOME_RECOMMEND_TASK: &str = "io.github.cctyl.service.impl.BiliService.doHomeRecommendTask";
+pub const DO_DEFAULT_PROCESS_VIDEO: &str = "io.github.cctyl.service.impl.BiliService.doDefaultProcessVideo";
+pub const DO_THIRD_PROCESS: &str = "io.github.cctyl.service.impl.BiliService.doThirdProcess";
 
 pub const  DEFAULT_PROMPT:&str = r#"角色定义：
 你是一个严格的视频内容审核助手。你的任务是根据用户提供的视频信息,以及预设的审核规则（黑名单、白名单），

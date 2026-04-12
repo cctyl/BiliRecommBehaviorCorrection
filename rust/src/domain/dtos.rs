@@ -480,8 +480,11 @@ impl From<VideoDetail> for VideoVo {
     }
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CommonTriggerTaskRequest{
 
-
+  pub  name:String
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchHandleVideoRequest {

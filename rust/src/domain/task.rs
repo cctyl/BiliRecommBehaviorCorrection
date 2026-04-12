@@ -1,4 +1,7 @@
 
+use rbatis::executor::Executor;
+use rbatis::rbdc::db::ExecResult;
+use rbatis::{impled, sql};
 use rbatis::{crud, rbdc::DateTime};
 use serde::{Deserialize, Serialize};
 use crate::app::database::bool_or_int;
@@ -38,4 +41,11 @@ impl Task {
             img: None,
         }
     }
+
+
+    #[sql("update task set current_run_status = ? ")]
+    pub async fn update_task_state(rb: &dyn Executor,status: TaskStatus) -> ExecResult {
+        impled!()
+    }
+
 }
