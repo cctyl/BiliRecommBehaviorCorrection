@@ -436,7 +436,7 @@ impl From<VideoDetailJsonDto> for VideoDetail {
 pub struct SecondHandleDto {
     pub id: u64,
     pub handle_type: AccessType,
-    pub reason: Option<String>,
+    pub user_handle_reason: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

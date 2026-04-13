@@ -523,12 +523,17 @@ pub(crate) async fn second_process(dto: SecondHandleDto) -> R<String> {
     let v = VideoDetail::select_by_id(&CC.rb, dto.id).await?;
     if let Some(mut v) = v {
         let mut r = v.handle_reason.clone().unwrap_or(MatchResult::default());
-        if let Some(reason) = dto.reason {
+        if let Some(reason) = dto.user_handle_reason {
             r.user_handle_reason = Some(reason);
         }
+
+        let handle_step = if dto.handle_type == AccessType::OTHER{
+            100
+        }else { 2 };
+
         video_detail_service::update_handle_data(
             &mut v,
-            2,
+            handle_step,
             Some(r),
             Some(DateTime::now()),
             Some(dto.handle_type),
@@ -709,12 +714,12 @@ mod tests {
             SecondHandleDto {
                 id: 116259932933316u64,
                 handle_type: AccessType::BLACK,
-                reason: None,
+                user_handle_reason: None,
             },
             SecondHandleDto {
                 id: 116301943021405u64,
                 handle_type: AccessType::BLACK,
-                reason: None,
+                user_handle_reason: None,
             },
         ])
         .await
@@ -729,16 +734,12 @@ mod tests {
         //第一句必须是这个
         crate::init().await;
 
-        //在这中间编写测试代码
-        let option = VideoDetail::select_by_id(&CC.rb, 116286373759185u64)
-            .await
-            .unwrap()
-            .unwrap();
+
 
         second_process(SecondHandleDto {
-            id: 116286373759185,
-            handle_type: AccessType::BLACK,
-            reason: Some("用户反转了判断！".to_string()),
+            id: 114206670064346,
+            handle_type: AccessType::OTHER,
+            user_handle_reason: None,
         })
         .await
         .unwrap();
