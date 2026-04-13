@@ -15,6 +15,8 @@ mod service;
 mod single_test;
 mod utils;
 
+mod web;
+
 use crate::app::config::CC;
 use crate::app::database::{self};
 use crate::app::error::HttpError;
