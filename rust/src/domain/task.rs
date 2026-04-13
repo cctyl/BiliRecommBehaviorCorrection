@@ -48,4 +48,10 @@ impl Task {
         impled!()
     }
 
+
+
+    #[sql("update task set is_enabled = ? ")]
+    pub async fn update_task_is_enabled(rb: &dyn Executor,is_enabled: bool) -> ExecResult {
+        impled!()
+    }
 }

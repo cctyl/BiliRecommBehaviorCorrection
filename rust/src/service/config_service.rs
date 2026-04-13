@@ -1,3 +1,4 @@
+use std::time::{SystemTime, UNIX_EPOCH};
 use log::info;
 use rbatis::rbdc::{DateTime, Timestamp};
 use rbs::value;
@@ -12,6 +13,8 @@ use crate::{
         dtos::{ConfigAddUpdateDTO, VideoDetailDTO},
     }
 };
+use crate::app::constans::FIRST_START_TIME;
+use crate::service::task_service;
 
 /**
  * 删除配置项
@@ -315,7 +318,7 @@ pub async fn check_accesskey(){
     match bili::get_user_info().await {
         Ok(info) => {
 
-            info!("检查access_key: {:#?}",info);
+            info!("检查access_key 未报错");
         },
         Err(e) => {
             info!("检查access_key 失败: {:#?}",e);
@@ -334,4 +337,33 @@ pub(crate)  async fn get_min_play_second() -> R<u32> {
     });
 
     R::Ok(config)
+}
+
+/// 记录启动信息
+pub(crate) async fn set_info()->R<()> {
+    let first = is_first_use().await?;
+
+    if first{
+        info!("第一次使用，进行初始化操作！");
+        let mut first_config = find_config_by_name(FIRST_START_TIME).await?
+            .unwrap_or_else(|| {
+                let mut a = Config::default();
+                a.name = FIRST_START_TIME.to_string();
+                a
+            });
+
+        let millis = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        first_config.value = Some(millis.to_string());
+
+
+        task_service::set_cron(false).await?;
+
+    }
+
+
+
+   R::Ok(())
 }

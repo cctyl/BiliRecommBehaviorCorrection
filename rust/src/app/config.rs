@@ -20,6 +20,7 @@ use rbdc_sqlite::Driver;
 use rbdc_sqlite::driver::SqliteDriver;
 use serde::{Deserialize, Deserializer, de};
 use tokio::{runtime::Runtime, sync::RwLock};
+use crate::api::bili;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
@@ -72,6 +73,18 @@ impl AppContext {
 
         self.init_glm_chat().await?;
 
+
+        //启动时检查和更新一些配置
+        Self::check_on_start().await?;
+
+        R::Ok(())
+    }
+
+
+
+    /// 启动时检查和更新一些配置
+    pub async fn check_on_start() ->R<()>{
+
         // 启动时，所有任务都应该是停止的
         task_service::update_stop_status().await?;
 
@@ -79,8 +92,17 @@ impl AppContext {
         //检查access_key 是否过期
         config_service::check_accesskey().await;
 
+
+        // 如果是初次启动，记录启动时间
+        config_service::set_info().await?;
+
+
+        // 获取新的cookie 信息
+        bili::get_home().await?;
+
         R::Ok(())
     }
+
 
     /// 初始化glm chat
     pub async fn init_glm_chat(&self) -> R<String> {

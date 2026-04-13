@@ -26,7 +26,7 @@ use crate::utils::thread_util::ThreadUtil;
 use anyhow::Context;
 use axum::body;
 use hex;
-use log::{error, info};
+use log::{debug, error, info};
 use rbs::value;
 use rbs::value::map::ValueMap;
 use regex::Regex;
@@ -337,7 +337,7 @@ pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
 /**
  * 携带header和cookie的通用get请求
  */
-pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
+pub async fn common_get_json_body(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
     req = init_header.processr((url, req)).await?;
@@ -354,13 +354,39 @@ pub async fn common_get(url: &str, param_map: Vec<(String, String)>) -> R<serde_
 
     //保存cookie
     update_cookie(&response, cookie_jar).await?;
-
     let json = response.json().await?;
 
     check_resp(&json).await?;
 
     R::Ok(json)
 }
+
+/// get请求，获取text响应体
+pub async fn common_get_text_body(url: &str, param_map: Vec<(String, String)>) -> R<String> {
+    let mut req = CLIENT.get(url);
+
+    req = init_header.processr((url, req)).await?;
+
+    //读取cookie
+    let (cookie_jar, cookie_str) = get_cookie_str().await?;
+
+    let response: reqwest::Response = req
+        .timeout(Duration::from_secs(10))
+        .header(header::COOKIE, cookie_str)
+        .query(&param_map)
+        .send()
+        .await?;
+
+    //保存cookie
+    update_cookie(&response, cookie_jar).await?;
+    let json = response .text_with_charset("utf-8").await?;
+
+
+
+    R::Ok(json)
+}
+
+
 
 /// 封装通用的get
 /// 携带cookie、ua、参数的url编码
@@ -406,7 +432,6 @@ pub async fn update_cookie(
 ) -> R<()> {
     //保存cookie
     response.cookies().for_each(|c| {
-        info!("cookie: {:#?}", c);
         cookie_jar.insert(c.name().to_string(), c.value().to_string());
     });
 
@@ -487,7 +512,7 @@ pub async fn get_user_info() -> R<serde_json::Value> {
         ("ts".to_string(), get_ts().to_string()),
     ];
 
-    let response = common_get(url, get_app_sign(params)).await?;
+    let response = common_get_json_body(url, get_app_sign(params)).await?;
 
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_number() {
@@ -548,7 +573,7 @@ async fn test_get_user_info() {
  */
 pub async fn get_history() -> R<serde_json::Value> {
     let url = "https://api.bilibili.com/x/web-interface/history/cursor?ps=1&pn=1";
-    common_get(url, vec![]).await
+    common_get_json_body(url, vec![]).await
 }
 
 /// 查询用户投稿的视频
@@ -667,7 +692,7 @@ async fn get_wbi(refresh: bool, mut params: Vec<(&str, String)>) -> R<Vec<(&str,
     let mut sub_key: Option<String> = config_service::get_sub_key().await?;
     if refresh || img_key.is_none() || sub_key.is_none() {
         let url = "https://api.bilibili.com/x/web-interface/nav";
-        let response = common_get(url, vec![]).await?;
+        let response = common_get_json_body(url, vec![]).await?;
 
         let value = &response["data"]["wbi_img"];
 
@@ -730,7 +755,7 @@ fn get_mixin_key(orig: &[u8]) -> String {
 pub(crate) async fn get_video_detail(aid: u64) -> R<VideoDetailDTO> {
     info!("正在获取视频详情aid={}", aid);
     let url: &'static str = "https://api.bilibili.com/x/web-interface/view/detail";
-    let body = common_get(url, vec![("aid".to_string(), aid.to_string())]).await?;
+    let body = common_get_json_body(url, vec![("aid".to_string(), aid.to_string())]).await?;
 
     trans2_video_detail(body)
 }
@@ -777,7 +802,7 @@ pub(crate) async fn dislike(aid: u64) -> R<()> {
 pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
     info!("请求分区排行榜数据，tid={}", tid);
     let url = "https://api.bilibili.com/x/web-interface/ranking/v2";
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("rid".to_string(), tid.to_string()),
@@ -797,7 +822,7 @@ pub(crate) async fn get_rank_by_tid(tid: u32) -> R<Vec<VideoDetailDTO>> {
 /// * page_num 页码
 pub(crate) async fn get_region_lastest_video(page_num: i32, tid: u32) -> R<Vec<VideoDetailDTO>> {
     let url = "https://api.bilibili.com/x/web-interface/dynamic/region";
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("rid".to_string(), tid.to_string()),
@@ -837,7 +862,7 @@ pub(crate) async fn get_user_name_by_mid(mid: String) -> R<String> {
 /// 根据关键词进行综合搜索
 pub(crate) async fn search_keyword(keyword: &str, page: i32) -> R<Vec<SearchKeywordDto>> {
     let url = "https://api.bilibili.com/x/web-interface/search/all/v2";
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("search_type".to_string(), "video".to_string()),
@@ -873,7 +898,7 @@ pub(crate) async fn search_keyword(keyword: &str, page: i32) -> R<Vec<SearchKeyw
 /// 获取热门排行榜数据
 pub async fn hot_rank_video(page_num: u32, page_size: u32) -> R<Vec<VideoDetail>> {
     let url = "https://api.bilibili.com/x/web-interface/popular";
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("pn".to_string(), page_num.to_string()),
@@ -909,7 +934,7 @@ pub async fn hot_rank_video(page_num: u32, page_size: u32) -> R<Vec<VideoDetail>
 pub async fn get_home_recommend_video() -> R<Vec<u64>> {
     let url = "https://app.bilibili.com/x/v2/feed/index";
 
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("build".to_string(), "1".to_string()),
@@ -950,7 +975,7 @@ use rand::Rng;
 /// 获得视频url
 pub async fn get_video_url(bvid: String, cid: u64) -> R<String> {
     let url = "https://api.bilibili.com/x/player/playurl";
-    let mut body = common_get(
+    let mut body = common_get_json_body(
         url,
         vec![
             ("bvid".to_string(), bvid),
@@ -971,6 +996,8 @@ pub async fn get_video_url(bvid: String, cid: u64) -> R<String> {
 
 /// 点赞并播放视频
 pub(crate) async fn play_and_thumb_up(v: &VideoDetail) -> R<()> {
+
+    // 获取视频url
     let video_url = get_video_url(v.bvid.clone(), v.cid).await?;
     ThreadUtil::s1().await;
 
@@ -978,6 +1005,7 @@ pub(crate) async fn play_and_thumb_up(v: &VideoDetail) -> R<()> {
     simulate_play(v.id, v.cid, v.duration.unwrap_or(10)).await?;
 
     ThreadUtil::s1().await;
+
     //点赞
     thumb_up(v.id).await?;
     
@@ -1188,6 +1216,14 @@ pub async fn simulate_play(aid: u64, cid: u64, video_duration: u32) -> R<()> {
     R::Ok(())
 }
 
+/// 获取首页数据，更新bilijct 数据
+pub(crate) async fn get_home() ->R<String>{
+
+    let url = "https://www.bilibili.com/";
+    let value = common_get_text_body(url, vec![]).await?;
+    R::Ok(value)
+
+}
 #[cfg(test)]
 mod tests {
     use std::{
@@ -1203,6 +1239,7 @@ mod tests {
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
     };
+    use crate::api::bili::{get_history, get_home};
 
     #[tokio::test]
     async fn example() {
@@ -1210,6 +1247,36 @@ mod tests {
         crate::init().await;
 
         //在这中间编写测试代码
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+// get_history
+#[tokio::test]
+async fn test_get_history() {
+    //第一句必须是这个
+    crate::init().await;
+
+    //在这中间编写测试代码
+    let value = get_history().await.unwrap();
+    println!("{:#?}", value);
+    //最后一句必须是这个
+    log::logger().flush();
+}
+
+    //get_home
+
+    #[tokio::test]
+    async fn test_get_home() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let string = get_home().await.unwrap();
+        println!("{}", string);
 
         //最后一句必须是这个
         log::logger().flush();
@@ -1388,3 +1455,4 @@ mod tests {
         log::logger().flush();
     }
 }
+

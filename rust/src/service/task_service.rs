@@ -76,12 +76,10 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
 pub async fn third_process() -> R<()> {
 
 
-
+    // 黑白名单各取20条
     let handle_type_arr = vec![AccessType::BLACK,AccessType::WHITE];
 
     for handle_type in handle_type_arr {
-
-     
 
         let video_list = VideoDetail::select_page_by_condition(&CC.rb, &PageRequest::new(1, 20), value!{
             "handle_step":2,
@@ -598,16 +596,20 @@ pub(crate) async fn update_stop_status() -> R<ExecResult> {
     R::Ok(exec_result)
 }
 
+/// 修改定时任务状态
+pub(crate) async fn set_cron(is_enable: bool)->R<()> {
+
+    Task::update_task_is_enabled(&CC.rb, is_enable).await?;
+    R::Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
     use crate::domain::dtos::SecondHandleDto;
     use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::VideoDetail;
-    use crate::service::task_service::{
-        batch_second_handle, default_process, home_recommend_task, hot_rank_video_task,
-        search_keyword_task, second_process, update_stop_status,
-    };
+    use crate::service::task_service::{batch_second_handle, default_process, home_recommend_task, hot_rank_video_task, search_keyword_task, second_process, set_cron, update_stop_status};
     use crate::{
         app::{config::CC, response::R},
         domain::{enumeration::TaskStatus, task::Task},
@@ -631,7 +633,20 @@ mod tests {
         log::logger().flush();
     }
 
-    //do_default_process_video
+    //set_cron
+    #[tokio::test]
+    async fn test_set_cron() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        set_cron(false).await.unwrap();
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
 
     //update_handle_step_by_ids
@@ -911,3 +926,4 @@ mod tests {
         log::logger().flush();
     }
 }
+
