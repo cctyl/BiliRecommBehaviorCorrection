@@ -26,9 +26,9 @@ validator = { version = "0.20.0", features = ["derive"] }
 axum = { version = "0.8.4", features = ["macros","multipart"] }
 # axum-extra = { version = "0.9.3", features = ["cookie"] }
 tokio = { version = "1.39.3", features = ["full"] }
-tower = { version = "0.5.0" }
+
 chrono = "0.4.42"
-tower-http = { version = "0.5.2", features = ["cors"] }
+tower-http = { version = "0.5.2", features = ["cors","fs"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 idgenerator = "2.0.0"
@@ -46,18 +46,18 @@ jieba-rs = "0.8"
 aho-corasick = "1.1.4"
 tokio-cron-scheduler = "0.15.1"
 
-rust-embed = { version = "8.7.2", features = [
-
-    "axum",
-    "axum-ex",
-    "tokio",
-    "compression",
-    "debug-embed",
-    "include-exclude",
-    "include-flate",
-    "interpolate-folder-path",
-    "mime-guess",
-
-] }
+#rust-embed = { version = "8.7.2", features = [
+#
+#    "axum",
+#    "axum-ex",
+#    "tokio",
+#    "compression",
+#    "debug-embed",
+#    "include-exclude",
+#    "include-flate",
+#    "interpolate-folder-path",
+#    "mime-guess",
+#
+#] }
 
 mimalloc = { version = "*", features = ["secure"] }

@@ -1,7 +1,8 @@
-use crate::web::{index_handler, static_assets_handler};
+// use crate::web::{index_handler, static_assets_handler};
 use crate::{app::error::HttpError, app::middleware::auth, app::response::R};
 use axum::{Extension, Router, middleware, routing};
 use axum::routing::any;
+use tower_http::services::{ServeDir, ServeFile};
 
 pub mod ai;
 pub mod associate_rule_handler;
@@ -37,16 +38,20 @@ pub fn create_router() -> Router {
         })
         .route_layer(middleware::from_fn(auth));
 
+
+    let service = ServeDir::new("web")
+        .not_found_service(ServeFile::new("web/index.html"));
     Router::new()
         .nest("/api", api_router)
+        .fallback_service(service)
         //这个fallback可以用于前面没匹配到的，也就是给静态资源和index.html的请求
-        .merge(
-            Router::new()
-                .route("/{*file}", routing::get(static_assets_handler))
-                // .route_layer(CompressionLayer::new())
-                .fallback(index_handler)
-
-        )
-
+        // .merge(
+        //     Router::new()
+        //         .route("/{*file}", routing::get(static_assets_handler))
+        //         // .route_layer(CompressionLayer::new())
+        //         .fallback(index_handler)
+        //
+        // )
+        //
 
 }

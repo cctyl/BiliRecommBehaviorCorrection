@@ -180,3 +180,6 @@ target
 *.db-shm
 *.db-wal
 config.dev.txt
+rust/web/**
+
+deploy/**
