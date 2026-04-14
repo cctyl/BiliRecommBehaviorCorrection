@@ -161,7 +161,7 @@ pub async fn add_if_not_exist(name: &String) -> R<()> {
         t.is_enabled = true;
         t.current_run_status = TaskStatus::STOPPED;
         t.total_run_count = Some(0);
-        t.scheduled_hour = -1;
+        t.scheduled_hour = 0;
         Task::insert(&CC.rb, &t).await?;
     }
 

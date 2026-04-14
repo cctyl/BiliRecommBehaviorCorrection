@@ -180,6 +180,22 @@ cargo fmt --check
 6. **测试**: 所有测试需要先调用`crate::init().await`初始化环境
 7. **内存分配**: 使用mimalloc作为全局分配器提高性能
 
+## 函数的响应格式
+
+在handler层，函数的返回值用 crate::app::response:: RR 包裹，
+成功是用 RR::success() 返回，失败使用 RR::fail() 返回。
+普通函数返回值，用 crate::app::response::R 包裹。
+成功则用R::Ok() 返回,失败使用R::Err()
+
+
+## handler 注意事项
+每个handler必须加上#[debug_handler]注解
+
+
+## 错误
+凡是错误相关的都在 src/app/error.rs 中寻找
+
+
 ## 视频处理流程
 
 1. 获取视频信息（搜索、排行榜、推荐等）

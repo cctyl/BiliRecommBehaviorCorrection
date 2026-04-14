@@ -12,6 +12,7 @@ pub mod config_handler;
 pub mod cookie_header_data_handler;
 pub mod dict_handler;
 pub mod file;
+pub mod overview_handler;
 pub mod region_handler;
 pub mod rule_handler;
 pub mod task_handler;
@@ -31,6 +32,7 @@ pub fn create_router() -> Router {
         .nest("/bili", bili_api_handler::create_router())
         .nest("/rule", rule_handler::create_router())
         .nest("/task", task_handler::create_router())
+        .nest("/overview", overview_handler::create_router())
         // /api/xxx 匹配不到的路径都会到这里，防止被后续的 static_assets_handler 匹配
         .route("/{*path}", any(async || -> R<()> { Err(HttpError::BadRequest("Not found".to_string())) }))
         .method_not_allowed_fallback(async || -> R<()> {
