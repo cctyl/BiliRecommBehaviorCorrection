@@ -56,8 +56,9 @@ async fn check_resp(value: &serde_json::Value) -> R<()> {
                 65010 => info!("对方在您的黑名单中噢~"),
                 -101 => {
                     // 登陆过期，清除accessKey
-                    config_service::del_by_name(constans::BILI_ACCESS_KEY).await?;
-                    info!("登录过期，清除accessKey");
+                    //config_service::del_by_name(constans::BILI_ACCESS_KEY).await?;
+                    // info!("登录过期，清除accessKey");
+                    info!("登录过期，需要重新获取access_key");
                     error!("body: {:#?}", value);
                     throw = true;
                 }

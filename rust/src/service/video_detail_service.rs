@@ -383,7 +383,7 @@ pub async fn get_handle_video(
     .await?
     .group_by(|f| Some(f.id));
 
-    let convert = page.convert(|f| {
+    let mut convert = page.convert(|f| {
         let mut v: VideoVo = f.into();
         v.owner_id.map(|f| {
             id_owner_map.remove(&f).map(|mut a| {
@@ -394,6 +394,8 @@ pub async fn get_handle_video(
         });
         v
     });
+
+    convert.records.sort_by(|a, b| b.handle_time.cmp(&a.handle_time));
 
    R::Ok(convert)
 }

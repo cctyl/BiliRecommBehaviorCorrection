@@ -527,9 +527,17 @@ pub(crate) async fn second_process(dto: SecondHandleDto) -> R<String> {
             r.user_handle_reason = Some(reason);
         }
 
-        let handle_step = if dto.handle_type == AccessType::OTHER{
-            100
-        }else { 2 };
+        //如果是被纠正的数据，那么执行步骤变成2
+        let handle_step =   if dto.re_handle{
+
+            2
+
+        }else {
+            if dto.handle_type == AccessType::OTHER{
+                100
+            }else { 2 }
+
+        };
 
         video_detail_service::update_handle_data(
             &mut v,
@@ -715,11 +723,13 @@ mod tests {
                 id: 116259932933316u64,
                 handle_type: AccessType::BLACK,
                 user_handle_reason: None,
+                re_handle:false
             },
             SecondHandleDto {
                 id: 116301943021405u64,
                 handle_type: AccessType::BLACK,
                 user_handle_reason: None,
+                re_handle:false
             },
         ])
         .await
@@ -740,6 +750,7 @@ mod tests {
             id: 114206670064346,
             handle_type: AccessType::OTHER,
             user_handle_reason: None,
+            re_handle:false
         })
         .await
         .unwrap();

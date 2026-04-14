@@ -437,6 +437,7 @@ pub struct SecondHandleDto {
     pub id: u64,
     pub handle_type: AccessType,
     pub user_handle_reason: Option<String>,
+    pub re_handle: bool
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

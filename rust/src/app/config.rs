@@ -35,6 +35,7 @@ impl ServerConfig {
         if let Ok(_) = dotenvy::from_filename("config.dev.txt") {
             info!("已加载开发环境配置");
         } else {
+            info!("加载正式环境配置");
             // 如果开发配置不存在，回退到默认配置
             dotenvy::from_filename("config.txt").expect("配置文件config.txt不存在！");
         }
