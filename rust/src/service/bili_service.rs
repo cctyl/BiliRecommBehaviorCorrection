@@ -72,8 +72,7 @@ pub async fn disklike_by_user_id(user_id: &str, train: bool) -> R<u32> {
         info!("获取用户投稿视频，页码：{}", page_num);
         let page_bean = bili::search_user_submission_video(user_id, page_num, "").await?;
         let has_more = page_bean.has_more();
-        //TO DO
-        // let has_more =false;
+
         all_video.extend(page_bean.data);
         page_num += 1;
         ThreadUtil::s20().await;

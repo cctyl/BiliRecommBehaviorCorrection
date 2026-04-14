@@ -201,7 +201,7 @@ use crate::service::rule_service::{
 };
 use crate::service::{bili_service, dict_service, rule_service, video_detail_service};
 use crate::utils::collection_tool::VecGroupByExt;
-use crate::utils::data_util::{bvid_to_aid, get_random_set, random_access_list};
+use crate::utils::data_util::{bvid_to_aid, get_random_set, get_random};
 use crate::utils::thread_util::ThreadUtil;
 use rbatis::crud_traits::ValueOperatorSql;
 
@@ -616,6 +616,56 @@ pub(crate) async fn set_cron(is_enable: bool)->R<()> {
     R::Ok(())
 }
 
+/// 点赞用户所有视频
+///
+/// # 参数
+/// * `mid` - 用户id
+/// * `page` - 起始页码
+/// * `keyword` - 搜索关键词
+///
+/// # 功能
+/// 1. 获取用户所有投稿视频
+/// 2. 随机顺序点赞所有视频
+/// 3. 每次点赞之间随机休眠 10-23 秒
+pub(crate) async fn thumb_up_user_all_video(mid: u64, page: i64, keyword: &str) -> R<()> {
+    info!("开始点赞用户 {} 的所有视频，起始页码: {}, 关键词: {}", mid, page, keyword);
+
+    // 获取用户所有投稿视频
+    let user_submission_videos = bili::search_user_all_submission_video(mid, page, keyword).await?;
+
+    if user_submission_videos.is_empty() {
+        info!("用户 {} 投稿视频为空", mid);
+        return R::Ok(());
+    }
+
+    info!("用户 {} 共有 {} 条投稿视频，开始点赞", mid, user_submission_videos.len());
+
+    // 生成随机索引集合
+    let indices = get_random_set(user_submission_videos.len(), 0, (user_submission_videos.len() - 1) as i32);
+
+    // 按随机索引顺序遍历视频
+    for index in indices {
+        let video = &user_submission_videos[index as usize];
+        let title = video.title.clone().unwrap_or_else(|| "未知标题".to_string());
+
+        match bili::thumb_up(video.aid).await {
+            Ok(_) => {
+                info!("点赞成功: {}", title);
+            }
+            Err(e) => {
+                error!("点赞失败: {}, 错误: {:?}", title, e);
+            }
+        }
+
+        // 随机休眠 10-23 秒
+        let sleep_seconds = get_random(10, 23);
+        ThreadUtil::sleep(sleep_seconds as u64).await;
+    }
+
+    info!("共点赞用户 {} 的 {} 条视频", mid, user_submission_videos.len());
+    R::Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use crate::app::task_pool::TASK_POOL;
@@ -629,7 +679,7 @@ mod tests {
         impl_select_by_id,
         service::task_service::update_task_status,
     };
-    use log::info;
+    use log::{error, info};
     use rbatis::dark_std::sync::vec;
     use rbatis::rbdc::DateTime;
     use rbs::value;
@@ -937,5 +987,7 @@ mod tests {
 
         log::logger().flush();
     }
+
+
 }
 

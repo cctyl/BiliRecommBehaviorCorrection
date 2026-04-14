@@ -338,7 +338,10 @@ pub async fn get_cookie_str() -> R<(HashMap<String, String>, String)> {
 /**
  * 携带header和cookie的通用get请求
  */
-pub async fn common_get_json_body(url: &str, param_map: Vec<(String, String)>) -> R<serde_json::Value> {
+pub async fn common_get_json_body(
+    url: &str,
+    param_map: Vec<(String, String)>,
+) -> R<serde_json::Value> {
     let mut req = CLIENT.get(url);
 
     req = init_header.processr((url, req)).await?;
@@ -380,14 +383,10 @@ pub async fn common_get_text_body(url: &str, param_map: Vec<(String, String)>) -
 
     //保存cookie
     update_cookie(&response, cookie_jar).await?;
-    let json = response .text_with_charset("utf-8").await?;
-
-
+    let json = response.text_with_charset("utf-8").await?;
 
     R::Ok(json)
 }
-
-
 
 /// 封装通用的get
 /// 携带cookie、ua、参数的url编码
@@ -517,14 +516,12 @@ pub async fn get_user_info() -> R<serde_json::Value> {
 
     // 更新mid到配置中
     if let Some(mid) = response["data"]["mid"].as_number() {
-
-        info!("响应中获得mid={}",mid);
+        info!("响应中获得mid={}", mid);
         // 查找是否已存在mid配置
         let mut existing_config =
             Config::select_by_map(&CC.rb, value! {"name":constans::MID_KEY.to_string()}).await?;
 
         if existing_config.is_empty() {
-
             info!("不存在配置！");
 
             // 创建新的mid配置
@@ -551,11 +548,10 @@ pub async fn get_user_info() -> R<serde_json::Value> {
             Config::update_by_map(&CC.rb, &config, value! {"id":&config.id}).await?;
             info!("更新mid: {}", mid);
         }
-    }else{
-
+    } else {
         info!("响应没有获得mid");
-        info!("{:#?}",response["data"]["mid"]);
-        info!("{:#?}",response["data"]["mid"].as_number());
+        info!("{:#?}", response["data"]["mid"]);
+        info!("{:#?}", response["data"]["mid"].as_number());
     }
     Ok(response)
 }
@@ -633,6 +629,46 @@ pub(crate) async fn search_user_submission_video(
     );
 
     R::Ok(page_bean)
+}
+
+/// 获取用户所有投稿视频
+///
+/// # 参数
+/// * `mid` - 用户id
+/// * `page` - 起始页码
+/// * `keyword` - 搜索关键词
+///
+/// # 返回
+/// 返回该用户的所有投稿视频列表
+pub(crate) async fn search_user_all_submission_video(
+    mid: u64,
+    page: i64,
+    keyword: &str,
+) -> R<Vec<UserSubmissionVideo>> {
+    let mut all_video = Vec::new();
+    let mut current_page = page as i32;
+
+    loop {
+        let page_bean = search_user_submission_video(&mid.to_string(), current_page, keyword).await?;
+
+        // 先检查是否还有更多数据
+        let has_more = page_bean.has_more();
+
+        // 添加当前页的视频
+        all_video.extend(page_bean.data);
+
+        // 如果没有更多数据，跳出循环
+        if !has_more {
+            break;
+        }
+
+        // 等待10秒再请求下一页
+        ThreadUtil::sleep(10).await;
+        current_page += 1;
+    }
+
+    info!("用户 {} 共有投稿视频 {} 条", mid, all_video.len());
+    R::Ok(all_video)
 }
 
 // 为请求参数进行 wbi 签名
@@ -997,7 +1033,6 @@ pub async fn get_video_url(bvid: String, cid: u64) -> R<String> {
 
 /// 点赞并播放视频
 pub(crate) async fn play_and_thumb_up(v: &VideoDetail) -> R<()> {
-
     // 获取视频url
     let video_url = get_video_url(v.bvid.clone(), v.cid).await?;
     ThreadUtil::s1().await;
@@ -1009,7 +1044,6 @@ pub(crate) async fn play_and_thumb_up(v: &VideoDetail) -> R<()> {
 
     //点赞
     thumb_up(v.id).await?;
-    
 
     R::Ok(())
 }
@@ -1218,12 +1252,10 @@ pub async fn simulate_play(aid: u64, cid: u64, video_duration: u32) -> R<()> {
 }
 
 /// 获取首页数据，更新bilijct 数据
-pub(crate) async fn get_home() ->R<String>{
-
+pub(crate) async fn get_home() -> R<String> {
     let url = "https://www.bilibili.com/";
     let value = common_get_text_body(url, vec![]).await?;
     R::Ok(value)
-
 }
 #[cfg(test)]
 mod tests {
@@ -1233,14 +1265,19 @@ mod tests {
         hash::Hash,
     };
 
-    use crate::{api::bili::{
-        get_home_recommend_video, get_video_url, hot_rank_video, play_and_thumb_up, search_keyword
-    }, app::config::CC, domain::video_detail::VideoDetail};
+    use crate::api::bili::{get_history, get_home, search_user_all_submission_video};
     use crate::{
         api::bili::{generate_md5, get_mixin_key},
         utils::data_util,
     };
-    use crate::api::bili::{get_history, get_home};
+    use crate::{
+        api::bili::{
+            get_home_recommend_video, get_video_url, hot_rank_video, play_and_thumb_up,
+            search_keyword,
+        },
+        app::config::CC,
+        domain::video_detail::VideoDetail,
+    };
 
     #[tokio::test]
     async fn example() {
@@ -1254,18 +1291,32 @@ mod tests {
     }
 
 
-// get_history
-#[tokio::test]
-async fn test_get_history() {
-    //第一句必须是这个
-    crate::init().await;
+    // search_user_all_submission_video
+    #[tokio::test]
+    async fn test_search_user_all_submission_video() {
+        //第一句必须是这个
+        crate::init().await;
 
-    //在这中间编写测试代码
-    let value = get_history().await.unwrap();
-    println!("{:#?}", value);
-    //最后一句必须是这个
-    log::logger().flush();
-}
+        //在这中间编写测试代码
+        let vec = search_user_all_submission_video(498917515, 1, "聊天").await.unwrap();
+        println!("{:?}", vec);
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+    // get_history
+    #[tokio::test]
+    async fn test_get_history() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+        let value = get_history().await.unwrap();
+        println!("{:#?}", value);
+        //最后一句必须是这个
+        log::logger().flush();
+    }
 
     //get_home
 
@@ -1283,7 +1334,6 @@ async fn test_get_history() {
         log::logger().flush();
     }
 
-
     //play_and_thumb_up
     #[tokio::test]
     async fn test_play_and_thumb_up() {
@@ -1291,13 +1341,15 @@ async fn test_get_history() {
         crate::init().await;
 
         //在这中间编写测试代码
-        let v = VideoDetail::select_by_id(&CC.rb, 114472521896185u64).await.unwrap().unwrap();
+        let v = VideoDetail::select_by_id(&CC.rb, 114472521896185u64)
+            .await
+            .unwrap()
+            .unwrap();
         play_and_thumb_up(&v).await.unwrap();
 
         //最后一句必须是这个
         log::logger().flush();
     }
-
 
     // get_video_url
     #[tokio::test]
@@ -1456,4 +1508,3 @@ async fn test_get_history() {
         log::logger().flush();
     }
 }
-
