@@ -4,6 +4,14 @@
     allow(dead_code, unused_imports, unused_variables, unused_mut)
 )]
 
+
+
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
+
 mod app;
 mod macros;
 

@@ -2,7 +2,6 @@ use crate::web::{index_handler, static_assets_handler};
 use crate::{app::error::HttpError, app::middleware::auth, app::response::R};
 use axum::{Extension, Router, middleware, routing};
 use axum::routing::any;
-use tower_http::compression::CompressionLayer;
 
 pub mod ai;
 pub mod associate_rule_handler;
@@ -44,7 +43,7 @@ pub fn create_router() -> Router {
         .merge(
             Router::new()
                 .route("/{*file}", routing::get(static_assets_handler))
-                .route_layer(CompressionLayer::new())
+                // .route_layer(CompressionLayer::new())
                 .fallback(index_handler)
 
         )
