@@ -63,6 +63,12 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
         DO_THIRD_PROCESS => {
             third_process().await?;
         }
+        // 点赞用户所有视频任务
+        THUMB_UP_ALL_USER_VIDEO_TASK => {
+            // 这个任务通过 handler 直接调用，带有参数，这里只是占位
+            // 实际执行在 task_handler 中处理
+            info!("点赞用户所有视频任务被调用");
+        }
         e => {
             error!("class_name={} ,未知的任务，跳过", e);
         }
@@ -189,7 +195,7 @@ pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
 }
 
 use crate::api::bili;
-use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK};
+use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK, THUMB_UP_ALL_USER_VIDEO_TASK};
 use crate::domain::dict::Dict;
 use crate::domain::dtos::{
     AssociateRuleAc, SearchKeywordDto, SecondHandleDto, SingleMatchRuleAc, TestRuleDto,
@@ -641,7 +647,13 @@ pub(crate) async fn thumb_up_user_all_video(mid: u64, page: i64, keyword: &str) 
     info!("用户 {} 共有 {} 条投稿视频，开始点赞", mid, user_submission_videos.len());
 
     // 生成随机索引集合
-    let indices = get_random_set(user_submission_videos.len(), 0, (user_submission_videos.len() - 1) as i32);
+    // 注意：当视频数量为1时，end值需要特殊处理，避免 panic
+    let end_index = if user_submission_videos.len() > 1 {
+        (user_submission_videos.len() - 1) as i32
+    } else {
+        1 as i32
+    };
+    let indices = get_random_set(user_submission_videos.len(), 0, end_index);
 
     // 按随机索引顺序遍历视频
     for index in indices {

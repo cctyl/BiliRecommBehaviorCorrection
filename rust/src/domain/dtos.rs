@@ -606,3 +606,17 @@ pub struct AssociateRuleUpdateDto {
     pub info: String,
     pub access_type: AccessType,
 }
+
+/// 点赞用户所有视频请求参数
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ThumbUpUserAllVideoRequest {
+    pub mid: u64,
+    #[serde(default = "default_page")]
+    pub page: i64,
+    #[serde(default)]
+    pub keyword: String,
+}
+
+fn default_page() -> i64 {
+    1
+}
