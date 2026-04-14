@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "rbdc-mcp-sqlite": {
+      "command": "rbdc-mcp",
+      "args": [
+        "--database-url",
+        "sqlite://./chat.db"
+      ]
+    }
+
+  }
+}
