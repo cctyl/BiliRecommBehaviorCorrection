@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverviewVo {
-    pub year: i32,
+    pub year: u32,
 
     // 当前运行任务数
     pub running_task_count: u32,

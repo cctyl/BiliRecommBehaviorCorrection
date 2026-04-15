@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct OverviewQuery {
-    year: i32,
+    year: u32,
 }
 
 #[debug_handler]

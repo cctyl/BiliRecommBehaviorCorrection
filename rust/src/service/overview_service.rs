@@ -8,9 +8,10 @@ use crate::domain::enumeration::{AccessType, DictStatus, TaskStatus};
 use crate::domain::overview::{DateCountMap, OverviewVo, TaskInfo};
 use crate::domain::{config::Config, dict::Dict, task::Task, video_detail::VideoDetail};
 use rbs::value;
+use tokio::join;
 
 /// 获取总览信息
-pub async fn get_overview_info(year: i32) -> R<OverviewVo> {
+pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
     let mut overview_vo = OverviewVo {
         year,
         running_task_count: 0,
@@ -28,24 +29,44 @@ pub async fn get_overview_info(year: i32) -> R<OverviewVo> {
         like_video_count: 0,
         hate_video_count: 0,
     };
+    // 同时执行所有异步函数
+    let (task_result, dict_result, video_result, config_result) = join!(
+        fill_task_info(),
+        fill_dict_info(),
+        fill_video_detail_info(year),
+        fill_config_info()
+    );
 
-    // 填充任务信息
-    fill_task_info(&mut overview_vo).await?;
+    // 检查结果
+    let (running_task_count,task_list) = task_result?;
+    overview_vo.running_task_count = task_list.len() as u32;
+    overview_vo.task_list = task_list;
 
-    // 填充字典信息
-    fill_dict_info(&mut overview_vo).await?;
 
-    // 填充视频详情信息
-    fill_video_detail_info(&mut overview_vo).await?;
+    let (black_count,white_count,search_count,black_cache_count) = dict_result?;
+    overview_vo.black_rule_count = black_count;
+    overview_vo.white_rule_count = white_count;
+    overview_vo.search_keyword_count = search_count;
+    overview_vo.black_cache_count = black_cache_count;
 
-    // 填充配置信息（运行天数）
-    fill_config_info(&mut overview_vo).await?;
+    let (second_handle_count, third_handle_count,like_video_count,hate_video_count,white_history,black_history,other_history) = video_result?;
+    overview_vo.second_handle_count = second_handle_count;
+    overview_vo.third_handle_count = third_handle_count;
+    overview_vo.like_video_count = like_video_count;
+    overview_vo.hate_video_count = hate_video_count;
+    overview_vo.white_history = white_history;
+    overview_vo.black_history = black_history;
+    overview_vo.other_history = other_history;
+
+
+    let run_days = config_result?;
+    overview_vo.run_days = run_days;
 
     R::Ok(overview_vo)
 }
 
 /// 填充任务信息
-async fn fill_task_info(overview_vo: &mut OverviewVo) -> R<()> {
+async fn fill_task_info() -> R<(u32, Vec<TaskInfo>)> {
     // 查找正在运行的任务
     let running_tasks = Task::select_by_map(
         &CC.rb,
@@ -71,15 +92,15 @@ async fn fill_task_info(overview_vo: &mut OverviewVo) -> R<()> {
         })
         .collect();
 
-    overview_vo.running_task_count = task_list.len() as u32;
-    overview_vo.task_list = task_list;
+    // overview_vo.running_task_count = task_list.len() as u32;
+    // overview_vo.task_list = task_list;
 
     
-    R::Ok(())
+    R::Ok((task_list.len() as u32,task_list))
 }
 
 /// 填充字典信息
-async fn fill_dict_info(overview_vo: &mut OverviewVo) -> R<()> {
+async fn fill_dict_info() -> R<((u64,u64,u64,u64))> {
     // 统计黑名单数量
     let black_count = Dict::select_by_map(
         &CC.rb,
@@ -125,16 +146,24 @@ async fn fill_dict_info(overview_vo: &mut OverviewVo) -> R<()> {
     .await?
     .len() as u64;
 
-    overview_vo.black_rule_count = black_count;
-    overview_vo.white_rule_count = white_count;
-    overview_vo.search_keyword_count = search_count;
-    overview_vo.black_cache_count = black_cache_count;
+    // overview_vo.black_rule_count = black_count;
+    // overview_vo.white_rule_count = white_count;
+    // overview_vo.search_keyword_count = search_count;
+    // overview_vo.black_cache_count = black_cache_count;
 
-    R::Ok(())
+    R::Ok((black_count,white_count,search_count,black_cache_count))
 }
 
 ///   填充视频详情信息
-async fn fill_video_detail_info(overview_vo: &mut OverviewVo) -> R<()> {
+async fn fill_video_detail_info(year:u32) -> R<((
+    u64,
+    u64,
+    u64,
+    u64,
+    Vec<DateCountMap>,
+    Vec<DateCountMap>,
+    Vec<DateCountMap>,
+))> {
     // 统计待二次处理的数据量 (handle_step = 1)
     let second_handle_count = VideoDetail::select_by_map(
         &CC.rb,
@@ -178,8 +207,8 @@ async fn fill_video_detail_info(overview_vo: &mut OverviewVo) -> R<()> {
     .len() as u64;
 
     // 构造日期范围
-    let start_date = DateTime::from_str( &format!("{}-01-01 00:00:00", overview_vo.year)).unwrap();
-    let end_date = DateTime::from_str( &format!("{}-12-31 23:59:59", overview_vo.year)).unwrap();
+    let start_date = DateTime::from_str( &format!("{}-01-01 00:00:00", year)).unwrap();
+    let end_date = DateTime::from_str( &format!("{}-12-31 23:59:59", year)).unwrap();
 
     // 统计白名单历史数据
     // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
@@ -209,15 +238,15 @@ async fn fill_video_detail_info(overview_vo: &mut OverviewVo) -> R<()> {
     )
     .await?;
 
-    overview_vo.second_handle_count = second_handle_count;
-    overview_vo.third_handle_count = third_handle_count;
-    overview_vo.like_video_count = like_video_count;
-    overview_vo.hate_video_count = hate_video_count;
-    overview_vo.white_history = white_history;
-    overview_vo.black_history = black_history;
-    overview_vo.other_history = other_history;
+    // overview_vo.second_handle_count = second_handle_count;
+    // overview_vo.third_handle_count = third_handle_count;
+    // overview_vo.like_video_count = like_video_count;
+    // overview_vo.hate_video_count = hate_video_count;
+    // overview_vo.white_history = white_history;
+    // overview_vo.black_history = black_history;
+    // overview_vo.other_history = other_history;
 
-    R::Ok(())
+    R::Ok((second_handle_count, third_handle_count,like_video_count,hate_video_count,white_history,black_history,other_history))
 }
 
 /// 自定义SQL查询，用于统计按日期分组的处理数据
@@ -243,7 +272,7 @@ async fn count_by_handle_type_and_date_range_sql(
 }
 
 /// 填充配置信息（运行天数）
-async fn fill_config_info(overview_vo: &mut OverviewVo) -> R<()> {
+async fn fill_config_info() -> R<u64> {
     let first_start_time_config = Config::select_one_by_condition(
         &CC.rb,
         value! {
@@ -252,6 +281,7 @@ async fn fill_config_info(overview_vo: &mut OverviewVo) -> R<()> {
     )
     .await?;
 
+    let mut run_days = 0;
     if let Some(config) = first_start_time_config {
         if let Some(value) = config.value {
             if let Ok(millis) = value.parse::<u128>() {
@@ -262,12 +292,13 @@ async fn fill_config_info(overview_vo: &mut OverviewVo) -> R<()> {
 
                 let start_millis = millis;
                 let days = (now - start_millis) / (1000 * 60 * 60 * 24);
-                overview_vo.run_days = days as u64;
+
+                run_days = days as u64;
             }
         }
     }
 
-    R::Ok(())
+    R::Ok(run_days)
 }
 
 #[cfg(test)]
