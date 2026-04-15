@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use rbatis::{executor::Executor, py_sql, rbdc::DateTime};
 
@@ -177,8 +178,8 @@ async fn fill_video_detail_info(overview_vo: &mut OverviewVo) -> R<()> {
     .len() as u64;
 
     // 构造日期范围
-    let start_date = format!("{}-01-01 00:00:00", overview_vo.year);
-    let end_date = format!("{}-12-31 23:59:59", overview_vo.year);
+    let start_date = DateTime::from_str( &format!("{}-01-01 00:00:00", overview_vo.year)).unwrap();
+    let end_date = DateTime::from_str( &format!("{}-12-31 23:59:59", overview_vo.year)).unwrap();
 
     // 统计白名单历史数据
     // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
@@ -227,16 +228,16 @@ async fn fill_video_detail_info(overview_vo: &mut OverviewVo) -> R<()> {
     FROM video_detail
     WHERE handle_type = #{handle_type}
         AND handle_step = 100
-        AND handle_time >= datetime(#{start_time})
-        AND handle_time <= datetime(#{end_time})
+        AND handle_time >= #{start_time}
+        AND handle_time <= #{end_time}
     GROUP BY strftime('%Y-%m-%d', handle_time)
     ORDER BY date"
 )]
 async fn count_by_handle_type_and_date_range_sql(
     rb: &dyn Executor,
     handle_type: AccessType,
-    start_time: &str,
-    end_time: &str,
+    start_time: &DateTime,
+    end_time: &DateTime,
 ) -> Result<Vec<DateCountMap>, rbatis::Error> {
     impled!()
 }

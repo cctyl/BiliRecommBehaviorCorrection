@@ -41,38 +41,39 @@ pub async fn check_and_run_task(hour: u32) -> R<()> {
 /// 按照名字调用任务
 pub async fn do_task_by_name(name: &str) -> R<()> {
     info!("执行：{} 任务", name);
-    match name {
-        // 关键词搜索任务
-        DO_SEARCH_TASK => {
-            search_keyword_task().await?;
-        }
-        // 热门排行榜任务
-        DO_HOT_RANK_TASK => {
-            hot_rank_video_task().await?;
-        }
-        // 首页推荐任务
-        DO_HOME_RECOMMEND_TASK => {
-            home_recommend_task().await?;
-        }
-        // 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
-        DO_DEFAULT_PROCESS_VIDEO => {
-            default_process().await?;
-        }
+    let name_owned = name.to_string();  // 提前克隆
+    let flag = do_task(name.to_string(), async move || {
+        match name_owned.as_str() {
+            // 关键词搜索任务
+            DO_SEARCH_TASK => {
+                search_keyword_task().await
+            }
+            // 热门排行榜任务
+            DO_HOT_RANK_TASK => {
+                hot_rank_video_task().await
+            }
+            // 首页推荐任务
+            DO_HOME_RECOMMEND_TASK => {
+                home_recommend_task().await
+            }
+            // 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
+            DO_DEFAULT_PROCESS_VIDEO => {
+                default_process().await
+            }
 
-        // 进行三次处理，把判断好的视频开始执行点赞点踩操作
-        DO_THIRD_PROCESS => {
-            third_process().await?;
+            // 进行三次处理，把判断好的视频开始执行点赞点踩操作
+            DO_THIRD_PROCESS => {
+                third_process().await
+            }
+            e => {
+                error!("class_name={} ,未知的任务，跳过", e);
+                R::Ok(())
+            }
         }
-        // 点赞用户所有视频任务
-        THUMB_UP_ALL_USER_VIDEO_TASK => {
-            // 这个任务通过 handler 直接调用，带有参数，这里只是占位
-            // 实际执行在 task_handler 中处理
-            info!("点赞用户所有视频任务被调用");
-        }
-        e => {
-            error!("class_name={} ,未知的任务，跳过", e);
-        }
-    }
+    })
+        .await?;
+
+    info!("{} 任务执行结果:{}",name,flag);
 
     R::Ok(())
 }
@@ -272,7 +273,6 @@ where
 
 /// 关键词搜索任务
 pub async fn search_keyword_task() -> R<()> {
-    let flag = do_task(DO_SEARCH_TASK.to_string(), async move || {
         let keyword_set = dict_service::get_search_keyword_set().await?;
         // todo 记得删除
         // let mut keyword_set:HashSet<String> =HashSet::new();
@@ -330,10 +330,7 @@ pub async fn search_keyword_task() -> R<()> {
             ThreadUtil::sleep(3).await;
         }
         R::Ok(())
-    })
-    .await?;
-    info!("关键词搜索任务 启动，提交结果：{flag}");
-    R::Ok(())
+
 }
 
 /// 热门排行榜任务
