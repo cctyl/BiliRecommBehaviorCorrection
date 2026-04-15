@@ -1,8 +1,8 @@
 
 ##############################用户无需改动######################################
 # RUST_BACKTRACE=1
-DB_URL=sqlite://bili-recomm-test.db
-PORT=9000
+DB_URL=sqlite://bili-recomm.db
+PORT=9001
 # 离线模式
 # SQLX_OFFLINE=true
 
