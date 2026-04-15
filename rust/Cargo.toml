@@ -60,4 +60,3 @@ tokio-cron-scheduler = "0.15.1"
 #
 #] }
 
-mimalloc = { version = "*", features = ["secure"] }
