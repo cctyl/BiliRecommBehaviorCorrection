@@ -32,7 +32,7 @@ tower-http = { version = "0.5.2", features = ["cors","fs"] }
 thiserror = "2.0.12"
 anyhow = "1.0.98"
 idgenerator = "2.0.0"
-reqwest ={version = "0.12.23",features = ["rustls-tls","cookies","json","stream"]} 
+reqwest ={version = "0.12.23",default-features = false,features = ["rustls-tls","cookies","json","stream","charset"]}
 md5 = "0.8.0"
 hex = "0.4"
 urlencoding = "2.1"
