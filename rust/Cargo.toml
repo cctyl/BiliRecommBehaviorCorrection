@@ -45,7 +45,7 @@ jieba-rs = "0.8"
 
 aho-corasick = "1.1.4"
 tokio-cron-scheduler = "0.15.1"
-
+dhat="0.3.3"
 #rust-embed = { version = "8.7.2", features = [
 #
 #    "axum",
@@ -60,3 +60,8 @@ tokio-cron-scheduler = "0.15.1"
 #
 #] }
 
+[features]
+dhat-heap = []
+
+[profile.release]
+debug = 1  # 启用调试信息

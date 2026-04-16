@@ -6,6 +6,11 @@
 
 
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+
 
 
 mod app;
@@ -53,6 +58,7 @@ use std::path::Path;
  * 初始化数据库和日志
  */
 pub async fn init() -> u16 {
+
     //日志
     crate::utils::log::init_log();
 
@@ -73,6 +79,9 @@ pub async fn init() -> u16 {
 
 #[tokio::main]
 pub async fn main() {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     let port = init().await;
     start_migration().await.expect("数据库迁移失败");
 
@@ -81,12 +90,27 @@ pub async fn main() {
         format!("🚀 Server is running on http://localhost:{}", port)
     );
 
+    // 启动你的 web 服务
+    let portc = port.clone();
+    tokio::spawn(async move{
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
-        .await
-        .unwrap();
-    let app = build_router();
-    axum::serve(listener, app).await.unwrap();
+        let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", portc))
+            .await
+            .unwrap();
+        let app = build_router();
+        axum::serve(listener, app).await.unwrap();
+    });
+
+
+
+
+
+
+
+    // 运行 60 秒后自动退出
+    tokio::time::sleep(tokio::time::Duration::from_secs(500)).await;
+
+    info!("退出程序");
 }
 
 fn build_router() -> Router {
