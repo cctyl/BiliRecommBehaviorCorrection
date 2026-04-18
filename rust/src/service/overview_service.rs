@@ -318,6 +318,79 @@ mod tests {
     use rbdc_sqlite::SqliteDriver;
     use rbs::value;
     use crate::utils::thread_util::ThreadUtil;
+    use serde::{Deserialize, Serialize};
+    use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+
+    #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+    struct SqlxVideoDetail {
+        id: i64,
+        tid: Option<i64>,
+        tname: Option<String>,
+        pic: Option<String>,
+        title: Option<String>,
+        cid: Option<i64>,
+        pubdate: Option<i64>,
+        desc: Option<String>,
+        duration: Option<i64>,
+        dynamic: Option<String>,
+        bvid: String,
+        owner_id: Option<i64>,
+        handle_time: Option<String>,
+        handle_type: Option<String>,
+        handle_step: i64,
+        handle_reason: Option<String>,
+        tag: Option<String>,
+        created_date: Option<String>,
+    }
+
+    async fn create_sqlx_pool() -> Result<SqlitePool, sqlx::Error> {
+        SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite://./bili-recomm-test.db")
+            .await
+    }
+
+    async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+        sqlx::query_as::<_, SqlxVideoDetail>(
+            "select * from video_detail where handle_step = ?",
+        )
+        .bind(1_i64)
+        .fetch_all(pool)
+        .await
+    }
+
+    async fn select_handle_step_2(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+        sqlx::query_as::<_, SqlxVideoDetail>(
+            "select * from video_detail where handle_step = ?",
+        )
+        .bind(2_i64)
+        .fetch_all(pool)
+        .await
+    }
+
+    async fn select_handle_step_100_white(
+        pool: &SqlitePool,
+    ) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+        sqlx::query_as::<_, SqlxVideoDetail>(
+            "select * from video_detail where handle_step = ? and handle_type = ?",
+        )
+        .bind(100_i64)
+        .bind("WHITE")
+        .fetch_all(pool)
+        .await
+    }
+
+    async fn select_handle_step_100_black(
+        pool: &SqlitePool,
+    ) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+        sqlx::query_as::<_, SqlxVideoDetail>(
+            "select * from video_detail where handle_step = ? and handle_type = ?",
+        )
+        .bind(100_i64)
+        .bind("BLACK")
+        .fetch_all(pool)
+        .await
+    }
 
     #[tokio::test]
     async fn test_get_overview_info() {
@@ -392,5 +465,46 @@ mod tests {
         }
 
         log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_video_select_by_sqlx_once() {
+        let pool = create_sqlx_pool().await.unwrap();
+
+        let handle_step_1_videos = select_handle_step_1(&pool).await.unwrap();
+        let handle_step_2_videos = select_handle_step_2(&pool).await.unwrap();
+        let white_videos = select_handle_step_100_white(&pool).await.unwrap();
+        let black_videos = select_handle_step_100_black(&pool).await.unwrap();
+
+        println!(
+            "handle_step=1: {}, handle_step=2: {}, step100 WHITE: {}, step100 BLACK: {}",
+            handle_step_1_videos.len(),
+            handle_step_2_videos.len(),
+            white_videos.len(),
+            black_videos.len()
+        );
+    }
+
+    #[tokio::test]
+    // #[ignore = "manual polling test that loops forever"]
+    async fn test_video_select_by_sqlx_loop() {
+        let pool = create_sqlx_pool().await.unwrap();
+
+        loop {
+            let handle_step_1_videos = select_handle_step_1(&pool).await.unwrap();
+            let handle_step_2_videos = select_handle_step_2(&pool).await.unwrap();
+            let white_videos = select_handle_step_100_white(&pool).await.unwrap();
+            let black_videos = select_handle_step_100_black(&pool).await.unwrap();
+
+            println!(
+                "handle_step=1: {}, handle_step=2: {}, step100 WHITE: {}, step100 BLACK: {}",
+                handle_step_1_videos.len(),
+                handle_step_2_videos.len(),
+                white_videos.len(),
+                black_videos.len()
+            );
+
+            ThreadUtil::s10().await;
+        }
     }
 }

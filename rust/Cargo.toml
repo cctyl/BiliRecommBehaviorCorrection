@@ -26,6 +26,7 @@ validator = { version = "0.20.0", features = ["derive"] }
 axum = { version = "0.8.4", features = ["macros","multipart"] }
 # axum-extra = { version = "0.9.3", features = ["cookie"] }
 tokio = { version = "1.39.3", features = ["full"] }
+sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-rustls"] }
 
 chrono = "0.4.42"
 tower-http = { version = "0.5.2", features = ["cors","fs"] }
