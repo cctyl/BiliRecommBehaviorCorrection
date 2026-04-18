@@ -19,6 +19,8 @@ use rbatis::{
 use rbdc_sqlite::Driver;
 use rbdc_sqlite::driver::SqliteDriver;
 use serde::{Deserialize, Deserializer, de};
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::SqlitePool;
 use tokio::{runtime::Runtime, sync::RwLock};
 use crate::api::bili;
 
@@ -54,6 +56,7 @@ impl ServerConfig {
 
 pub struct AppContext {
     pub rb: RBatis,
+    pub sqlx: OnceLock<SqlitePool>, // 这里改用 OnceLock
     pub config: ServerConfig,
     pub chat: RwLock<ChatGlm>,
     pub config_map: RwLock<HashMap<String, String>>,
@@ -63,6 +66,7 @@ pub static CC: LazyLock<AppContext> = LazyLock::new(|| AppContext {
     config: ServerConfig::new(),
     chat: RwLock::new(ChatGlm::new(ChatConfig::default())),
     config_map: RwLock::new(HashMap::new()),
+    sqlx: OnceLock::new(), // 初始化为一个空的“锁”
 });
 
 impl AppContext {
@@ -78,10 +82,23 @@ impl AppContext {
         //启动时检查和更新一些配置
         Self::check_on_start().await?;
 
+        //sqlx 初始化
+        self.create_sqlx_pool().await?;
+
         R::Ok(())
     }
 
+    pub async fn create_sqlx_pool(& self) -> R<()> {
 
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect(&CC.config.db_url)
+            .await?;
+
+        self.sqlx.set(pool).expect("SqlitePool 初始化失败");
+
+        R::Ok(())
+    }
 
     /// 启动时检查和更新一些配置
     pub async fn check_on_start() ->R<()>{

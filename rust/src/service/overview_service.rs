@@ -184,12 +184,7 @@ struct SqlxVideoDetail {
     created_date: Option<String>,
 }
 
-async fn create_sqlx_pool() -> Result<SqlitePool, sqlx::Error> {
-    SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect("sqlite://./bili-recomm-test.db")
-        .await
-}
+
 
 async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
     sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
@@ -284,7 +279,7 @@ async fn fill_video_detail_info(
 
     ),
 > {
-    let pool = create_sqlx_pool().await?;
+    let pool = CC.sqlx.get().expect("数据库未初始化");
 
 
     // 统计待二次处理的数据量 (handle_step = 1)
@@ -446,7 +441,7 @@ mod tests {
     use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::VideoDetail;
     use crate::service::overview_service::{
-        create_sqlx_pool, get_overview_info, select_handle_step_1, select_handle_step_2,
+         get_overview_info, select_handle_step_1, select_handle_step_2,
         select_handle_step_100_black, select_handle_step_100_white,
     };
     use crate::utils::thread_util::ThreadUtil;
@@ -456,6 +451,12 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 
+    async fn create_sqlx_pool() -> Result<SqlitePool, sqlx::Error> {
+        SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite://./bili-recomm-test.db")
+            .await
+    }
     #[tokio::test]
     async fn test_get_overview_info() {
         crate::init().await;
