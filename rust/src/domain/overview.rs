@@ -48,7 +48,7 @@ pub struct OverviewVo {
     pub hate_video_count: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize,sqlx::FromRow)]
 pub struct DateCountMap {
     pub date: String,
     pub count: i64,

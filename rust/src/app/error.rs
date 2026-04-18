@@ -89,7 +89,9 @@ pub enum HttpError {
     #[error("{0}")]
     JsonError(#[from] serde_json::Error),
 
-
+    
+    #[error(transparent)]
+    SqlxError(#[from ] sqlx::Error),
 
     #[error("{0}")]
     ChatError( String),
@@ -157,6 +159,7 @@ impl HttpError {
             HttpError::DataBaseError(error) => StatusCode::INTERNAL_SERVER_ERROR,
             HttpError::JsonError(error) => StatusCode::INTERNAL_SERVER_ERROR,
             HttpError::ChatError(error) => StatusCode::BAD_REQUEST,
+            HttpError::SqlxError(error) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

@@ -1,13 +1,16 @@
 use rbatis::{executor::Executor, py_sql, rbdc::DateTime};
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
-
+use chrono::{TimeZone, Utc};
 use crate::app::config::CC;
 use crate::app::response::R;
 use crate::domain::enumeration::{AccessType, DictStatus, TaskStatus};
 use crate::domain::overview::{DateCountMap, OverviewVo, TaskInfo};
 use crate::domain::{config::Config, dict::Dict, task::Task, video_detail::VideoDetail};
 use rbs::value;
+use serde::{Deserialize, Serialize};
+use sqlx::SqlitePool;
+use sqlx::sqlite::SqlitePoolOptions;
 use tokio::join;
 
 /// 获取总览信息
@@ -159,6 +162,113 @@ async fn fill_dict_info() -> R<((u64, u64, u64, u64))> {
     R::Ok((black_count, white_count, search_count, black_cache_count))
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+struct SqlxVideoDetail {
+    id: i64,
+    tid: Option<i64>,
+    tname: Option<String>,
+    pic: Option<String>,
+    title: Option<String>,
+    cid: Option<i64>,
+    pubdate: Option<i64>,
+    desc: Option<String>,
+    duration: Option<i64>,
+    dynamic: Option<String>,
+    bvid: String,
+    owner_id: Option<i64>,
+    handle_time: Option<String>,
+    handle_type: Option<String>,
+    handle_step: i64,
+    handle_reason: Option<String>,
+    tag: Option<String>,
+    created_date: Option<String>,
+}
+
+async fn create_sqlx_pool() -> Result<SqlitePool, sqlx::Error> {
+    SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect("sqlite://./bili-recomm-test.db")
+        .await
+}
+
+async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
+        .bind(1_i64)
+        .fetch_all(pool)
+        .await
+}
+
+async fn select_handle_step_2(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
+        .bind(2_i64)
+        .fetch_all(pool)
+        .await
+}
+
+async fn select_handle_step_100_white(
+    pool: &SqlitePool,
+) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>(
+        "select * from video_detail where handle_step = ? and handle_type = ?",
+    )
+    .bind(100_i64)
+    .bind("WHITE")
+    .fetch_all(pool)
+    .await
+}
+
+async fn select_handle_step_100_black(
+    pool: &SqlitePool,
+) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>(
+        "select * from video_detail where handle_step = ? and handle_type = ?",
+    )
+    .bind(100_i64)
+    .bind("BLACK")
+    .fetch_all(pool)
+    .await
+}
+
+
+
+async fn count_handle_step_1(pool: &SqlitePool) -> Result<u64, sqlx::Error> {
+    sqlx::query_scalar("select count(*) from video_detail where handle_step = ?")
+        .bind(1_i64)
+        .fetch_one(pool)
+        .await
+}
+
+async fn count_handle_step_2(pool: &SqlitePool) -> Result<u64, sqlx::Error> {
+    sqlx::query_scalar("select count(*) from video_detail where handle_step = ?")
+        .bind(2_i64)
+        .fetch_one(pool)
+        .await
+}
+
+async fn count_handle_step_100_white(
+    pool: &SqlitePool,
+) -> Result<u64, sqlx::Error> {
+    sqlx::query_scalar(
+        "select count(*) from video_detail where handle_step = ? and handle_type = ?",
+    )
+        .bind(100_i64)
+        .bind("WHITE")
+        .fetch_one(pool)
+        .await
+}
+
+async fn count_handle_step_100_black(
+    pool: &SqlitePool,
+) -> Result<u64, sqlx::Error> {
+    sqlx::query_scalar(
+        "select count(*) from video_detail where handle_step = ? and handle_type = ?",
+    )
+        .bind(100_i64)
+        .bind("BLACK")
+        .fetch_one(pool)
+        .await
+}
+
 ///   填充视频详情信息
 async fn fill_video_detail_info(
     year: u32,
@@ -175,67 +285,61 @@ async fn fill_video_detail_info(
         )
     ),
 > {
+    let pool = create_sqlx_pool().await?;
+
+
     // 统计待二次处理的数据量 (handle_step = 1)
-    let second_handle_count = VideoDetail::select_by_map(
-        &CC.rb,
-        value! {
-            "handle_step": 1u64
-        },
-    )
-    .await?
-    .len() as u64;
+    let second_handle_count = count_handle_step_1(&pool).await?;
 
     // 统计待三次处理的数据量 (handle_step = 2)
-    let third_handle_count = VideoDetail::select_by_map(
-        &CC.rb,
-        value! {
-            "handle_step": 2u64
-        },
-    )
-    .await?
-    .len() as u64;
+    let third_handle_count = count_handle_step_2(&pool).await?;
 
     // 统计历史点赞的视频数
-    let like_video_count = VideoDetail::select_by_map(
-        &CC.rb,
-        value! {
-            "handle_type": AccessType::WHITE,
-            "handle_step": 100u64
-        },
-    )
-    .await?
-    .len() as u64;
+    let like_video_count = count_handle_step_100_white(&pool).await?;
 
     // 统计历史点踩的视频数
-    let hate_video_count = VideoDetail::select_by_map(
-        &CC.rb,
-        value! {
-            "handle_type": AccessType::BLACK,
-            "handle_step": 100u64
-        },
-    )
-    .await?
-    .len() as u64;
+    let hate_video_count = count_handle_step_100_black(&pool).await?;
 
     // 构造日期范围
-    let start_date = DateTime::from_str(&format!("{}-01-01 00:00:00", year)).unwrap();
-    let end_date = DateTime::from_str(&format!("{}-12-31 23:59:59", year)).unwrap();
 
-    // 统计白名单历史数据
-    // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
+    let start_date = Utc.with_ymd_and_hms(year as i32, 1, 1, 0, 0, 0)
+        .unwrap();
+    let end_date = Utc.with_ymd_and_hms(year as i32, 12, 31, 23, 59, 59)
+        .unwrap();
+
+
     let white_history =
-        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::WHITE, &start_date, &end_date)
+        select_video_count_by_date(&pool, "WHITE", &start_date, &end_date)
             .await?;
 
     // 统计黑名单历史数据
     let black_history =
-        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::BLACK, &start_date, &end_date)
+        select_video_count_by_date(&pool, "BLACK", &start_date, &end_date)
             .await?;
 
     // 统计其他历史数据
     let other_history =
-        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::OTHER, &start_date, &end_date)
+        select_video_count_by_date(&pool,"OTHER", &start_date, &end_date)
             .await?;
+
+    // 统计白名单历史数据
+    // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
+    // let start_date = DateTime::from_str(&format!("{}-01-01 00:00:00", year)).unwrap();
+    // let end_date = DateTime::from_str(&format!("{}-12-31 23:59:59", year)).unwrap();
+
+    // let white_history =
+    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::WHITE, &start_date, &end_date)
+    //         .await?;
+    //
+    // // 统计黑名单历史数据
+    // let black_history =
+    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::BLACK, &start_date, &end_date)
+    //         .await?;
+    //
+    // // 统计其他历史数据
+    // let other_history =
+    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::OTHER, &start_date, &end_date)
+    //         .await?;
 
     // overview_vo.second_handle_count = second_handle_count;
     // overview_vo.third_handle_count = third_handle_count;
@@ -278,6 +382,35 @@ async fn count_by_handle_type_and_date_range_sql(
     impled!()
 }
 
+
+async fn select_video_count_by_date(
+    pool: &SqlitePool,
+    handle_type: &str,
+    start_time: &chrono::DateTime<Utc>,
+    end_time: &chrono::DateTime<Utc>,
+) -> Result<Vec<DateCountMap>, sqlx::Error> {
+
+    sqlx::query_as::<_, DateCountMap>(
+        r#"
+        SELECT
+            strftime('%Y-%m-%d', handle_time) as date,
+            COUNT(*) as count
+        FROM video_detail
+        WHERE handle_type = $1
+            AND handle_step = 100
+            AND handle_time >= $2
+            AND handle_time <= $3
+        GROUP BY strftime('%Y-%m-%d', handle_time)
+        ORDER BY date
+        "#
+    )
+        .bind(handle_type)
+        .bind(start_time)
+        .bind(end_time)
+        .fetch_all(pool)
+        .await
+}
+
 /// 填充配置信息（运行天数）
 async fn fill_config_info() -> R<u64> {
     let first_start_time_config = Config::select_one_by_condition(
@@ -313,84 +446,16 @@ mod tests {
     use crate::app::config::CC;
     use crate::domain::enumeration::AccessType;
     use crate::domain::video_detail::VideoDetail;
-    use crate::service::overview_service::get_overview_info;
+    use crate::service::overview_service::{
+        create_sqlx_pool, get_overview_info, select_handle_step_1, select_handle_step_2,
+        select_handle_step_100_black, select_handle_step_100_white,
+    };
+    use crate::utils::thread_util::ThreadUtil;
     use rbatis::RBatis;
     use rbdc_sqlite::SqliteDriver;
     use rbs::value;
-    use crate::utils::thread_util::ThreadUtil;
     use serde::{Deserialize, Serialize};
     use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
-
-    #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-    struct SqlxVideoDetail {
-        id: i64,
-        tid: Option<i64>,
-        tname: Option<String>,
-        pic: Option<String>,
-        title: Option<String>,
-        cid: Option<i64>,
-        pubdate: Option<i64>,
-        desc: Option<String>,
-        duration: Option<i64>,
-        dynamic: Option<String>,
-        bvid: String,
-        owner_id: Option<i64>,
-        handle_time: Option<String>,
-        handle_type: Option<String>,
-        handle_step: i64,
-        handle_reason: Option<String>,
-        tag: Option<String>,
-        created_date: Option<String>,
-    }
-
-    async fn create_sqlx_pool() -> Result<SqlitePool, sqlx::Error> {
-        SqlitePoolOptions::new()
-            .max_connections(1)
-            .connect("sqlite://./bili-recomm-test.db")
-            .await
-    }
-
-    async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-        sqlx::query_as::<_, SqlxVideoDetail>(
-            "select * from video_detail where handle_step = ?",
-        )
-        .bind(1_i64)
-        .fetch_all(pool)
-        .await
-    }
-
-    async fn select_handle_step_2(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-        sqlx::query_as::<_, SqlxVideoDetail>(
-            "select * from video_detail where handle_step = ?",
-        )
-        .bind(2_i64)
-        .fetch_all(pool)
-        .await
-    }
-
-    async fn select_handle_step_100_white(
-        pool: &SqlitePool,
-    ) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-        sqlx::query_as::<_, SqlxVideoDetail>(
-            "select * from video_detail where handle_step = ? and handle_type = ?",
-        )
-        .bind(100_i64)
-        .bind("WHITE")
-        .fetch_all(pool)
-        .await
-    }
-
-    async fn select_handle_step_100_black(
-        pool: &SqlitePool,
-    ) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-        sqlx::query_as::<_, SqlxVideoDetail>(
-            "select * from video_detail where handle_step = ? and handle_type = ?",
-        )
-        .bind(100_i64)
-        .bind("BLACK")
-        .fetch_all(pool)
-        .await
-    }
 
     #[tokio::test]
     async fn test_get_overview_info() {
@@ -413,17 +478,15 @@ mod tests {
             .unwrap();
 
         loop {
-
             let second_handle = VideoDetail::select_by_map(
-                & rb,
+                &rb,
                 value! {
                     "handle_step": 1u64
                 },
             )
-                .await
-                .unwrap()
-                .len() as u64;
-
+            .await
+            .unwrap()
+            .len() as u64;
 
             let third_handle = VideoDetail::select_by_map(
                 &rb,
@@ -431,10 +494,8 @@ mod tests {
                     "handle_step": 2u64
                 },
             )
-                .await
-                .unwrap()
-                ;
-
+            .await
+            .unwrap();
 
             let like_video = VideoDetail::select_by_map(
                 &rb,
@@ -443,10 +504,8 @@ mod tests {
                     "handle_step": 100u64
                 },
             )
-                .await
-                .unwrap()
-                ;
-
+            .await
+            .unwrap();
 
             let hate_video = VideoDetail::select_by_map(
                 &rb,
@@ -455,10 +514,8 @@ mod tests {
                     "handle_step": 100u64
                 },
             )
-                .await
-                .unwrap()
-                ;
-
+            .await
+            .unwrap();
 
             println!("执行一次");
             ThreadUtil::s10().await;
