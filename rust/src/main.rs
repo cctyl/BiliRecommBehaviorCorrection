@@ -108,7 +108,7 @@ pub async fn main() {
 
 
     // 运行 60 秒后自动退出
-    tokio::time::sleep(tokio::time::Duration::from_secs(500)).await;
+    tokio::time::sleep(tokio::time::Duration::from_secs(180)).await;
 
     info!("退出程序");
 }
