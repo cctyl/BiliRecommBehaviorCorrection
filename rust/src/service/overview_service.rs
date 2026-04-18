@@ -108,7 +108,7 @@ async fn fill_task_info() -> R<(u32, Vec<TaskInfo>)> {
 }
 
 /// 填充字典信息
-async fn fill_dict_info() -> R<((u64, u64, u64, u64))> {
+async fn fill_dict_info() -> R<(u64, u64, u64, u64)> {
     // 统计黑名单数量
     let black_count = Dict::select_by_map(
         &CC.rb,
@@ -273,7 +273,6 @@ async fn count_handle_step_100_black(
 async fn fill_video_detail_info(
     year: u32,
 ) -> R<
-    (
         (
             u64,
             u64,
@@ -282,7 +281,7 @@ async fn fill_video_detail_info(
             Vec<DateCountMap>,
             Vec<DateCountMap>,
             Vec<DateCountMap>,
-        )
+
     ),
 > {
     let pool = create_sqlx_pool().await?;
