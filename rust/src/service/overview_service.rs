@@ -1,6 +1,6 @@
+use rbatis::{executor::Executor, py_sql, rbdc::DateTime};
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
-use rbatis::{executor::Executor, py_sql, rbdc::DateTime};
 
 use crate::app::config::CC;
 use crate::app::response::R;
@@ -38,18 +38,25 @@ pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
     );
 
     // 检查结果
-    let (running_task_count,task_list) = task_result?;
+    let (running_task_count, task_list) = task_result?;
     overview_vo.running_task_count = task_list.len() as u32;
     overview_vo.task_list = task_list;
 
-
-    let (black_count,white_count,search_count,black_cache_count) = dict_result?;
+    let (black_count, white_count, search_count, black_cache_count) = dict_result?;
     overview_vo.black_rule_count = black_count;
     overview_vo.white_rule_count = white_count;
     overview_vo.search_keyword_count = search_count;
     overview_vo.black_cache_count = black_cache_count;
 
-    let (second_handle_count, third_handle_count,like_video_count,hate_video_count,white_history,black_history,other_history) = video_result?;
+    let (
+        second_handle_count,
+        third_handle_count,
+        like_video_count,
+        hate_video_count,
+        white_history,
+        black_history,
+        other_history,
+    ) = video_result?;
     overview_vo.second_handle_count = second_handle_count;
     overview_vo.third_handle_count = third_handle_count;
     overview_vo.like_video_count = like_video_count;
@@ -57,7 +64,6 @@ pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
     overview_vo.white_history = white_history;
     overview_vo.black_history = black_history;
     overview_vo.other_history = other_history;
-
 
     let run_days = config_result?;
     overview_vo.run_days = run_days;
@@ -95,12 +101,11 @@ async fn fill_task_info() -> R<(u32, Vec<TaskInfo>)> {
     // overview_vo.running_task_count = task_list.len() as u32;
     // overview_vo.task_list = task_list;
 
-    
-    R::Ok((task_list.len() as u32,task_list))
+    R::Ok((task_list.len() as u32, task_list))
 }
 
 /// 填充字典信息
-async fn fill_dict_info() -> R<((u64,u64,u64,u64))> {
+async fn fill_dict_info() -> R<((u64, u64, u64, u64))> {
     // 统计黑名单数量
     let black_count = Dict::select_by_map(
         &CC.rb,
@@ -151,19 +156,25 @@ async fn fill_dict_info() -> R<((u64,u64,u64,u64))> {
     // overview_vo.search_keyword_count = search_count;
     // overview_vo.black_cache_count = black_cache_count;
 
-    R::Ok((black_count,white_count,search_count,black_cache_count))
+    R::Ok((black_count, white_count, search_count, black_cache_count))
 }
 
 ///   填充视频详情信息
-async fn fill_video_detail_info(year:u32) -> R<((
-    u64,
-    u64,
-    u64,
-    u64,
-    Vec<DateCountMap>,
-    Vec<DateCountMap>,
-    Vec<DateCountMap>,
-))> {
+async fn fill_video_detail_info(
+    year: u32,
+) -> R<
+    (
+        (
+            u64,
+            u64,
+            u64,
+            u64,
+            Vec<DateCountMap>,
+            Vec<DateCountMap>,
+            Vec<DateCountMap>,
+        )
+    ),
+> {
     // 统计待二次处理的数据量 (handle_step = 1)
     let second_handle_count = VideoDetail::select_by_map(
         &CC.rb,
@@ -207,36 +218,24 @@ async fn fill_video_detail_info(year:u32) -> R<((
     .len() as u64;
 
     // 构造日期范围
-    let start_date = DateTime::from_str( &format!("{}-01-01 00:00:00", year)).unwrap();
-    let end_date = DateTime::from_str( &format!("{}-12-31 23:59:59", year)).unwrap();
+    let start_date = DateTime::from_str(&format!("{}-01-01 00:00:00", year)).unwrap();
+    let end_date = DateTime::from_str(&format!("{}-12-31 23:59:59", year)).unwrap();
 
     // 统计白名单历史数据
     // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
-    let white_history = count_by_handle_type_and_date_range_sql(
-        &CC.rb,
-        AccessType::WHITE,
-        &start_date,
-        &end_date,
-    )
-    .await?;
+    let white_history =
+        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::WHITE, &start_date, &end_date)
+            .await?;
 
     // 统计黑名单历史数据
-    let black_history = count_by_handle_type_and_date_range_sql(
-        &CC.rb,
-        AccessType::BLACK,
-        &start_date,
-        &end_date,
-    )
-    .await?;
+    let black_history =
+        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::BLACK, &start_date, &end_date)
+            .await?;
 
     // 统计其他历史数据
-    let other_history = count_by_handle_type_and_date_range_sql(
-        &CC.rb,
-        AccessType::OTHER,
-        &start_date,
-        &end_date,
-    )
-    .await?;
+    let other_history =
+        count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::OTHER, &start_date, &end_date)
+            .await?;
 
     // overview_vo.second_handle_count = second_handle_count;
     // overview_vo.third_handle_count = third_handle_count;
@@ -246,7 +245,15 @@ async fn fill_video_detail_info(year:u32) -> R<((
     // overview_vo.black_history = black_history;
     // overview_vo.other_history = other_history;
 
-    R::Ok((second_handle_count, third_handle_count,like_video_count,hate_video_count,white_history,black_history,other_history))
+    R::Ok((
+        second_handle_count,
+        third_handle_count,
+        like_video_count,
+        hate_video_count,
+        white_history,
+        black_history,
+        other_history,
+    ))
 }
 
 /// 自定义SQL查询，用于统计按日期分组的处理数据
@@ -303,7 +310,14 @@ async fn fill_config_info() -> R<u64> {
 
 #[cfg(test)]
 mod tests {
+    use crate::app::config::CC;
+    use crate::domain::enumeration::AccessType;
+    use crate::domain::video_detail::VideoDetail;
     use crate::service::overview_service::get_overview_info;
+    use rbatis::RBatis;
+    use rbdc_sqlite::SqliteDriver;
+    use rbs::value;
+    use crate::utils::thread_util::ThreadUtil;
 
     #[tokio::test]
     async fn test_get_overview_info() {
@@ -312,6 +326,70 @@ mod tests {
         let overview_vo = get_overview_info(2026).await.unwrap();
 
         println!("{:#?}", overview_vo);
+
+        log::logger().flush();
+    }
+
+    #[tokio::test]
+    async fn test_video_select_by_map() {
+        // fast_log::init(fast_log::Config::new().console()).expect("rbatis init fail");
+        /// initialize rbatis. also you can call rb.clone(). this is  an Arc point
+        let rb = RBatis::new();
+        rb.link(SqliteDriver {}, "sqlite://./bili-recomm-test.db")
+            .await
+            .unwrap();
+
+        loop {
+
+            let second_handle = VideoDetail::select_by_map(
+                & rb,
+                value! {
+                    "handle_step": 1u64
+                },
+            )
+                .await
+                .unwrap()
+                .len() as u64;
+
+
+            let third_handle = VideoDetail::select_by_map(
+                &rb,
+                value! {
+                    "handle_step": 2u64
+                },
+            )
+                .await
+                .unwrap()
+                ;
+
+
+            let like_video = VideoDetail::select_by_map(
+                &rb,
+                value! {
+                    "handle_type": AccessType::WHITE,
+                    "handle_step": 100u64
+                },
+            )
+                .await
+                .unwrap()
+                ;
+
+
+            let hate_video = VideoDetail::select_by_map(
+                &rb,
+                value! {
+                    "handle_type": AccessType::BLACK,
+                    "handle_step": 100u64
+                },
+            )
+                .await
+                .unwrap()
+                ;
+
+
+            println!("执行一次");
+            ThreadUtil::s10().await;
+        }
 
         log::logger().flush();
     }
