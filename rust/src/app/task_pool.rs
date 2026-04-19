@@ -66,6 +66,7 @@ impl TaskPool {
             let map = self.method_name_task_map.read().await;
             if let Some(handle) = map.get(&method_name) {
                 if !handle.is_finished() {
+                    info!("存在相同的未完成的任务:{}",method_name);
                     return false;
                 }
             }
