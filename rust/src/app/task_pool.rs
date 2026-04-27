@@ -61,20 +61,28 @@ impl TaskPool {
         F: FnOnce() -> Fut + Send + 'static,
         Fut: Future<Output = R<()>> + Send + 'static,
     {
+        info!("put_if_absent {}", method_name);
         // 先检查是否存在运行中的任务
         {
             let map = self.method_name_task_map.read().await;
             if let Some(handle) = map.get(&method_name) {
                 if !handle.is_finished() {
                     info!("存在相同的未完成的任务:{}",method_name);
+
+                    let keys:Vec<&String> = map.keys().collect();
+                    info!("当前map中存在的key为：{:#?}",keys);
+
+
                     return false;
                 }
             }
         }
         // 添加新任务
         {
+            
             let mut map = self.method_name_task_map.write().await;
             let method_name_clone = method_name.clone();
+            info!("put_if_absent 添加新任务:{}",method_name);
             let handle = self.runtime_handle.spawn(async move {
                 match task().await {
                     Ok(_) => info!("任务执行成功: {}", method_name_clone),

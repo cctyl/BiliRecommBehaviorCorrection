@@ -43,6 +43,7 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
     info!("执行：{} 任务", name);
     let name_owned = name.to_string();  // 提前克隆
     let flag = do_task(name.to_string(), async move || {
+        info!("do_task_by_name: {}", name_owned);
         match name_owned.as_str() {
             // 关键词搜索任务
             DO_SEARCH_TASK => {
@@ -241,6 +242,7 @@ where
     F: FnOnce() -> Fut + Send + 'static,
     Fut: Future<Output = R<()>> + Send + 'static,
 {
+    info!("do_task ： {}",method_name);
     // 需要记录任务的执行情况
     add_if_not_exist(&method_name).await?;
     update_task_status(&CC.rb, TaskStatus::WAITING, &method_name).await?;
@@ -250,9 +252,11 @@ where
     R::Ok(
         TASK_POOL
             .put_if_absent(method_name_move, async move || {
+                info!("TASK_POOL put_if_absent start {}", method_name);
                 let start = Instant::now();
                 update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
                 task().await?;
+                info!("TASK_POOL put_if_absent end {}", method_name);
                 let end = Instant::now();
                 let millis = end.duration_since(start).as_millis();
 
@@ -335,63 +339,57 @@ pub async fn search_keyword_task() -> R<()> {
 
 /// 热门排行榜任务
 pub async fn hot_rank_video_task() -> R<()> {
-    let flag = do_task(DO_HOT_RANK_TASK.to_string(), async move || {
-        // 0.1 单一规则
-        let (
-            black_single_match,
-            white_single_match,
-            black_complex_rule,
-            white_complex_rule,
-            black_prompt,
-            white_prompt,
-            ai_chat_enable,
-            single_match_enable,
-            complex_match_enable,
-            prompt,
-        ) = rule_service::build_match_config().await?;
-        for page in 1..=10 {
-            // todo 记得删
-            // for page in 1..=1 {
+    info!("进入 hot_rank_video_task");
 
-            let set = bili::hot_rank_video(page, 10).await?;
-            ThreadUtil::sleep(3).await;
 
-            for item in set {
-                let aid = item.id;
-                match first_process(
-                    item.into(),
-                    ai_chat_enable,
-                    single_match_enable,
-                    complex_match_enable,
-                    &prompt,
-                    &black_single_match,
-                    &white_single_match,
-                    &black_complex_rule,
-                    &white_complex_rule,
-                    &black_prompt,
-                    &white_prompt,
-                )
-                .await
-                {
-                    Ok(_) => {}
-                    Err(e) => {
-                        error!("处理aid={aid} 时出错！ 错误：{:?}", e);
-                    }
-                };
-                ThreadUtil::s5().await;
-            }
-        }
+    info!("hot_rank_video_task 具体");
+    // 0.1 单一规则
+    let (
+        black_single_match,
+        white_single_match,
+        black_complex_rule,
+        white_complex_rule,
+        black_prompt,
+        white_prompt,
+        ai_chat_enable,
+        single_match_enable,
+        complex_match_enable,
+        prompt,
+    ) = rule_service::build_match_config().await?;
+    for page in 1..=10 {
+        let set = bili::hot_rank_video(page, 10).await?;
         ThreadUtil::sleep(3).await;
-        R::Ok(())
-    })
-    .await?;
-    info!("热门排行榜任务 启动，提交结果：{flag}");
+
+        for item in set {
+            let aid = item.id;
+            match first_process(
+                item.into(),
+                ai_chat_enable,
+                single_match_enable,
+                complex_match_enable,
+                &prompt,
+                &black_single_match,
+                &white_single_match,
+                &black_complex_rule,
+                &white_complex_rule,
+                &black_prompt,
+                &white_prompt,
+            )
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    error!("处理aid={aid} 时出错！ 错误：{:?}", e);
+                }
+            };
+            ThreadUtil::s5().await;
+        }
+    }
     R::Ok(())
 }
 
 /// 首页推荐任务
 pub async fn home_recommend_task() -> R<()> {
-    let flag = do_task(DO_HOME_RECOMMEND_TASK.to_string(), async move || {
         // 0.1 单一规则
         let (
             black_single_match,
@@ -439,10 +437,6 @@ pub async fn home_recommend_task() -> R<()> {
         }
         ThreadUtil::sleep(3).await;
         R::Ok(())
-    })
-    .await?;
-    info!("首页推荐任务 启动，提交结果：{flag}");
-    R::Ok(())
 }
 
 /// 初次处理视频
