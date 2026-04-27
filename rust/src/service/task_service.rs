@@ -255,7 +255,7 @@ where
                 info!("TASK_POOL put_if_absent start {}", method_name);
                 let start = Instant::now();
                 update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
-                task().await?;
+                let result = task().await;
                 info!("TASK_POOL put_if_absent end {}", method_name);
                 let end = Instant::now();
                 let millis = end.duration_since(start).as_millis();
@@ -269,7 +269,7 @@ where
                     Task::update_by_id(&CC.rb, &t).await?;
                 }
 
-                R::Ok(())
+                result
             })
             .await,
     )

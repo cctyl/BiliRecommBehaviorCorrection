@@ -89,115 +89,19 @@ pub struct SearchKeywordDto {
     pub arcurl: String,
     pub area: u32,
     pub author: String,
-    pub badgepay: bool,
-    pub cid: u64,
     pub bvid: String,
-    pub card_status: u32,
-    pub cate_name: String,
-    pub cny_flag: u32,
-    pub corner: String,
-    pub cover: String,
-    // --- 修改点 1: play 出现了 null ---
-    pub play: Option<u32>,
-
-    pub danmaku: u32,
     pub desc: String,
     pub description: String,
     pub duration: String,
-    pub enable_vt: u32,
-    pub episode_count_text: String,
-    pub favorites: u32,
-    pub id: u64,
-    pub is_charge_video: u32,
-    pub is_intervene: u32,
-    pub is_live_room_inline: u32,
-    pub is_pay: u32,
-    pub is_union_video: u32,
-    pub like: u32,
-    pub live_status: u32,
-    pub live_time: String,
     pub mid: u64,
-    pub online: u32,
-    pub parent_area_id: u32,
-    pub parent_area_name: String,
     pub pic: String,
-    // --- 修改点 2: pubdate 出现了 0，虽然通常是 u64，但若担心无效值可选 Option，这里保留 u64 因为 null 会报错，但数据中是 0 ---
-    // 数据中 pubdate 为 0 而非 null，所以可以保留 u64，但如果 API 变化可能为 null，则需改为 Option<u64>
-    pub pubdate: u64,
-    pub rank_index: u32,
-    pub rank_offset: u32,
-    pub rec_reason: String,
-    pub release_status: u32,
-    pub review: u32,
-    pub roomid: u32,
-    // --- 修改点 3: senddate 出现了 0 ---
-    // 同 pubdate，数据中是数字 0，不是 null。但如果协议定义可能为 null，需改为 Option
-    // 根据严格 JSON 检查：senddate 在部分条目为 0，非 null，保留 u64
-    pub senddate: u64,
-    pub short_id: u32,
-    pub spread_id: u32,
-    pub style: u32,
-    pub subtitle: String,
     pub tag: String,
-    pub tags: String,
     pub title: String,
-    #[serde(rename = "type")]
-    pub video_type: String,
     pub typeid: String,
     pub typename: String,
-    pub uface: String,
-    pub uid: u32,
-    pub uname: String,
-    pub upic: String,
-    pub url: String,
-    pub user_cover: String,
-    pub video_review: u32,
-    pub view_type: String,
-    pub vt: u32,
-    pub vt_display: String,
-
-    // --- 以下是根据JSON数据修改为 Option 的字段 ---
-
-    // JSON中为 null
-    pub biz_data: Option<Value>,
-
-    // JSON中为 [] (空数组) 或 null
-    pub new_rec_tags: Option<Vec<Value>>,
-
-    // JSON中为 null
-    pub rec_tags: Option<Value>,
-
-    // JSON中为 null
-    pub watched_show: Option<Value>,
-
-    // JSON中为 ["title", "tag"] 或 []
-    pub hit_columns: Option<Vec<String>>,
 }
 
-// impl From<SearchKeywordDto> for VideoDetail {
-//     fn from(dto: SearchKeywordDto) -> Self {
-//         VideoDetail {
-//             id: dto.aid,
-//             cid:0,
-//             tid: dto.typeid.parse().ok(),
-//             tname: Some(dto.typename),
-//             pic: Some(dto.pic),
-//             title: Some(dto.title),
-//             pubdate: Some(dto.pubdate),
-//             desc_field: Some(dto.description),
-//             duration: None,
-//             dynamic: None, // SearchKeywordDto 中没有对应字段
-//             bvid: dto.bvid,
-//             owner_id: Some(dto.mid),
-//             handle_step: 0, // 默认未处理
-//             handle_reason: None,
-//             handle_time: None,
-//             handle_type: None,
-//             created_date: Some(DateTime::now()),
-//             tag: Some(dto.tag),
-//         }
-//     }
-// }
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PageDTO<T: Send + Sync> {
