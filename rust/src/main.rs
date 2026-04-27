@@ -55,8 +55,6 @@ use std::path::Path;
  */
 pub async fn init() -> u16 {
 
-    //日志
-    crate::utils::log::init_log();
 
     //全局变量的初始化
     CC.init().await.expect("全局变量初始化失败!");

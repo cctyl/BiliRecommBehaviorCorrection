@@ -6,19 +6,15 @@ use fast_log::{
     },
 };
 use log::LevelFilter;
-
-
-
-const LOG_LEVEL: LevelFilter = LevelFilter::Debug;
-
-
+use crate::app::config::CC;
 
 pub fn init_log() {
+    let log_level = &CC.config.log_level;
     let _ = fast_log::init(
         fast_log::Config::new()
-            .format(FastLogFormat::new().set_display_line_level(LOG_LEVEL))
+            .format(FastLogFormat::new().set_display_line_level(log_level.to_owned()))
             .console()
-            .level(LOG_LEVEL)
+            .level(log_level.to_owned())
             .chan_len(None),
     );
 }

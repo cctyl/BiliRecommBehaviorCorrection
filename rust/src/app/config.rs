@@ -9,7 +9,8 @@ use std::{
     sync::{Arc, LazyLock, OnceLock},
     time::Duration,
 };
-
+use std::env::VarError;
+use std::str::FromStr;
 use crate::{
     app::{interceptor::SqlOnlyLogInterceptor, response::R}, domain::config::Config, service::{config_service, task_service}, utils::glm_chat::{ChatConfig, ChatGlm}
 };
@@ -29,6 +30,7 @@ pub struct ServerConfig {
     pub secret: String,
     pub port: u16,
     pub db_url: String,
+    pub log_level:LevelFilter,
 }
 
 impl ServerConfig {
@@ -45,11 +47,19 @@ impl ServerConfig {
         let port = std::env::var("PORT").map_or(8080, |s| s.parse::<u16>().unwrap());
         let secret = std::env::var("SECRET").expect("必须设置密钥");
         let db_url = std::env::var("DB_URL").expect("必须提供数据库链接");
-
+        let log_level = match std::env::var("LOG_LEVEL") {
+            Ok(ss) => {
+                LevelFilter::from_str(ss.as_str()).unwrap_or(LevelFilter::Info)
+            }
+            Err(e) => {
+                LevelFilter::Info
+            }
+        };
         ServerConfig {
             secret,
             port,
             db_url,
+            log_level
         }
     }
 }
@@ -71,6 +81,11 @@ pub static CC: LazyLock<AppContext> = LazyLock::new(|| AppContext {
 
 impl AppContext {
     pub async fn init(&self) -> R<()> {
+
+
+        //日志
+        crate::utils::log::init_log();
+        
         self.init_db().await;
 
         // 先初始化配置，后面的初始化需要用到这里的配置
