@@ -6,6 +6,7 @@ use serde::Serialize;
 use crate::{app::{config::CC, constans::DEFAULT_PROMPT, response::{OkRespExt, RR}}, domain::{dict::Dict, dtos::TestRuleDto, enumeration::{AccessType, DictStatus, DictType}, video_detail::{AiMatch, MatchResult, VideoDetail}}, extractor::path::MyPath, handler::ai, service::{rule_service, video_detail_service}, utils::{collection_tool::VecGroupByExt, data_util::bvid_to_aid}};
 use crate::domain::dtos::{AssociateRuleAc, SingleMatchRuleAc};
 use crate::service::rule_service::{build_complex_rule_list, build_single_match_rule_ac, get_match_need_config};
+use crate::service::video_detail_service::find_or_save_video;
 
 pub fn create_router() -> Router {
     Router::new().route(
@@ -74,8 +75,8 @@ pub async fn test_rule(Json(dto): Json<TestRuleDto>) -> RR<MatchResult>
     ) = rule_service::build_match_config().await?;
     let TestRuleDto { bvid, ai_chat_enable, single_match_enable, complex_match_enable } = dto;
     let aid = bvid_to_aid(&bvid);
-    let find_or_save_video = video_detail_service::find_or_save_video(aid).await?;
-    let (_, m) = rule_service::total_rule_match(&find_or_save_video,
+    let mut find_or_save_video = video_detail_service::find_or_save_video(aid).await?;
+    let (access_type, m) = rule_service::total_rule_match(&find_or_save_video,
                                                 ai_chat_enable, single_match_enable, complex_match_enable, &prompt,
                                                 &black_single_match, &white_single_match,
                                                 &black_complex_rule,
@@ -83,6 +84,16 @@ pub async fn test_rule(Json(dto): Json<TestRuleDto>) -> RR<MatchResult>
                                                 &black_prompt,
                                                 &white_prompt,
     ).await?;
+
+
+    let handle_step = find_or_save_video.handle_step.clone();
+    video_detail_service::update_handle_data(&mut find_or_save_video,
+                                             handle_step,
+                                             Some(m.clone()),
+                                             None,
+                                             Some(access_type)
+    ).await?;
+
     RR::success(m)
 }
 
