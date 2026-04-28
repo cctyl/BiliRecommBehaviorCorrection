@@ -26,7 +26,7 @@ cargo run
 # 运行所有测试
 cargo test
 
-# 运行单个测试（测试中需要先执行 crate::init().await）
+# 运行单个测试（测试开头必须先调用 crate::init().await）
 cargo test test_get_user_info
 
 # 使用bacon工具进行实时开发
@@ -34,6 +34,8 @@ bacon run          # 运行应用
 bacon test         # 运行测试
 bacon clippy-all   # 运行clippy检查
 ```
+
+> **注意**：`single_test.rs` 中 `pub async fn init() -> u16` 负责初始化日志、数据库连接、配置映射、AI客户端等全局状态，所有测试的开头必须调用它；最后一行必须为 `log::logger().flush()`。
 
 ### 代码检查和格式化
 ```bash
@@ -59,7 +61,8 @@ cargo fmt --check
   - `video_detail_service.rs`: 视频详情服务
   - `schedule_service.rs`: 定时任务调度（使用tokio-cron-scheduler）
 
-- **handler/**: HTTP请求处理器（Axum路由）
+- **handler/**: HTTP请求处理器（Axum 0.8），所有路由在 `mod.rs:create_router()` 中集中注册
+  - 所有路由统一前缀 `/api`，认证中间件层 `auth`
   - `config_handler.rs`: 配置管理接口
   - `cookie_header_data_handler.rs`: Cookie和Header接口
   - `dict_handler.rs`: 字典数据接口
@@ -68,7 +71,9 @@ cargo fmt --check
   - `task_handler.rs`: 任务管理接口
   - `region_handler.rs`: 分区信息接口
   - `associate_rule_handler.rs`: 关联规则接口
+  - `bili_api_handler.rs`: B站API接口
   - `ai.rs`: AI功能接口
+  - `/` 路径提供 `web/` 目录静态文件（SPA fallback 到 index.html）
 
 - **domain/**: 数据模型定义
   - `video_detail.rs`: 视频详情数据库模型（VideoDetail）
@@ -96,7 +101,7 @@ cargo fmt --check
 
 - **utils/**: 工具函数
   - `data_util.rs`: 数据处理工具、随机访问列表消费者（RandomAccessListConsumer）
-  - `http.rs`: HTTP客户端配置（使用mimalloc内存分配器）
+  - `http.rs`: HTTP客户端配置
   - `log.rs`: 日志配置（使用fast_log）
   - `thread_util.rs`: 线程休眠工具（ThreadUtil），用于API限流
   - `migration.rs`: 数据库迁移管理（支持从Java版本迁移）
@@ -106,22 +111,33 @@ cargo fmt --check
   - `id.rs`: ID生成工具
 
 - **macros/**: 宏定义
-  - `rb.rs`: RBatis相关宏（crud、impl_select_by_id、impl_update_by_id等）
-  - 使用`plus!`宏自动生成常用的CRUD方法
+  - `rb.rs`: RBatis相关宏，通过`plus!`批量生成常用CRUD方法
+  - 用法示例：`plus!(VideoDetail {})` 生成 `select_by_id`、`update_by_id`、`delete_by_id`、`select_one_by_condition`、`count_by_condition`、`select_page_by_condition`
+  - 分页查询条件使用 `rbs::value! {}` 构造，支持 `column`、`order_by` 特殊键
 
 - **extractor/**: 自定义提取器
   - `path.rs`: 路径参数提取器
 
+## 可用 Skills
+
+项目在 `.claude/skills/` 中预置了两个 skill，当遇到对应场景时应主动调用：
+
+| Skill | 触发场景 | 说明 |
+|---|---|---|
+| `bili-api` | 涉及 B站API 调用（登录、点赞、搜索、签名等） | 位于 `.claude/skills/bili-api/SKILL.md`，提供请求方法、参数说明、调用示例 |
+| `rbatis` | 涉及 RBatis 数据库操作（crud、py_sql、html_sql、事务、分页等） | 位于 `.claude/skills/rbatis-skill/SKILL.md`，包含语法速查和完整示例 |
+
+> 使用方式：遇到相关场景时，通过 `/skill <name>` 或让 AI 主动加载对应 SKILL.md 文件获取详细指导。
+
 ### 关键技术栈
 
 - **Web框架**: Axum 0.8
-- **数据库**: SQLite + RBatis 4.8 ORM
+- **数据库**: SQLite + RBatis 4.8 ORM（主），Sqlx 0.8（辅助，如任务状态持久化）
 - **HTTP客户端**: Reqwest 0.12
 - **异步运行时**: Tokio 1.39
 - **序列化**: Serde + Serde_json
 - **日志**: Log + fast_log
 - **任务调度**: tokio-cron-scheduler
-- **内存分配**: mimalloc（全局分配器）
 - **中文分词**: jieba-rs
 - **定时任务**: tokio-cron-scheduler
 
@@ -131,8 +147,15 @@ cargo fmt --check
 - `PORT`: 服务器端口（默认8080）
 - `SECRET`: JWT密钥
 - `DB_URL`: 数据库连接URL
+- `LOG_LEVEL`: 日志级别（默认Info）
 
-配置文件：`config.dev.txt`（开发环境）或``config.txt``（生产环境）
+配置文件：`config.dev.txt`（开发环境，优先加载）或`config.txt`（生产环境）
+
+### 应用启动初始化顺序（main.rs:init）
+
+1. `CC.init()` → 初始化日志 → RBatis数据库连接 → Sqlx连接池 → 加载config表到内存 → 初始化AI客户端
+2. `schedule_service::init_scheduler()` → 定时任务调度器
+3. `init_common_header_map()` → 通用Header映射
 
 ### 数据库初始化
 
@@ -178,18 +201,22 @@ cargo fmt --check
 4. **API限流**: B站API有调用频率限制，使用`ThreadUtil`进行延时控制
 5. **配置管理**: 敏感信息通过数据库config表管理，不是硬编码
 6. **测试**: 所有测试需要先调用`crate::init().await`初始化环境
-7. **内存分配**: 使用mimalloc作为全局分配器提高性能
+7. **Rust Edition**: 项目使用 Rust 2024 Edition（`Cargo.toml`），请确保本地工具链支持（Rust 1.85+）
 
 ## 函数的响应格式
 
-在handler层，函数的返回值用 crate::app::response:: RR 包裹，
-成功是用 RR::success() 返回，失败使用 RR::fail() 返回。
-普通函数返回值，用 crate::app::response::R 包裹。
-成功则用R::Ok() 返回,失败使用R::Err()
+在 handler 层，返回值用 `RR<T>` 包裹（`type RR<T> = R<Resp<T>>`，即 `Result<Resp<T>, HttpError>`）：
+- `RR::success(data)` 返回成功，`RR::fail(err)` 返回错误
+- `RR::msg(msg)` 用于无数据的成功响应
+- `Resp<T>` 的 HTTP body 格式为 `{ code: 200, message: "...", data: T }`
 
+普通函数（非 handler）返回值用 `R<T>`（`type R<T> = Result<T, HttpError>`）：
+- `R::Ok(val)` 返回成功，`R::Err(err)` 返回错误
+
+`HttpError` 实现 `IntoResponse`，自动转换为 JSON 错误响应。
 
 ## handler 注意事项
-每个handler必须加上#[debug_handler]注解
+每个 handler 必须加上 `#[debug_handler]` 注解（来自 `axum` crate）
 
 
 ## 错误
