@@ -880,6 +880,29 @@ pub static USER_NAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"<title>(.*?)的个人空间-(.*?)个人主页-哔哩哔哩视频</title>")
         .expect("Failed to compile 用户名提起表达式")
 });
+/// 根据mid获取用户信息（调用B站空间详细信息API）
+/// API文档: https://github.com/pskdje/bilibili-API-collect/blob/main/docs/user/info.md
+/// 接口: https://api.bilibili.com/x/space/wbi/acc/info
+/// 需要WBI签名和Cookie
+pub(crate) async fn get_user_info_by_mid(mid: u64) -> R<serde_json::Value> {
+    let url = "https://api.bilibili.com/x/space/wbi/acc/info";
+
+    let wbi_map = vec![("mid", mid.to_string())];
+    let other_map = vec![
+        (
+            "Referer",
+            format!("https://space.bilibili.com/{}", mid),
+        ),
+        ("Origin", "https://space.bilibili.com".to_string()),
+    ];
+
+    let wbi_result_map = get_wbi(false, wbi_map).await?;
+
+    let response = common_get_other_header(url, wbi_result_map, other_map).await?;
+
+    R::Ok(response["data"].clone())
+}
+
 /// 根据mid获取用户名
 pub(crate) async fn get_user_name_by_mid(mid: String) -> R<String> {
     let body = no_auth_cookie_get(&format!("https://space.bilibili.com/{}", mid), vec![]).await?;
