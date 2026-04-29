@@ -255,10 +255,12 @@ where
                 info!("TASK_POOL put_if_absent start {}", method_name);
                 let start = Instant::now();
                 update_task_status(&CC.rb, TaskStatus::RUNNING, &method_name).await?;
+
                 let result = task().await;
+
                 info!("TASK_POOL put_if_absent end {}", method_name);
                 let end = Instant::now();
-                let millis = end.duration_since(start).as_millis();
+                let millis = end.duration_since(start).as_secs();
 
                 let mut t = find_by_class_method_name(&method_name).await?;
                 if let Some(mut t) = t {
@@ -278,7 +280,7 @@ where
 /// 关键词搜索任务
 pub async fn search_keyword_task() -> R<()> {
         let keyword_set = dict_service::get_search_keyword_set().await?;
-        // todo 记得删除
+        // to do 记得删除
         // let mut keyword_set:HashSet<String> =HashSet::new();
         // keyword_set.insert("红色沙漠".to_string());
 
@@ -403,9 +405,7 @@ pub async fn home_recommend_task() -> R<()> {
             complex_match_enable,
             prompt,
         ) = rule_service::build_match_config().await?;
-        // for page in 1..=10 {
-        // todo 记得删
-        for page in 1..=1 {
+        for page in 1..=10 {
             let aid_set = bili::get_home_recommend_video().await?;
 
             for aid in aid_set {
@@ -435,7 +435,6 @@ pub async fn home_recommend_task() -> R<()> {
 
             ThreadUtil::sleep(3).await;
         }
-        ThreadUtil::sleep(3).await;
         R::Ok(())
 }
 
