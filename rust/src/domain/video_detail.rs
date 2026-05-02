@@ -73,6 +73,20 @@ pub struct AiMatch {
     pub reason: String,
 }
 
+/// 批量AI匹配的单个结果项
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct BatchAiMatchItem {
+    pub id: u64,
+    pub match_type: AccessType,
+    pub reason: String,
+}
+
+/// 批量AI匹配的响应结构
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct BatchAiMatchResponse {
+    pub results: Vec<BatchAiMatchItem>,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MatchResult {
     pub single_match: Option<SingleMatch>,
@@ -155,7 +169,15 @@ impl VideoDetail {
         handle_time: DateTime,  
     ) -> rbatis::Result<rbatis::rbdc::db::ExecResult> {  
         impled!()  
-    }  
+    }
+
+    /// 查询 handle_reason 为空的视频，带limit
+    pub async fn select_where_handle_reason_is_null(
+        rb: &dyn Executor,
+        limit: u64,
+    ) -> Vec<VideoDetail> {
+        impled!()
+    }
 }
 
 #[cfg(test)]

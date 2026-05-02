@@ -1,5 +1,5 @@
 use crate::app::config::CC;
-use crate::app::constans::THUMB_UP_ALL_USER_VIDEO_TASK;
+use crate::app::constans::{DO_BATCH_AI_MATCH, THUMB_UP_ALL_USER_VIDEO_TASK};
 use crate::app::error::HttpError;
 use crate::app::response::{FailRespExt, OkRespExt, RR};
 use crate::domain::dtos::{CommonTriggerTaskRequest, PageDTO, SearchHandleVideoRequest, SecondHandleDto, VideoVo, ThumbUpUserAllVideoRequest};
@@ -21,6 +21,7 @@ pub fn create_router() -> Router {
         .route("/", put(update_task))
         .route("/common-trigger-task", get(common_trigger_task))
         .route("/thumb-up-all", post(thumb_up_user_all_video))
+        .route("/batch-ai-match", post(batch_ai_match_trigger))
 }
 
 /// 二次处理视频
@@ -103,6 +104,22 @@ pub async fn thumb_up_user_all_video(
 
     if result {
         RR::success("点赞任务已开始".to_string())
+    } else {
+        RR::fail(HttpError::BadRequest("该任务正在被运行中，请等待上一个任务结束".to_string()))
+    }
+}
+
+/// 触发批量AI匹配处理
+#[debug_handler]
+pub async fn batch_ai_match_trigger() -> RR<String> {
+    let task_name = DO_BATCH_AI_MATCH.to_string();
+    let result = task_service::do_task(task_name, async move || {
+        task_service::batch_ai_match_process().await
+    })
+    .await?;
+
+    if result {
+        RR::success("批量AI匹配任务已开始".to_string())
     } else {
         RR::fail(HttpError::BadRequest("该任务正在被运行中，请等待上一个任务结束".to_string()))
     }

@@ -66,6 +66,10 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
             DO_THIRD_PROCESS => {
                 third_process().await
             }
+            // 批量AI匹配处理
+            DO_BATCH_AI_MATCH => {
+                batch_ai_match_process().await
+            }
             e => {
                 error!("class_name={} ,未知的任务，跳过", e);
                 R::Ok(())
@@ -128,6 +132,80 @@ pub async fn third_process() -> R<()> {
     R::Ok(())
 }
 
+
+/// 批量AI匹配处理：从数据库查询未处理的视频，分批交给AI匹配，然后更新结果
+/// 每次查询50个视频，最多执行4000次循环
+pub async fn batch_ai_match_process() -> R<()> {
+    let batch_size: u64 = 50;
+    let max_loop: u64 = 4000;
+
+    // 构建匹配规则配置，只获取AI匹配需要的数据
+    let (_, _, _, _, black_prompt, white_prompt, ai_chat_enable, _, _, prefix_prompt) =
+        rule_service::build_match_config().await?;
+
+    if !ai_chat_enable {
+        info!("AI匹配未启用，跳过批量AI匹配任务");
+        return R::Ok(());
+    }
+
+    let mut total_matched: u64 = 0;
+
+    for i in 0..max_loop {
+        // 查询 handle_reason 为空的视频
+        let videos = VideoDetail::select_where_handle_reason_is_null(&CC.rb, batch_size).await?;
+
+        if videos.is_empty() {
+            info!("第{}次循环：没有未处理的视频，退出", i + 1);
+            break;
+        }
+
+        info!(
+            "第{}次循环：查询到{}个未处理视频，开始批量AI匹配",
+            i + 1,
+            videos.len()
+        );
+
+        // 调用批量AI匹配
+        let match_result_map = rule_service::get_batch_ai_match_result(
+            &videos,
+            &white_prompt,
+            &black_prompt,
+            &prefix_prompt,
+        )
+        .await?;
+
+        let matched_count = match_result_map.len();
+        info!("批量AI匹配返回{}个结果", matched_count);
+
+        // 根据匹配结果更新视频
+        for mut v in videos {
+            if let Some(ai_match) = match_result_map.get(&v.id) {
+                // 有匹配结果，更新视频
+                let handle_step = if v.handle_step != 0 { v.handle_step } else { 1 };
+
+                let match_result = MatchResult {
+                    ai_match: Some(ai_match.clone()),
+                    ..Default::default()
+                };
+
+                video_detail_service::update_handle_data(
+                    &mut v,
+                    handle_step,
+                    Some(match_result),
+                    None,
+                    Some(ai_match.match_type.clone()),
+                )
+                .await?;
+
+                total_matched += 1;
+            }
+            // AI未返回该视频结果，跳过，留到下一次处理
+        }
+    }
+
+    info!("批量AI匹配任务完成，共处理{}个视频", total_matched);
+    R::Ok(())
+}
 
 /// 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
 pub async fn default_process() -> R<()> {
@@ -197,13 +275,15 @@ pub async fn find_by_class_method_name(name: &str) -> R<Option<Task>> {
 }
 
 use crate::api::bili;
-use crate::app::constans::{DISLIKE_BY_USER_ID_TASK, DO_SEARCH_TASK, THUMB_UP_ALL_USER_VIDEO_TASK};
+use crate::app::constans::{
+    DISLIKE_BY_USER_ID_TASK, DO_BATCH_AI_MATCH, DO_SEARCH_TASK, THUMB_UP_ALL_USER_VIDEO_TASK,
+};
 use crate::domain::dict::Dict;
 use crate::domain::dtos::{
     AssociateRuleAc, SearchKeywordDto, SecondHandleDto, SingleMatchRuleAc, TestRuleDto,
 };
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
-use crate::domain::video_detail::{MatchResult, VideoDetail};
+use crate::domain::video_detail::{AiMatch, MatchResult, VideoDetail};
 use crate::service::rule_service::{
     build_complex_rule_list, build_single_match_rule_ac, get_match_need_config,
 };

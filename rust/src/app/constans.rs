@@ -41,6 +41,8 @@ pub const DO_HOT_RANK_TASK: &str = "io.github.cctyl.service.impl.BiliService.doH
 pub const DO_HOME_RECOMMEND_TASK: &str = "io.github.cctyl.service.impl.BiliService.doHomeRecommendTask";
 pub const DO_DEFAULT_PROCESS_VIDEO: &str = "io.github.cctyl.service.impl.BiliService.doDefaultProcessVideo";
 pub const DO_THIRD_PROCESS: &str = "io.github.cctyl.service.impl.BiliService.doThirdProcess";
+// 批量AI匹配任务
+pub const DO_BATCH_AI_MATCH: &str = "io.github.cctyl.service.impl.BiliService.doBatchAiMatch";
 // 点赞用户所有视频任务
 pub const THUMB_UP_ALL_USER_VIDEO_TASK: &str = "io.github.cctyl.handler.TaskHandler.thumbUpUserAllVideo";
 

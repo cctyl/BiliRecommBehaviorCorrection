@@ -15,7 +15,7 @@ use crate::domain::dict::Dict;
 use crate::domain::dtos::{AssociateRuleAc, SingleMatchRuleAc};
 use crate::domain::enumeration::{AccessType, DictStatus, DictType};
 use crate::domain::tag;
-use crate::domain::video_detail::{AiMatch, ComplexMatch, MatchResult, SingleMatch};
+use crate::domain::video_detail::{AiMatch, BatchAiMatchItem, BatchAiMatchResponse, ComplexMatch, MatchResult, SingleMatch};
 use crate::service::{associate_rule_service, video_detail_service};
 use crate::utils::collection_tool::VecGroupByExt;
 use crate::utils::glm_chat::{Message, MessageRole};
@@ -398,6 +398,109 @@ pub async fn get_ai_match_result(
     };
 
     R::Ok(result)
+}
+
+/// 批量AI匹配：将多个视频信息一次性发送给AI，返回每个视频的匹配结果
+/// 对于AI返回中缺失的视频id，不会出现在结果HashMap中（调用方应跳过这些视频）
+pub async fn get_batch_ai_match_result(
+    videos: &[VideoDetail],
+    white_prompt: &str,
+    black_prompt: &str,
+    prefix_prompt: &str,
+) -> R<HashMap<u64, AiMatch>> {
+    if videos.is_empty() {
+        return R::Ok(HashMap::new());
+    }
+
+    info!("开始批量AI匹配，共{}个视频", videos.len());
+
+    let output_prompt = r#"**输出格式**  
+将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。
+包含一个results字段，是一个数组，数组长度必须和输入的视频数量一致，每个元素包含：
+- id字段：视频的id（数字）
+- match_type字段：匹配结果，黑名单为BLACK，白名单为WHITE，其他为OTHER
+- reason字段：20个字以内，简要描述给出该判断的原因"#;
+
+    let system_prompt = format!("{}{}", prefix_prompt, output_prompt);
+
+    // 构建视频信息列表
+    let mut video_info_list = String::new();
+    for v in videos {
+        let info = format!(
+            r#"
+[视频] (id: {})
+标题：{};
+描述：{};
+封面文字：{};
+标签：{};
+分区：{}；"#,
+            v.id,
+            v.title.clone().unwrap_or_default(),
+            v.desc_field.clone().unwrap_or_default(),
+            "", // 暂时没有完成封面ocr
+            v.tag.clone().unwrap_or_default(),
+            v.tname.clone().unwrap_or_default(),
+        );
+        video_info_list.push_str(&info);
+    }
+
+    let rule_info = format!(
+        r#"
+黑名单规则如下：{}；
+白名单规则如下：{}；"#,
+        black_prompt, white_prompt
+    );
+
+    let user_prompt = format!(
+        "以下是多个视频的信息，请逐一判断每个视频属于黑名单、白名单还是其他：\n{}{}",
+        video_info_list, rule_info
+    );
+
+    let glm = &CC.chat.read().await;
+
+    let message = vec![
+        Message {
+            role: MessageRole::System,
+            content: system_prompt,
+        },
+        Message {
+            role: MessageRole::User,
+            content: user_prompt,
+        },
+    ];
+
+    let result_map = match glm.chat_request(message).await {
+        Ok(json) => {
+            match serde_json::from_str::<BatchAiMatchResponse>(&json) {
+                Ok(response) => {
+                    let mut map = HashMap::new();
+                    for item in response.results {
+                        map.insert(item.id, AiMatch {
+                            match_type: item.match_type,
+                            reason: item.reason,
+                        });
+                    }
+                    // 检查是否有缺失的视频id
+                    for v in videos {
+                        if !map.contains_key(&v.id) {
+                            info!("批量AI匹配中视频id={}未被AI返回，将跳过", v.id);
+                        }
+                    }
+                    map
+                }
+                Err(e) => {
+                    error!("批量AI匹配回答解析失败！原因：{:#?}, {}", e, json);
+                    HashMap::new()
+                }
+            }
+        }
+        Err(e) => {
+            error!("批量AI匹配调用失败！原因：{:#?}", e);
+            HashMap::new()
+        }
+    };
+
+    R::Ok(result_map)
 }
 
 /// 单一包含匹配

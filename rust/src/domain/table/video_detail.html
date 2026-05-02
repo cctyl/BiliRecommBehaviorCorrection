@@ -78,5 +78,9 @@
         <foreach collection="ids" item="id" open="(" close=")" separator=",">  
             #{id}  
         </foreach>  
-    </update>  
+    </update>
+
+    <select id="select_where_handle_reason_is_null">
+        `select * from video_detail where handle_reason is null limit #{limit}`
+    </select>
 </mapper>
