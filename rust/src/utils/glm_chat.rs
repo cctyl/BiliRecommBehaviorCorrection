@@ -246,12 +246,48 @@ impl ChatGlm {
 
 
         if let Some(choice) = chat_response.choices.unwrap_or(vec![]).first() {
-            Ok(choice.message.content.clone())
+            let content = Self::remove_think_tags(&choice.message.content.clone());
+            Ok(content)
         } else {
             R::Err(ChatError("无法获取回复".to_string()))
         }
     }
 
+    /// 移除 think 标签及其内容
+    fn remove_think_tags(content: &str) -> String {
+        // 检查是否包含 think 标签
+        if !content.contains("<think>") {
+            return content.to_string();
+        }
+
+        let mut result = String::new();
+        let mut remaining = content;
+
+        while let Some(start_pos) = remaining.find("<think>") {
+            // 添加 think 标签之前的内容
+            result.push_str(&remaining[..start_pos]);
+
+            // 跳过 <think> 标签本身
+            let after_start = &remaining[start_pos + 7..]; // 7 是 "<think>" 的长度
+
+            // 查找对应的 </think> 结束标签
+            if let Some(end_pos) = after_start.find("</think>") {
+                // 跳过整个 think 块，包括结束标签
+                remaining = &after_start[end_pos + 8..]; // 8 是 "</think>" 的长度
+            } else {
+                // 如果没有找到结束标签，保留剩余内容
+                result.push_str(remaining);
+                remaining = "";
+                break;
+            }
+        }
+
+        // 添加最后的剩余内容
+        result.push_str(remaining);
+
+        // 清理多余的空白字符
+        result.trim().to_string()
+    }
     /// 获取当前配置的引用
     pub fn config(&self) -> &ChatConfig {
         &self.config
