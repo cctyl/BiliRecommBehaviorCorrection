@@ -136,7 +136,7 @@ pub async fn third_process() -> R<()> {
 /// 批量AI匹配处理：从数据库查询未处理的视频，分批交给AI匹配，然后更新结果
 /// 每次查询50个视频，最多执行4000次循环
 pub async fn batch_ai_match_process() -> R<()> {
-    let batch_size: u64 = 50;
+    let batch_size: u64 = 10;
     let max_loop: u64 = 4000;
 
     // 构建匹配规则配置，只获取AI匹配需要的数据
