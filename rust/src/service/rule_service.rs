@@ -415,11 +415,14 @@ pub async fn get_batch_ai_match_result(
     info!("开始批量AI匹配，共{}个视频", videos.len());
 
     let output_prompt = r#"**输出格式**  
-将内容输出为一个json对象，直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。
-包含一个results字段，是一个数组，数组长度必须和输入的视频数量一致，每个元素包含：
-- id字段：视频的id（数字）
-- match_type字段：匹配结果，黑名单为BLACK，白名单为WHITE，其他为OTHER
-- reason字段：20个字以内，简要描述给出该判断的原因"#;
+直接输出完整纯json字符串，不要有markdown相关内容，不要有```json等格式。
+输出一个json对象，包含一个"results"字段，值为数组，数组长度必须和输入的视频数量一致，每个元素包含：
+- "id"：视频的id（数字）
+- "match_type"：匹配结果，黑名单为"BLACK"，白名单为"WHITE"，其他为"OTHER"
+- "reason"：20个字以内，简要描述给出该判断的原因
+
+**输出示例**：
+{"results":[{"id":123456,"match_type":"BLACK","reason":"包含游戏内容"},{"id":789012,"match_type":"OTHER","reason":"数码评测"}]}"#;
 
     let system_prompt = format!("{}{}", prefix_prompt, output_prompt);
 
@@ -471,28 +474,31 @@ pub async fn get_batch_ai_match_result(
 
     let result_map = match glm.chat_request(message).await {
         Ok(json) => {
-            match serde_json::from_str::<BatchAiMatchResponse>(&json) {
-                Ok(response) => {
-                    let mut map = HashMap::new();
-                    for item in response.results {
-                        map.insert(item.id, AiMatch {
-                            match_type: item.match_type,
-                            reason: item.reason,
-                        });
+            // AI返回格式可能不一致：有时返回 {"results":[...]}, 有时返回 [...]
+            let results: Vec<BatchAiMatchItem> = match serde_json::from_str::<Vec<BatchAiMatchItem>>(&json) {
+                Ok(items) => items,
+                Err(_) => match serde_json::from_str::<BatchAiMatchResponse>(&json) {
+                    Ok(resp) => resp.results,
+                    Err(e) => {
+                        error!("批量AI匹配回答解析失败！原因：{:#?}, {}", e, json);
+                        return R::Ok(HashMap::new());
                     }
-                    // 检查是否有缺失的视频id
-                    for v in videos {
-                        if !map.contains_key(&v.id) {
-                            info!("批量AI匹配中视频id={}未被AI返回，将跳过", v.id);
-                        }
-                    }
-                    map
                 }
-                Err(e) => {
-                    error!("批量AI匹配回答解析失败！原因：{:#?}, {}", e, json);
-                    HashMap::new()
+            };
+            let mut map = HashMap::new();
+            for item in results {
+                map.insert(item.id, AiMatch {
+                    match_type: item.match_type,
+                    reason: item.reason,
+                });
+            }
+            // 检查是否有缺失的视频id
+            for v in videos {
+                if !map.contains_key(&v.id) {
+                    info!("批量AI匹配中视频id={}未被AI返回，将跳过", v.id);
                 }
             }
+            map
         }
         Err(e) => {
             error!("批量AI匹配调用失败！原因：{:#?}", e);

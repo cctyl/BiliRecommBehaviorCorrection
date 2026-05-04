@@ -134,10 +134,11 @@ pub async fn third_process() -> R<()> {
 
 
 /// 批量AI匹配处理：从数据库查询未处理的视频，分批交给AI匹配，然后更新结果
-/// 每次查询50个视频，最多执行4000次循环
+/// 每次查询30个视频，最多执行4000次循环
 pub async fn batch_ai_match_process() -> R<()> {
-    let batch_size: u64 = 10;
-    let max_loop: u64 = 4000;
+    let batch_size: u64 = 30;
+    let max_loop: u64 = 1500;
+    let start = Instant::now();
 
     // 构建匹配规则配置，只获取AI匹配需要的数据
     let (_, _, _, _, black_prompt, white_prompt, ai_chat_enable, _, _, prefix_prompt) =
@@ -151,6 +152,8 @@ pub async fn batch_ai_match_process() -> R<()> {
     let mut total_matched: u64 = 0;
 
     for i in 0..max_loop {
+        let loop_start = Instant::now();
+
         // 查询 handle_reason 为空的视频
         let videos = VideoDetail::select_where_handle_reason_is_null(&CC.rb, batch_size).await?;
 
@@ -165,18 +168,38 @@ pub async fn batch_ai_match_process() -> R<()> {
             videos.len()
         );
 
-        // 调用批量AI匹配
-        let match_result_map = rule_service::get_batch_ai_match_result(
-            &videos,
-            &white_prompt,
-            &black_prompt,
-            &prefix_prompt,
-        )
-        .await?;
+        // 将视频分成3组，每组最多10条，并发调用AI
+        let (match_result_map1, match_result_map2, match_result_map3) = tokio::try_join!(
+            rule_service::get_batch_ai_match_result(
+                videos.get(0..10).unwrap_or(&[]),
+                &white_prompt,
+                &black_prompt,
+                &prefix_prompt,
+            ),
+            rule_service::get_batch_ai_match_result(
+                videos.get(10..20).unwrap_or(&[]),
+                &white_prompt,
+                &black_prompt,
+                &prefix_prompt,
+            ),
+            rule_service::get_batch_ai_match_result(
+                videos.get(20..).unwrap_or(&[]),
+                &white_prompt,
+                &black_prompt,
+                &prefix_prompt,
+            ),
+        )?;
+
+        // 合并三个结果
+        let mut match_result_map = match_result_map1;
+        match_result_map.extend(match_result_map2);
+        match_result_map.extend(match_result_map3);
 
         let matched_count = match_result_map.len();
         info!("批量AI匹配返回{}个结果", matched_count);
 
+        let loop_duration = loop_start.elapsed();
+        info!("第{}次循环完成，本次耗时{:?}", i + 1, loop_duration);
         // 根据匹配结果更新视频
         for mut v in videos {
             if let Some(ai_match) = match_result_map.get(&v.id) {
@@ -201,6 +224,7 @@ pub async fn batch_ai_match_process() -> R<()> {
             }
             // AI未返回该视频结果，跳过，留到下一次处理
         }
+
     }
 
     info!("批量AI匹配任务完成，共处理{}个视频", total_matched);
