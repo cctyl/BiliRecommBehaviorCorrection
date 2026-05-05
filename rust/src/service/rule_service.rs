@@ -7,7 +7,7 @@ use aho_corasick::{AhoCorasick, BuildError};
 use log::{error, info};
 use rbatis::table_field_vec;
 use rbs::value;
-
+use serde_json::json;
 use crate::app::config::CC;
 use crate::app::constans::DEFAULT_PROMPT;
 use crate::domain::associate_rule::AssociateRule;
@@ -382,6 +382,7 @@ pub async fn get_ai_match_result(
             Ok(r) => r,
             Err(e) => {
                 error!("ai回答解析失败！原因：{:#?}, {}", e, json);
+                let json = serde_json::to_string(&json).unwrap_or_else(|_| json!(&json).to_string());
                 AiMatch {
                     match_type: AccessType::OTHER,
                     reason: format!("ai回答解析失败！ {}", json),
@@ -951,7 +952,7 @@ mod tests {
     use aho_corasick::AhoCorasick;
     use jieba_rs::Jieba;
     use rbs::value;
-
+    use serde_json::json;
     use crate::domain::dtos::TestRuleDto;
     use crate::service::rule_service::{get_match_need_config, total_rule_match};
     use crate::service::video_detail_service;
@@ -964,6 +965,7 @@ mod tests {
         },
         service::rule_service::{self, build_ac, build_single_match_rule_ac},
     };
+    use crate::domain::video_detail::{AiMatch, VideoDetail};
 
     #[tokio::test]
     async fn example() {
@@ -976,6 +978,36 @@ mod tests {
         log::logger().flush();
     }
 
+
+    // let escaped_json = serde_json::to_string(&json).unwrap_or_else(|_| json!(&json).to_string());
+
+    #[tokio::test]
+    async fn test_json_deserialize() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let v = VideoDetail::select_by_id(&CC.rb, 116408142795218u64).await.unwrap().unwrap();
+        let mut result = v.handle_reason.clone().unwrap();
+
+
+
+        let json = r#"{"name": "张三", "message": "他说："你好"}"#;
+        // let json = serde_json::to_string(&json).unwrap_or_else(|_| json!(&json).to_string());
+        result .ai_match =  Some(AiMatch {
+            match_type: AccessType::OTHER,
+            reason: format!("ai回答解析失败！ {}", json),
+        });
+
+
+        VideoDetail::update_by_id(&CC.rb,&v).await.unwrap();
+
+        let v = VideoDetail::select_by_id(&CC.rb, 116408142795218u64).await.unwrap().unwrap();
+        println!("v={:#?}",v.handle_reason.unwrap());
+        //最后一句必须是这个
+        log::logger().flush();
+    }
     #[tokio::test]
     async fn test_all_match() {
         //第一句必须是这个
