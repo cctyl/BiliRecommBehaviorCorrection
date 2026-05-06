@@ -175,7 +175,7 @@ impl VideoDetail {
     pub async fn select_where_handle_reason_is_null(
         rb: &dyn Executor,
         limit: u64,
-    ) -> Vec<VideoDetail> {
+    ) ->  rbatis::Result<Vec<VideoDetail>> {
         impled!()
     }
 }
@@ -199,6 +199,23 @@ mod tests {
         crate::init().await;
 
         //在这中间编写测试代码
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+    //select_where_handle_reason_is_null
+ #[tokio::test]
+    async fn test_select_where_handle_reason_is_null() {
+        //第一句必须是这个
+        crate::init().await;
+
+        //在这中间编写测试代码
+
+        let select_where_handle_reason_is_null = VideoDetail::select_where_handle_reason_is_null(&CC.rb,2).await.unwrap();
+        println!("len={:?}",select_where_handle_reason_is_null.len());
+        println!("{:#?}",select_where_handle_reason_is_null);
 
         //最后一句必须是这个
         log::logger().flush();
