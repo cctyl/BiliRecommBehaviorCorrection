@@ -221,3 +221,37 @@ pub fn download_json_response(body:&serde_json::Value, file_name:&str)->R<()>{
     file.write_all(json_string.as_bytes())?;
     R::Ok(())
 }
+
+#[cfg(test)]
+mod tests{
+    use crate::utils::data_util::bvid_to_aid;
+
+
+
+    #[tokio::test]
+    async fn example() {
+        //第一句必须是这个
+        crate::init().await;
+       
+
+
+
+        //在这中间编写测试代码
+
+
+
+        //最后一句必须是这个
+        log::logger().flush();
+    }
+
+
+      #[test]
+     fn test_bv2av() {
+       
+
+       let bvid_to_aid = bvid_to_aid("BV1FCLje2Efu");
+       println!("{bvid_to_aid}");
+    }
+
+
+}
