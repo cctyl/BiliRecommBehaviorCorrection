@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::result;
 
 use aho_corasick::{AhoCorasick, BuildError};
-use log::{error, info};
+use log::{error, info, warn};
 use rbatis::table_field_vec;
 use rbs::value;
 use serde_json::json;
@@ -25,6 +25,19 @@ use crate::{
     domain::{dtos::VideoDetailDTO, video_detail::VideoDetail},
     service::dict_service,
 };
+
+fn strip_markdown_json(s: &str) -> String {
+    let s = s.trim();
+    if s.is_empty() {
+        return String::new();
+    }
+    let s = s
+        .strip_prefix("```json")
+        .or_else(|| s.strip_prefix("```"))
+        .unwrap_or(s);
+    let s = s.strip_suffix("```").unwrap_or(s);
+    s.trim().to_string()
+}
 
 /// 根据视频列表训练黑名单
 /// 应该改为通用的训练，如果后续还需要训练的话
@@ -378,17 +391,19 @@ pub async fn get_ai_match_result(
         },
     ];
     let result = match glm.chat_request(message).await {
-        Ok(json) => match serde_json::from_str(&json) {
-            Ok(r) => r,
-            Err(e) => {
-                error!("ai回答解析失败！原因：{:#?}, {}", e, json);
-                let json = serde_json::to_string(&json).unwrap_or_else(|_| json!(&json).to_string());
-                AiMatch {
-                    match_type: AccessType::OTHER,
-                    reason: format!("ai回答解析失败！ {}", json),
+        Ok(json) => {
+            let json = strip_markdown_json(&json);
+            match serde_json::from_str(&json) {
+                Ok(r) => r,
+                Err(e) => {
+                    error!("ai回答解析失败！原因：{:#?}, {}", e, json);
+                    AiMatch {
+                        match_type: AccessType::OTHER,
+                        reason: format!("ai回答解析失败！ {}", json),
+                    }
                 }
             }
-        },
+        }
         Err(e) => {
             error!("ai判断调用失败！原因：{:#?}", e);
             AiMatch {
@@ -475,7 +490,11 @@ pub async fn get_batch_ai_match_result(
 
     let result_map = match glm.chat_request(message).await {
         Ok(json) => {
-            // AI返回格式可能不一致：有时返回 {"results":[...]}, 有时返回 [...]
+            let json = strip_markdown_json(&json);
+            if json.is_empty() {
+                warn!("批量AI匹配返回空响应，跳过");
+                return R::Ok(HashMap::new());
+            }
             let results: Vec<BatchAiMatchItem> = match serde_json::from_str::<Vec<BatchAiMatchItem>>(&json) {
                 Ok(items) => items,
                 Err(_) => match serde_json::from_str::<BatchAiMatchResponse>(&json) {
