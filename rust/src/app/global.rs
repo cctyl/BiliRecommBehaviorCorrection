@@ -1,11 +1,15 @@
 use std::{
     collections::HashMap,
     sync::{LazyLock,  MutexGuard, OnceLock},
+    time::Instant,
 };
 use tokio::time::{sleep, Duration};
 use log::error;
 use tokio::sync::RwLock;
 use crate::app::response::R;
+
+/// 程序启动时间点
+pub static APP_START_INSTANT: OnceLock<Instant> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct GlobalState {

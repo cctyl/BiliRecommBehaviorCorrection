@@ -46,6 +46,15 @@ pub struct OverviewVo {
 
     // 历史点踩的视频数
     pub hate_video_count: u64,
+
+    // 程序占用内存（MB）
+    pub memory_usage_mb: f64,
+
+    // 程序启动时长（秒）
+    pub uptime_secs: u64,
+
+    // 程序当前使用的CPU占比（%）
+    pub cpu_usage_percent: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize,sqlx::FromRow)]

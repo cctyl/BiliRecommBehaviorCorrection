@@ -31,6 +31,9 @@ pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
         task_list: vec![],
         like_video_count: 0,
         hate_video_count: 0,
+        memory_usage_mb: 0.0,
+        uptime_secs: 0,
+        cpu_usage_percent: 0.0,
     };
     // 同时执行所有异步函数
     let (task_result, dict_result, video_result, config_result) = join!(
@@ -70,6 +73,9 @@ pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
 
     let run_days = config_result?;
     overview_vo.run_days = run_days;
+
+    // 填充系统运行信息
+    fill_system_info(&mut overview_vo);
 
     R::Ok(overview_vo)
 }
@@ -433,6 +439,32 @@ async fn fill_config_info() -> R<u64> {
     }
 
     R::Ok(run_days)
+}
+
+/// 填充系统运行信息（内存、启动时长、CPU）
+fn fill_system_info(overview_vo: &mut OverviewVo) {
+    use crate::app::global::APP_START_INSTANT;
+    use sysinfo::{ProcessesToUpdate, System};
+
+    // 计算启动时长
+    if let Some(start) = APP_START_INSTANT.get() {
+        overview_vo.uptime_secs = start.elapsed().as_secs();
+    }
+
+    // 使用 sysinfo 获取内存和 CPU
+    let mut sys = System::new();
+    sys.refresh_processes(
+        ProcessesToUpdate::All,
+        true,
+    );
+
+    let pid = sysinfo::Pid::from_u32(std::process::id());
+    if let Some(process) = sys.process(pid) {
+        overview_vo.memory_usage_mb =
+            ((process.memory() as f64) / (1024.0 * 1024.0) * 100.0).round() / 100.0;
+        overview_vo.cpu_usage_percent =
+            (process.cpu_usage() as f64 * 100.0).round() / 100.0;
+    }
 }
 
 #[cfg(test)]

@@ -73,7 +73,10 @@ pub async fn init() -> u16 {
 
 #[tokio::main]
 pub async fn main() {
-
+    // 记录程序启动时间
+    crate::app::global::APP_START_INSTANT
+        .set(std::time::Instant::now())
+        .expect("Failed to set APP_START_INSTANT");
 
     let port = init().await;
     start_migration().await.expect("数据库迁移失败");
