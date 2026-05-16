@@ -68,7 +68,7 @@ pub async fn do_task_by_name(name: &str) -> R<()> {
             }
             // 批量AI匹配处理
             DO_BATCH_AI_MATCH => {
-                batch_ai_match_process().await
+                batch_match_process().await
             }
             e => {
                 error!("class_name={} ,未知的任务，跳过", e);
@@ -230,6 +230,71 @@ pub async fn batch_ai_match_process() -> R<()> {
     info!("批量AI匹配任务完成，共处理{}个视频", total_matched);
     R::Ok(())
 }
+
+/// 把库里所有视频重新按照新的规则匹配一次
+pub async fn batch_match_process() -> R<()> {
+    let batch_size: u64 = 30;
+    let (
+        black_single_match,
+        white_single_match,
+        black_complex_rule,
+        white_complex_rule,
+        black_prompt,
+        white_prompt,
+        ai_chat_enable,
+        single_match_enable,
+        complex_match_enable,
+        prompt,
+    ) = rule_service::build_match_config().await?;
+
+    let mut total_matched: u64 = 0;
+
+    let mut page = 0;
+    loop {
+        let loop_start = Instant::now();
+
+        // 查询 handle_reason 为空的视频
+        let mut videos = VideoDetail::select_page(&CC.rb,&PageRequest::new(page,batch_size)).await?.records;
+        if videos.is_empty() {
+            info!("第{}次循环：没有未处理的视频，退出", page + 1);
+            break;
+        }
+
+        info!(
+            "第{}次循环：查询到{}个未处理视频，开始批量AI匹配",
+            page + 1,
+            videos.len()
+        );
+
+        for mut find_or_save_video in videos {
+            let (access_type, m) = rule_service::total_rule_match(&find_or_save_video,
+                                                                  ai_chat_enable, single_match_enable, complex_match_enable, &prompt,
+                                                                  &black_single_match, &white_single_match,
+                                                                  &black_complex_rule,
+                                                                  &white_complex_rule,
+                                                                  &black_prompt,
+                                                                  &white_prompt,
+            ).await?;
+
+
+            let handle_step = find_or_save_video.handle_step.clone();
+            video_detail_service::update_handle_data(&mut find_or_save_video,
+                                                     handle_step,
+                                                     Some(m.clone()),
+                                                     None,
+                                                     Some(access_type)
+            ).await?;
+
+            info!("{:?} 鉴定完成={:?}",find_or_save_video.title,access_type);
+        }
+
+        page = page + 1;
+    }
+
+    info!("批量AI匹配任务完成，共处理{}个视频", total_matched);
+    R::Ok(())
+}
+
 
 /// 把未处理的视频，全部加入处理队列中，按照默认的状态去处理 ，相当于代替人工处理，执行后step是2
 pub async fn default_process() -> R<()> {

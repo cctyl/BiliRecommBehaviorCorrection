@@ -4,7 +4,7 @@ use std::hash::Hash;
 use std::result;
 
 use aho_corasick::{AhoCorasick, BuildError};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use rbatis::table_field_vec;
 use rbs::value;
 use serde_json::json;
@@ -369,7 +369,7 @@ pub async fn get_ai_match_result(
         video.tname.clone().unwrap_or(String::from("")),
     );
 
-    info!("{}", video_info);
+    debug!("{}", video_info);
     let rule_info = format!(
         r#"黑名单规则如下：{};
         白名单规则如下：{};"#,
@@ -556,8 +556,9 @@ pub fn try_single_match(
     let mut match_count: u32 = 0;
     let tag: Vec<String> = match &v.tag {
         Some(tag_str) => {
-            info!("tag single match {:?}", access_type);
+
             let ac_match = get_ac_match_result(&rule.tag, &tag_str);
+            debug!("tag single match {:?} ,{}, {}", access_type,  ac_match.len()>0,tag_str);
             match_count = match_count + ac_match.len() as u32;
             ac_match
         }
@@ -566,8 +567,9 @@ pub fn try_single_match(
 
     let desc: Vec<String> = match &v.desc_field {
         Some(desc_str) => {
-            info!("desc single match  {:?}", access_type);
+
             let ac_match = get_ac_match_result(&rule.desc, &desc_str);
+            debug!("desc single match  {:?} ,{}, {}", access_type,  ac_match.len()>0,desc_str);
             match_count = match_count + ac_match.len() as u32;
             ac_match
         }
@@ -576,8 +578,9 @@ pub fn try_single_match(
 
     let title: Vec<String> = match &v.title {
         Some(title_str) => {
-            info!("title single match  {:?}", access_type);
+
             let ac_match = get_ac_match_result(&rule.title, &title_str);
+            debug!("title single match  {:?} ,{}, {}", access_type,  ac_match.len()>0,title_str);
             match_count = match_count + ac_match.len() as u32;
             ac_match
         }
@@ -589,6 +592,7 @@ pub fn try_single_match(
     // let cover: Vec<String> = match &v.cover {
     //     Some(cover_str) => {
     //         let ac_match = ac_match(&black_single_match.cover, &cover_str);
+    //           debug!("title single match  {:?} , {}", ac_match.len()>0,title_str);
     //         match_count = match_count + ac_match.len()as u32;
     //         ac_match
     //     }
@@ -599,6 +603,7 @@ pub fn try_single_match(
         Some(a) => {
             if rule.mid.contains(&a) {
                 match_count = match_count + 1;
+                debug!("mid single match  {:?} , {}", access_type,a);
                 vec![a]
             } else {
                 vec![]
@@ -611,6 +616,7 @@ pub fn try_single_match(
         Some(a) => {
             if rule.tid.contains(&a) {
                 match_count = match_count + 1;
+                debug!("tid single match  {:?} , {}", access_type,a);
                 vec![a]
             } else {
                 vec![]
@@ -853,7 +859,6 @@ pub fn get_complex_match_result(
         return R::Ok(white_result);
     }
 
-    // R::Ok(ComplexMatch::default())
 }
 
 /// 输入视频和规则，返回判断结果
@@ -866,7 +871,7 @@ fn try_complex_match(
 
     let mut max_match: Option<ComplexMatch> = None;
     for f in rule_list {
-        info!("规则={} 正在匹配", f.name);
+        debug!("规则={} 正在匹配", f.name);
         let mut count: u32 = 0;
 
         let title_arr = match &v.title {
@@ -932,7 +937,7 @@ fn try_complex_match(
         };
 
         if count >= 3 {
-            info!("{} 匹配成功，匹配count={}", f.name, count);
+            debug!("{} 匹配成功，匹配count={}", f.name, count);
             return R::Ok(ComplexMatch {
                 match_type: Some(access_type),
                 rule_name: Some(f.name.clone()),
@@ -945,7 +950,7 @@ fn try_complex_match(
                 match_count: count,
             });
         } else {
-            info!("{} 没有匹配成功，匹配count={}", f.name, count);
+            debug!("{} 没有匹配成功，匹配count={}", f.name, count);
 
             if max_match.as_ref().map_or(true, |f| f.match_count < count) {
                 max_match = Some(ComplexMatch {
