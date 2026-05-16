@@ -31,9 +31,23 @@ pub struct TaskPool {
 impl TaskPool {
     /// 创建一个新的任务池
     pub fn new() -> Self {
+        // 创建一个专用的多线程运行时
+        let dedicated_runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .thread_name("task-pool-worker")
+            .enable_all()
+            .build()
+            .expect("Failed to create task pool runtime");
+
+        // 获取该运行时的 Handle
+        let runtime_handle = dedicated_runtime.handle().clone();
+
+        // 【关键】：为了防止专门的运行时被立马释放，我们需要让它持续存活。
+        // 对于全局单例或测试中的局部池，将其“忘记/泄漏”给后台或由全局持有是最安全的做法
+        std::mem::forget(dedicated_runtime);
         Self {
             method_name_task_map: Arc::new(RwLock::new(HashMap::new())),
-            runtime_handle: Handle::current(),
+            runtime_handle,
         }
     }
 
