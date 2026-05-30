@@ -6,10 +6,18 @@ use std::{
 use tokio::time::{sleep, Duration};
 use log::error;
 use tokio::sync::RwLock;
+use sysinfo::{ProcessesToUpdate, System};
 use crate::app::response::R;
 
 /// 程序启动时间点
 pub static APP_START_INSTANT: OnceLock<Instant> = OnceLock::new();
+
+/// 全局 sysinfo System 实例（只创建一次，后续复用，避免每次请求都 new System）
+pub static GLOBAL_SYSTEM: LazyLock<RwLock<System>> = LazyLock::new(|| {
+    let mut sys = System::new_all();
+    sys.refresh_processes(ProcessesToUpdate::All, true);
+    RwLock::new(sys)
+});
 
 #[derive(Debug)]
 pub struct GlobalState {

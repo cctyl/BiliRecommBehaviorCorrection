@@ -1,16 +1,13 @@
-use rbatis::{executor::Executor, py_sql, rbdc::DateTime};
-use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 use chrono::{TimeZone, Utc};
 use crate::app::config::CC;
 use crate::app::response::R;
-use crate::domain::enumeration::{AccessType, DictStatus, TaskStatus};
+use crate::domain::enumeration::TaskStatus;
 use crate::domain::overview::{DateCountMap, OverviewVo, TaskInfo};
-use crate::domain::{config::Config, dict::Dict, task::Task, video_detail::VideoDetail};
+use crate::domain::{config::Config, task::Task};
 use rbs::value;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
-use sqlx::sqlite::SqlitePoolOptions;
 use tokio::join;
 
 /// 获取总览信息
@@ -75,7 +72,7 @@ pub async fn get_overview_info(year: u32) -> R<OverviewVo> {
     overview_vo.run_days = run_days;
 
     // 填充系统运行信息
-    fill_system_info(&mut overview_vo);
+    fill_system_info(&mut overview_vo).await;
 
     R::Ok(overview_vo)
 }
@@ -113,59 +110,53 @@ async fn fill_task_info() -> R<(u32, Vec<TaskInfo>)> {
     R::Ok((task_list.len() as u32, task_list))
 }
 
-/// 填充字典信息
+/// 填充字典信息（使用 COUNT(*) 替代 SELECT *，减少数据传输）
 async fn fill_dict_info() -> R<(u64, u64, u64, u64)> {
+    let pool = CC.sqlx.get().expect("数据库未初始化");
+
     // 统计黑名单数量
-    let black_count = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "access_type": AccessType::BLACK,
-            "status": DictStatus::NORMAL
-        },
+    let black_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM dict WHERE access_type = ? AND status = ?"
     )
-    .await?
-    .len() as u64;
+    .bind("BLACK")
+    .bind("NORMAL")
+    .fetch_one(pool)
+    .await?;
 
     // 统计白名单数量
-    let white_count = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "access_type": AccessType::WHITE,
-            "status": DictStatus::NORMAL
-        },
+    let white_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM dict WHERE access_type = ? AND status = ?"
     )
-    .await?
-    .len() as u64;
+    .bind("WHITE")
+    .bind("NORMAL")
+    .fetch_one(pool)
+    .await?;
 
     // 统计搜索关键词数
-    let search_count = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "access_type": AccessType::OTHER,
-            "dict_type": crate::domain::enumeration::DictType::SEARCH_KEYWORD,
-            "status": DictStatus::NORMAL
-        },
+    let search_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM dict WHERE access_type = ? AND dict_type = ? AND status = ?"
     )
-    .await?
-    .len() as u64;
+    .bind("OTHER")
+    .bind("SEARCH_KEYWORD")
+    .bind("NORMAL")
+    .fetch_one(pool)
+    .await?;
 
     // 统计黑名单缓存数
-    let black_cache_count = Dict::select_by_map(
-        &CC.rb,
-        value! {
-            "access_type": AccessType::BLACK,
-            "status": DictStatus::CACHE
-        },
+    let black_cache_count: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM dict WHERE access_type = ? AND status = ?"
     )
-    .await?
-    .len() as u64;
+    .bind("BLACK")
+    .bind("CACHE")
+    .fetch_one(pool)
+    .await?;
 
-    // overview_vo.black_rule_count = black_count;
-    // overview_vo.white_rule_count = white_count;
-    // overview_vo.search_keyword_count = search_count;
-    // overview_vo.black_cache_count = black_cache_count;
-
-    R::Ok((black_count, white_count, search_count, black_cache_count))
+    R::Ok((
+        black_count.0 as u64,
+        white_count.0 as u64,
+        search_count.0 as u64,
+        black_cache_count.0 as u64,
+    ))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
@@ -190,87 +181,71 @@ struct SqlxVideoDetail {
     created_date: Option<String>,
 }
 
-
-
-async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
-        .bind(1_i64)
-        .fetch_all(pool)
-        .await
+/// 合并后的 video_detail 计数查询结果
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct VideoDetailCounts {
+    #[sqlx(rename = "second_handle_count")]
+    second_handle_count: i64,
+    #[sqlx(rename = "third_handle_count")]
+    third_handle_count: i64,
+    #[sqlx(rename = "like_video_count")]
+    like_video_count: i64,
+    #[sqlx(rename = "hate_video_count")]
+    hate_video_count: i64,
 }
 
-async fn select_handle_step_2(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
-        .bind(2_i64)
-        .fetch_all(pool)
-        .await
+/// 合并后的按日期分组查询结果
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct DateCountByType {
+    handle_type: String,
+    date: String,
+    count: i64,
 }
 
-async fn select_handle_step_100_white(
-    pool: &SqlitePool,
-) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-    sqlx::query_as::<_, SqlxVideoDetail>(
-        "select * from video_detail where handle_step = ? and handle_type = ?",
+
+
+
+/// 合并的 COUNT 查询：一次查询获取所有 video_detail 统计数
+async fn count_video_detail_all(pool: &SqlitePool) -> Result<VideoDetailCounts, sqlx::Error> {
+    sqlx::query_as::<_, VideoDetailCounts>(
+        "SELECT 
+            COUNT(CASE WHEN handle_step = 1 THEN 1 END) AS second_handle_count,
+            COUNT(CASE WHEN handle_step = 2 THEN 1 END) AS third_handle_count,
+            COUNT(CASE WHEN handle_step = 100 AND handle_type = 'WHITE' THEN 1 END) AS like_video_count,
+            COUNT(CASE WHEN handle_step = 100 AND handle_type = 'BLACK' THEN 1 END) AS hate_video_count
+        FROM video_detail"
     )
-    .bind(100_i64)
-    .bind("WHITE")
+    .fetch_one(pool)
+    .await
+}
+
+/// 合并的按日期分组查询：一次查询获取 WHITE/BLACK/OTHER 三种类型的历史数据
+async fn select_video_count_by_date_all(
+    pool: &SqlitePool,
+    start_time: &chrono::DateTime<Utc>,
+    end_time: &chrono::DateTime<Utc>,
+) -> Result<Vec<DateCountByType>, sqlx::Error> {
+    sqlx::query_as::<_, DateCountByType>(
+        r#"
+        SELECT 
+            handle_type,
+            strftime('%Y-%m-%d', handle_time) as date,
+            COUNT(*) as count
+        FROM video_detail
+        WHERE handle_step = 100
+            AND handle_time >= $1
+            AND handle_time <= $2
+        GROUP BY handle_type, strftime('%Y-%m-%d', handle_time)
+        ORDER BY date
+        "#
+    )
+    .bind(start_time)
+    .bind(end_time)
     .fetch_all(pool)
     .await
 }
 
-async fn select_handle_step_100_black(
-    pool: &SqlitePool,
-) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
-    sqlx::query_as::<_, SqlxVideoDetail>(
-        "select * from video_detail where handle_step = ? and handle_type = ?",
-    )
-    .bind(100_i64)
-    .bind("BLACK")
-    .fetch_all(pool)
-    .await
-}
-
-
-
-async fn count_handle_step_1(pool: &SqlitePool) -> Result<u64, sqlx::Error> {
-    sqlx::query_scalar("select count(*) from video_detail where handle_step = ?")
-        .bind(1_i64)
-        .fetch_one(pool)
-        .await
-}
-
-async fn count_handle_step_2(pool: &SqlitePool) -> Result<u64, sqlx::Error> {
-    sqlx::query_scalar("select count(*) from video_detail where handle_step = ?")
-        .bind(2_i64)
-        .fetch_one(pool)
-        .await
-}
-
-async fn count_handle_step_100_white(
-    pool: &SqlitePool,
-) -> Result<u64, sqlx::Error> {
-    sqlx::query_scalar(
-        "select count(*) from video_detail where handle_step = ? and handle_type = ?",
-    )
-        .bind(100_i64)
-        .bind("WHITE")
-        .fetch_one(pool)
-        .await
-}
-
-async fn count_handle_step_100_black(
-    pool: &SqlitePool,
-) -> Result<u64, sqlx::Error> {
-    sqlx::query_scalar(
-        "select count(*) from video_detail where handle_step = ? and handle_type = ?",
-    )
-        .bind(100_i64)
-        .bind("BLACK")
-        .fetch_one(pool)
-        .await
-}
-
-///   填充视频详情信息
+///   填充视频详情信息（合并查询优化版：7次查询 → 2次查询）
 async fn fill_video_detail_info(
     year: u32,
 ) -> R<
@@ -287,67 +262,40 @@ async fn fill_video_detail_info(
 > {
     let pool = CC.sqlx.get().expect("数据库未初始化");
 
+    // 一次查询获取4个 COUNT（替代原来4次查询）
+    let counts = count_video_detail_all(&pool).await?;
 
-    // 统计待二次处理的数据量 (handle_step = 1)
-    let second_handle_count = count_handle_step_1(&pool).await?;
-
-    // 统计待三次处理的数据量 (handle_step = 2)
-    let third_handle_count = count_handle_step_2(&pool).await?;
-
-    // 统计历史点赞的视频数
-    let like_video_count = count_handle_step_100_white(&pool).await?;
-
-    // 统计历史点踩的视频数
-    let hate_video_count = count_handle_step_100_black(&pool).await?;
+    let second_handle_count = counts.second_handle_count as u64;
+    let third_handle_count = counts.third_handle_count as u64;
+    let like_video_count = counts.like_video_count as u64;
+    let hate_video_count = counts.hate_video_count as u64;
 
     // 构造日期范围
-
     let start_date = Utc.with_ymd_and_hms(year as i32, 1, 1, 0, 0, 0)
         .unwrap();
     let end_date = Utc.with_ymd_and_hms(year as i32, 12, 31, 23, 59, 59)
         .unwrap();
 
+    // 一次查询获取三种类型的历史数据（替代原来3次查询）
+    let all_history = select_video_count_by_date_all(&pool, &start_date, &end_date)
+        .await?;
 
-    let white_history =
-        select_video_count_by_date(&pool, "WHITE", &start_date, &end_date)
-            .await?;
+    // 按 handle_type 拆分结果
+    let mut white_history = Vec::new();
+    let mut black_history = Vec::new();
+    let mut other_history = Vec::new();
 
-    // 统计黑名单历史数据
-    let black_history =
-        select_video_count_by_date(&pool, "BLACK", &start_date, &end_date)
-            .await?;
-
-    // 统计其他历史数据
-    let other_history =
-        select_video_count_by_date(&pool,"OTHER", &start_date, &end_date)
-            .await?;
-
-    // 统计白名单历史数据
-    // 由于SQL中的DATE函数在SQLite中可能不兼容，使用自定义查询
-    // let start_date = DateTime::from_str(&format!("{}-01-01 00:00:00", year)).unwrap();
-    // let end_date = DateTime::from_str(&format!("{}-12-31 23:59:59", year)).unwrap();
-
-    // let white_history =
-    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::WHITE, &start_date, &end_date)
-    //         .await?;
-    //
-    // // 统计黑名单历史数据
-    // let black_history =
-    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::BLACK, &start_date, &end_date)
-    //         .await?;
-    //
-    // // 统计其他历史数据
-    // let other_history =
-    //     count_by_handle_type_and_date_range_sql(&CC.rb, AccessType::OTHER, &start_date, &end_date)
-    //         .await?;
-
-    // overview_vo.second_handle_count = second_handle_count;
-    // overview_vo.third_handle_count = third_handle_count;
-    // overview_vo.like_video_count = like_video_count;
-    // overview_vo.hate_video_count = hate_video_count;
-    // overview_vo.white_history = white_history;
-    // overview_vo.black_history = black_history;
-    // overview_vo.other_history = other_history;
+    for item in all_history {
+        let date_count = DateCountMap {
+            date: item.date,
+            count: item.count,
+        };
+        match item.handle_type.as_str() {
+            "WHITE" => white_history.push(date_count),
+            "BLACK" => black_history.push(date_count),
+            _ => other_history.push(date_count),
+        }
+    }
 
     R::Ok((
         second_handle_count,
@@ -360,55 +308,48 @@ async fn fill_video_detail_info(
     ))
 }
 
-/// 自定义SQL查询，用于统计按日期分组的处理数据
-#[py_sql(
-    "SELECT
-        strftime('%Y-%m-%d', handle_time) as date,
-        COUNT(*) as count
-    FROM video_detail
-    WHERE handle_type = #{handle_type}
-        AND handle_step = 100
-        AND handle_time >= #{start_time}
-        AND handle_time <= #{end_time}
-    GROUP BY strftime('%Y-%m-%d', handle_time)
-    ORDER BY date"
-)]
-async fn count_by_handle_type_and_date_range_sql(
-    rb: &dyn Executor,
-    handle_type: AccessType,
-    start_time: &DateTime,
-    end_time: &DateTime,
-) -> Result<Vec<DateCountMap>, rbatis::Error> {
-    impled!()
-}
+// ===== 以下函数保留用于测试兼容，生产代码已不再使用 =====
 
-
-async fn select_video_count_by_date(
-    pool: &SqlitePool,
-    handle_type: &str,
-    start_time: &chrono::DateTime<Utc>,
-    end_time: &chrono::DateTime<Utc>,
-) -> Result<Vec<DateCountMap>, sqlx::Error> {
-
-    sqlx::query_as::<_, DateCountMap>(
-        r#"
-        SELECT
-            strftime('%Y-%m-%d', handle_time) as date,
-            COUNT(*) as count
-        FROM video_detail
-        WHERE handle_type = $1
-            AND handle_step = 100
-            AND handle_time >= $2
-            AND handle_time <= $3
-        GROUP BY strftime('%Y-%m-%d', handle_time)
-        ORDER BY date
-        "#
-    )
-        .bind(handle_type)
-        .bind(start_time)
-        .bind(end_time)
+#[allow(dead_code)]
+async fn select_handle_step_1(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
+        .bind(1_i64)
         .fetch_all(pool)
         .await
+}
+
+#[allow(dead_code)]
+async fn select_handle_step_2(pool: &SqlitePool) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>("select * from video_detail where handle_step = ?")
+        .bind(2_i64)
+        .fetch_all(pool)
+        .await
+}
+
+#[allow(dead_code)]
+async fn select_handle_step_100_white(
+    pool: &SqlitePool,
+) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>(
+        "select * from video_detail where handle_step = ? and handle_type = ?",
+    )
+    .bind(100_i64)
+    .bind("WHITE")
+    .fetch_all(pool)
+    .await
+}
+
+#[allow(dead_code)]
+async fn select_handle_step_100_black(
+    pool: &SqlitePool,
+) -> Result<Vec<SqlxVideoDetail>, sqlx::Error> {
+    sqlx::query_as::<_, SqlxVideoDetail>(
+        "select * from video_detail where handle_step = ? and handle_type = ?",
+    )
+    .bind(100_i64)
+    .bind("BLACK")
+    .fetch_all(pool)
+    .await
 }
 
 /// 填充配置信息（运行天数）
@@ -442,17 +383,17 @@ async fn fill_config_info() -> R<u64> {
 }
 
 /// 填充系统运行信息（内存、启动时长、CPU）
-fn fill_system_info(overview_vo: &mut OverviewVo) {
-    use crate::app::global::APP_START_INSTANT;
-    use sysinfo::{ProcessesToUpdate, System};
+async fn fill_system_info(overview_vo: &mut OverviewVo) {
+    use crate::app::global::{APP_START_INSTANT, GLOBAL_SYSTEM};
+    use sysinfo::ProcessesToUpdate;
 
     // 计算启动时长
     if let Some(start) = APP_START_INSTANT.get() {
         overview_vo.uptime_secs = start.elapsed().as_secs();
     }
 
-    // 使用 sysinfo 获取内存和 CPU
-    let mut sys = System::new();
+    // 复用全局 System 实例，只刷新进程信息（比 new System 快得多）
+    let mut sys = GLOBAL_SYSTEM.write().await;
     sys.refresh_processes(
         ProcessesToUpdate::All,
         true,
